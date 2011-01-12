@@ -1,0 +1,26 @@
+#
+# MacOS
+#
+.DS_Store
+
+#
+# Xcode
+#
+*.pch
+*.xib
+*.mode*
+*.perspectivev3
+*.pbxuser
+build/*
+
+#
+# vim
+#
+*.swp
+
+#
+# var files
+#
+log
+*.icns
+*.tiff
