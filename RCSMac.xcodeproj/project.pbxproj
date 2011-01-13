@@ -26,6 +26,8 @@
 		1A33F4F30FC6AA9400590FA1 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
 		1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */; };
 		1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
+		1A40F7C912DF071C00BEACB8 /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
+		1A40F81812DF293A00BEACB8 /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
 		1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
 		1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */; };
 		1A4435490F8CB10800CD910E /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435480F8CB10800CD910E /* NSString+SHA1.m */; };
@@ -118,6 +120,11 @@
 		1A356BA8109F3EB30063AF34 /* speex_resampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_resampler.h; path = Support/Speex/speex_resampler.h; sourceTree = "<group>"; };
 		1A356BA9109F3EB30063AF34 /* speex_stereo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_stereo.h; path = Support/Speex/speex_stereo.h; sourceTree = "<group>"; };
 		1A356BAA109F3EB30063AF34 /* speex_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_types.h; path = Support/Speex/speex_types.h; sourceTree = "<group>"; };
+		1A40F7C712DF071C00BEACB8 /* AuthNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AuthNetworkOperation.h; path = Modules/AuthNetworkOperation.h; sourceTree = "<group>"; };
+		1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AuthNetworkOperation.m; path = Modules/AuthNetworkOperation.m; sourceTree = "<group>"; };
+		1A40F7DF12DF107900BEACB8 /* Transport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Transport.h; path = Modules/Transport.h; sourceTree = "<group>"; };
+		1A40F81612DF293A00BEACB8 /* RESTTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RESTTransport.h; path = Modules/RESTTransport.h; sourceTree = "<group>"; };
+		1A40F81712DF293A00BEACB8 /* RESTTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTTransport.m; path = Modules/RESTTransport.m; sourceTree = "<group>"; };
 		1A43C9650FFA641A008E5EFE /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		1A4434830F8B950B00CD910E /* RCSMConfManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMConfManager.h; path = Modules/RCSMConfManager.h; sourceTree = "<group>"; };
 		1A4434840F8B950B00CD910E /* RCSMConfManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMConfManager.m; path = Modules/RCSMConfManager.m; sourceTree = "<group>"; };
@@ -297,6 +304,16 @@
 			name = Support;
 			sourceTree = "<group>";
 		};
+		1A40F7DE12DF104700BEACB8 /* Transports */ = {
+			isa = PBXGroup;
+			children = (
+				1A40F7DF12DF107900BEACB8 /* Transport.h */,
+				1A40F81612DF293A00BEACB8 /* RESTTransport.h */,
+				1A40F81712DF293A00BEACB8 /* RESTTransport.m */,
+			);
+			name = Transports;
+			sourceTree = "<group>";
+		};
 		1A44351B0F8CA1E000CD910E /* Categories */ = {
 			isa = PBXGroup;
 			children = (
@@ -369,6 +386,7 @@
 			children = (
 				1ADC5D8212DDBE7600650A1E /* Operations */,
 				1ADC5D8312DDBE7B00650A1E /* Protocols */,
+				1A40F7DE12DF104700BEACB8 /* Transports */,
 				1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */,
 				1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */,
 			);
@@ -379,6 +397,8 @@
 			isa = PBXGroup;
 			children = (
 				1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */,
+				1A40F7C712DF071C00BEACB8 /* AuthNetworkOperation.h */,
+				1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */,
 				1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */,
 				1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */,
 				1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */,
@@ -635,6 +655,8 @@
 				1A65116412DDCA4600D4F1AF /* FSNetworkOperation.m in Sources */,
 				1A65116712DDCA5700D4F1AF /* LogNetworkOperation.m in Sources */,
 				1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */,
+				1A40F7C912DF071C00BEACB8 /* AuthNetworkOperation.m in Sources */,
+				1A40F81812DF293A00BEACB8 /* RESTTransport.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

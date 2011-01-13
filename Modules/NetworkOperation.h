@@ -13,6 +13,6 @@
 
 @protocol NetworkOperation
 
-- (void)perform;
+- (BOOL)perform;
 
 @end
