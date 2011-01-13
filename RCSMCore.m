@@ -2599,6 +2599,23 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 #endif
   
+  // Inject running ActivityMonitor
+  NSNumber *pActivityM = pidForProcessName(@"Activity Monitor");
+  
+  if (pActivityM != nil)
+    {
+#ifdef DEBUG
+      NSLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
+#endif
+      [self sendEventToPid: pActivityM];
+    }
+  else 
+    {
+#ifdef DEBUG
+      NSLog(@"%s: no running ActivityMonitor", __FUNCTION__);
+#endif
+    }
+    
   // Register notification for new process. Snow only 
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {

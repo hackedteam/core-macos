@@ -195,6 +195,41 @@ NSArray *obtainProcessList()
   return [processList autorelease];
 }
 
+NSArray *obtainProcessListWithPid()
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  int i;
+  kinfo_proc *allProcs = 0;
+  size_t numProcs;
+  NSMutableArray *processList;
+  
+  int err =  getBSDProcessList(&allProcs, &numProcs);
+  if (err)
+    return nil;
+  
+  processList = [[NSMutableArray alloc] initWithCapacity: numProcs];
+  
+  for (i = 0; i < numProcs; i++)
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+      NSString *procName = [NSString stringWithFormat: @"%s", allProcs[i].kp_proc.p_comm];
+      NSNumber *pid = [NSNumber numberWithInt: allProcs[i].kp_proc.p_pid];
+      
+      NSDictionary *processDict = [NSDictionary dictionaryWithObjectsAndKeys: procName, @"procName", pid, @"pid", nil, nil];
+      
+      [processList addObject: processDict];
+      
+      [inner release];
+    }
+  
+  free(allProcs);
+  [outerPool release];
+  
+  return [processList autorelease];
+}
+
 BOOL findProcessWithName(NSString *aProcess)
 {
   NSArray *processList;
@@ -215,6 +250,31 @@ BOOL findProcessWithName(NSString *aProcess)
   
   [processList release];
   return NO;
+}
+
+NSNumber *pidForProcessName(NSString *aProcess)
+{
+  NSArray *processList;
+  
+  processList = obtainProcessListWithPid();
+  [processList retain];
+  
+  for (NSDictionary *currentProcess in processList)
+    {
+      //if (strcmp([currentProcess UTF8String], [[aProcess lowercaseString] UTF8String]) == 0)
+      NSString *procName = [currentProcess objectForKey: @"procName"];
+      
+      if (matchPattern([[procName lowercaseString] UTF8String],
+                       [[aProcess lowercaseString] UTF8String]))
+        {
+          [processList release];
+          return [currentProcess objectForKey: @"pid"];
+        }
+    }
+  
+  [processList release];
+  
+  return nil;
 }
 
 BOOL isAddressOnLan(struct in_addr ipAddress)

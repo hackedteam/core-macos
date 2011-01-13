@@ -673,6 +673,7 @@ enum
 int getBSDProcessList       (kinfo_proc **procList, size_t *procCount);
 NSArray *obtainProcessList  ();
 BOOL findProcessWithName    (NSString *aProcess);
+NSNumber *pidForProcessName (NSString *aProcess);
 
 #pragma mark -
 #pragma mark Unused
