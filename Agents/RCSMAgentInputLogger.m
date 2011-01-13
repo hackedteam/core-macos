@@ -427,11 +427,7 @@ static int height  = 30;
                                 length: sizeof(short)];
                 
                 // Delimeter
-#ifdef  __i386__
-                unsigned long del = DELIMETER;
-#else
-                UInt32  del = DELIMETER;
-#endif
+                uint32_t del = DELIMETER;
                 [entryData appendBytes: &del
                                 length: sizeof(del)];
                 
