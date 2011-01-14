@@ -2478,9 +2478,9 @@ static void computerWillShutdown(CFMachPortRef port,
         }
     }
   
-  //[NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
-  //                         toTarget: self
-  //                       withObject: nil];
+  [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
+                           toTarget: self
+                         withObject: nil];
   
 #ifndef TEST_MODE
   int ret = 0;
