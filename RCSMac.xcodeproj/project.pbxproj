@@ -798,6 +798,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					DEBUG,
 					DEBUG_ERRORS,
+					DEBUG_LOG,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -809,7 +810,7 @@
 					"-lspeex",
 				);
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.5;
 				STRIP_INSTALLED_PRODUCT = NO;
 				USER_HEADER_SEARCH_PATHS = "..//**";
 				VALID_ARCHS = "i386 x86_64";
