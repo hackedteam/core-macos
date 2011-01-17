@@ -10,7 +10,7 @@
 #import <AddressBook/AddressBook.h>
 #import "RCSMAgentOrganizer.h"
 
-#define DEBUG
+//#define DEBUG
 
 static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
