@@ -447,7 +447,7 @@ static NSLock *gSyncLock                  = nil;
                 {
                   NSString *destDir = nil;
                   
-                  if (gOSMajor == 10 && gOSMinor > 5) 
+                  if (gOSMajor == 10 && gOSMinor == 6) 
                     {
 #ifdef DEBUG
                       infoLog(ME, @"Removing scripting additions");
@@ -456,7 +456,7 @@ static NSLock *gSyncLock                  = nil;
                                     initWithFormat: @"/Library/ScriptingAdditions/%@",
                                            OSAX_FOLDER ];
                     }
-                  else 
+                  else if (gOSMajor == 10 && gOSMinor == 5) 
                     {
 #ifdef DEBUG
                       infoLog(ME, @"Removing input manager");

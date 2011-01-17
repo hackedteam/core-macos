@@ -81,6 +81,7 @@
 
 - (void)injectBundle: (NSNotification*)notification;
 - (void)sendEventToPid: (NSNumber*)thePid;
+- (void)shareCorePidOnShMem;
 //- (void)eventDidFail: (const AppleEvent*)event withError: (NSError*)error;
 
 @end

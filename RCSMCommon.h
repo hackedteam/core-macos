@@ -197,6 +197,7 @@ typedef struct os_version {
 #define OFFT_IM           0x1840
 #define OFFT_CLIPBOARD    0x1C40
 #define OFFT_COMMAND      0x2040
+#define OFFT_CORE_PID     0x2440
 
 extern u_int remoteAgents[];
 
@@ -595,6 +596,7 @@ typedef struct _shMemoryCommand {
 #define IM_CAN_SYNC_SAFARI        0x4 // Reply from IM (can sync with)
 #define CR_UNREGISTER_SAFARI_SYNC 0x5 // Unregister the sync operation
 #define IM_SYNC_DONE              0x6 // Sync ended
+#define CR_CORE_PID               0x7 // core pid to Activity Monitor
   char commandData[0x3F0];
   u_int commandDataSize;
 } shMemoryCommand;
@@ -673,6 +675,7 @@ enum
 int getBSDProcessList       (kinfo_proc **procList, size_t *procCount);
 NSArray *obtainProcessList  ();
 BOOL findProcessWithName    (NSString *aProcess);
+NSNumber *pidForProcessName (NSString *aProcess);
 
 #pragma mark -
 #pragma mark Unused

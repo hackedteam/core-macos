@@ -58,6 +58,8 @@ extern int32_t gBackdoorPID;
 //
 + (void)closeThreadCommunicator: (NSNotification *)_notification;
 
++ (void)hideCoreFromAM;
+
 //
 // @abstract
 //  This function will be responsible of communicating with our Core in order
