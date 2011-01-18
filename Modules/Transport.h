@@ -1,10 +1,12 @@
-//
-//  Transport.h
-//  RCSMac
-//
-//  Created by revenge on 1/13/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
+/*
+ * RCSMac - Transport Abstract Class
+ *  Abstract Class (formal protocol) for a generic network transport
+ *
+ *
+ * Created by revenge on 13/01/2011
+ * Copyright (C) HT srl 2011. All rights reserved
+ *
+ */
 
 #import <Cocoa/Cocoa.h>
 
@@ -12,7 +14,13 @@
 @protocol Transport
 
 @required
-- (BOOL)connectToHost: (NSString *)aHost;
+- (BOOL)connect;
 - (BOOL)disconnect;
+
+@end
+
+@interface Transport : NSObject
+
+- (NSHost *)hostFromString: (NSString *)aHost;
 
 @end

