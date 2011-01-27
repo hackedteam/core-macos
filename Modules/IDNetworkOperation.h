@@ -1,3 +1,4 @@
+
 /*
  * RCSMac - Identification Network Operation
  *
@@ -8,11 +9,20 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "NetworkOperation.h"
+#import "RESTTransport.h"
 
 
-@interface IDNetworkOperation : NSObject
+@interface IDNetworkOperation : NSObject <NetworkOperation>
 {
-
+@private
+  RESTTransport *mTransport;
+  NSMutableArray *mCommands;
 }
+
+@property (readonly, getter=getCommands) NSMutableArray *mCommands;
+
+- (id)initWithTransport: (RESTTransport *)aTransport;
+- (void)dealloc;
 
 @end
