@@ -8,10 +8,18 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "NetworkOperation.h"
+#import "RESTTransport.h"
 
 
-@interface DownloadNetworkOperation : NSObject {
-
+@interface DownloadNetworkOperation : NSObject <NetworkOperation>
+{
+@private
+  RESTTransport *mTransport;
+  NSMutableArray *mDownloads;
 }
+
+- (id)initWithTransport: (RESTTransport *)aTransport;
+- (void)dealloc;
 
 @end
