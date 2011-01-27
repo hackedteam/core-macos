@@ -53,7 +53,7 @@
   BOOL _isSyncing;
   NSNumber *status;
   NSData *syncConfig = [[aConfiguration objectForKey: @"data"] retain];
-  status = [aConfiguration objectForKey: @"status"];
+  //status = [aConfiguration objectForKey: @"status"];
   
   [mActionsLock lock];
   _isSyncing = mIsSyncing;
