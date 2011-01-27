@@ -12,9 +12,16 @@
 #import "NetworkProtocol.h"
 
 
-@interface RESTNetworkProtocol : NSObject //<NetworkProtocol>
+@interface RESTNetworkProtocol : NSObject <NetworkProtocol>
 {
-
+@private
+  NSURL *mURL;
+  uint32_t mPort;
 }
+
+- (id)initWithHost: (NSString *)aHost
+            onPort: (int32_t)aPort;
+
+- (void)dealloc;
 
 @end
