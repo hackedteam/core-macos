@@ -8,11 +8,15 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "NetworkOperation.h"
+#import "RESTTransport.h"
 
 
-@interface ByeNetworkOperation : NSObject
+@interface ByeNetworkOperation : NSObject <NetworkOperation>
 {
-
+  RESTTransport *mTransport;
 }
+
+- (id)initWithTransport: (RESTTransport *)aTransport;
 
 @end
