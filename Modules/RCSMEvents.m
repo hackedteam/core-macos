@@ -131,7 +131,7 @@ NSLock *connectionLock;
   [configuration retain];
   
   timerStruct *timerRawData;
-  NSDate *startThreadDate = [NSDate date];
+  NSDate *startThreadDate = [[NSDate date] retain];
   NSTimeInterval interval = 0;
   
 #ifdef DEBUG
@@ -188,6 +188,9 @@ NSLock *connectionLock;
                 infoLog(ME, @"TIMER_LOOP (%f) triggered", fabs(interval));
 #endif
                 
+                if (startThreadDate != nil)
+                  [startThreadDate release];
+                
                 startThreadDate = [[NSDate date] retain];
                 [taskManager triggerAction: actionID];
               }
@@ -199,7 +202,7 @@ NSLock *connectionLock;
             int64_t configuredDate = 0;
             configuredDate = ((int64_t)high << 32) | (int64_t)low;
 
-            int64_t unixDate = (configuredDate - EPOCH_DIFF) / RATE_DIFF;            
+            int64_t unixDate = (configuredDate - EPOCH_DIFF) / RATE_DIFF;
             NSDate *givenDate = [NSDate dateWithTimeIntervalSince1970: unixDate];
             
             if ([[NSDate date] isGreaterThan: givenDate])
@@ -244,6 +247,9 @@ NSLock *connectionLock;
                        forKey: @"status"];
       [configuration release];
     }
+  
+  if (startThreadDate != nil)
+    [startThreadDate release];
   
   [outerPool release];
 }
