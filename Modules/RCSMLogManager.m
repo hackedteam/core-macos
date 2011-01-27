@@ -542,11 +542,15 @@ static RCSMLogManager *sharedLogManager = nil;
           
           if ([self writeDataToLog: logHeader
                          forHandle: logFileHandle] == FALSE)
-            return FALSE;
+            {
+              [agentLog release];
+              [encryptedLogName release];
+              return FALSE;
+            }
           
           [agentLog release];
-          [outerPool release];
           [encryptedLogName release];
+          [outerPool release];
           
           return TRUE;
         }
