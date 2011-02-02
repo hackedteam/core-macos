@@ -262,21 +262,15 @@ static int actionCounter = 0;
 
 - (BOOL)loadConfiguration
 {
-  NSString *configurationFile;
   actionCounter = 0;
   
 #ifdef DEBUG
   NSLog(@"%s", __FUNCTION__);
 #endif
-      
-#ifdef DEV_MODE
-  configurationFile = [[NSString alloc] initWithString:
-                       @"/Users/revenge/Desktop/files/test_configuration/conf_macos.bin"];
-#else
-  configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
-                       [[NSBundle mainBundle] bundlePath],
-                       gConfigurationName];
-#endif
+  
+  NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
+                                 [[NSBundle mainBundle] bundlePath],
+                                 gConfigurationName];
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: configurationFile])
     {
