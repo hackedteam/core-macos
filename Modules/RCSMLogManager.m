@@ -566,16 +566,8 @@ static RCSMLogManager *sharedLogManager = nil;
   return FALSE;
 }
 
-- (BOOL)closeActiveLogs: (BOOL)continueLogging
+- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging
 {
-  /*
-  [logLock lock];
-  NSEnumerator *enumerator = [[[mActiveQueue copy] autorelease] objectEnumerator];
-  [logLock unlock];
-  
-  NSMutableArray *tempArray = nil;
-  id anObject;
-  */
   NSMutableIndexSet *discardedItem  = [NSMutableIndexSet indexSet];
   NSMutableArray *newItems          = [[NSMutableArray alloc] init];
   NSMutableArray *tempAgentsConf    = [[NSMutableArray alloc] init];
@@ -627,57 +619,6 @@ static RCSMLogManager *sharedLogManager = nil;
   
   [gSendQueueLock unlock];
   [gActiveQueueLock unlock];
-  
-  /*
-  while (anObject = [enumerator nextObject])
-    {
-      [[anObject objectForKey: @"handle"] closeFile];
-      
-      //
-      // Now put the log in the sendQueue and remove it from the active queue
-      //
-#ifdef DEBUG
-      NSLog(@"mSendQueue: %@", mSendQueue);
-      NSLog(@"mActiveQueue: %@", mActiveQueue);
-#endif
-      [logLock lock];
-      [mSendQueue addObject: anObject];
-      [mActiveQueue removeObject: anObject];
-      [logLock unlock];
-      
-      //
-      // Verifying if we need to recreate the log entry so that the agents can
-      // keep logging (verify for possible races here)
-      //
-      if (continueLogging == TRUE)
-        {
-          if (tempArray == nil)
-            {
-              tempArray = [[NSMutableArray alloc] init];    
-            }
-          
-          NSNumber *tempAgentID = [NSNumber numberWithInt:
-                                   [[anObject objectForKey: @"agentID"] intValue]];
-
-          id tempAgentHeader = [anObject objectForKey: @"header"];
-
-          NSArray *keys = [NSArray arrayWithObjects: @"agentID",
-                                                     @"header",
-                                                     nil];
-          NSArray *objects = [NSArray arrayWithObjects: tempAgentID,
-                                                        tempAgentHeader,
-                                                        nil];
-          
-          NSMutableDictionary *agent = [[NSMutableDictionary alloc] init];
-          NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
-                                                                 forKeys: keys];
-          
-          [agent addEntriesFromDictionary: dictionary];
-          [tempArray addObject: agent];
-          [agent release];
-        }
-    }
-  */
   
   if (continueLogging == TRUE)
     {
@@ -878,6 +819,12 @@ static RCSMLogManager *sharedLogManager = nil;
   //
   // If logFound is false and we called this function, it means that the agent
   // is running but no file was created, thus we need to do it here
+  //
+  
+  //
+  // TODO: There's a non-issue race condition here, this means that two files
+  // could be created instead of one if the sync is running and closeActiveLogs
+  // has been called by passing TRUE for continueLogging
   //
   if (logFound == FALSE)
     {

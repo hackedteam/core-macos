@@ -78,7 +78,7 @@ enum {
 // @abstract
 //  Close ALL the logs in the mActiveQueue and move them inside the mSendQueue
 //
-- (BOOL)closeActiveLogs: (BOOL)continueLogging;
+- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging;
 
 //
 // @author
