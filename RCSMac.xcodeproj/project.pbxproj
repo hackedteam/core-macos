@@ -34,7 +34,6 @@
 		1A1A2FDF106112CF001F1B5D /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A1A2FDE106112CF001F1B5D /* QuickTime.framework */; };
 		1A1B9CD60FA091970036558C /* spref.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1A1B9CD50FA091970036558C /* spref.icns */; };
 		1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */; };
-		1A281D320FF501A400616589 /* RCSMCommunicationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */; };
 		1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */; };
 		1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28798512F080B20008973A /* FSNetworkOperationTest.m */; };
 		1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */; };
@@ -106,7 +105,6 @@
 		1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */; };
 		1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
-		1AF6092012EF1ECB0091F6F6 /* RCSMCommunicationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */; };
 		1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
 		1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
 		1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
@@ -177,8 +175,6 @@
 		1A319EE30FA9B6410079B060 /* RCSMInputManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputManager.h; path = InputManager/RCSMInputManager.h; sourceTree = "<group>"; };
 		1A319EE40FA9B6410079B060 /* RCSMInputManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMInputManager.m; path = InputManager/RCSMInputManager.m; sourceTree = "<group>"; };
 		1A319F080FA9C8260079B060 /* Info */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Info; sourceTree = "<group>"; };
-		1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMCommunicationManager.h; path = Modules/RCSMCommunicationManager.h; sourceTree = "<group>"; };
-		1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMCommunicationManager.m; path = Modules/RCSMCommunicationManager.m; sourceTree = "<group>"; };
 		1A33F8EA0FCC1EB000590FA1 /* RCSMEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMEvents.h; path = Modules/RCSMEvents.h; sourceTree = "<group>"; };
 		1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMEvents.m; path = Modules/RCSMEvents.m; sourceTree = "<group>"; };
 		1A356B9F109F3EB30063AF34 /* speex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex.h; path = Support/Speex/speex.h; sourceTree = "<group>"; };
@@ -564,8 +560,6 @@
 				1ADC5D8212DDBE7600650A1E /* Operations */,
 				1A40F7DE12DF104700BEACB8 /* Transports */,
 				1ADC5D8312DDBE7B00650A1E /* Protocols */,
-				1A33F3FC0FC696FE00590FA1 /* RCSMCommunicationManager.h */,
-				1A33F3FD0FC696FE00590FA1 /* RCSMCommunicationManager.m */,
 			);
 			name = Network;
 			sourceTree = "<group>";
@@ -855,7 +849,6 @@
 				1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */,
 				1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */,
 				1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */,
-				1AF6092012EF1ECB0091F6F6 /* RCSMCommunicationManager.m in Sources */,
 				1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */,
 				1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */,
 				1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */,
@@ -932,7 +925,6 @@
 				1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */,
 				1A7A94160FE13EC7007FF947 /* RCSMActions.m in Sources */,
 				1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */,
-				1A281D320FF501A400616589 /* RCSMCommunicationManager.m in Sources */,
 				1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */,
 				1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */,
 				1AA1373212F6EFC900E0CD52 /* AuthNetworkOperation.m in Sources */,
