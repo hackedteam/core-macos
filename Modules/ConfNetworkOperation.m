@@ -192,7 +192,6 @@
       return NO;
     }
   
-  /*
   //
   // Store new configuration file
   //
@@ -200,7 +199,7 @@
   
   if ([taskManager updateConfiguration: configData] == FALSE)
     {
-#ifdef DEBUG
+#ifdef DEBUG_CONF_NOP
       errorLog(ME, @"Error while storing new configuration");
 #endif
     
@@ -211,7 +210,7 @@
       
       return NO;
     }
-  */
+  
   [configData release];
   [replyDecrypted release];
   [commandData release];
