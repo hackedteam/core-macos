@@ -302,6 +302,7 @@ extern u_int remoteAgents[];
 #pragma mark -
 
 #define LOG_DOWNLOAD      0xD0D0
+#define LOG_FILESYSTEM    0xEDA1
 
 #pragma mark -
 #pragma mark Configurator Struct Definition
