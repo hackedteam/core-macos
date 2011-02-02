@@ -16,7 +16,6 @@
 {
 @private
   RESTTransport *mTransport;
-  NSMutableArray *mUploads;
 }
 
 - (id)initWithTransport: (RESTTransport *)aTransport;
