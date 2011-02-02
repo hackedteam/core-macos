@@ -19,6 +19,8 @@
   NSMutableArray *mPaths;
 }
 
+@property (readonly, getter=getPaths) NSMutableArray *mPaths;
+
 - (id)initWithTransport: (RESTTransport *)aTransport;
 - (void)dealloc;
 

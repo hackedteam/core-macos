@@ -20,6 +20,8 @@
 
 @implementation FSNetworkOperation
 
+@synthesize mPaths;
+
 - (id)initWithTransport: (RESTTransport *)aTransport
 {
   if (self = [super init])
@@ -252,7 +254,7 @@
       // Serialize with depth in a NSMutableDictionary
       //
       NSArray *keys = [NSArray arrayWithObjects: @"depth",
-                                                 @"pathName",
+                                                 @"path",
                                                  nil];
       
       NSArray *objects = [NSArray arrayWithObjects: depthN,
