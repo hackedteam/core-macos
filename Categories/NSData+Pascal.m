@@ -21,8 +21,7 @@
       return nil;
     }
   
-  NSData *stringData = [self subdataWithRange: NSMakeRange(4, len)];
-  
+  NSData *stringData = [self subdataWithRange: NSMakeRange(4, len - 1)];
   NSString *string = [[NSString alloc] initWithData: stringData
                                            encoding: encoding];
   
