@@ -12,6 +12,7 @@
 #import "RCSMCommon.h"
 
 //#define DEBUG_TRANSPORT
+#define USER_AGENT @"Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4"
 
 
 @implementation RESTTransport
@@ -95,6 +96,13 @@
   [urlRequest setHTTPBody: aPacketData];
   [urlRequest setValue: @"application/octet-stream"
     forHTTPHeaderField: @"Content-Type"];
+  [urlRequest setValue: USER_AGENT
+    forHTTPHeaderField: @"User-Agent"];
+  
+  //
+  // Avoid to store cookies in the cookie manager
+  //
+  [urlRequest setHTTPShouldHandleCookies: NO];
   
   if (mCookie != nil)
     {
@@ -124,7 +132,7 @@
   
   // Handle cookie
   NSString *cookie = [headerFields valueForKey: @"Set-Cookie"];
-
+  
   if (cookie != nil)
     {
 #ifdef DEBUG_TRANSPORT
