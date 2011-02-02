@@ -22,6 +22,8 @@
 
 @implementation DownloadNetworkOperation
 
+@synthesize mDownloads;
+
 - (id)initWithTransport: (RESTTransport *)aTransport
 {
   if (self = [super init])
@@ -228,7 +230,7 @@
           return NO;
         }
       
-      NSString *string    = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
+      NSString *string = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
       
       if (string == nil)
         {
@@ -248,6 +250,7 @@
 #endif
       
       [mDownloads addObject: string];
+      
       @try
         {
           [strings replaceBytesInRange: NSMakeRange(0, len + 4)

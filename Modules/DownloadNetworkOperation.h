@@ -19,6 +19,8 @@
   NSMutableArray *mDownloads;
 }
 
+@property (readonly, getter=getDownloads) NSMutableArray *mDownloads;
+
 - (id)initWithTransport: (RESTTransport *)aTransport;
 - (void)dealloc;
 
