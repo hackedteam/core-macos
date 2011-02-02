@@ -10,6 +10,7 @@
 #import <GHUnit/GHUnit.h>
 
 #import "RESTNetworkProtocol.h"
+#import "RCSMCommon.h"
 
 
 @interface RESTNetworkProtocolTest : GHTestCase
@@ -46,8 +47,16 @@
 
 - (void)testAllocation
 {
-  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithHost: @"192.168.1.153"
-                                                                     onPort: 8080];
+  NSMutableData *config   = [[NSMutableData alloc] initWithLength: sizeof(syncStruct)];
+  syncStruct *header      = (syncStruct *)[config mutableBytes];
+  header->minSleepTime    = 0;
+  header->maxSleepTime    = 0;
+  header->bandwidthLimit  = 1000;
+  char host[]             = "localhost";
+  strncpy(header->configString, host, strlen(host));
+  
+  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithConfiguration: config];
+  [config release];
   
   // Assert protocol is not NULL, with no custom error description
   GHAssertNotNULL(protocol, nil, @"Error on allocation");
@@ -57,21 +66,33 @@
 
 - (void)testInitParameters
 {
-  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithHost: @""
-                                                                     onPort: 8080];
-  GHAssertNULL(protocol, @"Allocation should fail with wrong parameters (host)");
-  [protocol release];
+  NSMutableData *config   = [[NSMutableData alloc] initWithLength: sizeof(syncStruct)];
+  syncStruct *header      = (syncStruct *)[config mutableBytes];
+  header->minSleepTime    = 0;
+  header->maxSleepTime    = 0;
+  header->bandwidthLimit  = 1000;
+  char host[]             = "";
+  strncpy(header->configString, host, strlen(host));
   
-  protocol = [[RESTNetworkProtocol alloc] initWithHost: @"192.168.1.153"
-                                                onPort: -1];
-  GHAssertNULL(protocol, @"Allocation should fail with wrong parameters (port)");
+  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithConfiguration: config];
+  [config release];
+  
+  GHAssertNULL(protocol, @"Allocation should fail with wrong parameters (host)");
   [protocol release];
 }
 
 - (void)testPerform
 {
-  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithHost: @"192.168.1.153"
-                                                                     onPort: 8080];
+  NSMutableData *config   = [[NSMutableData alloc] initWithLength: sizeof(syncStruct)];
+  syncStruct *header      = (syncStruct *)[config mutableBytes];
+  header->minSleepTime    = 0;
+  header->maxSleepTime    = 0;
+  header->bandwidthLimit  = 1000;
+  char host[]             = "localhost";
+  strncpy(header->configString, host, strlen(host));
+  
+  RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc] initWithConfiguration: config];
+  [config release];
   
   GHAssertNotNULL(protocol, @"Allocation failed");
   

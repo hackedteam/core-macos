@@ -80,7 +80,10 @@ static ByeNetworkOperation *mBye        = nil;
                                                          onPort: 80];
   
   LogNetworkOperation *logOP = [[LogNetworkOperation alloc]
-                                initWithTransport: transport];
+                                initWithTransport: transport
+                                         minDelay: 0
+                                         maxDelay: 0
+                                        bandwidth: 1000];
   
   GHAssertNotNULL(logOP, nil, @"Error on allocation");
   
