@@ -60,9 +60,25 @@
 		1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */; };
 		1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
 		1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
+		1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
+		1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */; };
+		1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
 		1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
 		1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
 		1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
+		1AA1373212F6EFC900E0CD52 /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
+		1AA1373312F6EFC900E0CD52 /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
+		1AA1373412F6EFC900E0CD52 /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
+		1AA1373512F6EFC900E0CD52 /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
+		1AA1373612F6EFC900E0CD52 /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
+		1AA1373712F6EFC900E0CD52 /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
+		1AA1373812F6EFC900E0CD52 /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
+		1AA1373912F6EFC900E0CD52 /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
+		1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
+		1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
+		1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
+		1AA1376912F6FA2B00E0CD52 /* NSString+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */; };
+		1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */; };
 		1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
 		1AA84485113C26D1005FBADB /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
 		1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */; };
@@ -223,6 +239,9 @@
 		1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LogNetworkOperationTest.m; path = Tests/LogNetworkOperationTest.m; sourceTree = "<group>"; };
 		1A7FD33E12F1841200361B0B /* NSData+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+SHA1.h"; path = "Categories/NSData+SHA1.h"; sourceTree = "<group>"; };
 		1A7FD33F12F1841200361B0B /* NSData+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+SHA1.m"; path = "Categories/NSData+SHA1.m"; sourceTree = "<group>"; };
+		1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMFileSystemManager.h; path = Modules/RCSMFileSystemManager.h; sourceTree = "<group>"; };
+		1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManager.m; path = Modules/RCSMFileSystemManager.m; sourceTree = "<group>"; };
+		1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManagerTest.m; path = Tests/RCSMFileSystemManagerTest.m; sourceTree = "<group>"; };
 		1A84C8EC100F18B30069A8E5 /* TODO */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO; sourceTree = "<group>"; };
 		1AA84480113C22FE005FBADB /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspeex.a; path = Support/Speex/libspeex.a; sourceTree = "<group>"; };
 		1AA84484113C26D1005FBADB /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
@@ -332,6 +351,8 @@
 			children = (
 				1AE6B5610F8E2574004736EA /* Agents */,
 				1ADC5D7D12DDBE4E00650A1E /* Network */,
+				1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */,
+				1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */,
 				1A4434830F8B950B00CD910E /* RCSMConfManager.h */,
 				1A4434840F8B950B00CD910E /* RCSMConfManager.m */,
 				1A4434D50F8C907000CD910E /* RCSMEncryption.h */,
@@ -630,6 +651,7 @@
 			isa = PBXGroup;
 			children = (
 				1AF60BE112EF25DE0091F6F6 /* Network */,
+				1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
@@ -865,6 +887,8 @@
 				1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */,
 				1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */,
 				1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */,
+				1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */,
+				1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -892,7 +916,13 @@
 				1ABE7CDF0F7BA0A800BC61B1 /* RCSMSharedMemory.m in Sources */,
 				1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */,
 				1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */,
+				1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */,
 				1A4435490F8CB10800CD910E /* NSString+SHA1.m in Sources */,
+				1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */,
+				1AA1376912F6FA2B00E0CD52 /* NSString+Pascal.m in Sources */,
+				1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
+				1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */,
+				1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */,
 				1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */,
 				1ABEEE2E0F975CE100063113 /* RCSMCore.m in Sources */,
 				1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */,
@@ -904,10 +934,18 @@
 				1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */,
 				1A281D320FF501A400616589 /* RCSMCommunicationManager.m in Sources */,
 				1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */,
-				1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */,
-				1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */,
-				1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
-				1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */,
+				1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */,
+				1AA1373212F6EFC900E0CD52 /* AuthNetworkOperation.m in Sources */,
+				1AA1373312F6EFC900E0CD52 /* IDNetworkOperation.m in Sources */,
+				1AA1373412F6EFC900E0CD52 /* ConfNetworkOperation.m in Sources */,
+				1AA1373512F6EFC900E0CD52 /* DownloadNetworkOperation.m in Sources */,
+				1AA1373612F6EFC900E0CD52 /* UploadNetworkOperation.m in Sources */,
+				1AA1373712F6EFC900E0CD52 /* FSNetworkOperation.m in Sources */,
+				1AA1373812F6EFC900E0CD52 /* LogNetworkOperation.m in Sources */,
+				1AA1373912F6EFC900E0CD52 /* ByeNetworkOperation.m in Sources */,
+				1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */,
+				1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */,
+				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
