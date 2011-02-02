@@ -109,6 +109,9 @@ static ByeNetworkOperation *mBye    = nil;
         {
           GHTestLog(@"Server requested to send a new configuration");
           
+          gConfigurationName        = @"actual.conf";
+          gConfigurationUpdateName  = @"update.conf";
+          
           result = [mConf perform];
           GHAssertTrue(result, @"confOP went wrong");
           
