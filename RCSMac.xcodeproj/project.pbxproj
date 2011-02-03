@@ -28,6 +28,8 @@
 		1A107BF612E737060063759B /* RESTTransportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A107BF512E737060063759B /* RESTTransportTest.m */; };
 		1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */; };
 		1A12A0F21095BD350090C4D7 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
+		1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
+		1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
 		1A17CC611281B440001A74BD /* mach_override.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A14F1095F24C0090C4D7 /* mach_override.mm */; };
 		1A17CC621281B44A001A74BD /* RCSMAgentVoipSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */; };
 		1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */; };
@@ -52,6 +54,9 @@
 		1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */; };
+		1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
+		1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
 		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
 		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
 		1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */; };
@@ -146,7 +151,6 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		1A10793212E718920063759B /* RESTNetworkProtocolTest-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RESTNetworkProtocolTest-Info.plist"; sourceTree = "<group>"; };
 		1A10795612E720ED0063759B /* Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A10795A12E720ED0063759B /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
 		1A10797212E721850063759B /* GHUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GHUnit.framework; path = Library/Frameworks/GHUnit.framework; sourceTree = SDKROOT; };
@@ -160,6 +164,9 @@
 		1A12A0F11095BD350090C4D7 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1A12A14F1095F24C0090C4D7 /* mach_override.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mach_override.mm; path = Support/mach_override.mm; sourceTree = "<group>"; };
 		1A12A1501095F24C0090C4D7 /* mach_override.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mach_override.h; path = Support/mach_override.h; sourceTree = "<group>"; };
+		1A13FE4412F9B4F800B82938 /* RCSMLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMLogger.h; path = Support/RCSMLogger.h; sourceTree = "<group>"; };
+		1A13FE4512F9B4F800B82938 /* RCSMLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLogger.m; path = Support/RCSMLogger.m; sourceTree = "<group>"; };
+		1A13FE4C12F9B6B300B82938 /* RCSMDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMDebug.h; path = Support/RCSMDebug.h; sourceTree = "<group>"; };
 		1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentWebcam.m; path = Agents/RCSMAgentWebcam.m; sourceTree = "<group>"; };
 		1A1A2FD110611075001F1B5D /* RCSMAgentWebcam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentWebcam.h; path = Agents/RCSMAgentWebcam.h; sourceTree = "<group>"; };
 		1A1A2FDE106112CF001F1B5D /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = System/Library/Frameworks/QuickTime.framework; sourceTree = SDKROOT; };
@@ -209,6 +216,9 @@
 		1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableDictionary+ThreadSafe.m"; path = "Categories/NSMutableDictionary+ThreadSafe.m"; sourceTree = "<group>"; };
 		1A508AD111A692260067BF81 /* RCSMDesktopImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMDesktopImage.h; sourceTree = "<group>"; };
 		1A508B0411A6B1F20067BF81 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperationTest.m; path = Tests/UpgradeNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A521EC812FABAC00091ADD5 /* UpgradeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UpgradeNetworkOperation.h; path = Modules/UpgradeNetworkOperation.h; sourceTree = "<group>"; };
+		1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperation.m; path = Modules/UpgradeNetworkOperation.m; sourceTree = "<group>"; };
 		1A5B320C12E4A2AF00677A0B /* Transport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Transport.m; path = Modules/Transport.m; sourceTree = "<group>"; };
 		1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDNetworkOperation.h; path = Modules/IDNetworkOperation.h; sourceTree = "<group>"; };
 		1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperation.m; path = Modules/IDNetworkOperation.m; sourceTree = "<group>"; };
@@ -424,6 +434,9 @@
 				1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */,
 				1ABE7CDD0F7BA0A800BC61B1 /* RCSMSharedMemory.h */,
 				1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */,
+				1A13FE4412F9B4F800B82938 /* RCSMLogger.h */,
+				1A13FE4512F9B4F800B82938 /* RCSMLogger.m */,
+				1A13FE4C12F9B6B300B82938 /* RCSMDebug.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -436,6 +449,7 @@
 				1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */,
 				1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */,
 				1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */,
+				1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */,
 				1A28798512F080B20008973A /* FSNetworkOperationTest.m */,
 				1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */,
 				1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */,
@@ -578,6 +592,8 @@
 				1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */,
 				1A65115F12DDCA1900D4F1AF /* UploadNetworkOperation.h */,
 				1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */,
+				1A521EC812FABAC00091ADD5 /* UpgradeNetworkOperation.h */,
+				1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */,
 				1A65116212DDCA4600D4F1AF /* FSNetworkOperation.h */,
 				1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */,
 				1A65116512DDCA5700D4F1AF /* LogNetworkOperation.h */,
@@ -671,7 +687,6 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */,
-				1A10793212E718920063759B /* RESTNetworkProtocolTest-Info.plist */,
 				1A10795A12E720ED0063759B /* Tests-Info.plist */,
 			);
 			name = RCSMac;
@@ -882,6 +897,8 @@
 				1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */,
 				1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */,
 				1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */,
+				1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */,
+				1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -898,6 +915,7 @@
 				1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */,
 				1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */,
 				1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */,
+				1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -938,6 +956,8 @@
 				1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */,
 				1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */,
 				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
+				1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */,
+				1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

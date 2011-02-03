@@ -16,6 +16,7 @@
 #import "ConfNetworkOperation.h"
 #import "DownloadNetworkOperation.h"
 #import "UploadNetworkOperation.h"
+#import "UpgradeNetworkOperation.h"
 #import "FSNetworkOperation.h"
 #import "LogNetworkOperation.h"
 #import "ByeNetworkOperation.h"
@@ -218,6 +219,20 @@
               }
             
             [upOP release];
+          } break;
+        case PROTO_UPGRADE:
+          {
+            UpgradeNetworkOperation *upgradeOP = [[UpgradeNetworkOperation alloc]
+                                                  initWithTransport: transport];
+            
+            if ([upgradeOP perform] == NO)
+              {
+#ifdef DEBUG_PROTO
+                errorLog(ME, @"Error on UPGRADE");
+#endif
+              }
+            
+            [upgradeOP release];
           } break;
         case PROTO_FILESYSTEM:
           {
