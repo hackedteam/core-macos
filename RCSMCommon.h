@@ -715,13 +715,6 @@ void printFormatFlags(AudioStreamBasicDescription inDescription);
 
 size_t _utf16len(unichar *string);
 
-#ifdef DEBUG_LOG
-void debugLog(const char *callerMethod, NSString *format, ...);
-void warnLog(const char *callerMethod, NSString *format, ...);
-void infoLog(const char *callerMethod, NSString *format, ...);
-void errorLog(const char *callerMethod, NSString *format, ...);
-#endif
-
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);
 #endif

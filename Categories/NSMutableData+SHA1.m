@@ -10,7 +10,11 @@
 
 #import <CommonCrypto/CommonDigest.h>
 #import <openssl/sha.h>
+
 #import "NSMutableData+SHA1.h"
+
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation NSMutableData (SHA1Extension)

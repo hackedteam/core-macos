@@ -10,7 +10,11 @@
 
 #import <CommonCrypto/CommonDigest.h>
 #import <openssl/sha.h>
+
 #import "NSData+SHA1.h"
+
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation NSData (SHA1)
@@ -34,8 +38,6 @@
  	for (i = 0; i < SHA_DIGEST_LENGTH; i++)
     sprintf(finalDigest + i * 2, "%02x", digest[i]);
   
-  //return [NSString stringWithCString: finalDigest
-  //                            length: 2 * SHA_DIGEST_LENGTH];
   return [NSString stringWithCString: finalDigest
                             encoding: NSUTF8StringEncoding];
 }

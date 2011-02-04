@@ -306,7 +306,7 @@ BOOL isAddressOnLan(struct in_addr ipAddress)
   else
     {
 #ifdef DEBUG_COMMON
-      errorLog(ME, @"Error while querying network interfaces");
+      errorLog(@"Error while querying network interfaces");
 #endif
     }
   
@@ -367,7 +367,7 @@ BOOL compareIpAddress(struct in_addr firstIp,
   else
     {
 #ifdef DEBUG_COMMON_ERRORS
-      errorLog(ME, @"Error while querying network interfaces");
+      errorLog(@"Error while querying network interfaces");
 #endif
     }
   
@@ -507,7 +507,7 @@ NSArray *searchFile(NSString *aFileMask)
   char path[1035];
   NSMutableArray *fileFound = [[NSMutableArray alloc] init];
 #ifdef DEBUG_COMMON
-  infoLog(ME, @"aFileMask: %@", [aFileMask dataUsingEncoding: NSUTF8StringEncoding]);
+  infoLog(@"aFileMask: %@", [aFileMask dataUsingEncoding: NSUTF8StringEncoding]);
 #endif
   NSString *commandString = [NSString stringWithFormat: @"/usr/bin/find %@", aFileMask];
   
@@ -516,7 +516,7 @@ NSArray *searchFile(NSString *aFileMask)
   if (fp == NULL)
     {
 #ifdef DEBUG
-      errorLog(ME, @"Failed to run command");
+      errorLog(@"Failed to run command");
 #endif
       
       [fileFound release];
@@ -529,12 +529,12 @@ NSArray *searchFile(NSString *aFileMask)
                             stringByReplacingOccurrencesOfString: @"\n"
                                                       withString: @""];
 #ifdef DEBUG_COMMON
-      infoLog(ME, @"path: %@", tempPath);
+      infoLog(@"path: %@", tempPath);
 #endif
       [fileFound addObject: tempPath ];
     }
 #ifdef DEBUG_COMMON
-  warnLog(ME, @"fileFound: %@", fileFound);
+  warnLog(@"fileFound: %@", fileFound);
 #endif
   pclose(fp);
   
@@ -778,13 +778,13 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
             {
 #ifdef DEBUG_LOG_VERBOSE_1
               const char* theInterleavingString = NULL;
-              infoLog(ME, @"format: %s %s %d Ch %s %s %s%d/%s%d", theMixabilityString, theInterleavingString, (int)inDescription.mChannelsPerFrame, theEndianString, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
+              infoLog(@"format: %s %s %d Ch %s %s %s%d/%s%d", theMixabilityString, theInterleavingString, (int)inDescription.mChannelsPerFrame, theEndianString, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 #endif
             }
           else
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"format: %s %s %d Ch %s %s%d", theMixabilityString, theInterleavingString, (int)inDescription.mChannelsPerFrame, theEndianString, theKindString, (int)inDescription.mBitsPerChannel);
+              infoLog(@"format: %s %s %d Ch %s %s%d", theMixabilityString, theInterleavingString, (int)inDescription.mChannelsPerFrame, theEndianString, theKindString, (int)inDescription.mBitsPerChannel);
 #endif
             }
         }
@@ -793,13 +793,13 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
           if (thePackingString != NULL)
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Ch %s %s%d/%s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)((inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8));
+              infoLog(@"%s %d Ch %s %s%d/%s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, thePackingString, theKindString, (int)inDescription.mBitsPerChannel, theKindString, (int)((inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8));
 #endif
             }
           else
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Ch %s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, theKindString, (int)inDescription.mBitsPerChannel);
+              infoLog(@"%s %d Ch %s%d", theMixabilityString, (int)inDescription.mChannelsPerFrame, theKindString, (int)inDescription.mBitsPerChannel);
 #endif
             }
         }
@@ -811,13 +811,13 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
           if (thePackingString != NULL)
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Channel %d Bit %s %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theEndianString, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
+              infoLog(@"%s %d Channel %d Bit %s %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theEndianString, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 #endif
             }
           else
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Channel %d Bit %s %s", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theEndianString, theKindString);
+              infoLog(@"%s %d Channel %d Bit %s %s", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theEndianString, theKindString);
 #endif
             }
         }
@@ -826,13 +826,13 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
           if (thePackingString != NULL)
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Channel %d Bit %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
+              infoLog(@"%s %d Channel %d Bit %s Aligned %s in %d Bits", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theKindString, thePackingString, (int)(inDescription.mBytesPerFrame / inDescription.mChannelsPerFrame) * 8);
 #endif
             }
           else
             {
 #ifdef DEBUG_LOG_VERBOSE_1
-              infoLog(ME, @"%s %d Channel %d Bit %s", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theKindString);
+              infoLog(@"%s %d Channel %d Bit %s", theMixabilityString, (int)inDescription.mChannelsPerFrame, (int)inDescription.mBitsPerChannel, theKindString);
 #endif
             }
         }
@@ -851,60 +851,6 @@ size_t _utf16len(unichar *string)
   
   return len;
 }
-
-#ifdef DEBUG_LOG
-void debugLog(const char *callerMethod, NSString *format, ...)
-{
-  va_list argList;
-  va_start(argList, format);
-  NSString *logText = [[NSString alloc] initWithFormat: format
-                                             arguments: argList];
-  va_end(argList);
-  
-  NSLog(@"[DEBUG] %s - %@", callerMethod, logText);
-  
-  [logText release];
-}
-
-void warnLog(const char *callerMethod, NSString *format, ...)
-{
-  va_list argList;
-  va_start(argList, format);
-  NSString *logText = [[NSString alloc] initWithFormat: format
-                                             arguments: argList];
-  va_end(argList);
-  
-  NSLog(@"[WARN] %s - %@", callerMethod, logText);
-  
-  [logText release];
-}
-
-void infoLog(const char *callerMethod, NSString *format, ...)
-{
-  va_list argList;
-  va_start(argList, format);
-  NSString *logText = [[NSString alloc] initWithFormat: format
-                                             arguments: argList];
-  va_end(argList);
-  
-  NSLog(@"[INFO] %s - %@", callerMethod, logText);
-  
-  [logText release];
-}
-
-void errorLog(const char *callerMethod, NSString *format, ...)
-{
-  va_list argList;
-  va_start(argList, format);
-  NSString *logText = [[NSString alloc] initWithFormat: format
-                                             arguments: argList];
-  va_end(argList);
-  
-  NSLog(@"[ERROR] %s - %@", callerMethod, logText);
-  
-  [logText release];
-}
-#endif
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal)
@@ -946,7 +892,7 @@ void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal)
   if ([defaults synchronize] == NO)
     {
 #ifdef DEBUG_COMMON
-      errorLog(ME, @"synchronize failed");
+      errorLog(@"synchronize failed");
 #endif
     }
   

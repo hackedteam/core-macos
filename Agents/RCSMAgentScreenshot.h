@@ -15,7 +15,6 @@
 #ifndef __RCSMAgentScreenshot_h__
 #define __RCSMAgentScreenshot_h__
 
-#import "RCSMCommon.h"
 #import "RCSMLogManager.h"
 
 

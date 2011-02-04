@@ -8,6 +8,9 @@
 
 #import "NSString+Pascal.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation NSString (PascalExtension)
 

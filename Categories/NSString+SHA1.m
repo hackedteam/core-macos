@@ -14,6 +14,9 @@
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation NSString (SHA1)
 

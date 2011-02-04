@@ -8,6 +8,9 @@
 
 #import "NSData+Pascal.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation NSData (PascalExtension)
 

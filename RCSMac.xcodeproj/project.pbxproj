@@ -85,6 +85,8 @@
 		1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */; };
 		1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
 		1AA84485113C26D1005FBADB /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
+		1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */; };
+		1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
 		1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */; };
 		1ABE7CDF0F7BA0A800BC61B1 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */; };
@@ -248,9 +250,9 @@
 		1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMFileSystemManager.h; path = Modules/RCSMFileSystemManager.h; sourceTree = "<group>"; };
 		1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManager.m; path = Modules/RCSMFileSystemManager.m; sourceTree = "<group>"; };
 		1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManagerTest.m; path = Tests/RCSMFileSystemManagerTest.m; sourceTree = "<group>"; };
-		1A84C8EC100F18B30069A8E5 /* TODO */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO; sourceTree = "<group>"; };
 		1AA84480113C22FE005FBADB /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspeex.a; path = Support/Speex/libspeex.a; sourceTree = "<group>"; };
 		1AA84484113C26D1005FBADB /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
+		1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLoggerTest.m; path = Tests/RCSMLoggerTest.m; sourceTree = "<group>"; };
 		1AB5DC3F11CF9DE600B9E32B /* NSApplication+SystemVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSApplication+SystemVersion.h"; path = "Categories/NSApplication+SystemVersion.h"; sourceTree = "<group>"; };
 		1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSApplication+SystemVersion.m"; path = "Categories/NSApplication+SystemVersion.m"; sourceTree = "<group>"; };
 		1ABE7CDD0F7BA0A800BC61B1 /* RCSMSharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMSharedMemory.h; path = Support/RCSMSharedMemory.h; sourceTree = "<group>"; };
@@ -476,6 +478,7 @@
 		1A2877D712F039B60008973A /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				1AAF6FC712FB0A6000D3E581 /* Support */,
 				1AF60C5812F02F600091F6F6 /* Modules */,
 				1AF60BE212EF25EF0091F6F6 /* Categories */,
 			);
@@ -566,6 +569,14 @@
 				1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */,
 			);
 			name = Voip;
+			sourceTree = "<group>";
+		};
+		1AAF6FC712FB0A6000D3E581 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */,
+			);
+			name = Support;
 			sourceTree = "<group>";
 		};
 		1ADC5D7D12DDBE4E00650A1E /* Network */ = {
@@ -715,7 +726,6 @@
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
-				1A84C8EC100F18B30069A8E5 /* TODO */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -899,6 +909,8 @@
 				1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */,
 				1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */,
 				1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
+				1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */,
+				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
