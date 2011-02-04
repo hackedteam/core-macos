@@ -11,11 +11,11 @@
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
 
-#import "RCSMCommunicationManager.h"
 #import "RESTNetworkProtocol.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
+#import "RCSMCommon.h"
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
