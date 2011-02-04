@@ -6,7 +6,6 @@
 #
 # Xcode
 #
-*.pch
 *.xib
 *.mode*
 *.perspectivev3
@@ -14,6 +13,8 @@
 build/*
 Tests*.plist
 *Test-Info.plist
+*.xcworkspace
+xcuserdata
 
 #
 # vim
