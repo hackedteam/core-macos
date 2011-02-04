@@ -1,8 +1,8 @@
 /*
  * RCSMac - Log Manager
  *  Logging facilities, this class is a singleton which will be referenced
- *  by RCSMCommunicationManager and all the single agents providing ways for
- *  writing log data per agentID.
+ *  by all the single agents providing ways for writing log data per agentID
+ *  or agentLogFileHandle.
  *
  * 
  * Created by Alfredo 'revenge' Pesoli on 16/06/2009
