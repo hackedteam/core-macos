@@ -11,8 +11,6 @@
 *.perspectivev3
 *.pbxuser
 build/*
-Tests*.plist
-*Test-Info.plist
 *.xcworkspace
 xcuserdata
 
