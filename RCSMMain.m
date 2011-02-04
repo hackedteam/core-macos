@@ -13,7 +13,6 @@
 #import "RCSMCommon.h"
 #import "RCSMConfManager.h"
 #import "RCSMTaskManager.h"
-#import "RCSMCommunicationManager.h"
 
 #import "RCSMDesktopImage.h"
 #import "RCSMDebug.h"

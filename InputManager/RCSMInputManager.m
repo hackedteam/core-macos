@@ -27,7 +27,6 @@
 #import "RCSMInputManager.h"
 #import "RCSMAgentVoipSkype.h"
 
-#import "RCSMCommunicationManager.h"
 
 //#define DEBUG_TMP
 //#define DEBUG
