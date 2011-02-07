@@ -51,7 +51,7 @@
   
   if (success == NO)
     {
-#ifdef DEBUG
+#ifdef DEBUG_UPGRADE_NOP
       errorLog(@"Error while changing attributes on the upgrade file");
 #endif
       return success;
@@ -104,7 +104,7 @@
 
 - (id)initWithTransport: (RESTTransport *)aTransport
 {
-  if (self = [super init])
+  if ((self = [super init]))
     {
       mTransport = aTransport;
       
