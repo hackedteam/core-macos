@@ -2776,7 +2776,8 @@ static void computerWillShutdown(CFMachPortRef port,
   else if (gOSMajor == 10 && gOSMinor == 5 && geteuid() == 0)
     {
       // Only for leopard send pid to new activity monitor via shmem
-      if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
+      if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
+      //if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
         {
           // Write command with pid
           [self shareCorePidOnShMem];
