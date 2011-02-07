@@ -321,7 +321,7 @@ BOOL isAddressAlreadyDetected(NSString *ipAddress,
   NSEnumerator *enumerator = [ipDetectedList objectEnumerator];
   id anObject;
   
-  while (anObject = [enumerator nextObject])
+  while ((anObject = [enumerator nextObject]))
     {
       if ([[anObject objectForKey: @"ip"] isEqualToString: ipAddress])
         {
@@ -515,7 +515,7 @@ NSArray *searchFile(NSString *aFileMask)
   
   if (fp == NULL)
     {
-#ifdef DEBUG
+#ifdef DEBUG_COMMON
       errorLog(@"Failed to run command");
 #endif
       
