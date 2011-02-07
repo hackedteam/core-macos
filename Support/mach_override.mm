@@ -181,7 +181,7 @@ mach_override(
   if (originalFunctionPtr != NULL)
     {
 #ifdef DEBUG
-      NSLog(@"function found @ 0x%08x", originalFunctionPtr);
+      NSLog(@"function found @ 0x%p", originalFunctionPtr);
 #endif
     }
   else
@@ -653,7 +653,7 @@ eatKnownInstructions(
 		// See if instruction matches one  we know
 		AsmInstructionMatch* curInstr = possibleInstructions;
 		do { 
-			if (curInstructionKnown = codeMatchesInstruction(ptr, curInstr)) break;
+			if ((curInstructionKnown = codeMatchesInstruction(ptr, curInstr))) break;
 			curInstr++;
 		} while (curInstr->length > 0);
 		
