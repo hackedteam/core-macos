@@ -16,9 +16,9 @@
 #import "RCSMCommon.h"
 #import "RCSMSharedMemory.h"
 
+#import "RCSMDebug.h"
+#import "RCSMLogger.h"
 
-//#define DEBUG_ERRORS
-//#define DEBUG_VERBOSE_1
 
 // access permissions on shared memory 0666
 #define GLOBAL_PERMISSIONS 0666
@@ -62,8 +62,8 @@ static int testPreviousTime = 0;
     {
       if (sem_close(mSemaphoreID) == 0)
         {
-#ifdef DEBUG
-          NSLog(@"Semaphore closed correctly");
+#ifdef DEBUG_SHMEM
+          infoLog(@"Semaphore closed correctly");
 #endif
         }
     }
@@ -79,7 +79,7 @@ static int testPreviousTime = 0;
   
   if (mSharedMemoryID == -1)
     {
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_SHMEM
       char *error = NULL;
       switch (errno)
         {
@@ -91,15 +91,15 @@ static int testPreviousTime = 0;
         default:     error = EUNKNOWN_STR;
         }
       
-      NSLog(@"Error shmget: %s", error);
+      errorLog(@"Error shmget: %s", error);
 #endif
       
       return -1;
     }
 
-#ifdef DEBUG
-  NSLog(@"SharedMemoryID: %d", mSharedMemoryID);
-  NSLog(@"Key: %d", mKey);
+#ifdef DEBUG_SHMEM
+  infoLog(@"SharedMemoryID: %d", mSharedMemoryID);
+  infoLog(@"Key: %d", mKey);
 #endif
   
   return 0;
@@ -111,7 +111,7 @@ static int testPreviousTime = 0;
   
   if (mSharedMemory == NULL)
     {
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_SHMEM
       char *error = NULL;
       switch (errno)
         {
@@ -122,14 +122,14 @@ static int testPreviousTime = 0;
         default:     error = EUNKNOWN_STR;
         }
       
-      NSLog(@"Error shmat: %s", error);
+      errorLog(@"Error shmat: %s", error);
 #endif
       
       return -1;
     }
   
-#ifdef DEBUG
-  NSLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
+#ifdef DEBUG_SHMEM
+  infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
 #endif
   
   mSemaphoreID = sem_open((const char *)mSemaphoreName, 
@@ -139,8 +139,8 @@ static int testPreviousTime = 0;
   
   if ((int *)mSemaphoreID == SEM_FAILED)
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"An error occured while opening semaphore in sem_open()");
+#ifdef DEBUG_SHMEM
+      errorLog(@"An error occured while opening semaphore in sem_open()");
 #endif
       shmdt(mSharedMemory);
       
@@ -163,14 +163,14 @@ static int testPreviousTime = 0;
         {
           // Remove the segment in order to free the key and memory
           shmctl(mSharedMemoryID, IPC_RMID, NULL);
-#ifdef DEBUG
-          NSLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
+#ifdef DEBUG_SHMEM
+          infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
 #endif
         }
       else
         {
-#ifdef DEBUG
-          NSLog(@"We have still someone attached here dude, can't destroy");
+#ifdef DEBUG_SHMEM
+          infoLog(@"We have still someone attached here dude, can't destroy");
 #endif
           //shmctl(mSharedMemoryID, IPC_RMID, NULL);
         }
@@ -193,8 +193,8 @@ static int testPreviousTime = 0;
   
   if (mSize < SHMEM_LOG_MAX_SIZE)
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"[EE] clearConfigurations can't be used on the command queue");
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] clearConfigurations can't be used on the command queue");
 #endif      
       return FALSE;
     }
@@ -229,16 +229,16 @@ static int testPreviousTime = 0;
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
     {
-#ifdef DEBUG_ERRORS_VERBOSE_1
-      NSLog(@"[EE] readMemory-command unsupported component");
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] readMemory-command unsupported component");
 #endif
       return nil;
     }
   
   if (anOffset == 0)
     {
-#ifdef DEBUG_ERRORS_VERBOSE_1
-      NSLog(@"[EE] readMemory-command offset is zero");
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] readMemory-command offset is zero");
 #endif
       return nil;
     }
@@ -251,8 +251,8 @@ static int testPreviousTime = 0;
       //
       if (aComponent ^ memoryHeader->direction == 0)
         {
-#ifdef DEBUG
-          NSLog(@"Found data on shared memory");
+#ifdef DEBUG_SHMEM
+          infoLog(@"Found data on shared memory");
 #endif
           readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
                                                    length: sizeof(shMemoryCommand)];
@@ -282,16 +282,16 @@ static int testPreviousTime = 0;
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
     {
-#ifdef DEBUG_ERRORS_VERBOSE_1
-      NSLog(@"[EE] readMemory-log unsupported component");
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] readMemory-log unsupported component");
 #endif
       return nil;
     }
   
   if (anAgentID == 0 && aCommandType == 0)
     {
-#ifdef DEBUG_ERRORS_VERBOSE_1
-      NSLog(@"[EE] readMemory-log usupported read");
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] readMemory-log usupported read");
 #endif
     }
   
@@ -326,8 +326,8 @@ static int testPreviousTime = 0;
       
       if (tempState == SHMEM_LOCKED)
         {
-#ifdef DEBUG_ERRORS
-          NSLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
+#ifdef DEBUG_SHMEM
+          verboseLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
 #endif
         }
       
@@ -366,8 +366,8 @@ static int testPreviousTime = 0;
         {
           if (tmpDirection ^ aComponent == 0)
             {
-#ifdef DEBUG_VERBOSE_1
-              NSLog(@"[ii] Found data matching our request on shmem");
+#ifdef DEBUG_SHMEM
+              infoLog(@"[ii] Found data matching our request on shmem");
 #endif
               
               blockMatched = YES;
@@ -395,16 +395,16 @@ static int testPreviousTime = 0;
   
   if (blockMatched == YES)
     {
-      //NSLog(@"lowest Timestamp: %x", lowestTimestamp);
+      //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
       
       if (testPreviousTime != 0)
         {
           if (lowestTimestamp < testPreviousTime)
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"ANOMALY DETECTED in shared memory!");
-              NSLog(@"previousTimestamp: %x", testPreviousTime);
-              NSLog(@"lowestTimestamp  : %x", lowestTimestamp);
+#ifdef DEBUG_SHMEM
+              verboseLog(@"ANOMALY DETECTED in shared memory!");
+              verboseLog(@"previousTimestamp: %x", testPreviousTime);
+              verboseLog(@"lowestTimestamp  : %x", lowestTimestamp);
 #endif
             }
         }
@@ -420,7 +420,7 @@ static int testPreviousTime = 0;
     }
   else
     {
-      //NSLog(@"block not found while reading!!!!!");
+      //infoLog(@"block not found while reading!!!!!");
       
       return nil;
     }
@@ -462,8 +462,8 @@ static int testPreviousTime = 0;
           
           if (anOffset >= SHMEM_LOG_MAX_SIZE)
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"[EE] SHMem - write didn't found an available memory block");
+#ifdef DEBUG_SHMEM
+              errorLog(@"[EE] SHMem - write didn't found an available memory block");
 #endif
 
               return FALSE;
@@ -471,7 +471,7 @@ static int testPreviousTime = 0;
         }
       while (memoryState != SHMEM_FREE);
       
-      //NSLog(@"Block written @ 0x%x", anOffset);
+      //infoLog(@"Block written @ 0x%x", anOffset);
       memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
     }
   else
@@ -481,9 +481,9 @@ static int testPreviousTime = 0;
       memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
     }
 
-#ifdef DEBUG_VERBOSE_2
+#ifdef DEBUG_SHMEM
   for (int x = 0; x < [aData length]; x += sizeof(int))
-    NSLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
+    infoLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
 #endif
   
   return TRUE;

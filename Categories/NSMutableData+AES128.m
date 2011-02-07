@@ -10,9 +10,9 @@
  */
 
 #import "NSMutableData+AES128.h"
-#import "RCSMCommon.h"
 
-//#define DEBUG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @implementation NSMutableData (AES128)
@@ -23,8 +23,8 @@
   int outLen = 0;
   BOOL needsPadding = YES;
   
-#ifdef DEBUG
-  infoLog(ME, @"self length: %d", [self length]);
+#ifdef DEBUG_MUTABLE_AES
+  infoLog(@"self length: %d", [self length]);
 #endif
   
   if ([self length] % kCCBlockSizeAES128)
@@ -42,9 +42,9 @@
       needsPadding  = NO;
     }
   
-#ifdef DEBUG
-  infoLog(ME, @"outLen: %d", outLen);
-  infoLog(ME, @"pad: %d", pad);
+#ifdef DEBUG_MUTABLE_AES
+  infoLog(@"outLen: %d", outLen);
+  infoLog(@"pad: %d", pad);
 #endif
   
   //
@@ -77,7 +77,7 @@
 
 - (CCCryptorStatus)decryptWithKey: (NSData *)aKey
 {
-#ifdef DEBUG
+#ifdef DEBUG_MUTABLE_AES
   NSLog(@"self length: %d", [self length]);
 #endif
   
@@ -93,6 +93,20 @@
                                    &numBytesDecrypted);
   
   return result;
+}
+
+- (void)removePadding
+{
+  // remove padding
+  char bytesOfPadding;
+  [self getBytes: &bytesOfPadding
+           range: NSMakeRange([self length] - 1, sizeof(char))];
+  
+#ifdef DEBUG_MUTABLE_AES
+  infoLog(@"byte: %d", bytesOfPadding);
+#endif
+  
+  [self setLength: [self length] - bytesOfPadding];
 }
 
 @end

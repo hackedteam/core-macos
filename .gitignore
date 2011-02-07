@@ -6,12 +6,13 @@
 #
 # Xcode
 #
-*.pch
 *.xib
 *.mode*
 *.perspectivev3
 *.pbxuser
 build/*
+*.xcworkspace
+xcuserdata
 
 #
 # vim
@@ -22,5 +23,3 @@ build/*
 # var files
 #
 log
-*.icns
-*.tiff

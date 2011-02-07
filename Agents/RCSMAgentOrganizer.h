@@ -12,7 +12,6 @@
 #ifndef __RCSMAgentOrganizer_h__
 #define __RCSMAgentOrganizer_h__
 
-#import "RCSMCommon.h"
 #import "RCSMLogManager.h"
 
 
