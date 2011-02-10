@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A00BF9913019C8000783D4E /* RCSMAgentOrganizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */; };
+		1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */; };
 		1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
 		1A10796212E721320063759B /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
 		1A10796412E721320063759B /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
@@ -65,6 +67,7 @@
 		1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
 		1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */; };
 		1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
+		1A8A7877130027610024B9CF /* RCSMAgentOrganizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */; };
 		1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
 		1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
 		1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
@@ -401,6 +404,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1A00BFAB1302D2FF00783D4E /* Agents */ = {
+			isa = PBXGroup;
+			children = (
+				1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */,
+			);
+			name = Agents;
+			sourceTree = "<group>";
+		};
 		1A10798712E722440063759B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
@@ -655,6 +666,7 @@
 		1AF60C5812F02F600091F6F6 /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				1A00BFAB1302D2FF00783D4E /* Agents */,
 				1AF60BE112EF25DE0091F6F6 /* Network */,
 				1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */,
 			);
@@ -856,6 +868,7 @@
 				1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */,
 				1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */,
 				1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */,
+				1A00BF9913019C8000783D4E /* RCSMAgentOrganizer.m in Sources */,
 				1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */,
 				1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */,
 				1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */,
@@ -893,6 +906,7 @@
 				1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
 				1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */,
 				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
+				1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -934,6 +948,7 @@
 				1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */,
 				1A33F4B20FC69D1800590FA1 /* RCSMTaskManager.m in Sources */,
 				1A33F4F30FC6AA9400590FA1 /* RCSMAgentScreenshot.m in Sources */,
+				1A8A7877130027610024B9CF /* RCSMAgentOrganizer.m in Sources */,
 				1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */,
 				1A7A94160FE13EC7007FF947 /* RCSMActions.m in Sources */,
 				1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */,

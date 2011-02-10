@@ -14,7 +14,6 @@
 
 #import "RCSMLogManager.h"
 
-
 #define	CONTACT_LOG_VERSION	0x01000000
 
 
@@ -23,8 +22,6 @@
 @private
   NSMutableDictionary *mConfiguration;
 }
-
-//@property (getter=getConfiguration, setter=setConfiguration:, readwrite, copy) NSMutableDictionary *mConfiguration;
 
 + (RCSMAgentOrganizer *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
