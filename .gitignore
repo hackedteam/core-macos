@@ -13,6 +13,7 @@
 build/*
 *.xcworkspace
 xcuserdata
+project_backup.pbxproj
 
 #
 # vim
