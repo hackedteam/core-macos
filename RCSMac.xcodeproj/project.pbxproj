@@ -38,10 +38,8 @@
 		1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */; };
 		1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */; };
 		1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28798512F080B20008973A /* FSNetworkOperationTest.m */; };
-		1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */; };
 		1A319EE50FA9B6410079B060 /* RCSMInputManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A319EE40FA9B6410079B060 /* RCSMInputManager.m */; };
 		1A319F090FA9C8260079B060 /* Info in Resources */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
-		1A319F0D0FA9C85A0079B060 /* Info in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
 		1A319F1F0FA9ED520079B060 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		1A319F880FAA02640079B060 /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A33F4B20FC69D1800590FA1 /* RCSMTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */; };
@@ -136,23 +134,10 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		1AF610640FA75C18003F2C12 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = RCSMInputManager;
-			dstSubfolderSpec = 16;
-			files = (
-				1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */,
-				1A319F0D0FA9C85A0079B060 /* Info in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentOrganizerTest.m; path = Tests/RCSMAgentOrganizerTest.m; sourceTree = "<group>"; };
 		1A10795612E720ED0063759B /* Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A10795A12E720ED0063759B /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
 		1A10797212E721850063759B /* GHUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GHUnit.framework; path = Library/Frameworks/GHUnit.framework; sourceTree = SDKROOT; };
@@ -289,7 +274,6 @@
 		1AF92CC50F947FEE009ED774 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
 		1AFBE66312A0082600BFA7D0 /* RCSMAgentOrganizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentOrganizer.h; path = Agents/RCSMAgentOrganizer.h; sourceTree = "<group>"; };
 		1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentOrganizer.m; path = Agents/RCSMAgentOrganizer.m; sourceTree = "<group>"; };
-		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* RCSMMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMMain.m; sourceTree = "<group>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* RCSMac_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMac_Prefix.pch; sourceTree = "<group>"; };
@@ -725,7 +709,6 @@
 				1AF92CB00F947D53009ED774 /* spref.tiff */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
-				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -766,7 +749,6 @@
 				1AF610050FA72D87003F2C12 /* Resources */,
 				1AF610060FA72D87003F2C12 /* Sources */,
 				1AF610070FA72D87003F2C12 /* Frameworks */,
-				1AF610640FA75C18003F2C12 /* CopyFiles */,
 				1A319E540FA896480079B060 /* Rez */,
 			);
 			buildRules = (
@@ -982,14 +964,6 @@
 				089C165DFE840E0CC02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		1DDD58140DA1D0A300B32029 /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DDD58150DA1D0A300B32029 /* English */,
-			);
-			name = MainMenu.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
