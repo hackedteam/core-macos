@@ -168,9 +168,15 @@ static RCSMLogger *sharedLogger = nil;
       break;
     }
   
-  entry = [[NSString alloc] initWithFormat: @"[%@]%@%s:%d - %@",
+  NSThread *thread     = [NSThread currentThread];
+  NSString *threadDesc = [thread description];
+  int threadNo         = [[threadDesc substringWithRange:
+                           NSMakeRange([threadDesc length] - 2, 1)] intValue];
+  
+  entry = [[NSString alloc] initWithFormat: @"[%@]%@[TID:%d]%s:%d - %@",
                                             dateString,
                                             level,
+                                            threadNo,
                                             aCaller,
                                             aLineNumber,
                                             logString];
