@@ -73,7 +73,6 @@
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMAgentOrganizer *agent = [RCSMAgentOrganizer sharedInstance];
   BOOL success              = YES;
   id mock                   = [OCMockObject partialMockForObject:
                                [RCSMAgentOrganizer sharedInstance]];

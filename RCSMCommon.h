@@ -26,10 +26,6 @@
 #import "RCSMSharedMemory.h"
 #import "RCSMUtils.h"
 
-//#define DEMO_VERSION
-//#define DEV_MODE
-//#define DEBUG_LOG
-
 #define INPUT_MANAGER_FOLDER @"appleHID"
 #define OSAX_FOLDER @"appleOsax"
 #define ME __func__

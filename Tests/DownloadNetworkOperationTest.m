@@ -112,10 +112,6 @@ static ByeNetworkOperation *mBye        = nil;
       if ([[commandList objectAtIndex: i] unsignedIntValue] == PROTO_DOWNLOAD)
         {
           GHTestLog(@"Server requested a file download");
-          //BOOL success = YES;
-          
-          //id mockTaskManager = [OCMockObject partialMockForObject: [RCSMTaskManager sharedInstance]];
-          //[[[mockTaskManager stub] andReturn: OCMOCK_VALUE(success)] _uploadFiles];
           
           result = [mDown perform];
           GHAssertTrue(result, @"downOP went wrong");

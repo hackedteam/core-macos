@@ -52,6 +52,7 @@ static RCSMEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
 NSLock *connectionLock;
 
+
 @implementation RCSMEvents
 
 #pragma mark -
@@ -401,7 +402,6 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
-  //[[NSRunLoop currentRunLoop] run];
   
   [configuration retain];
   
