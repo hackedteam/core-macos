@@ -12,6 +12,7 @@
 #import <GHUnit/GHUnit.h>
 
 #import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 
 @interface RCSMLoggerTest : GHTestCase
@@ -46,19 +47,23 @@
   // Run after each test method
 }
 
+#ifdef ENABLE_LOGGING
+
 - (void)testInfo
 {
-  debugInfo(@"Test for INFO level");
+  logInfo(@"Test for INFO level");
 }
 
 - (void)testWarn
 {
-  debugWarn(@"Test for WARN level");
+  logWarn(@"Test for WARN level");
 }
 
 - (void)testError
 {
-  debugErr(@"Test for ERR level");
+  logErr(@"Test for ERR level");
 }
+
+#endif
 
 @end

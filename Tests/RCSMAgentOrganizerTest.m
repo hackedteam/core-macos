@@ -14,6 +14,7 @@
 
 #import "RCSMAgentOrganizer.h"
 #import "RCSMLogger.h"
+#import "RCSMDebug.h"
 
 #define AGENT_ORGANIZER   0x0200
 
@@ -54,6 +55,7 @@
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+#ifdef ENABLE_LOGGING
   if ([[aNotification name] isEqualToString: @"mockLog"])
     infoLog(@"mock object called on _logData for AgentOrganizer");
   
@@ -65,6 +67,7 @@
   
   if ([[aNotification name] isEqualToString: @"mockClose"])
     infoLog(@"mock object called on create stub");
+#endif
   
   [outerPool release];
 }
