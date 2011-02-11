@@ -12,14 +12,17 @@
 
 /* Testing */
 //#define DEMO_MODE
-//#define DEV_MODE              // You need to hardcode keys in RCSMCommon
+//#define DEV_MODE          // Remember to hardcode keys in RCSMCommon, won't work with console build!!!
+//#define NO_UISPOOF
+//#define NO_PROC_HIDING
 //#define NO_KEXT
 //#define NO_ANTIDEBUGGING
 //#define WRITE_CLEAR_TEXT_LOG
-
-/* Source */
-//#define DEBUG_CORE
 //#define DEBUG_UI_SPOOF
+
+/* Components */
+//#define DEBUG_CORE
+//#define DEBUG_INPUT_MANAGER
 
 /* Modules */
 //#define DEBUG_ACTIONS
@@ -48,10 +51,12 @@
 /* Protocols */
 //#define DEBUG_PROTO
 
-/* Modules/Agents */
+/* Agents */
 //#define DEBUG_WEBCAM
 //#define DEBUG_SCREENSHOT
 //#define DEBUG_ORGANIZER
+//#define DEBUG_IM_SKYPE
+//#define DEBUG_VOIP_SKYPE
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES
