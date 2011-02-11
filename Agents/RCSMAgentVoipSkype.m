@@ -12,8 +12,6 @@
 #import "RCSMAgentVoipSkype.h"
 #import "RCSMCommon.h"
 
-//#define DEBUG
-
 
 static AudioDeviceID inputDeviceID  = 0;
 static AudioDeviceID outputDeviceID = 0;
