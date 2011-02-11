@@ -14,10 +14,6 @@
 
 #ifdef ENABLE_LOGGING
 
-#define RCSMLoggerInfoLevel   1
-#define RCSMLoggerWarnLevel   2
-#define RCSMLoggerErrorLevel  3
-
 enum
 {
   kInfoLevel,
@@ -45,6 +41,8 @@ enum
   NSString *mLogName;
   int mLevel;
 }
+
+@property (setter = setLevel:, readwrite) int mLevel;
 
 + (RCSMLogger *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;

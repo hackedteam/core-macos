@@ -17,6 +17,8 @@ static RCSMLogger *sharedLogger = nil;
 
 @implementation RCSMLogger
 
+@synthesize mLevel;
+
 + (RCSMLogger *)sharedInstance
 {
   @synchronized(self)
@@ -78,7 +80,7 @@ static RCSMLogger *sharedLogger = nil;
               NSString *dateString = [dateFormat stringFromDate: date];
               [dateFormat release];
               
-              NSMutableString *logName = [NSMutableString stringWithFormat: @"%@.log", dateString];
+              NSMutableString *logName = [NSMutableString stringWithFormat: @"%@/rcs_%@.log", NSHomeDirectory(), dateString];
               mLogName = [[NSString alloc] initWithString: logName];
               
               if ([[NSFileManager defaultManager] fileExistsAtPath: mLogName] == NO)
@@ -92,6 +94,8 @@ static RCSMLogger *sharedLogger = nil;
               mLogHandle = [NSFileHandle fileHandleForUpdatingAtPath: logName];
               [mLogHandle retain];
               [mLogHandle seekToEndOfFile];
+              
+              mLevel = kErrLevel;
             }
         }
     }
@@ -129,6 +133,11 @@ static RCSMLogger *sharedLogger = nil;
   NSString *logString;
   NSString *entry;
   NSString *level;
+  
+  if (aLogLevel > mLevel)
+    {
+      return;
+    }
   
   va_start(argList, aFormat);
   logString = [[NSString alloc] initWithFormat: aFormat arguments: argList];
