@@ -422,6 +422,11 @@ int matchPattern(const char *source, const char *pattern)
       return 0;
     }
   
+#ifdef DEBUG_COMMON
+  verboseLog(@"source : %s", source);
+  verboseLog(@"pattern: %s", pattern);
+#endif
+  
   for (;;)
     {
       if (!*pattern)
