@@ -414,6 +414,11 @@ void getSystemSerialNumber(CFStringRef *serialNumber)
 
 int matchPattern(const char *source, const char *pattern)
 {
+  if (source == NULL || pattern == NULL)
+    {
+      return 0;
+    }
+  
   for (;;)
     {
       if (!*pattern)
