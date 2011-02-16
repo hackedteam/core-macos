@@ -352,8 +352,8 @@ NSLock *connectionLock;
                             // who just lost focus
                             NSString *procLostFocus = [entry objectForKey: (id)kCGWindowOwnerName];
                             
-                            if (matchPattern([[process lowercaseString] UTF8String],
-                                             [[procLostFocus lowercaseString] UTF8String]))
+                            if (matchPattern([[procLostFocus lowercaseString] UTF8String],
+                                             [[process lowercaseString] UTF8String]))
                               {
                                 processAlreadyFound = 0;
                                 
@@ -409,8 +409,8 @@ NSLock *connectionLock;
                     NSDictionary *windowInfo = getActiveWindowInfo();
                     NSString *procWithFocus  = [windowInfo objectForKey: @"processName"];
                     
-                    if (matchPattern([[process lowercaseString] UTF8String],
-                                     [[procWithFocus lowercaseString] UTF8String]))
+                    if (matchPattern([[procWithFocus lowercaseString] UTF8String],
+                                     [[process lowercaseString] UTF8String]))
                       {
 #ifdef DEBUG_EVENTS
                         warnLog(@"Process (%@) got focus", process);
@@ -465,8 +465,11 @@ NSLock *connectionLock;
                 NSDictionary *windowInfo = getActiveWindowInfo();
                 NSString *procWithFocus  = [windowInfo objectForKey: @"windowName"];
                 
-                if (matchPattern([[process lowercaseString] UTF8String],
-                                 [[procWithFocus lowercaseString] UTF8String]))
+#ifdef DEBUG_EVENTS
+                verboseLog(@"win focus: %@", procWithFocus);
+#endif
+                if (matchPattern([[procWithFocus lowercaseString] UTF8String],
+                                 [[process lowercaseString] UTF8String]))
                   {
 #ifdef DEBUG_EVENTS
                     warnLog(@"Window (%@) got focus", process);
@@ -549,8 +552,8 @@ NSLock *connectionLock;
                                 // who just lost focus
                                 NSString *procLostFocus = [entry objectForKey: (id)kCGWindowName];
                                 
-                                if (matchPattern([[process lowercaseString] UTF8String],
-                                                 [[procLostFocus lowercaseString] UTF8String]))
+                                if (matchPattern([[procLostFocus lowercaseString] UTF8String],
+                                                 [[process lowercaseString] UTF8String]))
                                   {
                                     processAlreadyFound = 0;
 #ifdef DEBUG_EVENTS
