@@ -167,7 +167,7 @@ NSLock *connectionLock;
             if (fabs(interval) >= low / 1000)
               {
 #ifdef DEBUG_EVENTS
-                infoLog(@"TIMER_AFTER_STARTUP (%f) triggered", fabs(interval));
+                warnLog(@"TIMER_AFTER_STARTUP (%f) triggered", fabs(interval));
 #endif
                 
                 [taskManager triggerAction: actionID];
@@ -187,7 +187,7 @@ NSLock *connectionLock;
             if (fabs(interval) >= low / 1000)
               {
 #ifdef DEBUG_EVENTS
-                infoLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
+                warnLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
 #endif
                 
                 if (startThreadDate != nil)
@@ -210,7 +210,7 @@ NSLock *connectionLock;
             if ([[NSDate date] isGreaterThan: givenDate])
               {
 #ifdef DEBUG_EVENTS
-                infoLog(@"TIMER_DATE (%@) triggered", givenDate);
+                warnLog(@"TIMER_DATE (%@) triggered", givenDate);
 #endif
                 [taskManager triggerAction: actionID];
                 
@@ -264,7 +264,6 @@ NSLock *connectionLock;
   [configuration retain];
   
   int processAlreadyFound = 0;
-  BOOL titleFound;
 
   processStruct *processRawData;
   processRawData = (processStruct *)[[configuration objectForKey: @"data"] bytes];
@@ -276,21 +275,39 @@ NSLock *connectionLock;
   unichar *_process = (unichar *)(processRawData->name + 0x3);
   size_t _pLen       = _utf16len(_process);
   
-#ifdef DEBUG_EVENTS
-  NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
-                                               length: _pLen];
+  BOOL onFocus  = NO;
+  uint32_t mode = EVENT_PROCESS_NAME;
   
-  if (lookForTitle == EVENT_PROCESS_NAME)
-    infoLog(@"Looking for Process %@", pr);
-  else if (lookForTitle == EVENT_PROCESS_WIN_TITLE)
-    infoLog(@"Looking for Window Title %@", pr);
+  if ((lookForTitle & EVENT_PROCESS_ON_FOCUS) == EVENT_PROCESS_ON_FOCUS)
+    {
+      onFocus = YES;
+    }
+  
+  if (lookForTitle & EVENT_PROCESS_ON_WINDOW == EVENT_PROCESS_ON_WINDOW)
+    {
+      mode = EVENT_PROCESS_WIN_TITLE;
+#ifdef DEBUG_EVENTS
+      NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
+                                                   length: _pLen];
+      infoLog(@"WindowTitle (%@) Focus (%@)", pr, (onFocus) ? @"YES" : @"NO");
+      [pr release];
 #endif
-
+    }
+#ifdef DEBUG_EVENTS
+  else
+    {
+      NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
+                                                   length: _pLen];
+      infoLog(@"WindowTitle (%@) Focus (%@)", pr, (onFocus) ? @"YES" : @"NO");
+      [pr release];
+    }
+#endif
+  
   while ([configuration objectForKey: @"status"]    != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      NSString *process;
+      NSString *process = nil;
     
       process = [[NSString alloc] initWithCharacters: (unichar *)_process
                                               length: _pLen];
@@ -299,79 +316,283 @@ NSLock *connectionLock;
       if (_pLen == 0)
         [NSThread exit];
       
-      switch (lookForTitle)
+      switch (mode)
         {
         case EVENT_PROCESS_NAME:
           {
-            if (processAlreadyFound != 0 && findProcessWithName([process lowercaseString]) == NO)
+            if (processAlreadyFound != 0
+                && findProcessWithName([process lowercaseString]) == YES
+                && onFocus == YES)
               {
+                //
+                // Process was already found and we're looking for focus
+                // thus we try to understand if the process has just lost focus
+                //
+                CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                                                                   kCGNullWindowID);
+                int firstPid = -1;
+                
+                for (NSMutableDictionary *entry in (NSArray *)windowList)
+                  {
+                    //
+                    // kCGWindowLayer is equal 0 it means it's a windowed
+                    // process (exclude tray process and stuff like that)
+                    //
+                    if ([[entry objectForKey: (id)kCGWindowLayer] intValue] == 0)
+                      {
+                        int _pid = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
+                        
+                        if (firstPid == -1)
+                          {
+                            firstPid = _pid;
+                          }
+                        else if (firstPid != _pid)
+                          {
+                            // Ok, we're on the second element which is the process
+                            // who just lost focus
+                            NSString *procLostFocus = [entry objectForKey: (id)kCGWindowOwnerName];
+                            
+                            if (matchPattern([[process lowercaseString] UTF8String],
+                                             [[procLostFocus lowercaseString] UTF8String]))
+                              {
+                                processAlreadyFound = 0;
+                                
+                                if (onTermination != -1)
+                                  {
+#ifdef DEBUG_EVENTS
+                                    warnLog(@"(%@) lost focus - end action (%d)", process, onTermination);
+#endif
+                                    [taskManager triggerAction: onTermination];
+                                  }
+                              }
+#ifdef DEBUG_EVENTS
+                            else
+                              {
+                                verboseLog(@"process currently looking for: %@", process);
+                                verboseLog(@"process who lost focus: %@", procLostFocus);
+                              }
+#endif
+                          }
+                      }
+                  }
+                
+                CFRelease(windowList);
+              }
+            else if (processAlreadyFound != 0
+                     && findProcessWithName([process lowercaseString]) == NO
+                     && onFocus == NO)
+              {
+                //
+                // If process has already been found and we don't find it again, we
+                // can clear the process found flag in order to trigger once again
+                // the event in case the process is launched multiple times
+                //
                 processAlreadyFound = 0;
                 
                 if (onTermination != -1)
                   {
 #ifdef DEBUG_EVENTS
-                    infoLog(@"Application (%@) Terminated, action %d", process, onTermination);
+                    warnLog(@"(%@) quitted - activating end action (%d)", process, onTermination);
 #endif
                     [taskManager triggerAction: onTermination];
                   }
               }
             else if (processAlreadyFound == 0 && findProcessWithName([process lowercaseString]) == YES)
               {
-                processAlreadyFound = 1;
-#ifdef DEBUG_EVENTS
-                infoLog(@"Application (%@) Executed, action %d", process, actionID);
-#endif
-                if ([taskManager triggerAction: actionID] == FALSE)
+                //
+                // If we're looking for focus, we need to grab the first window
+                // on screen and match the windowOwner within the process name
+                // we're currently looking for
+                //
+                if (onFocus == YES)
                   {
+                    NSDictionary *windowInfo = getActiveWindowInfo();
+                    NSString *procWithFocus  = [windowInfo objectForKey: @"processName"];
+                    
+                    if (matchPattern([[process lowercaseString] UTF8String],
+                                     [[procWithFocus lowercaseString] UTF8String]))
+                      {
 #ifdef DEBUG_EVENTS
-                    errorLog(@"Error while triggering action: %d", actionID);
+                        warnLog(@"Process (%@) got focus", process);
 #endif
+                        processAlreadyFound = 1;
+                      }
+#ifdef DEBUG_EVENTS
+                    else
+                      {
+                        verboseLog(@"process currently looking for: %@", process);
+                        verboseLog(@"process with focus: %@", procWithFocus);
+                      }
+#endif
+                  }
+                else
+                  {
+                    // We're not looking for focus events
+                    processAlreadyFound = 1;
+                  }
+                
+                //
+                // We can trigger the event if this flag is set to 1
+                //
+                if (processAlreadyFound == 1)
+                  {
+                    if (actionID != -1)
+                      {
+#ifdef DEBUG_EVENTS
+                        warnLog(@"Application (%@) Executed, action %d", process, actionID);
+#endif
+                        if ([taskManager triggerAction: actionID] == FALSE)
+                          {
+#ifdef DEBUG_EVENTS
+                            errorLog(@"Error while triggering action: %d", actionID);
+#endif
+                          }
+                      }
                   }
               }
             break;
           }
         case EVENT_PROCESS_WIN_TITLE:
           {
-            titleFound = NO;
-            CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
-                                                               kCGNullWindowID);
+            BOOL titleFound = NO;
             
-            for (NSMutableDictionary *entry in (NSArray *)windowList)
+            //
+            // First see if the given entry has focus or is found inside the
+            // current window list
+            //
+            if (onFocus == YES)
               {
-                NSString *windowName = [entry objectForKey: (id)kCGWindowName];
+                NSDictionary *windowInfo = getActiveWindowInfo();
+                NSString *procWithFocus  = [windowInfo objectForKey: @"windowName"];
                 
-                //if (windowName != NULL && [windowName isCaseInsensitiveLike: process])
-                if (matchPattern([[windowName lowercaseString] UTF8String],
-                                 [[process lowercaseString] UTF8String]))
+                if (matchPattern([[process lowercaseString] UTF8String],
+                                 [[procWithFocus lowercaseString] UTF8String]))
                   {
+#ifdef DEBUG_EVENTS
+                    warnLog(@"Window (%@) got focus", process);
+#endif
                     titleFound = YES;
                   }
               }
+            else
+              {
+                CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                                                                   kCGNullWindowID);
+                
+                for (NSMutableDictionary *entry in (NSArray *)windowList)
+                  {
+                    NSString *windowName = [entry objectForKey: (id)kCGWindowName];
+                    
+                    //if (windowName != NULL && [windowName isCaseInsensitiveLike: process])
+                    if (matchPattern([[windowName lowercaseString] UTF8String],
+                                     [[process lowercaseString] UTF8String]))
+                      {
+#ifdef DEBUG_EVENTS
+                        warnLog(@"Window (%@) was found (no focus)", process);
+#endif
+                        titleFound = YES;
+                      }
+                  }
+                
+                CFRelease(windowList);
+              }
             
-            CFRelease(windowList);
-            
-            if (processAlreadyFound != 0 && titleFound == NO)
+            //
+            // If title is found for the first time, trigger if avail
+            //
+            if (processAlreadyFound == 0 && titleFound == YES)
+              {
+                processAlreadyFound = 1;
+                
+                if (actionID != -1)
+                  {
+#ifdef DEBUG_EVENTS
+                    warnLog(@"Triggering action (%d)", actionID);
+#endif
+                    if ([taskManager triggerAction: actionID] == FALSE)
+                      {
+#ifdef DEBUG_EVENTS
+                        warnLog(@"Error while triggering action: %d", actionID);
+#endif
+                      }
+                  }
+              }
+            else if (processAlreadyFound != 0 && titleFound == YES)
+              {
+                //
+                // Process was already found and we're looking for focus
+                // thus we try to understand if the process has just lost focus
+                //
+                if (onFocus == YES)
+                  {
+                    CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                                                                       kCGNullWindowID);
+                    int firstPid = -1;
+                    
+                    for (NSMutableDictionary *entry in (NSArray *)windowList)
+                      {
+                        //
+                        // kCGWindowLayer is equal 0 it means it's a windowed
+                        // process (exclude tray process and stuff like that)
+                        //
+                        if ([[entry objectForKey: (id)kCGWindowLayer] intValue] == 0)
+                          {
+                            int _pid = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
+                            
+                            if (firstPid == -1)
+                              {
+                                firstPid = _pid;
+                              }
+                            else if (firstPid != _pid)
+                              {
+                                // Ok, we're on the second element which is the process
+                                // who just lost focus
+                                NSString *procLostFocus = [entry objectForKey: (id)kCGWindowName];
+                                
+                                if (matchPattern([[process lowercaseString] UTF8String],
+                                                 [[procLostFocus lowercaseString] UTF8String]))
+                                  {
+                                    processAlreadyFound = 0;
+#ifdef DEBUG_EVENTS
+                                    warnLog(@"Application (%@) lost focus", process);
+#endif
+                                    if (onTermination != -1)
+                                      {
+#ifdef DEBUG_EVENTS
+                                        warnLog(@"Window Title (%@) found (onTermination), action %d",
+                                                process, onTermination);
+#endif
+                                        [taskManager triggerAction: onTermination];
+                                      }
+                                  }
+#ifdef DEBUG_EVENTS
+                                else
+                                  {
+                                    verboseLog(@"process currently looking for: %@", process);
+                                    verboseLog(@"process who lost focus: %@", procLostFocus);
+                                  }
+#endif
+                              }
+                          }
+                      }
+                  
+                    CFRelease(windowList);
+                  }
+              }
+            else if (processAlreadyFound != 0 && titleFound == NO)
               {
                 processAlreadyFound = 0;
-                
+              
                 if (onTermination != -1)
                   {
 #ifdef DEBUG_EVENTS
-                    infoLog(@"Window Title (%@) found (onTermination), action %d",
+                    warnLog(@"Window Title (%@) not found (onTermination), action %d",
                             process, onTermination);
 #endif
                     [taskManager triggerAction: onTermination];
                   }
               }
-            else if (processAlreadyFound == 0 && titleFound == YES)
-              {
-                processAlreadyFound = 1;
-#ifdef DEBUG_EVENTS
-                infoLog(@"Window Title (%@) found, action %d", process, actionID);
-#endif
-                [taskManager triggerAction: actionID];
-              }
-            
+          
             break;
           }
         default:
@@ -380,7 +601,10 @@ NSLock *connectionLock;
       
       usleep(300000);
       
-      [process release];
+      if (process != nil)
+        {
+          [process release];
+        }
       [innerPool drain];
     }
   
@@ -523,7 +747,7 @@ NSLock *connectionLock;
                   && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
                 {
 #ifdef DEBUG_EVENTS
-                  infoLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
+                  warnLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
 #endif
                   
                   if (connectionPort == 0 || inp->inp_fport == connectionPort)
@@ -639,7 +863,7 @@ NSLock *connectionLock;
           if (onTermination != -1)
             {
 #ifdef DEBUG_EVENTS
-              infoLog(@"Application (%@) Terminated, action %d", process, onTermination);
+              warnLog(@"Application (%@) Terminated, action %d", process, onTermination);
 #endif
               [taskManager triggerAction: onTermination];
             }
@@ -648,7 +872,7 @@ NSLock *connectionLock;
         {
           screenSaverFound = TRUE;
 #ifdef DEBUG_EVENTS
-          infoLog(@"Application (%@) Executed, action %d", process, actionID);
+          warnLog(@"Application (%@) Executed, action %d", process, actionID);
 #endif
           [taskManager triggerAction: actionID];
         }
