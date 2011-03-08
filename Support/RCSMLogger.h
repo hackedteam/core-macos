@@ -47,6 +47,9 @@ enum
 + (RCSMLogger *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 
++ (void)setComponent: (NSString *)aComponent;
++ (void)enableProcessNameVisualization: (BOOL)aFlag;
+
 - (id)copyWithZone:  (NSZone *)aZone;
 - (id)init;
 - (id)retain;

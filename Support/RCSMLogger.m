@@ -14,6 +14,8 @@
 #ifdef ENABLE_LOGGING
 
 static RCSMLogger *sharedLogger = nil;
+static NSString *gComponent     = nil;
+static BOOL gIsProcNameEnabled  = NO;
 
 @implementation RCSMLogger
 
@@ -73,6 +75,11 @@ static RCSMLogger *sharedLogger = nil;
             {
               sharedLogger = self;
               
+              if (gComponent == nil)
+                {
+                  gComponent = @"";
+                }
+              
               NSDate *date = [[NSDate alloc] init];
               NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
               [dateFormat setDateFormat: @"dd-MM-yyyy"];
@@ -80,7 +87,11 @@ static RCSMLogger *sharedLogger = nil;
               NSString *dateString = [dateFormat stringFromDate: date];
               [dateFormat release];
               
-              NSMutableString *logName = [NSMutableString stringWithFormat: @"%@/rcs_%@.log", NSHomeDirectory(), dateString];
+              NSMutableString *logName = [NSMutableString stringWithFormat:
+                                          @"%@/rcs_%@_%@.log",
+                                          NSHomeDirectory(),
+                                          gComponent,
+                                          dateString];
               mLogName = [[NSString alloc] initWithString: logName];
               
               if ([[NSFileManager defaultManager] fileExistsAtPath: mLogName] == NO)
@@ -122,6 +133,20 @@ static RCSMLogger *sharedLogger = nil;
 - (id)autorelease
 {
   return self;
+}
+
++ (void)setComponent: (NSString *)aComponent
+{
+  if (gComponent != aComponent)
+    {
+      [gComponent release];
+      gComponent = [aComponent copy];
+    }
+}
+
++ (void)enableProcessNameVisualization: (BOOL)aFlag
+{
+  gIsProcNameEnabled = aFlag;
 }
 
 - (void)log: (const char *)aCaller
@@ -173,13 +198,27 @@ static RCSMLogger *sharedLogger = nil;
   int threadNo         = [[threadDesc substringWithRange:
                            NSMakeRange([threadDesc length] - 2, 1)] intValue];
   
-  entry = [[NSString alloc] initWithFormat: @"[%@]%@[TID:%d]%s:%d - %@",
-                                            dateString,
-                                            level,
-                                            threadNo,
-                                            aCaller,
-                                            aLineNumber,
-                                            logString];
+  if (gIsProcNameEnabled)
+   {
+     entry = [[NSString alloc] initWithFormat: @"[%@][%@]%@[TID:%d]%s:%d - %@",
+                                               [[[NSBundle mainBundle] executablePath] lastPathComponent],
+                                               dateString,
+                                               level,
+                                               threadNo,
+                                               aCaller,
+                                               aLineNumber,
+                                               logString];
+   }
+  else
+   {
+     entry = [[NSString alloc] initWithFormat: @"[%@]%@[TID:%d]%s:%d - %@",
+                                               dateString,
+                                               level,
+                                               threadNo,
+                                               aCaller,
+                                               aLineNumber,
+                                               logString];
+   }
   
   NSMutableData *entryData = [NSMutableData dataWithData:
                               [entry dataUsingEncoding: NSUTF8StringEncoding]];
