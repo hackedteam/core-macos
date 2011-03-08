@@ -19,6 +19,7 @@
 //#define NO_ANTIDEBUGGING
 //#define WRITE_CLEAR_TEXT_LOG
 //#define DEBUG_UI_SPOOF
+//#define DEBUG_SPEEX
 
 /* Components */
 //#define DEBUG_CORE
@@ -32,6 +33,7 @@
 //#define DEBUG_ENCRYPTION
 //#define DEBUG_CONF_MANAGER
 //#define DEBUG_FS_MANAGER
+//#define DEBUG_COMMON
 
 /* Modules/Network */
 /* Operations */
