@@ -2339,8 +2339,15 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [self _checkCurrentPrivsAndDoWhatYouWant];
   
-  if ([self _createAndInitSharedMemory] == NO)
-    return NO;
+  //
+  // XXX: With low privs we won't have shared memory in this way
+  // which might be right since we won't have external agents
+  //
+  if (getuid() != 0 && geteuid == 0)
+    {
+      if ([self _createAndInitSharedMemory] == NO)
+        return NO;
+    }
   
   [self _checkIfIamHighlander];
   
