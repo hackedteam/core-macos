@@ -551,7 +551,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   waveFileHeader->formatTag       = 1;
   waveFileHeader->nChannels       = 2;
-  waveFileHeader->nSamplesPerSec  = 48000;
+  //waveFileHeader->nSamplesPerSec  = 48000;
+  waveFileHeader->nSamplesPerSec  = 44100;
   waveFileHeader->bitsPerSample   = 16;
   waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
@@ -577,7 +578,7 @@ static void computerWillShutdown(CFMachPortRef port,
   time_t t;
   time(&t);
   
-  NSString *fileName = [[NSString alloc] initWithFormat: @"/Users/revenge/Desktop/tempAudio-%d.wav", t];
+  NSString *fileName = [[NSString alloc] initWithFormat: @"/tmp/tempAudio-%d.wav", t];
   
   [audioData writeToFile: fileName
               atomically: YES];
@@ -652,7 +653,7 @@ static void computerWillShutdown(CFMachPortRef port,
   time_t ut;
   time(&ut);
   
-  NSString *outFile = [[NSString alloc] initWithFormat: @"/Users/revenge/Desktop/files2/speexDecode/samples/speexEncoded-%d.wav", ut];
+  NSString *outFile = [[NSString alloc] initWithFormat: @"/tmp/speexEncoded-%d.wav", ut];
   
   [fileData writeToFile: outFile
              atomically: YES];
