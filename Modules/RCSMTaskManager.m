@@ -348,13 +348,13 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
   if (lckRet == NO) 
     {
-      infoLog(@"%s: enter critical session with timeout [euid/uid %d/%d]", 
-              __FUNCTION__, geteuid(), getuid());
+      verboseLog(@"enter critical session with timeout [euid/uid %d/%d]", 
+                 geteuid(), getuid());
     }
   else
     {
-      infoLog(@"%s: enter critical session normaly [euid/uid %d/%d]", 
-              __FUNCTION__, geteuid(), getuid());
+      verboseLog(@"enter critical session normaly [euid/uid %d/%d]", 
+                 geteuid(), getuid());
     }
 #endif
 
@@ -546,8 +546,8 @@ static NSLock *gSyncLock                  = nil;
           [gSuidLock unlock];
   
 #ifdef DEBUG_TASK_MANAGER
-    infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
-          __FUNCTION__, geteuid(), getuid());
+          verboseLog(@"exit critical session [euid/uid %d/%d]", 
+                     geteuid(), getuid());
 #endif
           exit(0);
         //}
@@ -982,7 +982,7 @@ static NSLock *gSyncLock                  = nil;
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+        infoLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
         
         return NO;
@@ -1291,7 +1291,7 @@ static NSLock *gSyncLock                  = nil;
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+        infoLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
         
         return NO;
