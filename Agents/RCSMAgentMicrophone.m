@@ -3,8 +3,8 @@
  *  Microphone Agent for MacOS
  *  Uses AudioQueues from AudioToolbox
  *
- * Created by Alfredo 'revenge' Pesoli on 07/10/2009
- * Copyright (C) HT srl 2009. All rights reserved
+ * Created by Alfredo 'revenge' Pesoli on 8/3/2011
+ * Copyright (C) HT srl 2011. All rights reserved
  *
  */
 
