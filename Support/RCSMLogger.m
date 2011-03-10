@@ -80,6 +80,8 @@ static BOOL gIsProcNameEnabled  = NO;
                   gComponent = @"";
                 }
               
+              NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
               NSDate *date = [[NSDate alloc] init];
               NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
               [dateFormat setDateFormat: @"dd-MM-yyyy"];
@@ -107,6 +109,7 @@ static BOOL gIsProcNameEnabled  = NO;
               [mLogHandle seekToEndOfFile];
               
               mLevel = kErrLevel;
+              [outerPool release];
             }
         }
     }
@@ -154,6 +157,8 @@ static BOOL gIsProcNameEnabled  = NO;
       level: (int)aLogLevel
      string: (NSString *)aFormat, ...
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
   va_list argList;
   NSString *logString;
   NSString *entry;
@@ -161,6 +166,7 @@ static BOOL gIsProcNameEnabled  = NO;
   
   if (aLogLevel > mLevel)
     {
+      [outerPool release];
       return;
     }
   
@@ -230,6 +236,7 @@ static BOOL gIsProcNameEnabled  = NO;
   [entry release];
   [date release];
   [logString release];
+  [outerPool release];
 }
 
 @end
