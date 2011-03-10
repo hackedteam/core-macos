@@ -51,17 +51,17 @@
 
 - (void)testInfo
 {
-  logInfo(@"Test for INFO level");
+  infoLog(@"Test for INFO level");
 }
 
 - (void)testWarn
 {
-  logWarn(@"Test for WARN level");
+  warnLog(@"Test for WARN level");
 }
 
 - (void)testError
 {
-  logErr(@"Test for ERR level");
+  errorLog(@"Test for ERR level");
 }
 
 #endif
