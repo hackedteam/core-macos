@@ -59,6 +59,8 @@
 //#define DEBUG_ORGANIZER
 //#define DEBUG_IM_SKYPE
 //#define DEBUG_VOIP_SKYPE
+//#define DEBUG_MIC
+//#define DEBUG_MIC_WAVE
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES

