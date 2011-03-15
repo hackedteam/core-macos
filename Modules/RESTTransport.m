@@ -126,7 +126,7 @@
       errorLog(@"Error while connecting");
 #endif
       
-      return NO;
+      return nil;
     }
   
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)aResponse;
@@ -143,7 +143,9 @@
 #endif
       
       if (mCookie != nil)
-        [mCookie release];
+        {
+          [mCookie release];
+        }
       
       mCookie = [cookie copy];
     }
