@@ -76,7 +76,6 @@
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  BOOL success              = YES;
   id mock                   = [OCMockObject partialMockForObject:
                                [RCSMAgentOrganizer sharedInstance]];
   
@@ -85,11 +84,12 @@
                                                name: @"mockLog"
                                              object: nil];
   
+#ifdef MOCK_LOGGING
   NSNotification *notify = [NSNotification notificationWithName: @"mockLog"
                                                          object: nil];
   
   [[[[mock stub] andReturnValue: OCMOCK_VALUE(success)] andPost: notify] _logData: [OCMArg any]];
-   
+#endif
   [NSThread detachNewThreadSelector: @selector(start)
                            toTarget: mock
                          withObject: nil];
