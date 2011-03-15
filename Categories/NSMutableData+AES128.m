@@ -99,8 +99,19 @@
 {
   // remove padding
   char bytesOfPadding;
-  [self getBytes: &bytesOfPadding
-           range: NSMakeRange([self length] - 1, sizeof(char))];
+  @try
+    {
+      [self getBytes: &bytesOfPadding
+               range: NSMakeRange([self length] - 1, sizeof(char))];
+    }
+  @catch (NSException *e)
+    {
+#ifdef DEBUG_MUTABLE_AES
+      errorLog(@"Exception on getbytes (%@)", [e reason]);
+#endif
+      return;
+    }
+  
   
 #ifdef DEBUG_MUTABLE_AES
   infoLog(@"byte: %d", bytesOfPadding);
