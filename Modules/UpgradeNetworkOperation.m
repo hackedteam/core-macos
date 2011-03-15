@@ -152,6 +152,17 @@
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  if (replyData == nil)
+    {
+#ifdef DEBUG_UPGRADE_NOP
+      errorLog(@"empty reply from server");
+#endif
+      [commandData release];
+      [outerPool release];
+      
+      return NO;
+    }
+  
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
   [replyDecrypted decryptWithKey: gSessionKey];
   
