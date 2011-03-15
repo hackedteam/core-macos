@@ -341,12 +341,12 @@
 				1A1A2FDF106112CF001F1B5D /* QuickTime.framework in Frameworks */,
 				1AD1D6C11099EB96005B548F /* QTKit.framework in Frameworks */,
 				1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */,
-				1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */,
-				1AA84485113C26D1005FBADB /* libz.a in Frameworks */,
 				1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */,
 				1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */,
 				521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */,
 				1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */,
+				1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */,
+				1AA84485113C26D1005FBADB /* libz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
