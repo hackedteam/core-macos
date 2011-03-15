@@ -37,7 +37,7 @@
 @private
   NSString *mMainLoopControlFlag; // @"START" | @"STOP" | @"RUNNING"
   //BOOL mCanSyncThroughSafari;
-  
+
 @private
   NSMutableData *skypeInputData;
   NSMutableData *skypeOutputData;

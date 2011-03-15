@@ -361,13 +361,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
   mSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                          size: SHMEM_COMMAND_MAX_SIZE
+                                                          size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   [mSharedMemoryCommand createMemoryRegion];
   [mSharedMemoryCommand attachToMemoryRegion];
   
   mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                          size: SHMEM_LOG_MAX_SIZE
+                                                          size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   [mSharedMemoryLogging createMemoryRegion];
   [mSharedMemoryLogging attachToMemoryRegion];

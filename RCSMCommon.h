@@ -141,8 +141,12 @@ typedef struct os_version {
 // Size of the first 2 DWORDs that we need to skip in the configuration file
 #define TIMESTAMP_SIZE sizeof(int) * 2
 
-#define SHMEM_COMMAND_MAX_SIZE  0x3000
-#define SHMEM_LOG_MAX_SIZE      0x302460
+extern int32_t gMemCommandMaxSize;
+extern int32_t gMemLogMaxSize;
+
+//#define SHMEM_COMMAND_MAX_SIZE  0x3000
+//#define SHMEM_LOG_MAX_SIZE      0x302460
+
 //#define SHMEM_LOG_MAX_SIZE    0x300000
 #define SHMEM_SEM_NAME          @"sem-mdworker"
 
