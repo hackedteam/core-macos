@@ -115,20 +115,21 @@ static NSLock *gSyncLock                  = nil;
               
               mActions = [[RCSMActions alloc] init];
               
-              key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
-              key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
+//              key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
+//              key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
+//              
+//              gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+//                                                                      size: gMemCommandMaxSize
+//                                                             semaphoreName: SHMEM_SEM_NAME];
               
-              gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                                      size: gMemCommandMaxSize
-                                                             semaphoreName: SHMEM_SEM_NAME];
-              [gSharedMemoryCommand createMemoryRegion];
-              [gSharedMemoryCommand attachToMemoryRegion];
-              
-              gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                                      size: gMemLogMaxSize
-                                                             semaphoreName: SHMEM_SEM_NAME];
-              [gSharedMemoryLogging createMemoryRegion];
-              [gSharedMemoryLogging attachToMemoryRegion];
+//              [gSharedMemoryCommand createMemoryRegion];
+//              [gSharedMemoryCommand attachToMemoryRegion];
+//              
+//              gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+//                                                                      size: gMemLogMaxSize
+//                                                             semaphoreName: SHMEM_SEM_NAME];
+//              [gSharedMemoryLogging createMemoryRegion];
+//              [gSharedMemoryLogging attachToMemoryRegion];
               
               gTaskManagerLock  = [[NSLock alloc] init];
               mIsSyncing        = NO;
