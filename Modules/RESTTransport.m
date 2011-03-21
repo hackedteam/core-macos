@@ -67,26 +67,26 @@
 }
 
 // Abstract Class Methods
-- (BOOL)connect;
-{
-#ifdef DEBUG_TRANSPORT
-  infoLog(@"URL: %@", mURL);
-#endif
+//- (BOOL)connect;
+//{
+//#ifdef DEBUG_TRANSPORT
+  //infoLog(@"URL: %@", mURL);
+//#endif
   
-  return YES;
-}
+  //return YES;
+//}
 
-- (BOOL)disconnect
-{
-  return YES;
-}
+//- (BOOL)disconnect
+//{
+  //return YES;
+//}
 // End Of Abstract Class Methods
 
 - (NSData *)sendData: (NSData *)aPacketData
    returningResponse: (NSURLResponse *)aResponse
 {
 #ifdef DEBUG_TRANSPORT
-  infoLog(@"aPacketData: %@", aPacketData);
+  verboseLog(@"aPacketData: %@", aPacketData);
   infoLog(@"mURL: %@", mURL);
 #endif
   
