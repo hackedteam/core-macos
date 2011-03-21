@@ -71,6 +71,17 @@
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  if (replyData == nil)
+    {
+#ifdef DEBUG_UP_NOP
+      errorLog(@"empty reply from server");
+#endif
+      [commandData release];
+      [outerPool release];
+
+      return NO;
+    }
+
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
   [replyDecrypted decryptWithKey: gSessionKey];
   
@@ -252,7 +263,7 @@
           
           if (success == NO)
             {
-#ifdef DEBUG
+#ifdef DEBUG_UP_NOP
               errorLog(@"Error while changing attributes on the upgrade file");
 #endif
             }

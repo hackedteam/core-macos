@@ -191,7 +191,7 @@ static int testPreviousTime = 0;
   u_int offset              = 0;
   shMemoryLog *memoryHeader = NULL;
   
-  if (mSize < SHMEM_LOG_MAX_SIZE)
+  if (mSize < gMemLogMaxSize)
     {
 #ifdef DEBUG_SHMEM
       infoLog(@"[EE] clearConfigurations can't be used on the command queue");
@@ -216,7 +216,7 @@ static int testPreviousTime = 0;
           offset += sizeof (shMemoryLog);
         }
     }
-  while (offset < SHMEM_LOG_MAX_SIZE);
+  while (offset < gMemLogMaxSize);
   
   return TRUE;
 }
@@ -391,7 +391,7 @@ static int testPreviousTime = 0;
       foundAgent   = NO;
       blockFound   = NO;
     }
-  while (offset < SHMEM_LOG_MAX_SIZE);
+  while (offset < gMemLogMaxSize);
   
   if (blockMatched == YES)
     {
@@ -460,7 +460,7 @@ static int testPreviousTime = 0;
               break;
             }
           
-          if (anOffset >= SHMEM_LOG_MAX_SIZE)
+          if (anOffset >= gMemLogMaxSize)
             {
 #ifdef DEBUG_SHMEM
               errorLog(@"[EE] SHMem - write didn't found an available memory block");

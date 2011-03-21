@@ -99,6 +99,17 @@
   replyData = [mTransport sendData: message
                  returningResponse: urlResponse];
   
+  if (replyData == nil)
+    {
+#ifdef DEBUG_ID_NOP
+      errorLog(@"empty reply from server");
+#endif
+      [message release];
+      [outerPool release];
+
+      return NO;
+    }
+
   NSMutableData *decData      = [[NSMutableData alloc] initWithData: replyData];
   [decData decryptWithKey: gSessionKey];
   

@@ -17,7 +17,8 @@
 
 #include <CoreServices/CoreServices.h>
 
-//#define DEBUG
+#include "RCSMLogger.h"
+#include "RCSMDebug.h"
 
 
 /**************************
@@ -150,7 +151,7 @@ eatKnownInstructions(
 #pragma mark	-
 #pragma mark	(Interface)
 
-	mach_error_t
+mach_error_t
 mach_override(
 		char *originalFunctionSymbolName,
 		const char *originalFunctionLibraryNameHint,
@@ -164,7 +165,7 @@ mach_override(
 	//	Lookup the original function's code pointer.
 	void	*originalFunctionPtr;
   
-	if( originalFunctionLibraryNameHint )
+	if (originalFunctionLibraryNameHint)
 		_dyld_lookup_and_bind_with_hint(
 			originalFunctionSymbolName,
 			originalFunctionLibraryNameHint,
@@ -175,23 +176,19 @@ mach_override(
 			originalFunctionSymbolName,
 			&originalFunctionPtr,
 			NULL );
-	
   
-  //originalFunctionPtr = dlsym(RTLD_DEFAULT, originalFunctionSymbolName);
-  if (originalFunctionPtr != NULL)
+  if (originalFunctionPtr == NULL)
     {
-#ifdef DEBUG
-      NSLog(@"function found @ 0x%08x", originalFunctionPtr);
-#endif
-    }
-  else
-    {
-#ifdef DEBUG
-      NSLog(@"function not found: %s", originalFunctionSymbolName);
+#ifdef DEBUG_MACH_OVERRIDE
+      infoLog(@"function not found: %s", originalFunctionSymbolName);
 #endif
     
       return -1;
     }
+  
+#ifdef DEBUG_MACH_OVERRIDE
+  infoLog(@"function found @ %p", originalFunctionSymbolName);
+#endif
   
 	return mach_override_ptr( originalFunctionPtr, overrideFunctionAddress,
 		originalFunctionReentryIsland );
@@ -241,13 +238,13 @@ mach_override_ptr(
 	Boolean overridePossible = eatKnownInstructions ((unsigned char *)originalFunctionPtr, 
 										&jumpRelativeInstruction, &eatenCount, originalInstructions);
 	if (eatenCount > kOriginalInstructionsSize) {
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
 		NSLog(@"Too many instructions eaten\n");
 #endif
 		overridePossible = false;
 	}
 	if (!overridePossible) err = err_cannot_override;
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
 	if (err)
     printf("err = %x %d\n", err, __LINE__);
 #endif
@@ -263,7 +260,7 @@ mach_override_ptr(
 					(vm_address_t) originalFunctionPtr, sizeof(long), false,
 					(VM_PROT_DEFAULT | VM_PROT_COPY) );
 	}
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
 	if (err)
     printf("err = %x %d\n", err, __LINE__);
 #endif
@@ -271,7 +268,7 @@ mach_override_ptr(
 	BranchIsland	*escapeIsland = NULL;
 	if( !err )	
 		err = allocateBranchIsland( &escapeIsland, kAllocateHigh, originalFunctionAddress );
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
 		if (err) printf("err = %x %d\n", err, __LINE__);
 #endif
 	
@@ -286,12 +283,12 @@ mach_override_ptr(
 		branchAbsoluteInstruction = 0x48000002 | escapeIslandAddress;
 	}
 #elif defined(__i386__) || defined(__x86_64__)
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
         if (err) printf("err = %x %d\n", err, __LINE__);
 #endif
 	if( !err )
 		err = setBranchIslandTarget_i386( escapeIsland, overrideFunctionAddress, 0 );
-#ifdef DEBUG
+#ifdef DEBUG_MACH_OVERRIDE
 	if (err) printf("err = %x %d\n", err, __LINE__);
 #endif
 	// Build the jump relative instruction to the escape island
@@ -653,7 +650,7 @@ eatKnownInstructions(
 		// See if instruction matches one  we know
 		AsmInstructionMatch* curInstr = possibleInstructions;
 		do { 
-			if (curInstructionKnown = codeMatchesInstruction(ptr, curInstr)) break;
+			if ((curInstructionKnown = codeMatchesInstruction(ptr, curInstr))) break;
 			curInstr++;
 		} while (curInstr->length > 0);
 		

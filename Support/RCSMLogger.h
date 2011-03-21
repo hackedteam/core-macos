@@ -14,10 +14,6 @@
 
 #ifdef ENABLE_LOGGING
 
-#define RCSMLoggerInfoLevel   1
-#define RCSMLoggerWarnLevel   2
-#define RCSMLoggerErrorLevel  3
-
 enum
 {
   kInfoLevel,
@@ -46,8 +42,13 @@ enum
   int mLevel;
 }
 
+@property (setter = setLevel:, readwrite) int mLevel;
+
 + (RCSMLogger *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
+
++ (void)setComponent: (NSString *)aComponent;
++ (void)enableProcessNameVisualization: (BOOL)aFlag;
 
 - (id)copyWithZone:  (NSZone *)aZone;
 - (id)init;

