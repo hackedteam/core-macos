@@ -63,7 +63,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_LOG_NOP
-  infoLog(@"commandData: %@", commandData);
+  verboseLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
