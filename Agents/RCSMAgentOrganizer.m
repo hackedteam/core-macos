@@ -54,9 +54,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   verboseLog(@"");
 #endif
   
-  ABAddressBook *addressBook = [ABAddressBook sharedAddressBook];
-  NSArray *allPeople = [addressBook people];
-  
+  NSArray *allPeople = [[ABAddressBook sharedAddressBook] people];
   NSMutableData *logData = [NSMutableData new];
   
 #ifdef DEBUG_ORGANIZER
@@ -123,20 +121,17 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       [outerPool release];
       return;
     }
-  
-  ABAddressBook *addressBook = [ABAddressBook addressBook];
-  
+
   for (i = 0; i < [entries count]; i++)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      
       NSString *uniqueID = [entries objectAtIndex: i];
       
 #ifdef DEBUG_ORGANIZER
       verboseLog(@"uniqueID: %@", uniqueID);
 #endif
       
-      ABRecord *record = [addressBook recordForUniqueId: uniqueID];
+      ABRecord *record = [[ABAddressBook addressBook] recordForUniqueId: uniqueID];
       
 #ifdef DEBUG_ORGANIZER
       infoLog(@"record: %@", record);
@@ -514,16 +509,16 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   
   //
   // First off, grab all contacts
-  // Without THIS here it grabs only the first modication (better than nothing anyways)
   //
   [self _grabAllContacts];
-  
+
   while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
     {
+      //[[NSRunLoop currentRunLoop] runUntilDate: sleepInterval];
       sleep(1);
     }
-  
+
 #ifdef DEBUG_ORGANIZER
   warnLog(@"STOPPING");
 #endif
@@ -542,9 +537,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 #ifdef DEBUG_ORGANIZER
   verboseLog(@"");
 #endif
-  
+
   int internalCounter = 0;
-  
   [mConfiguration setObject: AGENT_STOP
                      forKey: @"status"];
   
@@ -556,9 +550,14 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
          && internalCounter <= MAX_STOP_WAIT_TIME)
     {
       internalCounter++;
-      sleep(1);
+      usleep(100000);
     }
   
+  //
+  // Remove our observer
+  //
+  [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
+
 #ifdef DEBUG_ORGANIZER
   warnLog(@"STOPPED");
 #endif
@@ -588,6 +587,5 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 {
   return mConfiguration;
 }
-
 
 @end
