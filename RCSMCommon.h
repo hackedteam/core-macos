@@ -141,13 +141,11 @@ typedef struct os_version {
 // Size of the first 2 DWORDs that we need to skip in the configuration file
 #define TIMESTAMP_SIZE sizeof(int) * 2
 
-extern int32_t gMemCommandMaxSize;
-extern int32_t gMemLogMaxSize;
+extern int gMemCommandMaxSize;
+extern int gMemLogMaxSize;
 
 //#define SHMEM_COMMAND_MAX_SIZE  0x3000
 //#define SHMEM_LOG_MAX_SIZE      0x302460
-
-//#define SHMEM_LOG_MAX_SIZE    0x300000
 #define SHMEM_SEM_NAME          @"sem-mdworker"
 
 // Hooked external apps Identifier
@@ -284,7 +282,7 @@ extern u_int remoteAgents[];
 #define PROTO_UNINSTALL   0x0A  // Uninstall
 #define PROTO_RESUME      0x0B  // Send me back log "name" starting from "xByte"
 #define PROTO_DOWNLOAD    0x0C  // Download - send me file "name" (wchar)
-#define PROTO_UPLOAD      0x0D  // Upload - upload file "nane" big "nBytes" to "pathName"
+#define PROTO_UPLOAD      0x0D  // Upload - upload file "name" big "nBytes" to "pathName"
 #define PROTO_FILE        0x0E  // Gonna receive a "fileName" big "nBytes"
 #define PROTO_ID          0x0F  // Backdoor ID
 #define PROTO_INSTANCE    0x10  // Device ID
