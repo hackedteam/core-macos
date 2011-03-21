@@ -21,7 +21,6 @@
 
 #import "RCSMCommon.h"
 
-
 // Remember to md5 this
 #ifndef DEV_MODE
 char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
@@ -515,7 +514,7 @@ NSArray *searchFile(NSString *aFileMask)
   
   if (fp == NULL)
     {
-#ifdef DEBUG
+#ifdef DEBUG_COMMON
       errorLog(@"Failed to run command");
 #endif
       
