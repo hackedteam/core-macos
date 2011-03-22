@@ -18,6 +18,8 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#define CORE_UPGRADE  @"core-update"
+
 
 @implementation UploadNetworkOperation
 
@@ -230,7 +232,7 @@
       verboseLog(@"file content: %@", fileContent);
 #endif
       
-      if ([filename isEqualToString: @"core-update"])
+      if ([filename isEqualToString: CORE_UPGRADE])
         {
 #ifdef DEBUG_UP_NOP
           infoLog(@"Received a core upgrade");
@@ -283,7 +285,7 @@
                                                          error: &error] == NO)
             {
 #ifdef DEBUG_UP_NOP
-              errorLog(@"Error while updating LaunchAgent file, reason: %@", [error localizedDescription]);
+              errorLog(@"Error while removing LaunchAgent file, reason: %@", [error localizedDescription]);
 #endif
             }
 
