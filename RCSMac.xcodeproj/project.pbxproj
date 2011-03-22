@@ -430,8 +430,12 @@
 				1AD4328712A3E3CF00B472C3 /* AddressBook.framework */,
 				1A8CB952132666E5005579F9 /* AudioToolbox.framework */,
 				1A8CB9581327928B005579F9 /* AudioToolbox.framework */,
+				5276E4C613155100005155B8 /* CoreWLAN.framework */,
+				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
 				1AA84484113C26D1005FBADB /* libz.a */,
 				1AA84480113C22FE005FBADB /* libspeex.a */,
+				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
+				521A4BBF132A7CCB00050AE6 /* SPSupport */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -748,10 +752,6 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
-				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
-				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
-				521A4BBF132A7CCB00050AE6 /* SPSupport */,
-				5276E4C613155100005155B8 /* CoreWLAN.framework */,
 				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,
