@@ -13,9 +13,9 @@
 
 @protocol Transport
 
-@required
-- (BOOL)connect;
-- (BOOL)disconnect;
+//@required
+//- (BOOL)connect;
+//- (BOOL)disconnect;
 
 @end
 

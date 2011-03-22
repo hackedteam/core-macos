@@ -63,7 +63,7 @@
   [commandData appendData: commandSha];
   
 #ifdef DEBUG_LOG_NOP
-  infoLog(@"commandData: %@", commandData);
+  verboseLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
@@ -78,6 +78,17 @@
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  if (replyData == nil)
+    {
+#ifdef DEBUG_LOG_NOP
+      errorLog(@"empty reply from server");
+#endif
+      [commandData release];
+      [outerPool release];
+
+      return NO;
+    }
+
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
   [replyDecrypted decryptWithKey: gSessionKey];
   

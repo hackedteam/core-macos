@@ -28,7 +28,7 @@ int main (int argc, const char *argv[])
                                [[NSBundle mainBundle] bundlePath]];
   
   gUtil = [RCSMUtils sharedInstance];
-  RCSMCore *core = [[[RCSMCore alloc] init] autorelease];
+  RCSMCore *core = [[RCSMCore alloc] init];
   
   //
   // Check if we'be been installed by offline cd

@@ -13,6 +13,7 @@
 build/*
 *.xcworkspace
 xcuserdata
+project_backup.pbxproj
 
 #
 # vim
@@ -23,3 +24,5 @@ xcuserdata
 # var files
 #
 log
+tags
+*_old*
