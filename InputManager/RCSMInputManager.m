@@ -112,7 +112,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (methodOriginal == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      errorLog(@"Message not found [%s %s]\n", class_getName(_class), name);
+      errorLog(@"Error on class_getInstanceMethod for [%s %s]\n", class_getName(_class), name);
 #endif
       
       return FALSE;
@@ -139,7 +139,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if (methodNew == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      errorLog(@"Message not found [%s %s]\n", class_getName(_class), newName);
+      errorLog(@"Method not found after add [%s %s]\n", class_getName(_class), newName);
 #endif
     
       return FALSE;

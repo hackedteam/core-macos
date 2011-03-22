@@ -2767,7 +2767,7 @@ static NSLock *gSyncLock                  = nil;
                action: (u_int)actionID
 {
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Registering event type %d", aType);
+  verboseLog(@"Registering event type %d", aType);
 #endif
 
   NSMutableDictionary *eventConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
@@ -2821,7 +2821,7 @@ static NSLock *gSyncLock                  = nil;
                 action: (u_int)actionID
 {
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Registering action ID (%d) with type (%d)", actionID, actionType);
+  verboseLog(@"Registering action ID (%d) with type (%d)", actionID, actionType);
 #endif
   NSMutableDictionary *actionConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
  
@@ -2872,7 +2872,7 @@ static NSLock *gSyncLock                  = nil;
                status: (u_int)status
 {
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
+  verboseLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
         (status == 1 ) ? @"activated" : @"deactivated", agentData);
 #endif
   NSMutableDictionary *agentConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
