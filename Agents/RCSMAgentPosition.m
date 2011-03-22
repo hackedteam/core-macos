@@ -13,7 +13,6 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
-#define DEBUG_POSITION
 
 #define AIRPORT_TOOL @"/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
 
@@ -228,7 +227,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     [[NSFileManager defaultManager] removeItemAtPath: tmpXmlName error: nil];
     
 #ifdef DEBUG_POSITION
-    NSLog(@"%s: tmpData 0x%X", __FUNCTION__, (void*)tmpData);
+    NSLog(@"%s: tmpData 0x%X", __FUNCTION__, (u_int)tmpData);
 #endif
     
     if (tmpData != nil && [tmpData length])
@@ -518,9 +517,8 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 
-  CFStringRef en1 = CFSTR("en1");
-  
-  BOOL isAirportTurnedOn = YES;
+  //CFStringRef en1 = CFSTR("en1");
+  //BOOL isAirportTurnedOn = YES;
   
   LocationAdditionalData *agentAdditionalHeader;
   NSError *err = nil;
@@ -624,7 +622,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
       CWInterface *icw = [scan objectAtIndex: i];
 
 #ifdef DEBUG_POSITION
-      NSLog(@"%s: icw ptr 0x%x", __FUNCTION__, icw);
+      NSLog(@"%s: icw ptr 0x%x", __FUNCTION__, (u_int)icw);
 #endif
       
       if ([icw ssidLen] != nil)
