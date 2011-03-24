@@ -12,10 +12,6 @@
 #import "NetworkOperation.h"
 #import "RESTTransport.h"
 
-#define CORE_UPGRADE  @"core-update"
-#define DYLIB_UPGRADE @"dylib-update"
-#define KEXT_UPGRADE  @"kext-update"
-
 
 @interface UpgradeNetworkOperation : NSObject <NetworkOperation>
 {

