@@ -739,8 +739,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   
-    if (positionRawData->iType == LOGGER_WIFI) 
-      [self grabHotspots];
+    // Bug on consolle: dont check type of logging
+    //if (positionRawData->iType == LOGGER_WIFI) 
+    [self grabHotspots];
     
     usleep(uSeconds);
     
