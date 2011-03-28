@@ -11,7 +11,6 @@
 #import "RCSMCommon.h"
 #import "RCSMTaskManager.h"
 
-#define DEBUG_DEVICE
 
 NSString *kSPHardwareDataType     = @"SPHardwareDataType";
 NSString *kSPApplicationsDataType = @"SPApplicationsDataType";

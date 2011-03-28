@@ -302,7 +302,6 @@
 		521B22C41312BA360077A491 /* RCSMAgentPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPosition.h; path = Agents/RCSMAgentPosition.h; sourceTree = "<group>"; };
 		521B22C51312BA360077A491 /* RCSMAgentPosition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPosition.m; path = Agents/RCSMAgentPosition.m; sourceTree = "<group>"; };
 		521DA5FD125C884000A3D49E /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
-		5250ED2613097EA60058AE63 /* ffurl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ffurl.mm; sourceTree = "<group>"; };
 		5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
 		5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
 		5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
@@ -431,8 +430,12 @@
 				1AD4328712A3E3CF00B472C3 /* AddressBook.framework */,
 				1A8CB952132666E5005579F9 /* AudioToolbox.framework */,
 				1A8CB9581327928B005579F9 /* AudioToolbox.framework */,
+				5276E4C613155100005155B8 /* CoreWLAN.framework */,
+				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
 				1AA84484113C26D1005FBADB /* libz.a */,
 				1AA84480113C22FE005FBADB /* libspeex.a */,
+				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
+				521A4BBF132A7CCB00050AE6 /* SPSupport */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -738,7 +741,6 @@
 		1AF610010FA72D50003F2C12 /* InputManager */ = {
 			isa = PBXGroup;
 			children = (
-				5250ED2613097EA60058AE63 /* ffurl.mm */,
 				1A68E0230FB87A9300B17F60 /* Agents */,
 				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
 				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,
@@ -750,10 +752,6 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
-				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
-				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
-				521A4BBF132A7CCB00050AE6 /* SPSupport */,
-				5276E4C613155100005155B8 /* CoreWLAN.framework */,
 				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,

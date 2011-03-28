@@ -57,6 +57,8 @@ BOOL VPSkypeStartAgent()
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
+  BOOL success = YES;
+
   gIsSkypeVoipAgentActive   = YES;
   gIsSkypeVoipAgentStopped  = NO;
 
@@ -83,7 +85,7 @@ BOOL VPSkypeStartAgent()
       warnLog(@"Agent is already activated");
 #endif
       [outerPool release];
-      return NO;
+      success = NO;
     }
 
   //
@@ -118,12 +120,12 @@ BOOL VPSkypeStartAgent()
   gMaxSampleSize *= 8;
   
 #ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"sampleSize  : %d", gMaxSampleSize);
-  verboseLog(@"compression : %d", gCompressFactor);
+  infoLog(@"sampleSize  : %d", gMaxSampleSize);
+  infoLog(@"compression : %d", gCompressFactor);
 #endif
   
   [outerPool release];
-  return YES;
+  return success;
 }
 
 BOOL VPSkypeStopAgent()
@@ -324,6 +326,9 @@ BOOL logCall(u_int channel, BOOL closeCall)
   
   if (closeCall == YES)
     {
+#ifdef DEBUG_VOIP_SKYPE
+      warnLog(@"Closing CALL");
+#endif
       flags |= SKYPE_CLOSE_CALL;
     }
   

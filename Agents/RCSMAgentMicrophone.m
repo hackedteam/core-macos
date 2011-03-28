@@ -722,7 +722,7 @@ void myInputAudioCallback(void                               *inUserData,
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  int fileCounter;
+  //int fileCounter;
 
   if (mIsRunning == YES)
     {

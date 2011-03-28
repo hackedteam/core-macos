@@ -11,10 +11,10 @@
 
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
-#import "RCSMConfManager.h"
-#import "RCSMTaskManager.h"
 
 #import "RCSMDesktopImage.h"
+
+#import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
 //#define TEST_MODE
@@ -26,6 +26,12 @@ int main (int argc, const char *argv[])
  
   NSString *offlineFlagPath = [[NSString alloc] initWithFormat: @"%@/off.flg",
                                [[NSBundle mainBundle] bundlePath]];
+
+#ifdef ENABLE_LOGGING
+  [RCSMLogger setComponent: @"core"];
+  infoLog(@"STARTING");
+#endif
+
   
   gUtil = [RCSMUtils sharedInstance];
   RCSMCore *core = [[RCSMCore alloc] init];

