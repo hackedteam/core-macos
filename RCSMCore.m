@@ -2129,7 +2129,7 @@ static void computerWillShutdown(CFMachPortRef port,
   // configd is just launching now.
   // Why: if configd crashed with "System Shutdown" == kCFbooleanTrue, reset
   // it now as the situation may no longer apply.
-  _setRootDomainProperty(CFSTR("System Shutdown"), kCFBooleanFalse);
+  //_setRootDomainProperty(CFSTR("System Shutdown"), kCFBooleanFalse);
   
   if (gOSMajor == 10 && gOSMinor == 5)
     {
