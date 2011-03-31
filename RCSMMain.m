@@ -17,8 +17,6 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
-//#define TEST_MODE
-
 
 int main (int argc, const char *argv[])
 {
@@ -31,7 +29,6 @@ int main (int argc, const char *argv[])
   [RCSMLogger setComponent: @"core"];
   infoLog(@"STARTING");
 #endif
-
   
   gUtil = [RCSMUtils sharedInstance];
   RCSMCore *core = [[RCSMCore alloc] init];
