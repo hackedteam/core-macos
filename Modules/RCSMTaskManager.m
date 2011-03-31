@@ -645,7 +645,7 @@ static NSLock *gSyncLock                  = nil;
         break;
       }
     case AGENT_CAM:
-      {   
+      {
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Webcam");
 #endif
