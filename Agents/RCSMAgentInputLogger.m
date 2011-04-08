@@ -879,11 +879,10 @@ static int height  = 30;
                                         fromComponent: COMP_AGENT] == TRUE)
                   {
 #ifdef DEBUG_INPUT_LOGGER
-                  NSLog(@"%s: Logged and mouse: %@ with size %d struct size %d", 
-                        __FUNCTION__, 
-                        keyBuffer, 
-                        shMemoryHeader->commandDataSize,
-                        sizeof(shMemoryLog));
+                    verboseLog(@"Logged mouse: %@ with size %d struct size %d", 
+                               keyBuffer, 
+                               shMemoryHeader->commandDataSize,
+                               sizeof(shMemoryLog));
 #endif
                   }
                 else
@@ -916,15 +915,21 @@ static int height  = 30;
 
 - (void)becomeKeyWindowHook
 {
+#ifdef DEBUG_INPUT_LOGGER
+  infoLog(@"context switched: 1");
+#endif
+
   [self becomeKeyWindowHook];
-  
   contextHasBeenSwitched = 1;
 }
 
 - (void)resignKeyWindowHook
 {
+#ifdef DEBUG_INPUT_LOGGER
+  infoLog(@"context switched: 0");
+#endif
+
   [self resignKeyWindowHook];
-  
   contextHasBeenSwitched = 0;
 }
 

