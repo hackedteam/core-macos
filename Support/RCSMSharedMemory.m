@@ -69,7 +69,6 @@ static int testPreviousTime = 0;
     }
   
   [mSemaphoreName release];
-  
   [super dealloc];
 }
 
