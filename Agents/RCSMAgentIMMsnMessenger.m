@@ -161,8 +161,8 @@ void logMessage(NSString *message)
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
-  // Delimeter
-  unsigned int del = DELIMETER;
+  // Delimiter
+  unsigned int del = LOG_DELIMITER;
   [entryData appendBytes: &del
                   length: sizeof(del)];
 

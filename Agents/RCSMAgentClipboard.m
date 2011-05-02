@@ -107,8 +107,8 @@
       [entryData appendBytes: &unicodeNullTerminator
                       length: sizeof(short)];
       
-      // Delimeter
-      uint32_t del = DELIMETER;
+      // Delimiter
+      uint32_t del = LOG_DELIMITER;
       [entryData appendBytes: &del
                       length: sizeof(del)];
       

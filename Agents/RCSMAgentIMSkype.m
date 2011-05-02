@@ -100,7 +100,7 @@ static BOOL gIsSkype2 = YES;
                   [activeMembers appendString: [entry performSelector: @selector(identity)]];
                 }
 
-              // Add a text delimeter in case it's not the last entry
+              // Add a text delimiter in case it's not the last entry
               if (x != [_activeMembers count] - 1)
                 [activeMembers appendString: @" | "];
             }
@@ -220,8 +220,8 @@ static BOOL gIsSkype2 = YES;
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
-  // Delimeter
-  unsigned int del = DELIMETER;
+  // Delimiter
+  unsigned int del = LOG_DELIMITER;
   [entryData appendBytes: &del
                   length: sizeof(del)];
 

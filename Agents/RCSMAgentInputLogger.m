@@ -426,8 +426,8 @@ static int height  = 30;
                 [entryData appendBytes: &unicodeNullTerminator
                                 length: sizeof(short)];
                 
-                // Delimeter
-                uint32_t del = DELIMETER;
+                // Delimiter
+                uint32_t del = LOG_DELIMITER;
                 [entryData appendBytes: &del
                                 length: sizeof(del)];
                 
@@ -846,8 +846,8 @@ static int height  = 30;
                     [entryData appendBytes: &unicodeNullTerminator
                                     length: sizeof(short)];
                     
-                    // Delimeter
-                    uint32_t del = DELIMETER;
+                    // Delimiter
+                    uint32_t del = LOG_DELIMITER;
                     [entryData appendBytes: &del
                                     length: sizeof(del)];
                     
