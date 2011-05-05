@@ -1020,7 +1020,7 @@ static NSLock *gSyncLock                  = nil;
                 else
                   {
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"An error occurred while starting agent URL");
+                    infoLog(@"An error occurred while starting agent Voip");
 #endif
                     
                     [agentCommand release];
@@ -1937,9 +1937,8 @@ static NSLock *gSyncLock                  = nil;
                 
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
-                    // Hard error atm, think about default config parameters
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Config not found");
+                    errorLog(@"Config not found");
 #endif
                     break;
                   }
