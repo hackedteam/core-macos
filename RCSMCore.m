@@ -1791,6 +1791,12 @@ static void computerWillShutdown(CFMachPortRef port,
           
           exit(0);
         }
+      else
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"mdworker flag found! Already loaded by launchd");
+#endif
+        }
       
       return YES;
     }
