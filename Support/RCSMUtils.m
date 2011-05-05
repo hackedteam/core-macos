@@ -271,6 +271,7 @@ static RCSMUtils *sharedUtils = nil;
        withArguments: _tempArguments
         waitUntilEnd: YES];
   
+  [_tempArguments release];
   return YES;
 }
 
