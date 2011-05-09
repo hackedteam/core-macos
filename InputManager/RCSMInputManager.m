@@ -1360,24 +1360,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                 @selector(openDocumentWithContentsOfURLHook:display:error:)),
                              @selector(openDocumentWithContentsOfURLHook:display:error:));
 
-          className   = objc_getClass("NSApplication");
-          classSource = objc_getClass("myNSApplication");
-          swizzleByAddingIMP(className,
-                             @selector(openFile:ok:),
-                             class_getMethodImplementation(classSource,
-                                                           @selector(openFileHook:ok:)),
-                             @selector(openFileHook:ok:));
-          swizzleByAddingIMP(className,
-                             @selector(_openFileWithoutUI:),
-                             class_getMethodImplementation(classSource,
-                                                           @selector(_openFileWithoutUIHook:)),
-                             @selector(_openFileWithoutUIHook:));
-          swizzleByAddingIMP(className,
-                             @selector(_doOpenFile:ok:tryTemp:),
-                             class_getMethodImplementation(classSource,
-                                                           @selector(_doOpenFileHook:ok:tryTemp:)),
-                             @selector(_doOpenFileHook:ok:tryTemp:));
-
           FCStartAgent();
         }
       else if (fileFlag == 3)

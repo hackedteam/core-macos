@@ -559,37 +559,3 @@ BOOL needToLogEntry(NSString *entry)
 }
 
 @end
-
-
-@implementation myNSApplication
-
-- (int)openFileHook: (id)arg1 ok: (id)arg2
-{
-#ifdef DEBUG_FILE_CAPTURE
-  infoLog(@"arg1: %@", arg1);
-#endif
-
-  return [self openFileHook: arg1 ok: arg2];
-}
-
-- (char)_openFileWithoutUIHook: (id)arg1
-{
-#ifdef DEBUG_FILE_CAPTURE
-  infoLog(@"arg1: %@", arg1);
-#endif
-
-  return [self _openFileWithoutUIHook: arg1];
-}
-
-- (void)_doOpenFileHook: (id)arg1 ok: (id)arg2 tryTemp: (int *)arg3
-{
-#ifdef DEBUG_FILE_CAPTURE
-  infoLog(@"arg1: %@", arg1);
-#endif
-
-  return [self _doOpenFileHook: arg1
-                            ok: arg2
-                       tryTemp: arg3];
-}
-
-@end

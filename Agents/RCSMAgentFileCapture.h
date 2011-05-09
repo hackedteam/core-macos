@@ -18,12 +18,3 @@ BOOL FCStartAgent();
                                   error: (NSError **)outError;
 
 @end
-
-@interface myNSApplication : NSObject
-
-- (int)openFileHook: (id)arg1 ok:(id)arg2;
-- (char)_openFileWithoutUIHook: (id)arg1;
-- (void)_doOpenFileHook: (id)arg1 ok: (id)arg2 tryTemp: (int *)arg3;
-
-
-@end
