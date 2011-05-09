@@ -2564,18 +2564,18 @@ static NSLock *gSyncLock                  = nil;
                 infoLog(@"Stopping Agent Device");
 #endif
                 RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
-                
+
                 if ([agentDevice stop] == FALSE)
-                {
+                  {
 #ifdef DEBUG_TASK_MANAGER
-                  infoLog(@"Error while stopping agent agentDevice");
+                    infoLog(@"Error while stopping agent agentDevice");
 #endif
-                  return NO;
-                }
+                    return NO;
+                  }
                 else
-                {
-                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                }
+                  {
+                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
+                  }
                 break;
               }
             case AGENT_MICROPHONE:
