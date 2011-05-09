@@ -2725,7 +2725,7 @@ static NSLock *gSyncLock                  = nil;
       while ([anObject objectForKey: @"status"] != EVENT_STOPPED
              && counter <= MAX_STOP_WAIT_TIME)
         {
-          sleep(1);
+          usleep(100000);
           counter++;
         }
       

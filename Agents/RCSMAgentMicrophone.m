@@ -811,7 +811,7 @@ void myInputAudioCallback(void                               *inUserData,
 - (BOOL)stop
 {
 #ifdef DEBUG_MIC
-  infoLog(@"");
+  verboseLog(@"");
 #endif
 
   int internalCounter = 0;
@@ -827,7 +827,7 @@ void myInputAudioCallback(void                               *inUserData,
          && internalCounter                             <= MAX_STOP_WAIT_TIME)
     {
       internalCounter++;
-      sleep(1);
+      usleep(100000);
     }
   
 #ifdef DEBUG_MIC

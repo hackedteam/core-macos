@@ -131,7 +131,7 @@ typedef struct os_version {
 #define MAXIDENTIFIERLENGTH 22
 
 // Max seconds to wait for an agent/event stop
-#define MAX_STOP_WAIT_TIME 5
+#define MAX_STOP_WAIT_TIME 10
 
 // Max seconds to wait for an action to trigger (e.g. waiting for a sync end)
 #define MAX_ACTION_WAIT_TIME 60
