@@ -10,6 +10,7 @@
 
 
 BOOL FCStartAgent();
+BOOL FCStopAgent();
 
 @interface myNSDocumentController : NSObject
 

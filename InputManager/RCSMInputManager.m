@@ -1366,7 +1366,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
           fileFlag = 0;
 
-          //FCStopAgent();
+          FCStopAgent();
           
           Class className   = objc_getClass("NSDocumentController");
           Class classSource = objc_getClass("myNSDocumentController");

@@ -30,6 +30,14 @@ BOOL FCStartAgent()
   infoLog(@"Setting up agent file capture parameters");
 #endif
 
+  if (gIsFileOpenActive == YES || gIsFileCaptureActive == YES)
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      warnLog(@"File agent is already active");
+#endif
+      return YES;
+    }
+
   //
   // Read configuration
   //
@@ -85,7 +93,7 @@ BOOL FCStartAgent()
 
       gMinSize  = fileConfiguration->minFileSize;
       gMaxSize  = fileConfiguration->maxFileSize;
-      gFromDate = [NSDate dateWithTimeIntervalSince1970: minDate];
+      gFromDate = [[NSDate dateWithTimeIntervalSince1970: minDate] retain];
 
       if (gIncludeList == nil)
         gIncludeList = [[NSMutableArray alloc] init];
@@ -147,6 +155,29 @@ BOOL FCStartAgent()
   
   [outerPool release];
   return success;
+}
+
+BOOL FCStopAgent()
+{
+  if (gIsFileCaptureActive == NO && gIsFileOpenActive == NO)
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      warnLog(@"File Capture agent is already stopped");
+#endif
+      return YES;
+    }
+
+  gIsFileOpenActive     = NO;
+  gIsFileCaptureActive  = NO;
+
+  [gFromDate release];
+  [gIncludeList release];
+  [gExcludeList release];
+
+  gIncludeList = nil;
+  gExcludeList = nil;
+
+  return YES;
 }
 
 //
