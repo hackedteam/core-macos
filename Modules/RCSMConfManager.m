@@ -193,8 +193,8 @@ static int actionCounter = 0;
       header = (agentStruct *)[rawHeader bytes];
       
 #ifdef DEBUG_CONF_MANAGER
-      verboseLog(@"agent ID: %x", header->agentID);
-      verboseLog(@"agent status: %d", header->status);
+      infoLog(@"agent ID: %x", header->agentID);
+      infoLog(@"agent status: %d", header->status);
 #endif
       
       if (header->internalDataSize)
@@ -214,7 +214,7 @@ static int actionCounter = 0;
             memcpy((void*)[tempData bytes], (void*)[aData bytes] + pos + 0xC, sizeof(UInt32)); 
             
 #ifdef DEBUG_CONF_MANAGER
-            NSLog(@"%s: AGENT DEVICE additional header %@", __FUNCTION__, tempData);
+            infoLog(@"AGENT DEVICE additional header %@", tempData);
 #endif
           }
           else

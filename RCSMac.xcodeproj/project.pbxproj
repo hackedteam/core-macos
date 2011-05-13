@@ -95,6 +95,8 @@
 		1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */; };
 		1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */; };
 		1ABEEE2E0F975CE100063113 /* RCSMCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABEEE2D0F975CE100063113 /* RCSMCore.m */; };
+		1AC279A813584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */; };
+		1AC279A913584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */; };
 		1AD1D6C11099EB96005B548F /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
 		1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
 		1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
@@ -264,6 +266,8 @@
 		1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMUtils.m; path = Support/RCSMUtils.m; sourceTree = "<group>"; };
 		1ABEEE2C0F975CE100063113 /* RCSMCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMCore.h; sourceTree = "<group>"; };
 		1ABEEE2D0F975CE100063113 /* RCSMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMCore.m; sourceTree = "<group>"; };
+		1AC279A613584222009C0812 /* RCSMAgentIMMsnMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMMsnMessenger.h; path = Agents/RCSMAgentIMMsnMessenger.h; sourceTree = "<group>"; };
+		1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMMsnMessenger.m; path = Agents/RCSMAgentIMMsnMessenger.m; sourceTree = "<group>"; };
 		1AD1D6C71099EBAF005B548F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		1AD4328712A3E3CF00B472C3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkOperation.h; path = Modules/NetworkOperation.h; sourceTree = "<group>"; };
@@ -583,6 +587,8 @@
 			children = (
 				1A68E04E0FB881DD00B17F60 /* RCSMAgentIMSkype.h */,
 				1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */,
+				1AC279A613584222009C0812 /* RCSMAgentIMMsnMessenger.h */,
+				1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */,
 			);
 			name = IM;
 			sourceTree = "<group>";
@@ -973,6 +979,7 @@
 				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
 				1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */,
 				1A8CB95613278ECB005579F9 /* RCSMAgentMicrophoneTest.m in Sources */,
+				1AC279A913584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -991,6 +998,7 @@
 				1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */,
 				1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */,
 				5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */,
+				1AC279A813584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1120,6 +1128,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_OBJC_GC = supported;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1159,6 +1168,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_OBJC_GC = supported;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";

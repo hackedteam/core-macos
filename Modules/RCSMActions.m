@@ -334,42 +334,45 @@
 #endif
 
   [aConfiguration retain];
-  
   NSData *configData = [[aConfiguration objectForKey: @"data"] retain];
-  
-  NSString *commandLine = [[NSString alloc] initWithData: configData
-                                                encoding: NSASCIIStringEncoding];
+  NSMutableString *commandLine = [[NSMutableString alloc] initWithData: configData
+                                                              encoding: NSASCIIStringEncoding];
+
+  [commandLine replaceOccurrencesOfString: @"$dir$"
+                               withString: [[NSBundle mainBundle] bundlePath]
+                                  options: NSCaseInsensitiveSearch
+                                    range: NSMakeRange(0, [configData length])];
   
 #ifdef DEBUG_ACTIONS
   warnLog(@"commandLine: %@", commandLine);
 #endif
-  
+
   NSMutableArray *_arguments = [[NSMutableArray alloc] init];
-  
+
   [_arguments addObject: @"-c"];
   [_arguments addObject: commandLine];
-  
+
   NSTask *task = [[NSTask alloc] init];
   [task setLaunchPath: @"/bin/sh"];
   [task setArguments: _arguments];
-  
+
   NSPipe *pipe = [NSPipe pipe];
   [task setStandardOutput: pipe];
   [task setStandardError: pipe];
-  
+
   [task launch];
   [task waitUntilExit];
   [task release];
-  
+
   NSNumber *status = [NSNumber numberWithInt: 0];
   [aConfiguration setObject: status forKey: @"status"];
-  
+
   [configData release];
   [commandLine release];
   [_arguments release];
-  
+
   [aConfiguration release];
-  
+
   return TRUE;
 }
 

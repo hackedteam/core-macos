@@ -143,7 +143,7 @@
       //
       // Integrity checks
       //  - Size
-      //  - END Delimeter
+      //  - END Delimiter
       //  - CRC
       //
       u_long readFilesize;

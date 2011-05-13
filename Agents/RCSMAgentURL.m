@@ -26,75 +26,6 @@
 static NSDate   *gURLDate = nil;
 static NSString *gPrevURL = nil;
 
-NSDictionary *getActiveWindowInformationForPID(pid_t pid)
-{
-  ProcessSerialNumber psn = { 0,0 };
-  NSDictionary *activeAppInfo;
-  
-  OSStatus success;
-  
-  CFArrayRef windowsList;
-  int windowPID;
-  pid_t activePid;
-  
-  NSNumber *windowID    = nil;
-  NSString *processName = nil;
-  NSString *windowName  = nil;
-  
-  // Active application on workspace
-  activeAppInfo = [[NSWorkspace sharedWorkspace] activeApplication];
-  psn.highLongOfPSN = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberHigh"]
-                       unsignedIntValue];
-  psn.lowLongOfPSN  = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberLow"]
-                       unsignedIntValue];
-  
-  // Get PID of the active Application(s)
-  if (success = GetProcessPID(&psn, &activePid) != 0)
-    return nil;
-  
-  // Window list front to back
-  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
-                                           kCGNullWindowID);
-  
-  if (windowsList == NULL)
-    return nil;
-  
-  for (NSMutableDictionary *entry in (NSArray *)windowsList)
-    {
-      windowPID = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
-      
-      if (windowPID == pid)
-        {
-          windowID    = [NSNumber numberWithUnsignedInt:
-                         [[[entry objectForKey: (id)kCGWindowNumber] retain] unsignedIntValue]];
-          processName = [[entry objectForKey: (id)kCGWindowOwnerName] copy];
-          windowName  = [[entry objectForKey: (id)kCGWindowName] copy];
-          break;
-        }
-    }
-  CFRelease(windowsList);
-  
-  if (windowPID != pid)
-    return nil;
-  
-  NSArray *keys = [NSArray arrayWithObjects: @"windowID",
-                                             @"processName",
-                                             @"windowName",
-                                             nil];
-  NSArray *objects = [NSArray arrayWithObjects: windowID,
-                                                processName,
-                                                windowName,
-                                                nil];
-  NSDictionary *windowInfo = [[NSDictionary alloc] initWithObjects: objects
-                                                           forKeys: keys];
-  
-  [processName release];
-  [windowName release];
-  [windowID release];
-  
-  return windowInfo;
-}
-
 @interface myLoggingObject : NSObject
 
 - (void)logURL: (NSString *)URL;
@@ -273,8 +204,8 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid)
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
-  // Delimeter
-  unsigned int del = DELIMETER;
+  // Delimiter
+  unsigned int del = LOG_DELIMITER;
   [entryData appendBytes: &del
                   length: sizeof(del)];
   

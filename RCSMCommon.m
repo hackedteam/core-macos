@@ -67,7 +67,7 @@ char gMode[]          = "iuherEoR93457dFADfasDjfNkA7Txmkl";
 char gMode[]          = "Ah57K";
 #endif
 
-int gMemCommandMaxSize = 0x3000;
+int gMemCommandMaxSize = 0x4000;
 int gMemLogMaxSize     = 0x302460;
 
 RCSMSharedMemory  *gSharedMemoryCommand;
@@ -94,7 +94,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2011032101;
+u_int gVersion        = 2011032103;
 u_int gSkypeQuality   = 0;
 
 // OS version

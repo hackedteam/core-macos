@@ -17,8 +17,6 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
-//#define TEST_MODE
-
 
 int main (int argc, const char *argv[])
 {
@@ -31,13 +29,12 @@ int main (int argc, const char *argv[])
   [RCSMLogger setComponent: @"core"];
   infoLog(@"STARTING");
 #endif
-
   
   gUtil = [RCSMUtils sharedInstance];
   RCSMCore *core = [[RCSMCore alloc] init];
   
   //
-  // Check if we'be been installed by offline cd
+  // Check if we've been installed by offline cd
   //
   if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlagPath])
     {

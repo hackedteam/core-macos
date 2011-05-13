@@ -24,6 +24,8 @@ extern RCSMSharedMemory *mSharedMemoryCommand;
 extern RCSMSharedMemory *mSharedMemoryLogging;
 extern int32_t gBackdoorPID;
 
+NSDictionary *getActiveWindowInformationForPID(pid_t pid);
+
 @interface RCSMInputManager : NSObject
 
 //

