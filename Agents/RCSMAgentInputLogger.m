@@ -288,6 +288,8 @@ static int height  = 30;
                 NSLog(@"Error while logging mouse to shared memory");
 #endif
               }
+            
+            [logData release];
           }
         
         [entryData release];
