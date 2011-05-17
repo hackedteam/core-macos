@@ -11,6 +11,7 @@
 
 
 NSDictionary *getActiveWindowInformation();
+void URLStartAgent();
 
 @interface myBrowserWindowController : NSObject
 

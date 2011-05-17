@@ -949,7 +949,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           // Safari
           //
           usleep(2000000);
-                        
+          URLStartAgent();
+
           Class className   = objc_getClass("BrowserWindowController");
           Class classSource = objc_getClass("myBrowserWindowController");
         
@@ -977,9 +978,11 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           if (className != nil)
             {
-              swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
-                                  class_getMethodImplementation(className, @selector(webFrameLoadCommittedHook:)),
-                                  @selector(webFrameLoadCommittedHook:));
+              //swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
+                                  //class_getMethodImplementation(className, @selector(webFrameLoadCommittedHook:)),
+                                  //@selector(webFrameLoadCommittedHook:));
+              swizzleMethod(className, @selector(webFrameLoadCommitted:),
+                            className, @selector(webFrameLoadCommittedHook:));
             }
           else
             {

