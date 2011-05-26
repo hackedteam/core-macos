@@ -395,7 +395,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   // This should be tag-1b -- len-3b (1dword)
   //
   u_int tag = aType << 24;
-  tag |= elemSize;
+  tag |= (elemSize & 0x00FFFFFF);
   
   [singleElement appendBytes: &tag
                       length: sizeof(u_int)];
