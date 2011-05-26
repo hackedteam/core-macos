@@ -33,6 +33,7 @@
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
 
+#import "RCSMInfoManager.h"
 #import "RCSMFileSystemManager.h"
 #import "RCSMEncryption.h"
 #import "RCSMLogManager.h"
@@ -2940,6 +2941,10 @@ static void computerWillShutdown(CFMachPortRef port,
   [gControlFlagLock lock];
   taskManager.mBackdoorControlFlag = mMainLoopControlFlag;
   [gControlFlagLock unlock];
+
+  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  [infoManager logActionWithDescription: @"Start"];
+  [infoManager release];
   
   //
   // Check /var/log/system.log

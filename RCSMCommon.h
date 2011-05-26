@@ -231,6 +231,7 @@ extern u_int remoteAgents[];
 #define ACTION_AGENT_STOP   0x0003
 #define ACTION_EXECUTE      0x0004
 #define ACTION_UNINSTALL    0x0005
+#define ACTION_INFO         0x0006
 
 // Configuration file Tags
 #define EVENT_CONF_DELIMITER "EVENTCONFS-"
@@ -313,6 +314,7 @@ extern u_int remoteAgents[];
 #define LOG_DOWNLOAD      0xD0D0
 #define LOG_FILESYSTEM    0xEDA1
 #define LOG_URL_SNAPSHOT  AGENT_URL+1
+#define LOG_INFO          0x0241
 
 #pragma mark -
 #pragma mark Configurator Struct Definition

