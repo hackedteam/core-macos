@@ -1185,7 +1185,6 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
-<<<<<<< Updated upstream
     case AGENT_FILECAPTURE:
       {
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
@@ -1261,7 +1260,9 @@ static NSLock *gSyncLock                  = nil;
 #endif
               }
           }
-=======
+        
+        break;
+      }
     case AGENT_CRISIS:
       {
 #ifdef DEBUG_TASK_MANAGER
@@ -1269,7 +1270,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
         gAgentCrisis |= CRISIS_START;
       
->>>>>>> Stashed changes
+
         break;
       }
     default:
@@ -2244,7 +2245,6 @@ static NSLock *gSyncLock                  = nil;
                                 
                 break;
               }
-<<<<<<< Updated upstream
             case AGENT_FILECAPTURE_OPEN:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2320,7 +2320,10 @@ static NSLock *gSyncLock                  = nil;
 #endif
                       }
                   }
-=======
+              
+                break;
+              
+              }
             case AGENT_CRISIS:
               {
 #ifdef DEBUG_TASK_MANAGER
@@ -2328,7 +2331,6 @@ static NSLock *gSyncLock                  = nil;
 #endif
                 gAgentCrisis |= CRISIS_START;                
                 
->>>>>>> Stashed changes
                 break;
               }
             default:

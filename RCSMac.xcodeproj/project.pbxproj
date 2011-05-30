@@ -147,6 +147,12 @@
 		5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */; };
 		5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 5269F6221330ED7200644B72 /* RCSMAgentApplication.m */; };
+		52D8361E1393915B00C18E70 /* libFFurlLib32.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361C1393915B00C18E70 /* libFFurlLib32.a */; };
+		52D8361F1393915B00C18E70 /* libFFurlLib64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361D1393915B00C18E70 /* libFFurlLib64.a */; };
+		52D836251393916B00C18E70 /* libmozalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836211393916B00C18E70 /* libmozalloc.dylib */; };
+		52D836261393916B00C18E70 /* libnspr4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836221393916B00C18E70 /* libnspr4.dylib */; };
+		52D836271393916B00C18E70 /* libxpcom.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836231393916B00C18E70 /* libxpcom.dylib */; };
+		52D836281393916B00C18E70 /* libxpcomglue_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836241393916B00C18E70 /* libxpcomglue_s.a */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -328,6 +334,12 @@
 		5269F6211330ED7200644B72 /* RCSMAgentApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentApplication.h; path = Agents/RCSMAgentApplication.h; sourceTree = "<group>"; };
 		5269F6221330ED7200644B72 /* RCSMAgentApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentApplication.m; path = Agents/RCSMAgentApplication.m; sourceTree = "<group>"; };
 		5276E4C613155100005155B8 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreWLAN.framework; sourceTree = DEVELOPER_DIR; };
+		52D8361C1393915B00C18E70 /* libFFurlLib32.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib32.a; path = Support/Firefox/libFFurlLib32.a; sourceTree = "<group>"; };
+		52D8361D1393915B00C18E70 /* libFFurlLib64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib64.a; path = Support/Firefox/libFFurlLib64.a; sourceTree = "<group>"; };
+		52D836211393916B00C18E70 /* libmozalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmozalloc.dylib; path = Support/Firefox/lib/libmozalloc.dylib; sourceTree = "<group>"; };
+		52D836221393916B00C18E70 /* libnspr4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnspr4.dylib; path = Support/Firefox/lib/libnspr4.dylib; sourceTree = "<group>"; };
+		52D836231393916B00C18E70 /* libxpcom.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpcom.dylib; path = Support/Firefox/lib/libxpcom.dylib; sourceTree = "<group>"; };
+		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -359,6 +371,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52D836251393916B00C18E70 /* libmozalloc.dylib in Frameworks */,
+				52D836261393916B00C18E70 /* libnspr4.dylib in Frameworks */,
+				52D836271393916B00C18E70 /* libxpcom.dylib in Frameworks */,
+				52D836281393916B00C18E70 /* libxpcomglue_s.a in Frameworks */,
+				52D8361E1393915B00C18E70 /* libFFurlLib32.a in Frameworks */,
+				52D8361F1393915B00C18E70 /* libFFurlLib64.a in Frameworks */,
 				1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */,
 				1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */,
 				1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */,
@@ -449,6 +467,12 @@
 				1AA84480113C22FE005FBADB /* libspeex.a */,
 				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
 				521A4BBF132A7CCB00050AE6 /* SPSupport */,
+				52D836211393916B00C18E70 /* libmozalloc.dylib */,
+				52D836221393916B00C18E70 /* libnspr4.dylib */,
+				52D836231393916B00C18E70 /* libxpcom.dylib */,
+				52D836241393916B00C18E70 /* libxpcomglue_s.a */,
+				52D8361C1393915B00C18E70 /* libFFurlLib32.a */,
+				52D8361D1393915B00C18E70 /* libFFurlLib64.a */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -1158,6 +1182,8 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/Firefox\"",
+					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
@@ -1197,6 +1223,8 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/Firefox\"",
+					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
