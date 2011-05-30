@@ -209,6 +209,7 @@ extern int gMemLogMaxSize;
 #define OFFT_CORE_PID     0x2440
 #define OFFT_APPLICATION  0x2840
 #define OFFT_FILECAPTURE  0x2C40
+#define OFFT_CRISIS       0x3040
 
 extern u_int remoteAgents[];
 

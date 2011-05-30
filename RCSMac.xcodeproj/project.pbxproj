@@ -1192,6 +1192,9 @@
 					"-framework",
 					AppKit,
 					"-fshort-wchar",
+					"-lazy-lxpcom",
+					"-lazy-lmozalloc",
+					"-lazy-lnspr4",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = RCSMInputManager;
@@ -1233,6 +1236,9 @@
 					"-framework",
 					AppKit,
 					"-fshort-wchar",
+					"-lazy-lxpcom",
+					"-lazy-lmozalloc",
+					"-lazy-lnspr4",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = RCSMInputManager;

