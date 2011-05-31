@@ -216,7 +216,7 @@ NSLock *connectionLock;
             
             break;
           }
-        case TIMER_DELTA:
+        case TIMER_INST:
           {
             int64_t configuredDate = 0;
             // 100-nanosec unit from installation date
@@ -257,16 +257,40 @@ NSLock *connectionLock;
         case TIMER_DAILY:
           {
             //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
+            NSDate *now = [NSDate date];
+            
             NSRange fixedRange;
             fixedRange.location = 11;
             fixedRange.length   = 8;
             
-            NSString *currDateStr = [[NSDate date] description];
+            // UTC timers
+            NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
+            
+            NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
+            [inFormat setTimeZone:timeZone];
+            [inFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+            
+            // Get current date string UTC
+            NSString *currDateStr = [inFormat stringFromDate: now];
+            [inFormat release];
             NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
             
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY currDateStr %@ (now %@)", currDateStr, now);
+#endif       
+            // Set current date time to midnight
             [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
-
-            NSDate *dayDate = [NSDate dateWithString: dayStr];
+            
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY dayStr %@", dayStr);
+#endif  
+            NSDateFormatter *outFormat = [[NSDateFormatter alloc] init];
+            [outFormat setTimeZone:timeZone];
+            [outFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+            
+            // Current midnite
+            NSDate *dayDate = [outFormat dateFromString: dayStr];
+            [outFormat release];
             
 #ifdef DEBUG_EVENTS
             infoLog(@"TIMER_DAILY dayDate %@", dayDate);
@@ -280,12 +304,13 @@ NSLock *connectionLock;
             infoLog(@"TIMER_DAILY min %@ max %@ curr %@ endActionID %d", 
                     lowDay, highDay, [NSDate date], endActionID);
 #endif            
+            
             if (timerDailyTriggered == NO &&
-                [[NSDate date] isGreaterThan: lowDay] &&
-                [[NSDate date] isLessThan: highDay])
+                [[now laterDate: lowDay] isEqualToDate: now] &&
+                [[now earlierDate: highDay] isEqualToDate: now])
             {
 #ifdef DEBUG_EVENTS
-              warnLog(@"TIMER_DAILY actionID triggered");
+              infoLog(@"TIMER_DAILY actionID triggered");
 #endif
               [taskManager triggerAction: actionID];
               
@@ -293,9 +318,12 @@ NSLock *connectionLock;
               
             } 
             else if (timerDailyTriggered == YES && 
-                     ([[NSDate date] isGreaterThan: highDay] ||
-                     [[NSDate date] isLessThan: lowDay]))
+                     ([[now laterDate: highDay] isEqualToDate: now]||
+                      [[now earlierDate: lowDay] isEqualToDate: now] ))
             {
+#ifdef DEBUG_EVENTS
+              infoLog(@"TIMER_DAILY endActionID triggered");
+#endif
               [taskManager triggerAction: endActionID];
               
               timerDailyTriggered = NO;
