@@ -24,9 +24,19 @@
       return nil;
     }
   
-  NSData *stringData = [self subdataWithRange: NSMakeRange(4, len - 1)];
-  NSString *string = [[NSString alloc] initWithData: stringData
-                                           encoding: encoding];
+  NSString *string = nil;
+  
+  @try
+    {
+      NSData *stringData = [self subdataWithRange: NSMakeRange(4, len - 1)];
+      string = [[NSString alloc] initWithData: stringData
+                                     encoding: encoding];
+    }
+  @catch (NSException *e)
+    {
+      return nil;
+    }
+
   
   return [string autorelease];
 }

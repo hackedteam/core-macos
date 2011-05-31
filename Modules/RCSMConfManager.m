@@ -602,9 +602,20 @@ static int actionCounter = 0;
   
   // Exclude sizeof(Final CRC) + sizeof(LEN field)
   endOfConfData = endOfConfData - sizeof(int) * 2;
+  NSData *configurationData = nil;
   
-  NSData *configurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
-                                                                           endOfConfData)];
+  @try
+    {
+      configurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
+                                                                       endOfConfData)];
+    }
+  @catch (NSException *e)
+    {
+#ifdef DEBUG_CONF_MANAGER
+      errorLog(@"exception on configData makerange (%@)", [e reason]);
+#endif
+    }
+
   
   u_long pos = 0;
   
