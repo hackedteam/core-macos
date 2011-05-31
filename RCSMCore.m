@@ -749,12 +749,33 @@ static void computerWillShutdown(CFMachPortRef port,
                                       + _mouseHeader->processNameLength
                                       + _mouseHeader->windowNameLength;
                 
-                NSMutableData *mouseAdditionalHeader = [[NSMutableData alloc] initWithData:
-                                                        [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
-                
-                NSMutableData *mouseData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
-                                                                         NSMakeRange([mouseAdditionalHeader length],
-                                                                                     [logData length] - [mouseAdditionalHeader length])]];
+                NSMutableData *mouseAdditionalHeader = nil;
+                NSMutableData *mouseData = nil;
+
+                @try
+                  {
+                    mouseAdditionalHeader = [[NSMutableData alloc] initWithData:
+                                             [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
+                  
+                    mouseData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
+                                                                      NSMakeRange([mouseAdditionalHeader length],
+                                                                                  [logData length] - [mouseAdditionalHeader length])]];
+#ifdef DEBUG_CORE
+                    infoLog(@"additional size: %d", additionalSize);
+                    infoLog(@"mouseadd header len: %d", [mouseAdditionalHeader length]);
+                    infoLog(@"logData len: %d", [logData length]);
+#endif
+                  }
+                @catch (NSException *e)
+                  {
+#ifdef DEBUG_CORE
+                    errorLog(@"exception on mouse header makerange (%@)", [e reason]);
+#endif
+                    [mouseAdditionalHeader release];
+                    [mouseData release];
+                    continue;
+                  }
+
                 //
                 // Create log here since we need to pass anAgentHeader as the
                 // additional file header
