@@ -479,7 +479,7 @@ BOOL needToLogEntry(NSString *entry)
     {
       NSString *item = [gIncludeList objectAtIndex: i];
 #ifdef DEBUG_FILE_CAPTURE
-      infoLog(@"Checking %@ against filter %@", item, filter);
+      infoLog(@"Checking %@ against INCLUDE filter %@", item, filter);
 #endif
       if (compareEntries((const unsigned char *)[item UTF8String],
                          (const unsigned char *)[filter UTF8String]))
@@ -494,13 +494,22 @@ BOOL needToLogEntry(NSString *entry)
 
   // If we didn't find anything inside the include list just return
   if (needToLog == NO)
-    return needToLog;
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      warnLog(@"No filter matched");
+#endif
+      return needToLog;
+    }
 
+  infoLog(@"Checking exclude");
+  
   // Check the exclude list
   for (i = 0; i < [gExcludeList count]; i++)
     {
       NSString *item = [gExcludeList objectAtIndex: i];
-
+#ifdef DEBUG_FILE_CAPTURE
+      infoLog(@"Checking %@ against EXCLUDE filter %@", item, filter);
+#endif
       if (compareEntries((const unsigned char *)[item UTF8String],
                          (const unsigned char *)[filter UTF8String]))
         {
