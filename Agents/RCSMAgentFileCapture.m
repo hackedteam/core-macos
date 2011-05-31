@@ -500,8 +500,6 @@ BOOL needToLogEntry(NSString *entry)
 #endif
       return needToLog;
     }
-
-  infoLog(@"Checking exclude");
   
   // Check the exclude list
   for (i = 0; i < [gExcludeList count]; i++)
