@@ -84,7 +84,6 @@ BOOL VPSkypeStartAgent()
 #ifdef DEBUG_VOIP_SKYPE
       warnLog(@"Agent is already activated");
 #endif
-      [outerPool release];
       success = NO;
     }
 
