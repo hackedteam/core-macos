@@ -944,6 +944,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       [tmpCrisisApp release];
       
       tmpPtr += iLen;
+      tmpPtr += sizeof(unichar);
     }
   }
   
@@ -970,7 +971,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   
   usleep(500000);
 
-  
   // Only for input manager
   if (gOSMajor    == 10 &&
       gOSMinor == 5 &&
