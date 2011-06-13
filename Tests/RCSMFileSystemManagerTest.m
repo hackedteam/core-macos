@@ -69,7 +69,8 @@
   RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
   BOOL success = NO;
   
-  success = [fsManager logFileAtPath: @"/Users/revenge/Desktop/antani.txt"];
+  success = [fsManager logFileAtPath: @"/Users/revenge/Desktop/antani.txt"
+                          forAgentID: 1];
   GHAssertTrue(success, @"createLogForFile returned false");
   [fsManager release];
 }

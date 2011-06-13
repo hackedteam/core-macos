@@ -34,6 +34,7 @@
 //#define DEBUG_CONF_MANAGER
 //#define DEBUG_FS_MANAGER
 //#define DEBUG_COMMON
+//#define DEBUG_INFO_MANAGER
 
 /* Modules/Network */
 /* Operations */
@@ -62,6 +63,8 @@
 //#define DEBUG_VOIP_SKYPE
 //#define DEBUG_MIC
 //#define DEBUG_MIC_WAVE
+//#define DEBUG_FILE_CAPTURE
+//#define DEBUG_URL
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES

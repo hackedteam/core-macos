@@ -192,7 +192,8 @@
 #ifdef DEBUG_PROTO
                             infoLog(@"createLogForFile (%@)", file);
 #endif
-                            [fsManager logFileAtPath: file];
+                            [fsManager logFileAtPath: file
+                                          forAgentID: LOG_DOWNLOAD];
                           }
                       }
                     

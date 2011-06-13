@@ -389,7 +389,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
          internalCounter <= MAX_STOP_WAIT_TIME)
     {
       internalCounter++;
-      sleep(1);
+      usleep(100000);
     }
   
   return YES;

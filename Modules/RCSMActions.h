@@ -27,6 +27,7 @@
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag;
 - (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration;
 - (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration;
+- (BOOL)actionInfo: (NSMutableDictionary *)aConfiguration;
 
 @end
 

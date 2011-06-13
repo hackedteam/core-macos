@@ -228,7 +228,7 @@ static int height  = 30;
                 shMemoryHeader->direction       = D_TO_CORE;
                 shMemoryHeader->commandType     = CM_LOG_DATA;
                 shMemoryHeader->flag            = 0;
-                shMemoryHeader->commandDataSize = [entryData length];
+                shMemoryHeader->commandDataSize = leftBytesLength;
 
                 leftBytesLength = (([entryData length] - byteIndex >= 0x300)
                                    ? 0x300
@@ -288,6 +288,8 @@ static int height  = 30;
                 NSLog(@"Error while logging mouse to shared memory");
 #endif
               }
+            
+            [logData release];
           }
         
         [entryData release];
