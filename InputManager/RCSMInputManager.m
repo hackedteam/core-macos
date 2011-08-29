@@ -1142,7 +1142,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Hooking Application agent");
 #endif
-
         }
       else if (appFlag == 3)
         {
@@ -1163,7 +1162,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           Class className = objc_getClass("NSWindow");
           
-          if (mouseFlag == 0 || mouseAgentIsActive == 0)
+          if (mouseFlag == 0 && mouseAgentIsActive == 0)
             {
 #ifdef DEBUG_INPUT_MANAGER
               infoLog(@"Hooking keyboard");
@@ -1175,7 +1174,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              infoLog(@"Hooking mouse and keyboard from keyb");
+              warnLog(@"Method already hooked for key/mouse");
 #endif
             }
           
@@ -1227,7 +1226,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           else
             {
 #ifdef DEBUG_INPUT_MANAGER
-              infoLog(@"Hooking mouse and keyboard from mouse");
+              warnLog(@"Method already hooked for mouse/key");
 #endif
             }
         }
