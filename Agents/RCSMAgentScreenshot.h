@@ -22,6 +22,7 @@
 {
 @private
   NSMutableDictionary *mAgentConfiguration;
+  uint32_t mSleepSec;
 }
 
 + (RCSMAgentScreenshot *)sharedInstance;

