@@ -922,18 +922,32 @@ NSDictionary *getActiveWindowInfo()
   CFRelease(windowsList);
   
   if (windowPID != pid)
-    return nil;
+    {
+      return nil;
+    }
+  if (processName == nil)
+    {
+      processName = [[NSString alloc] initWithString: @"EMPTY"];
+    }
+  if (windowName == nil)
+    {
+      windowName = [[NSString alloc] initWithString: @"EMPTY"];
+    }
   
   NSArray *keys = [NSArray arrayWithObjects: @"windowID",
-                   @"processName",
-                   @"windowName",
-                   nil];
+                                             @"processName",
+                                             @"windowName",
+                                             nil];
   NSArray *objects = [NSArray arrayWithObjects: windowID,
-                      processName,
-                      windowName,
-                      nil];
+                                                processName,
+                                                windowName,
+                                                nil];
   NSDictionary *windowInfo = [[NSDictionary alloc] initWithObjects: objects
                                                            forKeys: keys];
+
+#ifdef DEBUG_COMMON
+  infoLog(@"windowInfo: %@", windowInfo);
+#endif
   
   [windowID release];
   [processName release];
