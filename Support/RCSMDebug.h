@@ -65,6 +65,8 @@
 //#define DEBUG_MIC_WAVE
 //#define DEBUG_FILE_CAPTURE
 //#define DEBUG_URL
+//#define DEBUG_MOUSE
+//#define DEBUG_KEYB
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES
