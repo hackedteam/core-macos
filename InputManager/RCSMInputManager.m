@@ -1162,7 +1162,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           Class className = objc_getClass("NSWindow");
           
-          if (mouseFlag == 0 && mouseAgentIsActive == 0)
+          if (mouseFlag == 0 || mouseAgentIsActive == 0)
             {
 #ifdef DEBUG_INPUT_MANAGER
               infoLog(@"Hooking keyboard");
