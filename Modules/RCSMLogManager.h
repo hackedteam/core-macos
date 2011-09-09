@@ -18,6 +18,26 @@
 #import "RCSMCommon.h"
 #import "NSMutableData+AES128.h"
 
+//
+// First DWORD is not encrypted and specifies:
+// sizeof(logStruct)
+// + deviceIdLen
+// + userIdLen
+// + sourceIdLen
+// + uAdditionalData
+//
+typedef struct _log {
+  u_int version;
+#define LOG_VERSION   2008121901
+  u_int type;
+  u_int hiTimestamp;
+  u_int loTimestamp;
+  u_int deviceIdLength;       // IMEI/Hostname len
+  u_int userIdLength;         // IMSI/Username len
+  u_int sourceIdLength;       // Caller Number / IP length
+  u_int additionalDataLength; // Size of additional data if present
+} logStruct;
+
 @class RCSMEncryption;
 
 //

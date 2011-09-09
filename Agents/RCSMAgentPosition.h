@@ -11,6 +11,29 @@
 
 #import "RCSMLogManager.h"
 
+#define LOGTYPE_LOCATION_NEW    0x1220
+#define LOGTYPE_LOCATION_GPS    0x0001
+#define LOGTYPE_LOCATION_GSM    0x0002
+#define LOGTYPE_LOCATION_WIFI   0x0003
+#define LOGTYPE_LOCATION_IP     0x0004
+#define LOGTYPE_LOCATION_CDMA   0x0005
+
+typedef struct _position {
+  UInt32 sleepTime;
+#define LOGGER_GPS  1  // Take GPS Position
+#define LOGGER_GSM  2  // Take BTS Position
+#define LOGGER_WIFI 4  // Take nearby WiFi list
+  UInt32 iType;
+} positionStruct;
+
+typedef struct _LocationAdditionalData {
+	UInt32 uVersion;
+#define LOG_LOCATION_VERSION (UInt32)2010082401
+	UInt32 uType;
+	UInt32 uStructNum;
+} LocationAdditionalData;
+
+
 @interface RCSMAgentPosition : NSObject 
 {    
 @private

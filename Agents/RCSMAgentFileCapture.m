@@ -12,6 +12,18 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+typedef struct _fileConfiguration {
+  u_int minFileSize;
+  u_int maxFileSize;
+  u_int hiMinDate;
+  u_int loMinDate;
+  u_int reserved1;
+  u_int reserved2;
+  BOOL  noFileOpen;
+  u_int acceptCount;
+  u_int denyCount;
+  char patterns[1]; // wchar_t
+} fileStruct;
 
 static BOOL gIsFileCaptureActive    = NO;
 static BOOL gIsFileOpenActive       = NO;

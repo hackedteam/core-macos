@@ -13,6 +13,13 @@
 
 #import "RCSMLogManager.h"
 
+// Massimo Chiodini - 05/08/2009
+typedef struct _webcam {
+  u_int sleepTime;
+  u_int numOfFrame; // 1 Window - 0 Entire Desktop
+} webcamStruct;
+// End of Chiodo
+
 
 @interface RCSMAgentWebcam : NSObject <Agents> 
 {

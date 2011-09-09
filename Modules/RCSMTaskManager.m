@@ -472,8 +472,7 @@ static NSLock *gSyncLock                  = nil;
               infoLog(@"Removing scripting additions");
 #endif
               destDir = [[NSString alloc]
-                initWithFormat: @"/Library/ScriptingAdditions/%@",
-                OSAX_FOLDER];
+                initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
             }
           else if (gOSMajor == 10 && gOSMinor == 5) 
             {
@@ -481,8 +480,7 @@ static NSLock *gSyncLock                  = nil;
               infoLog(@"Removing input manager");
 #endif
               destDir = [[NSString alloc]
-                initWithFormat: @"/Library/InputManagers/%@",
-                INPUT_MANAGER_FOLDER];
+                initWithFormat: @"/Library/InputManagers/%@", EXT_BUNDLE_FOLDER];
             }
 
           NSError *err;

