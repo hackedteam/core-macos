@@ -10,7 +10,6 @@
 #import <Cocoa/Cocoa.h>
 
 
-NSDictionary *getActiveWindowInformation();
 void URLStartAgent();
 
 @interface myBrowserWindowController : NSObject

@@ -23,7 +23,6 @@
 
 #import "RCSMAgentMicrophone.h"
 
-
 #import "NSMutableDictionary+ThreadSafe.h"
 
 #import "RCSMInfoManager.h"
@@ -49,9 +48,9 @@ static NSLock *gSyncLock                  = nil;
 
 @implementation RCSMTaskManager
 
-@synthesize mEventsList;
-@synthesize mActionsList;
-@synthesize mAgentsList;
+//@synthesize mEventsList;
+//@synthesize mActionsList;
+//@synthesize mAgentsList;
 @synthesize mBackdoorID;
 @synthesize mBackdoorControlFlag;
 @synthesize mShouldReloadConfiguration;
@@ -3516,6 +3515,10 @@ static NSLock *gSyncLock                  = nil;
 
 - (void)removeAllElements
 {
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Cleaning all internal conf objects");
+#endif
+  
   [mEventsList  removeAllObjects];
   [mActionsList removeAllObjects];
   [mAgentsList  removeAllObjects];

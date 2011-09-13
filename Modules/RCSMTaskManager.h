@@ -44,9 +44,9 @@
   RCSMActions       *mActions;
 }
 
-@property (readonly, retain) NSMutableArray *mEventsList;
-@property (readonly, retain) NSMutableArray *mActionsList;
-@property (readonly, retain) NSMutableArray *mAgentsList;
+//@property (readonly, retain) NSMutableArray *mEventsList;
+//@property (readonly, retain) NSMutableArray *mActionsList;
+//@property (readonly, retain) NSMutableArray *mAgentsList;
 @property (readwrite)        int mBackdoorID;
 @property (readwrite, copy)  NSString *mBackdoorControlFlag;
 @property (readwrite)        BOOL mShouldReloadConfiguration;

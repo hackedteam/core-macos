@@ -113,11 +113,11 @@ io_registry_entry_t getRootDomain(void)
   return gRoot;
 }
 
-IOReturn _setRootDomainProperty(CFStringRef                 key,
-                                CFTypeRef                   val)
-{
-  return IORegistryEntrySetCFProperty(getRootDomain(), key, val);
-}
+//IOReturn _setRootDomainProperty(CFStringRef                 key,
+//                                CFTypeRef                   val)
+//{
+//  return IORegistryEntrySetCFProperty(getRootDomain(), key, val);
+//}
 
 //
 // Shutdown handler
