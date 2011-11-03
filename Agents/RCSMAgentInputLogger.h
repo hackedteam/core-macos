@@ -13,6 +13,11 @@
 extern int mouseAgentIsActive;
 extern int keylogAgentIsActive;
 
+typedef struct _mouseConfiguration {
+  u_int width;
+  u_int height;
+} mouseStruct;
+
 
 @interface NSWindow (inputLoggerHook)
 

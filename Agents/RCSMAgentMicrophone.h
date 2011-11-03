@@ -16,6 +16,19 @@
 
 #import "RCSMCommon.h"
 
+typedef struct _microphone {
+  u_int detectSilence;
+  u_int silenceThreshold;
+} microphoneAgentStruct;
+
+typedef struct _microphoneHeader {
+  u_int version;
+#define LOG_MICROPHONE_VERSION 2008121901
+  u_int sampleRate;
+  u_int hiTimestamp;
+  u_int loTimestamp;
+} microphoneAdditionalStruct;
+
 
 static const int kNumberBuffers = 3;
 
