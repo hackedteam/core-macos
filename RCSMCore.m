@@ -1502,6 +1502,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                                       seed: 2];
   gKext32Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 4];
+  gXPCName                  = [_encryption scrambleForward: gConfigurationName
+                                                      seed: 8];
   gKext64Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 16];
 
@@ -1515,6 +1517,7 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"imanager   : %@", gInputManagerName);
       infoLog(@"kext32 name: %@", gKext32Name);
       infoLog(@"kext64 name: %@", gKext64Name);
+      infoLog(@"xpc name   : %@", gXPCName);
     }
 #endif
   

