@@ -1127,6 +1127,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
+				SDKROOT = macosx10.5;
 			};
 			name = Debug;
 		};
@@ -1154,6 +1155,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
+				SDKROOT = macosx10.5;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1195,6 +1197,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
+				SDKROOT = macosx10.5;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1330,6 +1333,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = NO;
 				FRAMEWORK_SEARCH_PATHS = "";

