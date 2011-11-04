@@ -569,7 +569,7 @@ static RCSMUtils *sharedUtils = nil;
   else
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"Loading KEXT32 @ %@", mKextPath);
+      //NSLog(@"Loading KEXT32 @ %@", mKextPath);
 #endif
       if ([[NSFileManager defaultManager] fileExistsAtPath: mKext32Path])
         {
