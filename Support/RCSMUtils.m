@@ -823,4 +823,12 @@ static RCSMUtils *sharedUtils = nil;
   return NO;
 }
 
+- (BOOL)isLion
+{
+  if (gOSMajor == 10 && gOSMinor == 7)
+    return YES;
+  
+  return NO;
+}
+
 @end

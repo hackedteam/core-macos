@@ -132,6 +132,11 @@
 //
 - (BOOL)isLeopard;
 
+//
+// Return TRUE if we are on MacOS X Leopard (10.7.x)
+//
+- (BOOL)isLion;
+
 @end
 
 #endif

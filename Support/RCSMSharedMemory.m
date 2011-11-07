@@ -19,7 +19,6 @@
 
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
-#define DEBUG_SHMEM_TMP
 
 // access permissions on shared memory 0666
 #define GLOBAL_PERMISSIONS 0666
@@ -75,7 +74,7 @@ static BOOL resolveXpcFunc()
   if (libsystem == NULL) 
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"error on loading library libSystem");
+    infoLog(@"error on loading library libSystem");
 #endif
     return NO;
   }
@@ -113,7 +112,7 @@ static BOOL resolveXpcFunc()
       _xpc_release == NULL) 
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"error resolving xpc sym");
+    infoLog(@"error resolving xpc sym");
 #endif
     return NO;
   }
@@ -126,7 +125,7 @@ static BOOL resolveXpcFunc()
   if (_sandbox_check == NULL)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"error resolving sndbox_check sym");
+    infoLog(@"error resolving sndbox_check sym");
 #endif
     return NO;
   }
@@ -141,14 +140,14 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (resolveXpcFunc() == NO) 
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"error resolving xpc function addresses");
+    infoLog(@"error resolving xpc function addresses");
 #endif
     return bRet;
   }
   else
   {
 #ifdef  DEBUG_SHMEM
-    NSLog(@" xpc function resolved");
+    infoLog(@" xpc function resolved");
 #endif
   }
   
@@ -184,7 +183,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     if (sem_close(mSemaphoreID) == 0)
     {
 #ifdef DEBUG_SHMEM
-      NSLog(@"Semaphore closed correctly");
+      infoLog(@"Semaphore closed correctly");
 #endif
     }
   }
@@ -193,11 +192,57 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   [super dealloc];
 }
 
+- (char *)_guessXPCServiceName: (NSString*)aPath
+{
+  char *retString = NULL;
+  
+  NSFileManager *localFileManager = [NSFileManager defaultManager];
+  NSDirectoryEnumerator *dirEnum  = [localFileManager enumeratorAtPath: aPath];
+  
+  NSString *_file;
+  
+  while (_file = [dirEnum nextObject]) 
+  {
+    if ([_file hasPrefix: XPC_BUNDLE_FOLDER_PREFIX]) 
+    {
+#ifdef DEBUG_SHMEM_TMP
+      //NSLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
+#endif
+      
+      retString = (char*)[_file UTF8String];
+      
+      retString[strlen(retString) - 4] = 0;
+      
+      
+      return retString;
+    }
+  }
+  
+  return retString;
+}
+
 - (int)createMemoryRegion
 {
   // If sandboxed read shmem by xpc service
   if (amISandboxed) 
   {
+    char *service_name = "com.apple.mdworker_server";
+    //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
+    
+    if (service_name == NULL) 
+    {
+#ifdef  DEBUG_SHMEM_TMP
+      //NSLog(@"%s: error getting service name", __FUNCTION__);
+#endif
+      return -1;
+    }
+    else
+    {
+#ifdef  DEBUG_SHMEM_TMP
+      //NSLog(@"%s: setting service name %s", __FUNCTION__, service_name);
+#endif
+    }
+    
     xpc_handler_t handler = (^(xpc_object_t event) 
                              {
                                xpc_type_t type = _xpc_get_type(event);
@@ -205,7 +250,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
                                if (type == __xpc_type_error) 
                                {
 #ifdef DEBUG_SHMEM
-                                 NSLog(@"%s: error cannot continue!");
+                                 //NSLog(@"error cannot continue!");
 #endif
                                }
                              });
@@ -235,16 +280,16 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       default:     error = EUNKNOWN_STR;
     }
     
-    NSLog(@"Error shmget: %s", error);
+    infoLog(@"Error shmget: %s", error);
 #endif
     
     return -1;
   }
   
 #ifdef DEBUG_SHMEM
-  NSLog(@"SharedMemoryID: %d", mSharedMemoryID);
-  NSLog(@"Key: %d", mKey);
-  NSLog(@"Size: %d", mSize);
+  infoLog(@"SharedMemoryID: %d", mSharedMemoryID);
+  infoLog(@"Key: %d", mKey);
+  infoLog(@"Size: %d", mSize);
 #endif
   
   return 0;
@@ -270,14 +315,14 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
         default:     error = EUNKNOWN_STR;
       }
       
-      NSLog(@"Error shmat: %s", error);
+      infoLog(@"Error shmat: %s", error);
 #endif
       
       return -1;
     }
     
 #ifdef DEBUG_SHMEM
-    NSLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
+    infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
 #endif
     
     
@@ -289,7 +334,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     if ((int *)mSemaphoreID == SEM_FAILED)
     {
 #ifdef DEBUG_SHMEM
-      NSLog(@"An error occured while opening semaphore in sem_open()");
+      infoLog(@"An error occured while opening semaphore in sem_open()");
 #endif
       
       shmdt(mSharedMemory);
@@ -319,13 +364,13 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       // Remove the segment in order to free the key and memory
       shmctl(mSharedMemoryID, IPC_RMID, NULL);
 #ifdef DEBUG_SHMEM
-      NSLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
+      infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
 #endif
     }
     else
     {
 #ifdef DEBUG_SHMEM
-      NSLog(@"We have still someone attached here dude, can't destroy");
+      infoLog(@"We have still someone attached here dude, can't destroy");
 #endif
       //shmctl(mSharedMemoryID, IPC_RMID, NULL);
     }
@@ -353,7 +398,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (mSize < mSize)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"[EE] clearConfigurations can't be used on the command queue");
+    infoLog(@"[EE] clearConfigurations can't be used on the command queue");
 #endif      
     return FALSE;
   }
@@ -408,13 +453,13 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (reply == __xpc_error_connection_interrupted) 
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
+        //NSLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
 #endif
       } 
       else if (reply == __xpc_error_connection_invalid) 
       {            
 #ifdef DEBUG_SHMEM
-        NSLog(@"[XPC RCSMSharedMemory]xpc error connection invalid");
+        //NSLog(@"[XPC RCSMSharedMemory]xpc error connection invalid");
 #endif
       }
     } 
@@ -428,7 +473,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (buff == NULL)
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
+        //NSLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
 #endif
       }
       else
@@ -463,7 +508,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"[EE] readMemory-command unsupported component");
+    infoLog(@"[EE] readMemory-command unsupported component");
 #endif
     return nil;
   }
@@ -471,7 +516,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (anOffset == 0)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"[EE] readMemory-command offset is zero");
+    infoLog(@"[EE] readMemory-command offset is zero");
 #endif
     return nil;
   }
@@ -485,7 +530,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     if (aComponent ^ memoryHeader->direction == 0)
     {
 #ifdef DEBUG_SHMEM
-      NSLog(@"Found data on shared memory");
+      infoLog(@"Found data on shared memory");
 #endif
       readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
                                                length: sizeof(shMemoryCommand)];
@@ -516,7 +561,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"[EE] readMemory-log unsupported component");
+    infoLog(@"[EE] readMemory-log unsupported component");
 #endif
     return nil;
   }
@@ -524,7 +569,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   if (anAgentID == 0 && aCommandType == 0)
   {
 #ifdef DEBUG_SHMEM
-    NSLog(@"[EE] readMemory-log usupported read");
+    infoLog(@"[EE] readMemory-log usupported read");
 #endif
   }
   
@@ -560,7 +605,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     if (tempState == SHMEM_LOCKED)
     {
 #ifdef DEBUG_SHMEM
-      NSLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
+      infoLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
 #endif
     }
     
@@ -600,7 +645,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (tmpDirection ^ aComponent == 0)
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"[ii] Found data matching our request on shmem");
+        infoLog(@"[ii] Found data matching our request on shmem");
 #endif
         
         blockMatched = YES;
@@ -628,16 +673,16 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   
   if (blockMatched == YES)
   {
-    //NSLog(@"lowest Timestamp: %x", lowestTimestamp);
+    //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
     
     if (testPreviousTime != 0)
     {
       if (lowestTimestamp < testPreviousTime)
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"ANOMALY DETECTED in shared memory!");
-        NSLog(@"previousTimestamp: %x", testPreviousTime);
-        NSLog(@"lowestTimestamp  : %x", lowestTimestamp);
+        infoLog(@"ANOMALY DETECTED in shared memory!");
+        infoLog(@"previousTimestamp: %x", testPreviousTime);
+        infoLog(@"lowestTimestamp  : %x", lowestTimestamp);
 #endif
       }
     }
@@ -653,7 +698,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   }
   else
   {
-    //NSLog(@"block not found while reading!!!!!");
+    //infoLog(@"block not found while reading!!!!!");
     
     return nil;
   }
@@ -695,13 +740,13 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (reply == __xpc_error_connection_interrupted) 
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"xpc error connection interrupted");
+        infoLog(@"xpc error connection interrupted");
 #endif
       } 
       else if (reply == __xpc_error_connection_invalid) 
       {            
 #ifdef DEBUG_SHMEM
-        NSLog(@"xpc error connection invalid");
+        infoLog(@"xpc error connection invalid");
 #endif
       }
     } 
@@ -715,13 +760,13 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (buff == NULL || len == 0)
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"xpc error getting raw data");
+        infoLog(@"xpc error getting raw data");
 #endif
       }
       else
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"xpc getting raw data len %d", len);
+        infoLog(@"xpc getting raw data len %lu", len);
 #endif
         memcpy(&bRet, buff, sizeof(bRet));
       }
@@ -772,7 +817,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       if (anOffset >= mSize)
       {
 #ifdef DEBUG_SHMEM
-        NSLog(@"[EE] SHMem - write didn't found an available memory block");
+//        infoLog(@"[EE] SHMem - write didn't found an available memory block");
 #endif
         
         return FALSE;
@@ -780,7 +825,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     }
     while (memoryState != SHMEM_FREE);
     
-    //NSLog(@"Block written @ 0x%x", anOffset);
+    //infoLog(@"Block written @ 0x%x", anOffset);
     memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
   }
   else
@@ -791,8 +836,8 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   }
   
 #ifdef DEBUG_SHMEM
-  for (int x = 0; x < [aData length]; x += sizeof(int))
-    NSLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
+//  for (int x = 0; x < [aData length]; x += sizeof(int))
+//    infoLog(@"Data sent: %08x", *(unsigned int *)(mSharedMemory + anOffset + x));
 #endif
   
   return TRUE;

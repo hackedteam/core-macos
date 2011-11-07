@@ -12,6 +12,7 @@
 #ifndef __RCSMSharedMemory_h__
 #define __RCSMSharedMemory_h__
 
+typedef struct dispatch_queue_s * dispatch_queue_t;
 typedef void * xpc_object_t;
 typedef void (^xpc_handler_t)(xpc_object_t object);
 typedef const struct _xpc_type_s * xpc_type_t;

