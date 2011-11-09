@@ -2887,6 +2887,9 @@ static void computerWillShutdown(CFMachPortRef port,
               warnLog(@"mdworker.flg not found. Relaunching through launchd");
 #endif
               [gUtil dropExecFlag];
+            
+              // Enable setugid on lion
+              [gUtil enableSetugidAuth];
             }
         }
       else
