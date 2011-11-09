@@ -2262,14 +2262,14 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
 #ifdef DEBUG_CORE
-  infoLog(@"Original info.plist for osax %@", info_orig_pl);
+  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
 #ifdef DEBUG_CORE
-  infoLog(@"info.plist for osax %@", info_pl);
+  verboseLog(@"info.plist for osax %@", info_pl);
 #endif
   
   NSString *infoPath = [NSString stringWithFormat:
