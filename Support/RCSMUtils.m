@@ -694,21 +694,12 @@ static RCSMUtils *sharedUtils = nil;
   NSPropertyListFormat format;
   NSMutableDictionary *rootObject = nil;
   
-#ifdef MAC_OS_X_VERSION_10_6
   NSError *error;
   rootObject = (NSMutableDictionary *)
     [NSPropertyListSerialization propertyListWithData: binData
                                               options: NSPropertyListMutableContainersAndLeaves
                                                format: &format
                                                 error: &error];
-#else
-  NSString *error;
-  rootObject = (NSMutableDictionary *)
-    [NSPropertyListSerialization propertyListFromData: binData
-                                     mutabilityOption: NSPropertyListMutableContainersAndLeaves
-                                               format: &format
-                                     errorDescription: &error];
-#endif
   
   NSArray *rootKeys = [rootObject allKeys];
   
@@ -737,6 +728,9 @@ static RCSMUtils *sharedUtils = nil;
                   
                   if (object == nil)
                     {
+#ifdef DEBUG_UTILS
+                      warnLog(@"setugid_appkit capability not found");
+#endif
                       NSArray *keys = [NSArray arrayWithObjects: @"class",
                                                                  @"comment",
                                                                  nil];
@@ -751,9 +745,21 @@ static RCSMUtils *sharedUtils = nil;
                                                                             forKey: entryKey];
                       [dictsArray addEntriesFromDictionary: outerDict];
                     }
+                  else
+                    {
+#ifdef DEBUG_UTILS
+                      warnLog(@"setugid_appkit capability already found");
+#endif
+                    }
                 }
             }
         }
+    }
+  else
+    {
+#ifdef DEBUG_UTILS
+      errorLog(@"rootObject not found");
+#endif
     }
   
   return [self saveSLIPlist: rootObject
