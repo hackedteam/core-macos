@@ -157,6 +157,9 @@ extern int gMemLogMaxSize;
 #define SHMEM_SEM_NAME              @"sem-mdworker"
 #define SHMEM_LOG_MAX_NUM_BLOCKS    315
 #define SHMEM_LOG_MIN_NUM_BLOCKS    50
+#define READ_XPC_CMD                0
+#define READ_XPC_COMP_CMD           1
+#define WRITE_XPC_CMD               2
 
 #pragma mark -
 #pragma mark Backdoor Configuration
