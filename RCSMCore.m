@@ -3276,12 +3276,12 @@ void lionSendEventToPid(pid_t pidP)
           
           // Drop xpc services for sandboxed app
           if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
-          {
+            {
 #ifdef DEBUG_CORE
-            infoLog(@"im on lion dropping XPC service");
+              infoLog(@"im on lion dropping XPC service");
 #endif
-            [self _dropXPCBundle];
-          }
+              [self _dropXPCBundle];
+            }
         }
     }
   
@@ -3293,7 +3293,7 @@ void lionSendEventToPid(pid_t pidP)
   int ret = 0;
   int kextLoaded = 0;
 
-  if (getuid() != 0 && geteuid() == 0)
+  if (getuid() != 0 && geteuid() == 0 && [gUtil isLion] == NO)
     {
       if ([self connectKext] == -1)
         {
