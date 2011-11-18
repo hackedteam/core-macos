@@ -13,6 +13,8 @@
 #import <sys/errno.h>
 #import <sys/shm.h>
 #import <dlfcn.h>
+#import <sys/mman.h>
+
 
 #import "RCSMCommon.h"
 #import "RCSMSharedMemory.h"
@@ -160,6 +162,28 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   return bRet;
 }
 
+static BOOL amIPrivileged()
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  BOOL bRet = FALSE;
+  
+  if (getuid() == 0 || geteuid() == 0) 
+    bRet = TRUE;
+  else
+  {
+    NSString *appleHID = [[NSString alloc] initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
+    
+    bRet = [[NSFileManager defaultManager] fileExistsAtPath: appleHID];
+    
+    [appleHID release];
+  }
+  
+  [pool release];
+ 
+  return bRet;
+}
+
 @implementation RCSMSharedMemory
 
 - (id)initWithKey: (int)aKey
@@ -175,6 +199,7 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
     mSize          = aSize;
     mSemaphoreName = [aSemaphoreName copy];
     amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
+    mAmIPrivUser = amIPrivileged();
   }
   
   return self;
@@ -225,6 +250,19 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   return retString;
 }
 
+- (void)removeMappedFile
+{
+  if (mAmIPrivUser)
+    return;
+  
+  NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == TRUE)
+    {
+    [[NSFileManager defaultManager] removeItemAtPath: tmpFileName error: nil];
+    }
+}
+
 - (int)createMemoryRegion
 {
   // If sandboxed read shmem by xpc service
@@ -268,26 +306,58 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       return 0;  
     }
   
-  mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
-  
-  if (mSharedMemoryID == -1)
+  if (mAmIPrivUser)
     {
-#ifdef DEBUG_SHMEM
-      char *error = NULL;
-      switch (errno)
+      mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
+      
+      if (mSharedMemoryID == -1)
         {
-        case ENOSPC: error = ENOSPC_STR; break;
-        case ENOMEM: error = ENOMEM_STR; break;
-        case EACCES: error = EACCES_STR; break;
-        case EINVAL: error = EINVAL_STR; break;
-                     //case EEXIST: return -2;
-        default:     error = EUNKNOWN_STR;
+    #ifdef DEBUG_SHMEM
+          char *error = NULL;
+          switch (errno)
+            {
+            case ENOSPC: error = ENOSPC_STR; break;
+            case ENOMEM: error = ENOMEM_STR; break;
+            case EACCES: error = EACCES_STR; break;
+            case EINVAL: error = EINVAL_STR; break;
+                         //case EEXIST: return -2;
+            default:     error = EUNKNOWN_STR;
+            }
+
+          infoLog(@"Error shmget: %s", error);
+    #endif
+
+          return -1;
         }
-
-      infoLog(@"Error shmget: %s", error);
-#endif
-
-      return -1;
+    }
+  else
+    {
+      // create a tmp file for shmem
+      NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+   
+      if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == FALSE)
+        {
+          int intZero = 0;
+          mSharedMemoryID = open([tmpFileName UTF8String], 
+                                 O_CREAT|O_RDWR, 
+                                 S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+        
+          // create/rewrite the file, mSharedMemory read fail if not
+          if (mSharedMemoryID != -1)
+            {
+              for (int i=0; i<mSize; i+=sizeof(intZero))
+                write(mSharedMemoryID, &intZero, sizeof(intZero));
+            }
+        }
+      else
+        mSharedMemoryID = open([tmpFileName UTF8String], 
+                               O_RDWR, 
+                               S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    
+      if (mSharedMemoryID == -1)
+        {
+          return -1;
+        }
     }
   
 #ifdef DEBUG_SHMEM
@@ -304,31 +374,42 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   // If sandboxed to nothing...
   if (amISandboxed == NO) 
     { 
-      mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
-
-      if (mSharedMemory == NULL)
+      if (mAmIPrivUser)
         {
-#ifdef DEBUG_SHMEM
-          char *error = NULL;
-          switch (errno)
-            {
-            case EACCES: error = EACCES_STR; break;
-            case ENOMEM: error = ENOMEM_STR; break;
-            case EINVAL: error = EINVAL_STR2; break;
-            case EMFILE: error = EMFILE_STR; break;
-            default:     error = EUNKNOWN_STR;
-            }
+          mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
 
-          infoLog(@"Error shmat: %s", error);
+          if (mSharedMemory == NULL)
+            {
+#ifdef DEBUG_SHMEM
+              char *error = NULL;
+              switch (errno)
+                {
+                  case EACCES: error = EACCES_STR; break;
+                  case ENOMEM: error = ENOMEM_STR; break;
+                  case EINVAL: error = EINVAL_STR2; break;
+                  case EMFILE: error = EMFILE_STR; break;
+                  default:     error = EUNKNOWN_STR;
+                }
+
+              infoLog(@"Error shmat: %s", error);
 #endif
 
-          return -1;
+              return -1;
+            }
+        }
+      else
+        {
+          mSharedMemory = mmap(NULL, mSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, mSharedMemoryID, 0);
+        
+          if (mSharedMemory == NULL)
+            {
+              return -1;
+            }
         }
 
 #ifdef DEBUG_SHMEM
       infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
 #endif
-
 
       mSemaphoreID = sem_open((const char *)mSemaphoreName, 
                               O_CREAT,
@@ -340,8 +421,8 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 #ifdef DEBUG_SHMEM
           infoLog(@"An error occured while opening semaphore in sem_open()");
 #endif
-
-          shmdt(mSharedMemory);
+          if (mAmIPrivUser)
+            shmdt(mSharedMemory);
 
           return -1;
         } 
@@ -357,30 +438,37 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   // if sanboxed do nothing...
   if (amISandboxed)
     return 0;
-  
-  if (shmdt(mSharedMemory) != -1)
+  if (mAmIPrivUser)
     {
-      shmctl([self mSharedMemoryID], IPC_STAT, &SharedMemDS);
-
-      // Check if there's anything still attached to the region
-      if (SharedMemDS.shm_nattch == 0)
+      if (shmdt(mSharedMemory) != -1)
         {
-          // Remove the segment in order to free the key and memory
-          shmctl(mSharedMemoryID, IPC_RMID, NULL);
+          shmctl([self mSharedMemoryID], IPC_STAT, &SharedMemDS);
+
+          // Check if there's anything still attached to the region
+          if (SharedMemDS.shm_nattch == 0)
+            {
+              // Remove the segment in order to free the key and memory
+              shmctl(mSharedMemoryID, IPC_RMID, NULL);
 #ifdef DEBUG_SHMEM
-          infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
+              infoLog(@"Shared Memory (%d) destroyed", mSharedMemoryID);
 #endif
+            }
+          else
+            {
+#ifdef DEBUG_SHMEM
+              infoLog(@"We have still someone attached here dude, can't destroy");
+#endif
+              //shmctl(mSharedMemoryID, IPC_RMID, NULL);
+            }
         }
       else
-        {
-#ifdef DEBUG_SHMEM
-          infoLog(@"We have still someone attached here dude, can't destroy");
-#endif
-          //shmctl(mSharedMemoryID, IPC_RMID, NULL);
-        }
+        return -1;
     }
   else
-    return -1;
+    {
+      munmap(mSharedMemory, mSize);
+      close(mSharedMemoryID);
+    }
   
   return 0;
 }
@@ -427,6 +515,20 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
   while (offset < mSize);
   
   return TRUE;
+}
+
+
+- (void)_lockShmem
+{
+  if (mAmIPrivUser == NO)
+    if (sem_wait(mSemaphoreID) != 0) 
+      return;
+}
+
+- (void)_unlockShmem
+{
+  if (mAmIPrivUser == NO)
+    sem_post(mSemaphoreID);
 }
 
 - (NSMutableData*)readMemoryByXPC:(u_int)anOffset 
@@ -906,6 +1008,8 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
           anOffset = 0;
         }
 
+      [self _lockShmem];
+    
       do
         {
           memoryState = *(unsigned int *)(mSharedMemory + anOffset);
@@ -925,25 +1029,24 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 #ifdef DEBUG_SHMEM
               infoLog(@"[XPC RCSMSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
 #endif
-
               return FALSE;
             }
         }
       while (memoryState != SHMEM_FREE);
 
-#ifdef DEBUG_SHMEM    
-      shMemoryLog *shMemoryHeader= (shMemoryLog *)[aData bytes];
-      infoLog(@"[XPC RCSMSharedMemory] writeMemory agentID %#x, commandType %#x commandDataSize %#x at Off %#x", 
-              shMemoryHeader->agentID, shMemoryHeader->commandType, shMemoryHeader->commandDataSize, anOffset);
-#endif
-
       memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
+      
+      [self _unlockShmem];
     }
   else
     {
       //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
-
+    
+      [self _lockShmem];
+    
       memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
+    
+      [self _unlockShmem];
     }
 
   return TRUE;

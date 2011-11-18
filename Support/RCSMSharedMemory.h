@@ -30,6 +30,7 @@ typedef struct _xpc_connection_s * xpc_connection_t;
   sem_t *mSemaphoreID;
   NSString *mSemaphoreName;
   BOOL amISandboxed;
+  BOOL mAmIPrivUser;
   xpc_connection_t mXpcCon;
 }
 
@@ -71,6 +72,7 @@ typedef struct _xpc_connection_s * xpc_connection_t;
 - (void)setSemaphoreID: (sem_t *)value;
 - (NSString *)mSemaphoreName;
 - (void)setSemaphoreName: (NSString *)value;
+- (void)removeMappedFile;
 
 @end
 
