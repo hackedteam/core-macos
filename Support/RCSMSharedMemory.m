@@ -38,7 +38,7 @@
 #pragma mark Implementation
 #pragma mark -
 
-static int testPreviousTime = 0;
+static time_t testPreviousTime = 0;
 
 // function pointers for dinamic linking on 10.7
 static BOOL (*_sandbox_check)(pid_t pid, int type, int operation) = NULL;
@@ -643,7 +643,7 @@ static BOOL amIPrivileged()
       // Now if who is reading is the same as who this data is directed to,
       // read it and clean out the area
       //
-      if (aComponent ^ memoryHeader->direction == 0)
+      if ((aComponent ^ memoryHeader->direction) == 0)
         {
 #ifdef DEBUG_SHMEM
           infoLog(@"Found data on shared memory");
@@ -838,7 +838,7 @@ static BOOL amIPrivileged()
 
       if (blockFound == YES)
         {
-          if (tmpDirection ^ aComponent == 0)
+          if ((tmpDirection ^ aComponent) == 0)
             {
 #ifdef DEBUG_SHMEM
               infoLog(@"[ii] Found data matching our request on shmem");
