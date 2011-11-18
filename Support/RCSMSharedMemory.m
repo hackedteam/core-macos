@@ -171,13 +171,13 @@ static BOOL amIPrivileged()
   if (getuid() == 0 || geteuid() == 0) 
     bRet = TRUE;
   else
-  {
-    NSString *appleHID = [[NSString alloc] initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
-    
-    bRet = [[NSFileManager defaultManager] fileExistsAtPath: appleHID];
-    
-    [appleHID release];
-  }
+    {
+      NSString *appleHID = [[NSString alloc] initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
+
+      bRet = [[NSFileManager defaultManager] fileExistsAtPath: appleHID];
+
+      [appleHID release];
+    }
   
   [pool release];
  
@@ -191,16 +191,16 @@ static BOOL amIPrivileged()
     semaphoreName: (NSString *)aSemaphoreName
 {
   if (self = [super init])
-  {
-    // TODO: Fix SemaphoreID
-    mSharedMemory  = NULL;
-    mSemaphoreID   = 0;
-    mKey           = aKey;
-    mSize          = aSize;
-    mSemaphoreName = [aSemaphoreName copy];
-    amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
-    mAmIPrivUser = amIPrivileged();
-  }
+    {
+      // TODO: Fix SemaphoreID
+      mSharedMemory  = NULL;
+      mSemaphoreID   = 0;
+      mKey           = aKey;
+      mSize          = aSize;
+      mSemaphoreName = [aSemaphoreName copy];
+      amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
+      mAmIPrivUser   = amIPrivileged();
+    }
   
   return self;
 }
@@ -259,7 +259,7 @@ static BOOL amIPrivileged()
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == TRUE)
     {
-    [[NSFileManager defaultManager] removeItemAtPath: tmpFileName error: nil];
+      [[NSFileManager defaultManager] removeItemAtPath: tmpFileName error: nil];
     }
 }
 
@@ -384,11 +384,11 @@ static BOOL amIPrivileged()
               char *error = NULL;
               switch (errno)
                 {
-                  case EACCES: error = EACCES_STR; break;
-                  case ENOMEM: error = ENOMEM_STR; break;
-                  case EINVAL: error = EINVAL_STR2; break;
-                  case EMFILE: error = EMFILE_STR; break;
-                  default:     error = EUNKNOWN_STR;
+                case EACCES: error = EACCES_STR; break;
+                case ENOMEM: error = ENOMEM_STR; break;
+                case EINVAL: error = EINVAL_STR2; break;
+                case EMFILE: error = EMFILE_STR; break;
+                default:     error = EUNKNOWN_STR;
                 }
 
               infoLog(@"Error shmat: %s", error);
