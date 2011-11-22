@@ -312,6 +312,9 @@ static NSLock *gSyncLock                  = nil;
               //
               if ([mConfigManager loadConfiguration] == YES)
                 {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"loadConfiguration was ok");
+#endif
                   RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
                   [infoManager logActionWithDescription: @"New configuration activated"];
                   [infoManager release];
@@ -326,11 +329,17 @@ static NSLock *gSyncLock                  = nil;
                   // Start agents
                   //
                   [self startAgents];
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Started Agents");
+#endif
                   
                   //
                   // Start event thread here
                   //
                   [self eventsMonitor];
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Started Events Monitor");
+#endif
                 }
               else
                 {
@@ -1871,13 +1880,14 @@ static NSLock *gSyncLock                  = nil;
   
   int i = 0;
   
-  //for (anObject in mAgentsList)
   for (; i < [mAgentsList count]; i++)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       anObject = [mAgentsList objectAtIndex: i];
       id agentConfiguration        = nil;
       
+      [anObject retain];
+
       int agentID       = [[anObject objectForKey: @"agentID"] intValue];
       NSString *status  = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
       
@@ -2650,7 +2660,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                     errorLog(@"Error while stopping agent Organizer");
 #endif
-                    return NO;
+                    //return NO;
                   }
                 else
                   {
@@ -2889,7 +2899,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                     infoLog(@"Error while stopping agent Position");
 #endif
-                    return NO;
+                    //return NO;
                   }
                 else
                   {
@@ -2909,7 +2919,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                     infoLog(@"Error while stopping agent agentDevice");
 #endif
-                    return NO;
+                    //return NO;
                   }
                 else
                   {
@@ -2979,7 +2989,7 @@ static NSLock *gSyncLock                  = nil;
                         infoLog(@"An error occurred while starting agent CRISIS");
 #endif
                         [agentCommand release];
-                        return NO;
+                        //return NO;
                       }
                   }
                 
@@ -3018,13 +3028,9 @@ static NSLock *gSyncLock                  = nil;
   while ((anObject = [enumerator nextObject]) != nil)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      [[anObject retain] autorelease];
-      
       u_int eventType = [[anObject threadSafeObjectForKey: @"type"
                                                 usingLock: gTaskManagerLock] intValue];
-      
-      //u_int eventType = [[anObject objectForKey: @"type"] intValue];
-                                              
+
       switch (eventType)
         {
         case EVENT_TIMER:
