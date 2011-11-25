@@ -319,21 +319,12 @@
                                       [[NSBundle mainBundle] bundlePath],
                                       gInputManagerName];
 
-          if (gOSMajor == 10 && gOSMinor == 6)
-            {
-              _upgradePath = [[NSString alloc] initWithFormat:
-                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
-                OSAX_FOLDER,
-                gInputManagerName];
-
-
-            }
-          else if (gOSMajor == 10 && gOSMinor == 5)
+          if ([gUtil isLeopard])
             {
               _upgradePath = [[NSString alloc] initWithFormat:
                 @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                INPUT_MANAGER_FOLDER,
-                INPUT_MANAGER_FOLDER,
+                EXT_BUNDLE_FOLDER,
+                EXT_BUNDLE_FOLDER,
                 gInputManagerName];
 
               //
@@ -349,6 +340,13 @@
               [gUtil executeTask: @"/usr/sbin/chown"
                    withArguments: _tempArguments
                     waitUntilEnd: YES];
+            }
+          else
+            {
+              _upgradePath = [[NSString alloc] initWithFormat:
+                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
+                EXT_BUNDLE_FOLDER,
+                gInputManagerName];
             }
           
           // Now remove it

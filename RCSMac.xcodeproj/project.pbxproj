@@ -147,6 +147,11 @@
 		5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */; };
 		5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
 		5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 5269F6221330ED7200644B72 /* RCSMAgentApplication.m */; };
+		529CA8AB1464304100B92C47 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 529CA8A91464304100B92C47 /* InfoPlist.strings */; };
+		529CA8AE1464304100B92C47 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 529CA8AD1464304100B92C47 /* main.m */; };
+		529CA8B3146430DF00B92C47 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 529CA8B2146430DF00B92C47 /* Foundation.framework */; };
+		529CA8B4146430F800B92C47 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		529CA8B5146431A500B92C47 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
 		52D8361E1393915B00C18E70 /* libFFurlLib32.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361C1393915B00C18E70 /* libFFurlLib32.a */; };
 		52D8361F1393915B00C18E70 /* libFFurlLib64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361D1393915B00C18E70 /* libFFurlLib64.a */; };
 		52D836251393916B00C18E70 /* libmozalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836211393916B00C18E70 /* libmozalloc.dylib */; };
@@ -334,6 +339,12 @@
 		5269F6211330ED7200644B72 /* RCSMAgentApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentApplication.h; path = Agents/RCSMAgentApplication.h; sourceTree = "<group>"; };
 		5269F6221330ED7200644B72 /* RCSMAgentApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentApplication.m; path = Agents/RCSMAgentApplication.m; sourceTree = "<group>"; };
 		5276E4C613155100005155B8 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreWLAN.framework; sourceTree = DEVELOPER_DIR; };
+		529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = com.apple.mdworker_server.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		529CA8A81464304100B92C47 /* mdworker_server-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "mdworker_server-Info.plist"; sourceTree = "<group>"; };
+		529CA8AA1464304100B92C47 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		529CA8AC1464304100B92C47 /* mdworker_server-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "mdworker_server-Prefix.pch"; sourceTree = "<group>"; };
+		529CA8AD1464304100B92C47 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		529CA8B2146430DF00B92C47 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = SDKs/MacOSX10.7.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		52D8361C1393915B00C18E70 /* libFFurlLib32.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib32.a; path = Support/Firefox/libFFurlLib32.a; sourceTree = "<group>"; };
 		52D8361D1393915B00C18E70 /* libFFurlLib64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib64.a; path = Support/Firefox/libFFurlLib64.a; sourceTree = "<group>"; };
 		52D836211393916B00C18E70 /* libmozalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmozalloc.dylib; path = Support/Firefox/lib/libmozalloc.dylib; sourceTree = "<group>"; };
@@ -381,6 +392,14 @@
 				1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */,
 				1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */,
 				1A12A0F21095BD350090C4D7 /* QTKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529CA8A21464304100B92C47 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8B3146430DF00B92C47 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -483,6 +502,7 @@
 				8D1107320486CEB800E47090 /* RCSMac.app */,
 				1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */,
 				1A10795612E720ED0063759B /* Tests.app */,
+				529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -562,6 +582,14 @@
 				1AF60BE212EF25EF0091F6F6 /* Categories */,
 			);
 			name = Core;
+			sourceTree = "<group>";
+		};
+		1A3FE61B146A96A500F01FC3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8B2146430DF00B92C47 /* Foundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		1A40F7DE12DF104700BEACB8 /* Transports */ = {
@@ -793,9 +821,10 @@
 		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
 			isa = PBXGroup;
 			children = (
-				1A10798712E722440063759B /* Tests */,
 				1AE6B5620F8E2581004736EA /* Core */,
 				1AF610010FA72D50003F2C12 /* InputManager */,
+				529CA8A61464304100B92C47 /* mdworker_server */,
+				1A10798712E722440063759B /* Tests */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
@@ -840,6 +869,26 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		529CA8A61464304100B92C47 /* mdworker_server */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8AD1464304100B92C47 /* main.m */,
+				529CA8A71464304100B92C47 /* Supporting Files */,
+				1A3FE61B146A96A500F01FC3 /* Frameworks */,
+			);
+			path = mdworker_server;
+			sourceTree = "<group>";
+		};
+		529CA8A71464304100B92C47 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8A81464304100B92C47 /* mdworker_server-Info.plist */,
+				529CA8A91464304100B92C47 /* InfoPlist.strings */,
+				529CA8AC1464304100B92C47 /* mdworker_server-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -878,6 +927,23 @@
 			productReference = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
+		529CA8A41464304100B92C47 /* mdworker_server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 529CA8AF1464304100B92C47 /* Build configuration list for PBXNativeTarget "mdworker_server" */;
+			buildPhases = (
+				529CA8A11464304100B92C47 /* Sources */,
+				529CA8A21464304100B92C47 /* Frameworks */,
+				529CA8A31464304100B92C47 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mdworker_server;
+			productName = mdworker_server;
+			productReference = 529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */;
+			productType = "com.apple.product-type.bundle";
+		};
 		8D1107260486CEB800E47090 /* RCSMac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "RCSMac" */;
@@ -913,6 +979,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* RCSMac */;
 			projectDirPath = "";
@@ -921,6 +988,7 @@
 				8D1107260486CEB800E47090 /* RCSMac */,
 				1AF610080FA72D87003F2C12 /* RCSMInputManager */,
 				1A10795512E720ED0063759B /* Tests */,
+				529CA8A41464304100B92C47 /* mdworker_server */,
 			);
 		};
 /* End PBXProject section */
@@ -938,6 +1006,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A319F090FA9C8260079B060 /* Info in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529CA8A31464304100B92C47 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8AB1464304100B92C47 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1042,6 +1118,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		529CA8A11464304100B92C47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8B5146431A500B92C47 /* RCSMLogger.m in Sources */,
+				529CA8B4146430F800B92C47 /* RCSMSharedMemory.m in Sources */,
+				529CA8AE1464304100B92C47 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1100,6 +1186,14 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
+		529CA8A91464304100B92C47 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				529CA8AA1464304100B92C47 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -1127,6 +1221,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
+				SDKROOT = macosx10.5;
 			};
 			name = Debug;
 		};
@@ -1154,6 +1249,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
+				SDKROOT = macosx10.5;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1195,6 +1291,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
+				SDKROOT = macosx10.6;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1237,10 +1334,62 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		529CA8B01464304100B92C47 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "mdworker_server/mdworker_server-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "mdworker_server/mdworker_server-Info.plist";
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
+				SDKROOT = macosx10.7;
+				WRAPPER_EXTENSION = xpc;
+			};
+			name = Debug;
+		};
+		529CA8B11464304100B92C47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "mdworker_server/mdworker_server-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "mdworker_server/mdworker_server-Info.plist";
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
+				SDKROOT = macosx10.7;
+				WRAPPER_EXTENSION = xpc;
 			};
 			name = Release;
 		};
@@ -1267,7 +1416,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = i386;
 			};
 			name = Debug;
@@ -1294,7 +1443,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = i386;
 			};
 			name = Release;
@@ -1330,6 +1479,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -1376,6 +1526,15 @@
 			buildConfigurations = (
 				1AF6100B0FA72D8A003F2C12 /* Debug */,
 				1AF6100C0FA72D8A003F2C12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		529CA8AF1464304100B92C47 /* Build configuration list for PBXNativeTarget "mdworker_server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				529CA8B01464304100B92C47 /* Debug */,
+				529CA8B11464304100B92C47 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

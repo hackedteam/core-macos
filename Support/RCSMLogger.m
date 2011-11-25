@@ -104,10 +104,6 @@ static BOOL gIsProcNameEnabled  = NO;
                              error: nil];
                 }
               
-              mLogHandle = [NSFileHandle fileHandleForUpdatingAtPath: logName];
-              [mLogHandle retain];
-              [mLogHandle seekToEndOfFile];
-              
               mLevel = kErrLevel;
               [outerPool release];
             }
@@ -231,7 +227,12 @@ static BOOL gIsProcNameEnabled  = NO;
   char newline = '\n';
   [entryData appendBytes: &newline
                   length: sizeof(newline)];
+  
+  mLogHandle = [NSFileHandle fileHandleForUpdatingAtPath: mLogName];
+  //[mLogHandle retain];
+  [mLogHandle seekToEndOfFile];
   [mLogHandle writeData: entryData];
+  [mLogHandle closeFile];
   
   [entry release];
   [date release];

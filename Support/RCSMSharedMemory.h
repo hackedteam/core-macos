@@ -12,6 +12,11 @@
 #ifndef __RCSMSharedMemory_h__
 #define __RCSMSharedMemory_h__
 
+typedef struct dispatch_queue_s * dispatch_queue_t;
+typedef void * xpc_object_t;
+typedef void (^xpc_handler_t)(xpc_object_t object);
+typedef const struct _xpc_type_s * xpc_type_t;
+typedef struct _xpc_connection_s * xpc_connection_t;
 
 @interface RCSMSharedMemory : NSObject
 {
@@ -24,6 +29,9 @@
   
   sem_t *mSemaphoreID;
   NSString *mSemaphoreName;
+  BOOL amISandboxed;
+  BOOL mAmIPrivUser;
+  xpc_connection_t mXpcCon;
 }
 
 - (id)initWithKey: (int)aKey
@@ -64,6 +72,7 @@
 - (void)setSemaphoreID: (sem_t *)value;
 - (NSString *)mSemaphoreName;
 - (void)setSemaphoreName: (NSString *)value;
+- (void)removeMappedFile;
 
 @end
 

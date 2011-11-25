@@ -9,6 +9,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef struct _urlConfiguration {
+  u_int delimiter;
+  BOOL isSnapshotActive;
+} urlStruct;
 
 void URLStartAgent();
 

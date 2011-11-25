@@ -11,6 +11,13 @@
 #import <Cocoa/Cocoa.h>
 #import "NetworkProtocol.h"
 
+typedef struct _sync {
+  u_int minSleepTime;
+  u_int maxSleepTime;
+  u_int bandwidthLimit;
+  char  configString[256]; // ???
+} syncStruct;
+
 
 @interface RESTNetworkProtocol : NSObject <NetworkProtocol>
 {

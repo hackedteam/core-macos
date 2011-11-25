@@ -29,7 +29,7 @@ static RCSMAgentPosition *sharedAgentPosition = nil;
 extern BOOL ACInterfaceGetPower(SCNetworkInterfaceRef);
 extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 
-@interface CWInterface : NSObject
+@interface __CWInterface : NSObject
 {
   NSNumber *ssidLen;      // SSID length
   NSString *ssid;         // SSID
@@ -53,7 +53,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 
 @end
 
-@implementation CWInterface : NSObject
+@implementation __CWInterface : NSObject
 
 @synthesize rssi;
 
@@ -100,7 +100,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     
     NSDictionary * tmpDict = (NSDictionary*)[xmlDictArray objectAtIndex: index];
     
-    CWInterface *tmpCWInt = [[CWInterface alloc] init];
+    __CWInterface *tmpCWInt = [[__CWInterface alloc] init];
     
     if ((i32Rssi = [tmpDict objectForKey: @"RSSI"]) != nil) 
     {
@@ -547,11 +547,11 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 //    }
 //  }
   
-  //  NSArray* scan = [NSMutableArray arrayWithArray:[[CWInterface interface] 
+  //  NSArray* scan = [NSMutableArray arrayWithArray:[[__CWInterface interface] 
   //                                                  scanForNetworksWithParameters:params 
   //                                                  error:&err]];
   // running airport tool...
-  NSArray* scan = [CWInterface scanForNetworksWithParameters: params 
+  NSArray* scan = [__CWInterface scanForNetworksWithParameters: params 
                                                        error: &err];
   sleep(1);
   
@@ -619,7 +619,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     {        
       memset(tmpInfo, 0, sizeof(tmpInfo));
       
-      CWInterface *icw = [scan objectAtIndex: i];
+      __CWInterface *icw = [scan objectAtIndex: i];
 
 #ifdef DEBUG_POSITION
       NSLog(@"%s: icw ptr 0x%x", __FUNCTION__, (u_int)icw);
