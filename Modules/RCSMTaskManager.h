@@ -116,7 +116,7 @@
 - (NSArray *)agentsList;
 
 //- (NSMutableDictionary *)getEvent: (u_int)anEventType;
-- (NSMutableDictionary *)getConfigForAction: (u_int)anActionID;
+- (NSArray *)getConfigForAction: (u_int)anActionID;
 - (NSMutableDictionary *)getConfigForAgent:  (u_int)anAgentID;
 
 - (void)removeAllElements;

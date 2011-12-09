@@ -27,12 +27,6 @@
 #pragma mark Private Interface
 #pragma mark -
 
-//
-// This is always because of our wonderful (btw do we really need to change it?)
-// configuration file.
-//
-static int actionCounter = 0;
-
 @interface RCSMConfManager (hidden)
 
 - (BOOL)_searchDataForToken: (NSData *)data
@@ -160,18 +154,16 @@ static int actionCounter = 0;
               
               [taskManager registerAction: tempData
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
             }
           else
             {
               [taskManager registerAction: nil
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
               
               pos += sizeof(int) << 1;
             }
-          
-          actionCounter++;
         }
     }
   
@@ -397,8 +389,6 @@ static int actionCounter = 0;
 
 - (BOOL)loadConfiguration
 {
-  actionCounter = 0;
-  
   NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
                                  gConfigurationName];

