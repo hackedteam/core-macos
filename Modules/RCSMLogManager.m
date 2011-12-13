@@ -729,7 +729,6 @@ static RCSMLogManager *sharedLogManager = nil;
 #endif
           return TRUE;
         }
-      
       index++;
     }
   
