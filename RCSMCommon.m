@@ -1119,13 +1119,13 @@ BOOL is64bitKernel()
   int res = uname(&un);
   if (res == -1)
     {
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
       errorLog(@"Error while retrieving machine type");
 #endif
       return NO;
     }
   
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
   verboseLog(@"machine type: %s", un.machine);
 #endif
   
