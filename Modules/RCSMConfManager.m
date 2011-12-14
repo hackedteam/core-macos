@@ -197,7 +197,7 @@
   {
     for (int i=0; i<crisis_conf->network_process_count; i++) 
     {
-      int len = _utf16len((unichar*)process_name)*sizeof(unichar);
+      int len = _utf16len((unichar*)process_name) * sizeof(unichar);
       
   #ifdef DEBUG_CONF_MANAGER
       NSData *tmpD = [[NSData alloc] initWithBytes: process_name length: 8];
@@ -330,6 +330,9 @@
                                         andStatus: header->status];
             }
           
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"agent 0x%x: %@", header->agentID, tempData);
+#endif
           [taskManager registerAgent: tempData
                              agentID: header->agentID
                               status: header->status];
