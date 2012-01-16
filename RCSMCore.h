@@ -88,6 +88,7 @@
 //
 - (void)xfrth;
 
+- (void)injectRunningApp;
 - (void)injectBundle: (NSNotification *)notification;
 - (void)sendEventToPid: (NSNumber *)thePid;
 - (void)shareCorePidOnShMem;
