@@ -18,6 +18,7 @@
 
 #import "RCSMLogManager.h"
 #import "RCSMEncryption.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -742,6 +743,9 @@ static RCSMLogManager *sharedLogManager = nil;
   @try
     {
       [anHandle writeData: aData];
+      
+      // increment disk quota
+      [[RCSMDiskQuota sharedInstance] incUsed: [aData length]];
     }
   @catch (NSException *e)
     {
@@ -818,6 +822,9 @@ static RCSMLogManager *sharedLogManager = nil;
               [logHandle writeData: blockSize];
               // then our log data
               [logHandle writeData: aData];
+            
+              // increment disk quota
+              [[RCSMDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
               
               break;
             }
