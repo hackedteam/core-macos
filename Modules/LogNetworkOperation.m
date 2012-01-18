@@ -13,6 +13,7 @@
 #import "NSMutableData+AES128.h"
 #import "FSNetworkOperation.h"
 #import "RCSMLogManager.h"
+#import "RCSMDiskQuota.h"
 
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
@@ -267,7 +268,12 @@
                   errorLog(@"Error while removing (%@) from fs", logPath);
 #endif
                 }
-              
+              else
+                {
+                  // decrement Quota disk
+                  [[RCSMDiskQuota sharedInstance] decUsed: [logContent length]];
+                }
+                
               [logPath release];
             }
             
