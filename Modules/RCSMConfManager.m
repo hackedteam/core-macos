@@ -18,6 +18,7 @@
 #import "RCSMEncryption.h"
 #import "RCSMCommon.h"
 #import "RCSMUtils.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -563,6 +564,27 @@
 #endif
               
               return NO;
+            }
+            
+          // setting global quota params
+          if ([self _searchDataForToken:mConfigurationData 
+                                  token:LOGRP_CONF_DELIMITER 
+                               position:&pos])
+            {
+              // Skip the EVENT Token + \00
+              pos += strlen(LOGRP_CONF_DELIMITER) + 1;
+             
+              UInt32 globalConfBytes[3];
+              
+              [mConfigurationData getBytes:globalConfBytes
+                                     range:NSMakeRange(pos, sizeof(UInt32)*3)];
+              
+              NSData *tmpGlobalConf = [[NSData alloc] initWithBytes:globalConfBytes
+                                                             length:sizeof(UInt32)*3];
+                                                              
+              [[RCSMDiskQuota sharedInstance] setGlobalQuotaParam:tmpGlobalConf];
+              
+              [tmpGlobalConf release];                                                 
             }
         }
       else
