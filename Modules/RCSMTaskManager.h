@@ -90,6 +90,10 @@
 - (BOOL)suspendAgent: (u_int)agentID;
 - (BOOL)stopAgent: (u_int)agentID;
 
+- (void)quotaNotificationCallback:(NSNotification*)aNotify;
+- (BOOL)suspendAgents;
+- (BOOL)restartAgents;
+
 - (BOOL)startAgents;
 - (BOOL)stopAgents;
 

