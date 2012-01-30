@@ -30,6 +30,8 @@
   BOOL mMaxGlobalQuotaReached;
 }
 
+@property (readwrite) BOOL mMaxQuotaTriggered;
+
 + (RCSMDiskQuota *)sharedInstance;
 - (id)init;
 - (void)calcQuotas;
@@ -38,15 +40,10 @@
 - (void)decUsed:(UInt32)numBytes;
 - (UInt32)used;
 
-- (void)sendQuotaNotify:(NSString*)aName 
-             withObject:(id)aObject;
-
 - (void)setEventQuotaParam:(NSDictionary*)confDict
                  andAction:(NSNumber*)anAction;
    
 - (void)setGlobalQuotaParam:(NSData*)confData;
-             
-- (void)resetEventQuotaParam;
 
 - (void)checkQuotas;
 

