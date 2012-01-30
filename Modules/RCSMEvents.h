@@ -52,6 +52,11 @@ typedef struct _connection {
 } connectionStruct;
 
 @interface RCSMEvents : NSObject
+{
+  BOOL mEventQuotaRunning;
+}
+
+@property (readwrite) BOOL mEventQuotaRunning;
 
 + (RCSMEvents *)sharedEvents;
 + (id)allocWithZone: (NSZone *)aZone;
