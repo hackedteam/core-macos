@@ -20,11 +20,15 @@
 
 extern void lionSendEventToPid(pid_t pid);
 
+#ifndef ENABLE_LOGGING
+#include <asl.h>
 // Do not log anything in the console
-int _hook_asl_send(int client, int msg)
+static int _hook_asl_send(aslclient client, aslmsg msg)
 {
   return 1;
 }
+int (*asl_send_reentry)(aslclient,aslmsg);
+#endif
 
 int main (int argc, const char *argv[])
 {
@@ -35,7 +39,7 @@ int main (int argc, const char *argv[])
   infoLog(@"STARTING");
 #else
   // suppress every logging in console
-  mach_override("_asl_send", "libsystem_c",(void *)&_hook_asl_send, (void **)NULL);
+  mach_override("_asl_send", "libsystem_c",(void *)&_hook_asl_send, (void **)&asl_send_reentry);
 #endif
 
   // Fix for lion: AppleEvents only from unhidden proc
