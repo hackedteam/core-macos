@@ -1,8 +1,8 @@
 //
-//  MyClass.h
+//  RCSMAgentIMAdium.h
 //  RCSMac
 //
-//  Created by Alfredo Pesoli on 2/16/12.
+//  Created by Guido on 2/16/12.
 //  Copyright 2012 HT srl. All rights reserved.
 //
 
@@ -14,7 +14,7 @@
 
 @interface myAIContentController : NSObject
 
-- (void) myfinishReceiveContentObject: (id)arg1;
-- (void) myfinishSendContentObject: (id)arg1;
+- (void)myfinishReceiveContentObject: (id)arg1;
+- (void)myfinishSendContentObject: (id)arg1;
 
 @end

