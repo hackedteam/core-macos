@@ -60,6 +60,7 @@
 //#define DEBUG_ORGANIZER
 //#define DEBUG_IM_SKYPE
 //#define DEBUG_IM_MESSENGER
+//#define DEBUG_IM_ADIUM
 //#define DEBUG_VOIP_SKYPE
 //#define DEBUG_MIC
 //#define DEBUG_MIC_WAVE

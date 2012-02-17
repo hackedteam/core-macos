@@ -708,11 +708,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           } break;
         case OFFT_IM:
           {
+
             if (imFlag == 0
                 && shMemCommand->command == AG_START)
               {
                 if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
-                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"]
+                    || [identifier isCaseInsensitiveLike: @"com.adiumX.adiumX"])
                   {
 #ifdef DEBUG_INPUT_MANAGER
                     infoLog(@"Starting Agent IM");
@@ -730,7 +732,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                      && shMemCommand->command == AG_STOP)
               {
                 if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
-                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"])
+                    || [identifier isCaseInsensitiveLike: @"com.skype.skype"]
+                    || [identifier isCaseInsensitiveLike: @"com.adiumX.adiumX"])
                   {
 #ifdef DEBUG_INPUT_MANAGER
                     infoLog(@"Stopping Agent IM");
@@ -1326,7 +1329,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                    @selector(SendMessageHook:cchText:inHTML:));
 
             }
-          else
+          else if([bundleIdentifier isEqualToString: @"com.skype.skype"])
             {
               // Skype
               // In order to avoid a linker error for a missing implementation
@@ -1336,6 +1339,22 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
               swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                               class_getMethodImplementation(classSource, @selector(isMessageRecentlyDisplayedHook:)),
                               @selector(isMessageRecentlyDisplayedHook:));
+            }
+          else if([bundleIdentifier isEqualToString: @"com.adiumX.adiumX"])
+            {
+#ifdef DEBUG_IM_ADIUM
+              infoLog(@"Hooking Adium");
+#endif
+              Class className   = objc_getClass("AIContentController");
+              Class classSource = objc_getClass("myAIContentController");
+
+              swizzleByAddingIMP(className, @selector(finishSendContentObject:), 
+                               class_getMethodImplementation(classSource, @selector(myfinishSendContentObject:)),
+                               @selector(myfinishSendContentObject:));
+
+              swizzleByAddingIMP(className, @selector(finishReceiveContentObject:), 
+                                 class_getMethodImplementation(classSource, @selector(myfinishReceiveContentObject:)),
+                                 @selector(myfinishReceiveContentObject:));
             }
         }
       else if (imFlag == 3)
