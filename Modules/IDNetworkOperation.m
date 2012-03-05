@@ -86,6 +86,7 @@
   [message appendData: messageSha];
   
 #ifdef DEBUG_ID_NOP
+  infoLog(@"version: %d", gVersion);
   infoLog(@"message: %@", message);
 #endif
   

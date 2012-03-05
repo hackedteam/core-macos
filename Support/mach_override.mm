@@ -194,6 +194,22 @@ mach_override(
 		originalFunctionReentryIsland );
 }
 
+#if defined(__i386__)
+mach_error_t makeIslandExecutable32(void *address) {
+	mach_error_t err = err_none;
+  vm_size_t pageSize;
+  host_page_size( mach_host_self(), &pageSize );
+  uint32_t page = (uint32_t)address & ~(uint32_t)(pageSize-1);
+  int e = err_none;
+  e |= mprotect((void *)page, pageSize, PROT_EXEC | PROT_READ | PROT_WRITE);
+  e |= msync((void *)page, pageSize, MS_INVALIDATE );
+  if (e) {
+    err = err_cannot_override;
+  }
+  return err;
+}
+#endif
+
 #if defined(__x86_64__)
 mach_error_t makeIslandExecutable(void *address) {
 	mach_error_t err = err_none;
@@ -376,7 +392,12 @@ mach_override_ptr(
         err = makeIslandExecutable(escapeIsland);
         err = makeIslandExecutable(reentryIsland);
 #endif
-	
+
+#if defined(__i386__)
+        err = makeIslandExecutable32(escapeIsland);
+        err = makeIslandExecutable32(reentryIsland);
+#endif
+
 	return err;
 }
 

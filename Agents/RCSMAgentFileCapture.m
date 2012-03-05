@@ -19,7 +19,7 @@ typedef struct _fileConfiguration {
   u_int loMinDate;
   u_int reserved1;
   u_int reserved2;
-  BOOL  noFileOpen;
+  u_int noFileOpen;
   u_int acceptCount;
   u_int denyCount;
   char patterns[1]; // wchar_t
@@ -70,7 +70,7 @@ BOOL FCStartAgent()
 #endif
 
       fileStruct *fileConfiguration = (fileStruct *)[confData bytes];
-      if (fileConfiguration->noFileOpen == NO) 
+      if (fileConfiguration->noFileOpen == 0) 
         {
 #ifdef DEBUG_FILE_CAPTURE
           infoLog(@"file open is active");
@@ -113,45 +113,42 @@ BOOL FCStartAgent()
         gExcludeList = [[NSMutableArray alloc] init];
 
 #ifdef DEBUG_FILE_CAPTURE
-      infoLog(@"minSize: %ld", gMinSize);
-      infoLog(@"maxSize: %ld", gMaxSize);
-      infoLog(@"date   : %@", gFromDate);
+      infoLog(@"minSize    : %ld", gMinSize);
+      infoLog(@"maxSize    : %ld", gMaxSize);
+      infoLog(@"date       : %@", gFromDate);
+      infoLog(@"acceptCount: %d", fileConfiguration->acceptCount);
+      infoLog(@"denyCount  : %d", fileConfiguration->denyCount);
 #endif
 
-      int i = 0;
+      int i   = 0;
       off_t z = 0;
 
       for (; i < fileConfiguration->acceptCount; i++)
         {
           unichar *_entry = (unichar *)(fileConfiguration->patterns + z);
+#ifdef DEBUG_FILE_CAPTURE
+          infoLog(@"accept: %S", _entry);
+#endif
           int len = _utf16len(_entry);
           z += len * 2 + sizeof(short); // utf16 + null
 
           NSString *entry = [[NSString alloc] initWithCharacters: _entry
                                                           length: len];
-#ifdef DEBUG_FILE_CAPTURE
-          infoLog(@"include: %@", entry);
-          verboseLog(@"len  : %d", len);
-#endif
-
           [gIncludeList addObject: entry];
           [entry release];
         }
       
-      i = 0;
-      for (; i < fileConfiguration->denyCount; i++)
+      for (i = 0; i < fileConfiguration->denyCount; i++)
         {
           unichar *_entry = (unichar *)(fileConfiguration->patterns + z);
+#ifdef DEBUG_FILE_CAPTURE
+          infoLog(@"deny: %S", _entry);
+#endif
           int len = _utf16len(_entry);
           z += len * 2 + sizeof(short); // utf16 + null
 
           NSString *entry = [[NSString alloc] initWithCharacters: _entry
                                                           length: len];
-#ifdef DEBUG_FILE_CAPTURE
-          infoLog(@"exclude: %@", entry);
-          verboseLog(@"len  : %d", len);
-#endif
-
           [gExcludeList addObject: entry];
           [entry release];
         }
@@ -255,8 +252,8 @@ void logFileOpen(NSString *filePath)
   struct tm *tmTemp;
 
   processName  = [[NSMutableData alloc] initWithData:
-                     [_processName dataUsingEncoding:
-                     NSUTF8StringEncoding]];
+                  [_processName dataUsingEncoding:
+                   NSUTF8StringEncoding]];
   char nullTerminator = 0x00;
 
   // Struct tm

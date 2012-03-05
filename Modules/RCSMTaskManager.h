@@ -47,6 +47,8 @@
 //
 @interface RCSMTaskManager : NSObject
 {
+  BOOL mIsSyncing;
+  
 @private
   NSMutableArray *mEventsList;
   NSMutableArray *mActionsList;
@@ -56,7 +58,6 @@
   int mBackdoorID;
   NSString *mBackdoorControlFlag;
   BOOL mShouldReloadConfiguration;
-  BOOL mIsSyncing;
   
 @private
   RCSMConfManager   *mConfigManager;
@@ -69,6 +70,7 @@
 @property (readwrite)        int mBackdoorID;
 @property (readwrite, copy)  NSString *mBackdoorControlFlag;
 @property (readwrite)        BOOL mShouldReloadConfiguration;
+@property (readonly)         BOOL mIsSyncing;
 
 + (RCSMTaskManager *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
@@ -89,6 +91,9 @@
 - (BOOL)restartAgent: (u_int)agentID;
 - (BOOL)suspendAgent: (u_int)agentID;
 - (BOOL)stopAgent: (u_int)agentID;
+
+- (BOOL)suspendAgents;
+- (BOOL)restartAgents;
 
 - (BOOL)startAgents;
 - (BOOL)stopAgents;
@@ -116,12 +121,13 @@
 - (NSArray *)agentsList;
 
 //- (NSMutableDictionary *)getEvent: (u_int)anEventType;
-- (NSMutableDictionary *)getConfigForAction: (u_int)anActionID;
+- (NSArray *)getConfigForAction: (u_int)anActionID;
 - (NSMutableDictionary *)getConfigForAgent:  (u_int)anAgentID;
 
 - (void)removeAllElements;
 
 - (NSString *)getControlFlag;
+
 @end
 
 #endif

@@ -102,7 +102,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2011112801;
+u_int gVersion        = 2012013101;
 u_int gSkypeQuality   = 0;
 
 // OS version
@@ -1119,13 +1119,13 @@ BOOL is64bitKernel()
   int res = uname(&un);
   if (res == -1)
     {
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
       errorLog(@"Error while retrieving machine type");
 #endif
       return NO;
     }
   
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
   verboseLog(@"machine type: %s", un.machine);
 #endif
   
