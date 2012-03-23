@@ -10,6 +10,7 @@
  */
 
 #import <CommonCrypto/CommonCryptor.h>
+#import <CommonCrypto/CommonDigest.h>
 #import <zlib.h>
 
 #import "RCSMCommon.h"
@@ -104,6 +105,86 @@
   [mKey release];
   
   [super dealloc];
+}
+
+- (NSMutableData *)decryptWithKey:(NSData *)aKey
+                           inData:(NSMutableData*)inData
+{
+  NSMutableData *clearData = nil;
+  
+  size_t numBytesDecrypted = 0;
+  
+  CCCryptorStatus result = CCCrypt(kCCDecrypt, 
+                                   kCCAlgorithmAES128, 
+                                   kCCOptionPKCS7Padding,               //0,
+                                   [aKey bytes], 
+                                   kCCKeySizeAES128,
+                                   NULL,                                // initialization vector (optional)
+                                   [inData mutableBytes], [inData length],  // input
+                                   [inData mutableBytes], [inData length],  // output
+                                   &numBytesDecrypted);
+  
+  if (result == kCCSuccess)
+    {
+      clearData = [NSMutableData dataWithBytes:[inData bytes] length:numBytesDecrypted];
+    }
+  
+#ifdef DEBUG_TMP
+  NSLog(@"%s: return %d dec %lu", __FUNCTION__, result, numBytesDecrypted);
+#endif
+  
+  return clearData;
+}
+
+- (NSData *)decryptJSonConfiguration: (NSString *)aConfigurationFile
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSData *decConfig = nil;
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: aConfigurationFile] == FALSE)
+    {
+      //FIXED-
+      [pool release];
+      return decConfig;
+    }
+  
+  NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath: aConfigurationFile];
+  
+  if (fileHandle != nil)
+    {
+      NSMutableData *encData = [NSMutableData dataWithData: [fileHandle availableData]];
+      
+      NSMutableData *tempData = [self decryptWithKey: mKey inData: encData];
+      
+      if (tempData != nil)
+        {
+          u_int  confLen     = [tempData length] - CC_SHA1_DIGEST_LENGTH;
+          u_char *confBuffer = (u_char*)[tempData bytes];
+          u_char *confSha1   = (confBuffer + confLen);
+          
+          u_char tmpSha1[CC_SHA1_DIGEST_LENGTH+1];
+          memset(tmpSha1, 0, sizeof(tmpSha1));
+          
+          CC_SHA1(confBuffer, confLen, tmpSha1); 
+                
+          decConfig = [[NSData dataWithBytes:confBuffer length:confLen] retain];
+          
+          for (int i=0; i < CC_SHA1_DIGEST_LENGTH; i++) 
+            {
+              if (tmpSha1[i] != confSha1[i])
+                {
+                  [decConfig release];
+                  decConfig = nil;
+                  break;
+                }
+            }
+      }
+    }
+  
+  [pool release];
+  
+  return decConfig;
 }
 
 - (NSData *)decryptConfiguration: (NSString *)aConfigurationFile

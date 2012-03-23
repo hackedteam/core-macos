@@ -32,6 +32,7 @@
 
 - (NSData *)mKey;
 - (void)setKey: (NSData *)aValue;
+- (NSData *)decryptJSonConfiguration: (NSString *)aConfigurationFile;
 
 @end
 
