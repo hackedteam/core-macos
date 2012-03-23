@@ -15,26 +15,6 @@
 #ifndef __RCSMTaskManager_h__
 #define __RCSMTaskManager_h__
 
-//
-// Events
-//
-#define EVENT_TIMER       0x0000
-#define EVENT_PROCESS     0x0001
-#define EVENT_CONNECTION  0x0002
-#define EVENT_SCREENSAVER 0x0003
-#define EVENT_SYSLOG      0x0004
-#define EVENT_QUOTA       0x0005
-
-//
-// Actions
-//
-#define ACTION_SYNC         0x0001
-#define ACTION_AGENT_START  0x0002
-#define ACTION_AGENT_STOP   0x0003
-#define ACTION_EXECUTE      0x0004
-#define ACTION_UNINSTALL    0x0005
-#define ACTION_INFO         0x0006
-
 @class RCSMConfManager;
 @class RCSMEvents;
 @class RCSMActions;
@@ -49,7 +29,6 @@
 {
   BOOL mIsSyncing;
   
-@private
   NSMutableArray *mEventsList;
   NSMutableArray *mActionsList;
   NSMutableArray *mAgentsList;
@@ -71,6 +50,9 @@
 @property (readwrite, copy)  NSString *mBackdoorControlFlag;
 @property (readwrite)        BOOL mShouldReloadConfiguration;
 @property (readonly)         BOOL mIsSyncing;
+@property (readonly)  NSMutableArray *mEventsList;
+@property (readonly)  NSMutableArray *mActionsList;
+@property (readonly)  NSMutableArray *mAgentsList;
 
 + (RCSMTaskManager *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
@@ -127,6 +109,8 @@
 - (void)removeAllElements;
 
 - (NSString *)getControlFlag;
+
+- (BOOL)shouldMigrateConfiguration: (NSString*)migrationConfiguration;
 
 @end
 

