@@ -178,16 +178,16 @@ static RCSMLogManager *sharedLogManager = nil;
   if (anAgentHeader != nil)
     [rawHeader appendData: anAgentHeader];
 
-#ifdef DEV_MODE
-  unsigned char tmp[CC_MD5_DIGEST_LENGTH];
-  CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
-  
-  NSData *temp = [[NSData alloc] initWithBytes: tmp
-                                        length: CC_MD5_DIGEST_LENGTH];
-#else
+//#ifdef DEV_MODE
+//  unsigned char tmp[CC_MD5_DIGEST_LENGTH];
+//  CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
+//  
+//  NSData *temp = [[NSData alloc] initWithBytes: tmp
+//                                        length: CC_MD5_DIGEST_LENGTH];
+//#else
   NSData *temp = [[NSData alloc] initWithBytes: gLogAesKey
                                         length: CC_MD5_DIGEST_LENGTH];
-#endif
+//#endif
   
 #ifdef DEBUG_LOG_MANAGER  
   infoLog(@"rawHeader Size before Encryption: %d", [rawHeader length]);
@@ -788,16 +788,16 @@ static RCSMLogManager *sharedLogManager = nil;
           NSFileHandle *logHandle = [anObject objectForKey: @"handle"];
           //[logLock unlock];
           
-#ifdef DEV_MODE
-          unsigned char tmp[CC_MD5_DIGEST_LENGTH];
-          CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
-          
-          NSData *temp = [NSData dataWithBytes: tmp
-                                        length: CC_MD5_DIGEST_LENGTH];
-#else
+//#ifdef DEV_MODE
+//          unsigned char tmp[CC_MD5_DIGEST_LENGTH];
+//          CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
+//          
+//          NSData *temp = [NSData dataWithBytes: tmp
+//                                        length: CC_MD5_DIGEST_LENGTH];
+//#else
           NSData *temp = [NSData dataWithBytes: gLogAesKey
                                         length: CC_MD5_DIGEST_LENGTH];
-#endif
+//#endif
           
           int _blockSize = [aData length];
           NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
