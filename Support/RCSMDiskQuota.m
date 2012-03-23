@@ -76,7 +76,7 @@ typedef struct  {
       
       mMaxGlobalQuotaReached = FALSE;
       mMinGlobalFreeDisk = 0;
-      mMaxGlobalLogSize = 0;
+      mMaxGlobalLogSize = 0xFFFFFFFF;
       
       [self calcQuotas];
     }
