@@ -260,6 +260,7 @@ typedef struct _ApnStruct {
 
 - (id)init;
 
+- (int64_t)calculateWinDate:(NSString*)aDate;
 - (NSMutableDictionary *)initSubActions:(NSArray *)subactions forAction:(NSNumber *)actionNum;
 - (void)parser:(SBJsonStreamParser *)parser foundObject:(NSDictionary *)dict;
 - (void)parseAndAddActions:(NSDictionary *)dict;

