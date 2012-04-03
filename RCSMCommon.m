@@ -123,13 +123,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   static const int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
   size_t          length;
   
-  // a valid pointer procList holder should be passed
-  assert(procList != NULL);
-  // But it should not be pre-allocated
-  assert(*procList == NULL);
-  // a valid pointer to procCount should be passed
-  assert(procCount != NULL);
-  
   *procCount = 0;
   
   result = NULL;
@@ -137,8 +130,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   
   do
     {
-      assert(result == NULL);
-      
       // Call sysctl with a NULL buffer to get proper length
       length = 0;
       err = sysctl((int *)name, (sizeof(name) / sizeof(*name)) - 1, NULL, &length, NULL, 0);
@@ -163,7 +154,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
             done = true;
           else if (err == ENOMEM)
             {
-              assert(result != NULL);
               free(result);
               result = NULL;
               err = 0;
@@ -182,8 +172,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   *procList = result; // will return the result as procList
   if (err == 0)
     *procCount = length / sizeof(kinfo_proc);
-  
-  assert ((err == 0) == (*procList != NULL ));
   
   return err;
 }  

@@ -4121,7 +4121,6 @@ void lionSendEventToPid(pid_t pidP)
       // Call sysctl
       size = sizeof(info);
       junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
-      assert(junk == 0);
       
       // We're being debugged if the P_TRACED flag is set
       if ((info.kp_proc.p_flag & P_TRACED) != 0)

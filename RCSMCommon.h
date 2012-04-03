@@ -15,7 +15,6 @@
 #import <CoreAudio/CoreAudio.h>
 #import <sys/sysctl.h>
 #import <stdbool.h>
-#import <assert.h>
 #import <errno.h>
 
 #import <netdb.h>
