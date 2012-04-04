@@ -1644,6 +1644,7 @@ void lionSendEventToPid(pid_t pidP)
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: @"com.apple.mdworker" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
+  [rootObj setObject: @"com.apple.mdworker" forKey:@"CFBundleName"];
   [rootObj setObject: @"KEXT" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"2.0" forKey: @"CFBundleVersion"];
