@@ -127,6 +127,7 @@
 #define ACTION_MODULE_POS       @"position"
 #define ACTION_MODULE_SNAPSHOT  @"screenshot"
 #define ACTION_MODULE_MOUSE     @"mouse"
+#define ACTION_MODULE_FILE      @"file"
 
 // iOS
 #define ACTION_SYNC_GPRS_KEY  @"cell"

