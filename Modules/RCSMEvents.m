@@ -182,6 +182,8 @@ NSLock *connectionLock;
         }
     }
   
+  sleep(1);
+  
   return breaked;
 }
 
