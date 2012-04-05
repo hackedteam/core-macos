@@ -48,7 +48,7 @@
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   [aConfiguration retain];
-  
+  BOOL bSuccess = NO;
   BOOL _syncThroughSafariWentOk = NO;
   BOOL _isSyncing;
   NSNumber *status;
@@ -61,10 +61,6 @@
   
   if (_isSyncing == YES)
     {
-#ifdef DEBUG_ACTIONS
-      warnLog(@"Another sync op is in place, waiting");
-#endif
-      
       while (_isSyncing == YES)
         {
           usleep(600000);
@@ -72,10 +68,6 @@
           _isSyncing = mIsSyncing;
           [mActionsLock unlock];
         }
-        
-#ifdef DEBUG_ACTIONS
-      infoLog(@"Sync from (waiting) to (performing)");
-#endif
     }
   
   [mActionsLock lock];
@@ -230,13 +222,11 @@
                                        initWithConfiguration: syncConfig];
       if ([protocol perform] == NO)
         {
-#ifdef DEBUB_ACTIONS
-          errorLog(@"An error occurred while syncing with REST proto");
-#endif
+          bSuccess = NO;
         }
       else
         {
-          BOOL bSuccess = NO;
+          bSuccess = YES;
         }
         
       [protocol release];
@@ -255,7 +245,7 @@
   
   [outerPool release];
   
-  return TRUE;
+  return bSuccess;
 }
 
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag

@@ -3280,15 +3280,8 @@ static NSLock *gSyncLock                  = nil;
           {
             if ((gAgentCrisis & CRISIS_START) && (gAgentCrisis & CRISIS_SYNC))
               {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"CRISIS_SYNC actived do not sync 0x%x", gAgentCrisis);
-#endif
                 break;
               }  
-
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"syncing");
-#endif
 
             [gSyncLock lock];
             _isSyncing = mIsSyncing;
@@ -3296,14 +3289,8 @@ static NSLock *gSyncLock                  = nil;
 
             if (_isSyncing == YES)
               {
-#ifdef DEBUG_TASK_MANAGER
-                warnLog(@"Sync op already in place - waiting");
-#endif
-
                 while (_isSyncing == YES && waitCounter < MAX_ACTION_WAIT_TIME)
                   {
-                    //usleep(250000);
-
                     [gSyncLock lock];
                     _isSyncing = mIsSyncing;
                     [gSyncLock unlock];
@@ -3315,9 +3302,6 @@ static NSLock *gSyncLock                  = nil;
                 // We've waited way too much here
                 if (waitCounter == MAX_ACTION_WAIT_TIME)
                   {
-#ifdef DEBUG_TASK_MANAGER
-                    errorLog(@"Sync timed out while waiting for another in place");
-#endif
                     return FALSE;
                   }
               }
@@ -3327,24 +3311,29 @@ static NSLock *gSyncLock                  = nil;
             [gSyncLock unlock];
 
             NSNumber *status = [NSNumber numberWithInt: ACTION_PERFORMING];
-            //[configuration setObject: status forKey: @"status"];
+            
             [configuration threadSafeSetObject: status
                                         forKey: @"status"
                                      usingLock: gSyncLock];
-
-            [mActions actionSync: configuration];
-
+            
+            BOOL stop = [[configuration objectForKey:@"stop"] boolValue];
+            
+            BOOL bSyncRet = [mActions actionSync: configuration];
+            
             [gSyncLock lock];
             mIsSyncing = NO;
             [gSyncLock unlock];
-
+            
+            if (bSyncRet == YES && stop == TRUE)
+              {
+                [outerPool release];
+                return TRUE;
+              }
+               
             break;
           }
         case ACTION_AGENT_START:
           {
-            //
-            // TODO: call directly startAgent (?)
-            //
             if ([[configuration objectForKey: @"status"] intValue] == 0)
               {
                 NSNumber *status = [NSNumber numberWithInt: 1];
@@ -3427,11 +3416,7 @@ static NSLock *gSyncLock                  = nil;
           break;
           }
         default:
-          {
-#ifdef DEBUG_TASK_MANAGER
-            errorLog(@"Unknown action type: %d", actionType);
-#endif
-          } break;
+          break;
         }
     }
   
