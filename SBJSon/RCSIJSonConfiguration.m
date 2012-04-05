@@ -2107,8 +2107,8 @@ typedef struct {
     }
   
   tmpSyncStruct.bandwidthLimit = (bandwidth == nil ? 1 : [bandwidth intValue]);
-  tmpSyncStruct.minSleepTime  = (mindelay == nil ? 1 : [mindelay intValue]);
-  tmpSyncStruct.maxSleepTime  = (maxdelay == nil ? 1 : [maxdelay intValue]);
+  tmpSyncStruct.minSleepTime   = (mindelay  == nil ? 1 : [mindelay intValue]);
+  tmpSyncStruct.maxSleepTime   = (maxdelay  == nil ? 1 : [maxdelay intValue]);
   
   NSData *tmpHostnameData = [host dataUsingEncoding: NSUTF8StringEncoding];
   
