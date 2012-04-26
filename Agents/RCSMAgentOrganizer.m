@@ -520,13 +520,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-#ifdef DEBUG_ORGANIZER
-  infoLog(@"Agent organizer started");
-  infoLog(@"AgentConf: %@", mConfiguration);
-#endif
-  
-  [mConfiguration setObject: AGENT_RUNNING
-                     forKey: @"status"];
+  [mConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   
   //
   // Register our observer in order to grab notifications about changes
@@ -542,18 +536,9 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
                                                           name: @"ABDatabaseChangedNotification"
                                                         object: nil];
   
-  //
   // First off, grab all contacts
-  //
   if ([self _grabAllContacts] == NO)
-    {
-#ifdef DEBUG_ORGANIZER
-      errorLog(@"Error on grabAllContacts, DB not created yet, quitting.");
-#endif
-
-      [mConfiguration setObject: AGENT_STOP
-                         forKey: @"status"];
-    }
+    [mConfiguration setObject: AGENT_STOP forKey: @"status"];
 
   while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
@@ -562,13 +547,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
       sleep(1);
     }
 
-#ifdef DEBUG_ORGANIZER
-  warnLog(@"STOPPING");
-#endif
-
-  //
   // Remove our observer
-  //
   [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
   
   if ([mConfiguration objectForKey: @"status"] == AGENT_STOP)
@@ -582,28 +561,16 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (BOOL)stop
 {
-#ifdef DEBUG_ORGANIZER
-  verboseLog(@"");
-#endif
-
   int internalCounter = 0;
   [mConfiguration setObject: AGENT_STOP
                      forKey: @"status"];
-  
-#ifdef DEBUG_ORGANIZER
-  warnLog(@"Configuration set to STOP, now waiting");
-#endif
-  
+                     
   while ([mConfiguration objectForKey: @"status"] != AGENT_STOPPED
          && internalCounter <= MAX_STOP_WAIT_TIME)
     {
       internalCounter++;
       usleep(100000);
     }
-  
-#ifdef DEBUG_ORGANIZER
-  warnLog(@"STOPPED");
-#endif
 
   return YES;
 }

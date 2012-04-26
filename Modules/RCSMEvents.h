@@ -19,12 +19,6 @@
 #define EVENT_PROCESS_NAME      0
 #define EVENT_PROCESS_WIN_TITLE 1
 
-#define TIMER_AFTER_STARTUP     0x0
-#define TIMER_LOOP              0x1
-#define TIMER_DATE              0x2
-#define TIMER_INST              0x3
-#define TIMER_DAILY             0x4
-
 //
 // struct for events data
 //
@@ -52,6 +46,11 @@ typedef struct _connection {
 } connectionStruct;
 
 @interface RCSMEvents : NSObject
+{
+  BOOL mEventQuotaRunning;
+}
+
+@property (readwrite) BOOL mEventQuotaRunning;
 
 + (RCSMEvents *)sharedEvents;
 + (id)allocWithZone: (NSZone *)aZone;

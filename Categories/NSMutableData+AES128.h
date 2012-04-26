@@ -15,6 +15,7 @@
 
 @interface NSMutableData (AES128) 
 
+- (CCCryptorStatus)__encryptWithKey: (NSData *)aKey;
 - (CCCryptorStatus)encryptWithKey: (NSData *)aKey;
 - (CCCryptorStatus)decryptWithKey: (NSData *)aKey;
 

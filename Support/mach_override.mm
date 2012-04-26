@@ -158,10 +158,6 @@ mach_override(
 		const void *overrideFunctionAddress,
 		void **originalFunctionReentryIsland )
 {
-	assert( originalFunctionSymbolName );
-	assert( strlen( originalFunctionSymbolName ) );
-	assert( overrideFunctionAddress );
-	
 	//	Lookup the original function's code pointer.
 	void	*originalFunctionPtr;
   
@@ -194,6 +190,22 @@ mach_override(
 		originalFunctionReentryIsland );
 }
 
+#if defined(__i386__)
+mach_error_t makeIslandExecutable32(void *address) {
+	mach_error_t err = err_none;
+  vm_size_t pageSize;
+  host_page_size( mach_host_self(), &pageSize );
+  uint32_t page = (uint32_t)address & ~(uint32_t)(pageSize-1);
+  int e = err_none;
+  e |= mprotect((void *)page, pageSize, PROT_EXEC | PROT_READ | PROT_WRITE);
+  e |= msync((void *)page, pageSize, MS_INVALIDATE );
+  if (e) {
+    err = err_cannot_override;
+  }
+  return err;
+}
+#endif
+
 #if defined(__x86_64__)
 mach_error_t makeIslandExecutable(void *address) {
 	mach_error_t err = err_none;
@@ -215,10 +227,7 @@ mach_override_ptr(
 	void *originalFunctionAddress,
     const void *overrideFunctionAddress,
     void **originalFunctionReentryIsland )
-{
-	assert( originalFunctionAddress );
-	assert( overrideFunctionAddress );
-	
+{	
 	long	*originalFunctionPtr = (long*) originalFunctionAddress;
 	mach_error_t	err = err_none;
 	
@@ -376,7 +385,12 @@ mach_override_ptr(
         err = makeIslandExecutable(escapeIsland);
         err = makeIslandExecutable(reentryIsland);
 #endif
-	
+
+#if defined(__i386__)
+        err = makeIslandExecutable32(escapeIsland);
+        err = makeIslandExecutable32(reentryIsland);
+#endif
+
 	return err;
 }
 
@@ -405,15 +419,12 @@ allocateBranchIsland(
 		int				allocateHigh,
 		void *originalFunctionAddress)
 {
-	assert( island );
-	
 	mach_error_t	err = err_none;
 	
 	if( allocateHigh ) {
 		vm_size_t pageSize;
 		err = host_page_size( mach_host_self(), &pageSize );
 		if( !err ) {
-			assert( sizeof( BranchIsland ) <= pageSize );
 #if defined(__x86_64__)
 			vm_address_t first = (uint64_t)originalFunctionAddress & ~(uint64_t)(((uint64_t)1 << 31) - 1) | ((uint64_t)1 << 31); // start in the middle of the page?
 			vm_address_t last = 0x0;
@@ -469,18 +480,13 @@ allocateBranchIsland(
 	mach_error_t
 freeBranchIsland(
 		BranchIsland	*island )
-{
-	assert( island );
-	assert( (*(long*)&island->instructions[0]) == kIslandTemplate[0] );
-	assert( island->allocatedHigh );
-	
+{	
 	mach_error_t	err = err_none;
 	
 	if( island->allocatedHigh ) {
 		vm_size_t pageSize;
 		err = host_page_size( mach_host_self(), &pageSize );
 		if( !err ) {
-			assert( sizeof( BranchIsland ) <= pageSize );
 			err = vm_deallocate(
 					mach_task_self(),
 					(vm_address_t) island, pageSize );

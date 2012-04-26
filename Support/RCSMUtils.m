@@ -494,9 +494,7 @@ static RCSMUtils *sharedUtils = nil;
 {
   BOOL success;
   
-  //
   // Create the empty existence flag file
-  //
   success = [@"" writeToFile: [self mExecFlag]
                   atomically: NO
                     encoding: NSUnicodeStringEncoding

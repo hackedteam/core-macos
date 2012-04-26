@@ -111,8 +111,12 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  if ([arg1 respondsToSelector: @selector(message)])
+  if ([arg1 respondsToSelector: @selector(message)] &&
+      [arg1 respondsToSelector: @selector(type)] &&
+      [arg1 respondsToSelector: @selector(source)] &&
+      [arg1 respondsToSelector: @selector(chat)])
     {
+
       NSString *topic;
       NSString *msgType = [arg1 performSelector: @selector(type)];
       NSUInteger msgLen = [[arg1 performSelector: @selector(message)] length];

