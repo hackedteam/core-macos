@@ -255,6 +255,8 @@ extern u_int remoteAgents[];
 #define EVENT_SCREENSAVER 0x0003
 #define EVENT_SYSLOG      0x0004
 #define EVENT_QUOTA       0x0005
+#define EVENT_IDLE        0x0006
+
 //timers
 #define TIMER_AFTER_STARTUP     0x0
 #define TIMER_LOOP              0x1

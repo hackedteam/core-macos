@@ -60,6 +60,8 @@
 #define EVENTS_DATE_KEY   @"date"
 #define EVENTS_AFTIN_KEY  @"afterinst"
 #define EVENTS_WIN_KEY    @"window"
+#define EVENTS_IDLE_KEY   @"idle"
+#define EVENTS_IDLE_TIME_KEY  @"time"
 #define EVENTS_TIMER_KEY  @"timer"
 #define EVENTS_TIMER_DAYS_KEY @"days"
 #define EVENTS_TIMER_DATE_KEY  @"date"

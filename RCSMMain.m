@@ -36,7 +36,7 @@ int main (int argc, const char *argv[])
  
 #ifdef ENABLE_LOGGING
   [RCSMLogger setComponent: @"core"];
-  infoLog(@"STARTING");
+//  infoLog(@"STARTING");
 #else
   // suppress every logging in console
   mach_override("_asl_send", "libsystem_c",(void *)&_hook_asl_send, (void **)&asl_send_reentry);

