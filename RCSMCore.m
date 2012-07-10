@@ -3066,9 +3066,9 @@ void lionSendEventToPid(pid_t pidP)
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
   // First off check if we support the OS
-  if (gOSMajor != 10
-      || (gOSMajor == 10 && gOSMinor < 5)
-      || (gOSMajor == 10 && gOSMinor > 7))
+  if (gOSMajor != OSMAJOR_VER
+      || (gOSMajor == OSMAJOR_VER && gOSMinor < OSMINOR_MIN_VER)
+      || (gOSMajor == OSMAJOR_VER && gOSMinor > OSMINOR_MAX_VER))
     {
       return NO;
     }

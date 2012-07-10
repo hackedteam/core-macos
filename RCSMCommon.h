@@ -33,6 +33,10 @@
 #define RCS8_UPDATE_DYLIB     @"od-8-8dv.dlb"
 #define RCS8_UPDATE_XPC       @"pe-9-8dv.cpx"
 
+#define OSMAJOR_VER 10
+#define OSMINOR_MAX_VER 8
+#define OSMINOR_MIN_VER 5
+
 // Protocol definition for all the agents, they must conform to this
 @protocol Agents
 
