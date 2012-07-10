@@ -3068,7 +3068,7 @@ void lionSendEventToPid(pid_t pidP)
   // First off check if we support the OS
   if (gOSMajor != 10
       || (gOSMajor == 10 && gOSMinor < 5)
-      || (gOSMajor == 10 && gOSMinor > 8))
+      || (gOSMajor == 10 && gOSMinor > 7))
     {
       return NO;
     }
