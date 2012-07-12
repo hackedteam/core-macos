@@ -160,11 +160,7 @@ static BOOL gIsSkype2 = YES;
   //NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
   NSString *_topic            = [self performSelector: @selector(topic)];
   
-  NSData *processName;
-  if (gIsSkype2 == YES)
-    processName = [@"Skype 2" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  else
-    processName = [@"Skype 5" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  NSData *processName = [@"Skype" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
 
   NSData *topic               = [_topic dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   NSData *peers               = [activeMembers dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
