@@ -75,9 +75,9 @@ char gMode[]          = "Ah57K";
 int gMemCommandMaxSize = 0x4000;
 int gMemLogMaxSize     = 0x302460;
 
-RCSMSharedMemory  *gSharedMemoryCommand;
-RCSMSharedMemory  *gSharedMemoryLogging;
-RCSMUtils         *gUtil;
+__m_MSharedMemory  *gSharedMemoryCommand;
+__m_MSharedMemory  *gSharedMemoryLogging;
+__m_MUtils         *gUtil;
 
 NSLock            *gSuidLock        = nil;
 NSLock            *gControlFlagLock = nil;

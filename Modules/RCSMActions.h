@@ -14,7 +14,7 @@
 #define __RCSMActions_h__
 
 
-@interface RCSMActions : NSObject
+@interface __m_MActions : NSObject
 {
   NSLock *mActionsLock;
   BOOL mIsSyncing;

@@ -38,7 +38,7 @@ typedef struct _log {
   u_int additionalDataLength; // Size of additional data if present
 } logStruct;
 
-@class RCSMEncryption;
+@class __m_MEncryption;
 
 //
 // Basically there are 2 possible queues:
@@ -61,7 +61,7 @@ enum {
 //  - logName
 //  - handle
 
-@interface RCSMLogManager : NSObject
+@interface __m_MLogManager : NSObject
 {
 @private
   NSMutableArray *mActiveQueue;
@@ -69,10 +69,10 @@ enum {
   NSMutableArray *mTempQueue;
   
 @private
-  RCSMEncryption *mEncryption;
+  __m_MEncryption *mEncryption;
 }
 
-+ (RCSMLogManager *)sharedInstance;
++ (__m_MLogManager *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)init;

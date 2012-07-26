@@ -17,7 +17,7 @@
 #define ALPHABET_LEN 64
 
 
-@interface RCSMEncryption : NSObject
+@interface __m_MEncryption : NSObject
 {
 @private
   NSData *mKey;

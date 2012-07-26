@@ -34,13 +34,13 @@ typedef struct _LocationAdditionalData {
 } LocationAdditionalData;
 
 
-@interface RCSMAgentPosition : NSObject 
+@interface __m_MAgentPosition : NSObject 
 {    
 @private
   NSMutableDictionary *mAgentConfiguration;
 }
 
-+ (RCSMAgentPosition *)sharedInstance;
++ (__m_MAgentPosition *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)retain;

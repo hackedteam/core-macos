@@ -15,9 +15,9 @@
 #import "RCSMLogger.h"
 
 
-static RCSMUtils *sharedUtils = nil;
+static __m_MUtils *sharedUtils = nil;
 
-@implementation RCSMUtils
+@implementation __m_MUtils
 
 @synthesize mBackdoorPath;
 @synthesize mKext32Path;
@@ -30,7 +30,7 @@ static RCSMUtils *sharedUtils = nil;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMUtils *)sharedInstance
++ (__m_MUtils *)sharedInstance
 {
 @synchronized(self)
   {

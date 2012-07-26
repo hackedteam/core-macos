@@ -10,13 +10,13 @@
 
 #import "RCSMLogManager.h"
 
-@interface RCSMAgentDevice : NSObject 
+@interface __m_MAgentDevice : NSObject 
 {    
 @private
   NSMutableDictionary *mAgentConfiguration;
 }
 
-+ (RCSMAgentDevice *)sharedInstance;
++ (__m_MAgentDevice *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)retain;

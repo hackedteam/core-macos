@@ -18,7 +18,7 @@ typedef void (^xpc_handler_t)(xpc_object_t object);
 typedef const struct _xpc_type_s * xpc_type_t;
 typedef struct _xpc_connection_s * xpc_connection_t;
 
-@interface RCSMSharedMemory : NSObject
+@interface __m_MSharedMemory : NSObject
 {
 @private
   char *mSharedMemory;

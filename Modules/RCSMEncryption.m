@@ -25,7 +25,7 @@
 #pragma mark Private Interface
 #pragma mark -
 
-@interface RCSMEncryption (hidden)
+@interface __m_MEncryption (hidden)
 
 - (char *)_scrambleString: (char *)aString
                      seed: (u_char)aSeed
@@ -37,7 +37,7 @@
 #pragma mark Private Implementation
 #pragma mark -
 
-@implementation RCSMEncryption (hidden)
+@implementation __m_MEncryption (hidden)
 
 - (char *)_scrambleString: (char *)aString
                      seed: (u_char)aSeed
@@ -86,7 +86,7 @@
 #pragma mark Public Implementation
 #pragma mark -
 
-@implementation RCSMEncryption : NSObject
+@implementation __m_MEncryption : NSObject
 
 - (id)initWithKey: (NSData *)aKey
 {

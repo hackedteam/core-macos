@@ -209,7 +209,7 @@
 #endif
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   //
   // Close active logs and move them to the send queue
@@ -271,7 +271,7 @@
               else
                 {
                   // decrement Quota disk
-                  [[RCSMDiskQuota sharedInstance] decUsed: [logContent length]];
+                  [[__m_MDiskQuota sharedInstance] decUsed: [logContent length]];
                 }
                 
               [logPath release];

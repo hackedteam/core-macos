@@ -15,15 +15,15 @@
 NSString *kSPHardwareDataType     = @"SPHardwareDataType";
 NSString *kSPApplicationsDataType = @"SPApplicationsDataType";
 
-static RCSMAgentDevice *sharedAgentDevice = nil;
+static __m_MAgentDevice *sharedAgentDevice = nil;
 
-@implementation RCSMAgentDevice
+@implementation __m_MAgentDevice
 
 #pragma mark -
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentDevice *)sharedInstance
++ (__m_MAgentDevice *)sharedInstance
 {
   @synchronized(self)
   {
@@ -171,7 +171,7 @@ static RCSMAgentDevice *sharedAgentDevice = nil;
     return NO;
   }
   
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   BOOL success = [logManager createLog: LOGTYPE_DEVICE
                            agentHeader: nil

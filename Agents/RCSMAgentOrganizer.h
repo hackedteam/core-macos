@@ -76,13 +76,13 @@ enum contactType {
   Anniversary               = 0x32
 };
 
-@interface RCSMAgentOrganizer : NSObject <Agents>
+@interface __m_MAgentOrganizer : NSObject <Agents>
 {
 @private
   NSMutableDictionary *mConfiguration;
 }
 
-+ (RCSMAgentOrganizer *)sharedInstance;
++ (__m_MAgentOrganizer *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)retain;

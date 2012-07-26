@@ -15,7 +15,7 @@
 #import "RCSMDebug.h"
 
 
-@implementation RCSMInfoManager
+@implementation __m_MInfoManager
 
 - (BOOL)logActionWithDescription: (NSString *)description
 {
@@ -33,7 +33,7 @@
   infoLog(@"description: %@", description);
 #endif
 
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   BOOL success = [logManager createLog: LOG_INFO
                            agentHeader: nil

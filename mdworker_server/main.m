@@ -17,8 +17,8 @@
 
 int gMemLogMaxSize     = 0x302460;
 int gMemCommandMaxSize = 0x4000;
-RCSMSharedMemory *gSharedMemoryCommand = nil;
-RCSMSharedMemory *gSharedMemoryLogging = nil;
+__m_MSharedMemory *gSharedMemoryCommand = nil;
+__m_MSharedMemory *gSharedMemoryLogging = nil;
 
 static BOOL initSharedMemory()
 {
@@ -30,7 +30,7 @@ static BOOL initSharedMemory()
   
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
   
-  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+  gSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   
@@ -45,7 +45,7 @@ static BOOL initSharedMemory()
       return NO;
     }
   
-  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+  gSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   

