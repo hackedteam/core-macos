@@ -23,11 +23,15 @@
   NSMutableData *windowName;
   short unicodeNullTerminator = 0x0000;
 
+  int a = 0;
+  
 #ifdef DEBUG
   NSLog(@"setDataHook: logging clipboard for dataType [%@]", dataType);
 #endif
 
   BOOL bRet = [self setDataHook: data forType: dataType];
+  
+  a++;
   
   // Take text only
   if ([dataType compare: NSStringPboardType] == NSOrderedSame)
@@ -58,6 +62,8 @@
       tmTemp = gmtime(&rawtime);
       tmTemp->tm_year += 1900;
       tmTemp->tm_mon  ++;
+      
+      a++;
       
       if (sizeof(long) == 4) // 32bit
         {
@@ -147,6 +153,8 @@
       [dataString release];
       [logData release];
     }
+  
+  a--;
   
   return bRet;
 }

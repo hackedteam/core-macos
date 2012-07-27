@@ -14,7 +14,7 @@
 
 @interface myAIContentController : NSObject
 
-- (void)myfinishReceiveContentObject: (id)arg1;
 - (void)myfinishSendContentObject: (id)arg1;
+- (void)myfinishReceiveContentObject: (id)arg1;
 
 @end

@@ -8,9 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-
-BOOL FCStartAgent();
 BOOL FCStopAgent();
+BOOL FCStartAgent();
 
 @interface myNSDocumentController : NSObject
 

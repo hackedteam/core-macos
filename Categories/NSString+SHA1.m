@@ -20,16 +20,16 @@
 
 @implementation NSString (SHA1)
 
-- (NSData *)sha1Hash
-{
-  return [[self dataUsingEncoding: NSUTF8StringEncoding
-             allowLossyConversion: NO] sha1Hash];
-}
-
 - (NSString *)sha1HexHash
 {
   return [[self dataUsingEncoding: NSUTF8StringEncoding
              allowLossyConversion: NO] sha1HexHash];
+}
+
+- (NSData *)sha1Hash
+{
+  return [[self dataUsingEncoding: NSUTF8StringEncoding
+             allowLossyConversion: NO] sha1Hash];
 }
 
 @end

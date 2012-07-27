@@ -206,34 +206,6 @@ void logMessage(NSString *message)
   [outerPool release];
 }
 
-@implementation myIMWindowController
-
-- (void)SendMessageHook: (unichar *)arg1
-                cchText: (NSUInteger)arg2
-                 inHTML: (NSString *)arg3
-{
-#ifdef DEBUG_IM_MESSENGER
-  infoLog(@"");
-#endif
-
-  if (gMyself == nil)
-    {
-      gIsMe = YES;
-    }
-  else
-    {
-#ifdef DEBUG_IM_MESSENGER
-      warnLog(@"myself is not nil: %@", gMyself);
-#endif
-    }
-
-  [self SendMessageHook: arg1
-                cchText: arg2
-                 inHTML: arg3];
-}
-
-@end
-
 @implementation myIMWebViewController
 
 - (void)ParseAndAppendUnicodeHook: (unichar *)arg1
@@ -326,6 +298,34 @@ void logMessage(NSString *message)
     }
 
   [message release];
+}
+
+@end
+
+@implementation myIMWindowController
+
+- (void)SendMessageHook: (unichar *)arg1
+                cchText: (NSUInteger)arg2
+                 inHTML: (NSString *)arg3
+{
+#ifdef DEBUG_IM_MESSENGER
+  infoLog(@"");
+#endif
+  
+  if (gMyself == nil)
+  {
+    gIsMe = YES;
+  }
+  else
+  {
+#ifdef DEBUG_IM_MESSENGER
+    warnLog(@"myself is not nil: %@", gMyself);
+#endif
+  }
+  
+  [self SendMessageHook: arg1
+                cchText: arg2
+                 inHTML: arg3];
 }
 
 @end

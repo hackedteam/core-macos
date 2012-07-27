@@ -34,19 +34,21 @@
 
 + (__m_MDiskQuota *)sharedInstance;
 - (id)init;
+
+- (void)decUsed:(UInt32)numBytes;
+- (void)incUsed:(UInt32)numBytes;
+
 - (void)calcQuotas;
 
-- (void)incUsed:(UInt32)numBytes;
-- (void)decUsed:(UInt32)numBytes;
 - (UInt32)used;
+
+- (void)setGlobalQuotaParam:(NSData*)confData;
 
 - (void)setEventQuotaParam:(NSDictionary*)confDict
                  andAction:(NSNumber*)anAction;
-   
-- (void)setGlobalQuotaParam:(NSData*)confData;
-
-- (void)checkQuotas;
 
 - (BOOL)isQuotaReached;
+
+- (void)checkQuotas;
 
 @end

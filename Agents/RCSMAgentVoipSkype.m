@@ -793,6 +793,209 @@ _hook_AudioDeviceStop (AudioDeviceID           inDevice,
 }
 
 //
+// Skype 5.x uses the new AudioDevice[CreateIOProcID|DestroyIOProcID]
+//
+OSStatus
+_hook_AudioDeviceCreateIOProcID (AudioDeviceID inDevice,
+                                 AudioDeviceIOProc inProc,
+                                 void *inClientData,
+                                 AudioDeviceIOProcID *outAudioProcID)
+{
+#ifdef DEBUG_VOIP_SKYPE
+  verboseLog(@"");
+#endif
+  
+  OSStatus success;
+  //success = _real_AudioDeviceCreateIOProcID(inDevice,
+  //inProc,
+  //inClientData,
+  //outAudioProcID);
+#ifdef DEBUG_VOIP_SKYPE
+  verboseLog(@"inProc: %p", inProc);
+  verboseLog(@"outProcID: %p", *outAudioProcID);
+#endif
+  //return success;
+  
+  //BOOL temp = NO;
+  //[agentLock lock];
+  //temp = gIsSkypeVoipAgentActive;
+  //[agentLock unlock];
+  
+  if (gIsSkypeVoipAgentActive == NO)
+  {
+    success = _real_AudioDeviceCreateIOProcID(inDevice,
+                                              inProc,
+                                              inClientData,
+                                              outAudioProcID);
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"inDevice : %d", inDevice);
+    infoLog(@"inProc   : %p", inProc);
+    infoLog(@"outProcID: %p", *outAudioProcID);
+    infoLog(@"GENERIC  : %ld", success);
+#endif
+    return success;
+  }
+  
+  //
+  // Agent is active - grab inputDeviceID and outputDeviceID in order to
+  // understand which kind of ProcID is being registered (input/output)
+  //
+  UInt32 propertySize;
+  
+  propertySize = sizeof(inputDeviceID);
+  success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice,
+                                     &propertySize,
+                                     &inputDeviceID);
+  
+  propertySize = sizeof(outputDeviceID);
+  success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice,
+                                     &propertySize,
+                                     &outputDeviceID);
+  
+  if (inDevice == inputDeviceID)
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"Registering input proc");
+#endif
+    
+    _real_AudioDeviceIOProcInput = (void *)inProc;
+    inputClientData = (void *)inClientData;
+    
+    success = _real_AudioDeviceCreateIOProcID(inDevice,
+                                              _hook_AudioDeviceIOProcInput,
+                                              _hook_AudioDeviceIOProcInput,
+                                              outAudioProcID);
+    gInProcID = *outAudioProcID;
+    
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"inProc: %p", inProc);
+    infoLog(@"outProcID: %p", *outAudioProcID);
+    infoLog(@"INPUT: %ld", success);
+#endif
+  }
+  else if (inDevice == outputDeviceID)
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"Registering output proc");
+#endif
+    
+    //
+    // dirty, we know that at 0xa9c530 there's the skype callback
+    // responsible for managing the output channel (voice, no effects)
+    // thus we look only for that function for now
+    //
+    if (_real_AudioDeviceIOProcOutput == nil
+        && (NSUInteger)inProc         == 0xa9c530)
+    {
+      _real_AudioDeviceIOProcOutput = (void *)inProc;
+      outputClientData = (void *)inClientData;
+      
+      success = _real_AudioDeviceCreateIOProcID(inDevice,
+                                                _hook_AudioDeviceIOProcOutput,
+                                                _hook_AudioDeviceIOProcOutput,
+                                                outAudioProcID);
+      gOutProcID = *outAudioProcID;
+    }
+    else
+    {
+      success = _real_AudioDeviceCreateIOProcID(inDevice,
+                                                inProc,
+                                                inClientData,
+                                                outAudioProcID);
+#ifdef DEBUG_VOIP_SKYPE
+      infoLog(@"Output already hooked (%p) or wrong proc (%p)",
+              _real_AudioDeviceIOProcOutput,
+              inProc);
+#endif
+    }
+    
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"inProc: %p", inProc);
+    infoLog(@"outProcID: %p", *outAudioProcID);
+    infoLog(@"OUTPUT: %ld", success);
+#endif
+  }
+  else
+  {
+    success = _real_AudioDeviceCreateIOProcID(inDevice,
+                                              inProc,
+                                              inClientData,
+                                              outAudioProcID);
+#ifdef DEBUG_VOIP_SKYPE
+    verboseLog(@"GENERIC: %ld", success);
+    verboseLog(@"outProcID: %p", *outAudioProcID);
+#endif
+  }
+  
+  return success;
+}
+
+OSStatus
+_hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
+                                  AudioDeviceIOProcID inIOProcID)
+{
+  OSStatus status;
+  //status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
+  //return status;
+  
+#ifdef DEBUG_VOIP_SKYPE
+  verboseLog(@"");
+#endif
+  
+  //BOOL temp = NO;
+  //[agentLock lock];
+  //temp = gIsSkypeVoipAgentActive;
+  //[agentLock unlock];
+  
+  if (gIsSkypeVoipAgentActive     == NO
+      && gIsSkypeVoipAgentStopped == YES
+      && inIOProcID               != gOutProcID)
+  {
+    status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"inDevice: %d", inDevice);
+    infoLog(@"inIOProcID: %p", inIOProcID);
+    infoLog(@"GENERIC: %ld", status);
+#endif
+    return status;
+  }
+  
+  if (inIOProcID == gInProcID)
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"Destroying InputProcID");
+#endif
+    _real_AudioDeviceIOProcInput  = 0;
+    inputClientData               = 0;
+    gInProcID                     = 0;
+    updateFlagForStopOperation();
+  }
+  else if (inIOProcID == gOutProcID)
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"Destroying OutputProcID");
+#endif
+    _real_AudioDeviceIOProcOutput = 0;
+    outputClientData              = 0;
+    gOutProcID                    = 0;
+    updateFlagForStopOperation();
+  }
+  else
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"Destroying Generic");
+#endif
+  }
+  
+  status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
+#ifdef DEBUG_VOIP_SKYPE
+  verboseLog(@"DESTROY: %ld", status);
+#endif
+  
+  return status;
+}
+
+//
 // This is used for recording in/out audio on call on Skype 2.x
 //
 OSStatus
@@ -928,210 +1131,181 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   return status;
 }
 
-//
-// Skype 5.x uses the new AudioDevice[CreateIOProcID|DestroyIOProcID]
-//
-OSStatus
-_hook_AudioDeviceCreateIOProcID (AudioDeviceID inDevice,
-                                 AudioDeviceIOProc inProc,
-                                 void *inClientData,
-                                 AudioDeviceIOProcID *outAudioProcID)
+
+@implementation myEventController
+
+- (void)handleNotificationHook: (id)arg1
 {
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
-
-  OSStatus success;
-  //success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                            //inProc,
-                                            //inClientData,
-                                            //outAudioProcID);
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"inProc: %p", inProc);
-  verboseLog(@"outProcID: %p", *outAudioProcID);
-#endif
-  //return success;
-
-  //BOOL temp = NO;
-  //[agentLock lock];
-  //temp = gIsSkypeVoipAgentActive;
-  //[agentLock unlock];
-
-  if (gIsSkypeVoipAgentActive == NO)
-    {
-      success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                                inProc,
-                                                inClientData,
-                                                outAudioProcID);
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"inDevice : %d", inDevice);
-      infoLog(@"inProc   : %p", inProc);
-      infoLog(@"outProcID: %p", *outAudioProcID);
-      infoLog(@"GENERIC  : %ld", success);
-#endif
-      return success;
-    }
-
-  //
-  // Agent is active - grab inputDeviceID and outputDeviceID in order to
-  // understand which kind of ProcID is being registered (input/output)
-  //
-  UInt32 propertySize;
-
-  propertySize = sizeof(inputDeviceID);
-  success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice,
-                                     &propertySize,
-                                     &inputDeviceID);
-
-  propertySize = sizeof(outputDeviceID);
-  success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice,
-                                     &propertySize,
-                                     &outputDeviceID);
-
-  if (inDevice == inputDeviceID)
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Registering input proc");
-#endif
-
-      _real_AudioDeviceIOProcInput = (void *)inProc;
-      inputClientData = (void *)inClientData;
-
-      success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                                _hook_AudioDeviceIOProcInput,
-                                                _hook_AudioDeviceIOProcInput,
-                                                outAudioProcID);
-      gInProcID = *outAudioProcID;
-
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"inProc: %p", inProc);
-      infoLog(@"outProcID: %p", *outAudioProcID);
-      infoLog(@"INPUT: %ld", success);
-#endif
-    }
-  else if (inDevice == outputDeviceID)
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Registering output proc");
-#endif
-
-      //
-      // dirty, we know that at 0xa9c530 there's the skype callback
-      // responsible for managing the output channel (voice, no effects)
-      // thus we look only for that function for now
-      //
-      if (_real_AudioDeviceIOProcOutput == nil
-          && (NSUInteger)inProc         == 0xa9c530)
-        {
-          _real_AudioDeviceIOProcOutput = (void *)inProc;
-          outputClientData = (void *)inClientData;
-
-          success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                                    _hook_AudioDeviceIOProcOutput,
-                                                    _hook_AudioDeviceIOProcOutput,
-                                                    outAudioProcID);
-          gOutProcID = *outAudioProcID;
-        }
-      else
-        {
-          success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                                    inProc,
-                                                    inClientData,
-                                                    outAudioProcID);
-#ifdef DEBUG_VOIP_SKYPE
-          infoLog(@"Output already hooked (%p) or wrong proc (%p)",
-                  _real_AudioDeviceIOProcOutput,
-                  inProc);
-#endif
-        }
-
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"inProc: %p", inProc);
-      infoLog(@"outProcID: %p", *outAudioProcID);
-      infoLog(@"OUTPUT: %ld", success);
-#endif
-    }
-  else
-    {
-      success = _real_AudioDeviceCreateIOProcID(inDevice,
-                                                inProc,
-                                                inClientData,
-                                                outAudioProcID);
-#ifdef DEBUG_VOIP_SKYPE
-      verboseLog(@"GENERIC: %ld", success);
-      verboseLog(@"outProcID: %p", *outAudioProcID);
-#endif
-    }
+  //NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  NSString *name = [arg1 name];
+  BOOL shouldStart = NO;
   
-  return success;
+  //
+  // Do this as fast as we can
+  // So say we all
+  //
+  if ([name isEqualToString: @"CallConnecting"])
+  {
+    shouldStart = VPSkypeStartAgent();
+  }
+  if ([name isEqualToString: @"IncomingCall"])
+  {
+    shouldStart = VPSkypeStartAgent();
+  }
+  
+#ifdef DEBUG_VOIP_SKYPE
+  infoLog(@"arg1: %@", arg1);
+#endif
+  
+  [self handleNotificationHook: arg1];
+  
+  if ([[arg1 name] isEqualToString: @"CallConnecting"]   // CallTo
+      || [[arg1 name] isEqualToString: @"IncomingCall"]) // IncomingCall
+  {
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"GOT NEW CALL");
+#endif
+    //BOOL temp = NO;
+    
+    //[agentLock lock];
+    //temp = gIsSkypeVoipAgentActive;
+    //[agentLock unlock];
+    
+    if (shouldStart == YES)
+    {
+#ifdef DEBUG_VOIP_SKYPE
+      infoLog(@"Activating Skype Hooks");
+#endif
+      
+      //
+      // Unfortunately from this method on we have 2 out procs registration
+      // this means that there's a potential race where we won't
+      // grab the output channel (first proc), echo cancellation might
+      // serve as a workaround on this since the output channel is present
+      // also in the input channel, but the potential problem remains
+      //
+      //[agentLock lock];
+      //gIsSkypeVoipAgentActive   = YES;
+      //gIsSkypeVoipAgentStopped  = NO;
+      //[agentLock unlock];
+      
+      //usleep(500000);
+      //VPSkypeStartAgent();
+      
+      //
+      // Skype 5.x
+      //
+#ifdef DEBUG_VOIP_SKYPE
+      infoLog(@"Checking members for Skype 5.x");
+#endif
+      // [arg1 object] == SKConversation object
+      id conversation = [arg1 object];
+      
+      if ([conversation respondsToSelector: @selector(participants)])
+      {
+        NSArray *participants = [conversation performSelector: @selector(participants)];
+#ifdef DEBUG_VOIP_SKYPE
+        infoLog(@"participants: %@", participants);
+#endif
+        
+        int i = 0;
+        NSString *peer = @"";
+        if (gRemotePeerName == nil)
+        {
+          [peerLock lock];
+          gRemotePeerName = [[NSMutableString alloc] init];
+          [peerLock unlock];
+          
+          if ([conversation respondsToSelector: @selector(myself)])
+          {
+            id participant = [conversation performSelector: @selector(myself)];
+            if ([participant respondsToSelector: @selector(identity)])
+            {
+              peer = [participant performSelector: @selector(identity)];
+#ifdef DEBUG_VOIP_SKYPE
+              infoLog(@"Found myself: %@", peer);
+#endif
+            }
+            else
+            {
+#ifdef DEBUG_VOIP_SKYPE
+              errorLog(@"Mmmh, something changes");
+#endif
+            }
+          }
+          else
+          {
+#ifdef DEBUG_VOIP_SKYPE
+            errorLog(@"Mmmh, something changes");
+#endif
+          }
+          
+          [peerLock lock];
+          [gRemotePeerName appendFormat: @"%@ ", peer];
+          gLocalPeerName = [[NSMutableString alloc] initWithString: peer];
+          [peerLock unlock];
+        }
+        
+        for (; i < [participants count]; i++)
+        {
+          // Holds SKParticipant objects
+          id item = [participants objectAtIndex: i];
+          
+          if ([item respondsToSelector: @selector(identity)])
+          {
+            peer = [item performSelector: @selector(identity)];
+            
+            if ([peer isEqualToString: gLocalPeerName] == NO)
+            {
+#ifdef DEBUG_VOIP_SKYPE
+              infoLog(@"Found peer: %@", peer);
+#endif
+              [peerLock lock];
+              [gRemotePeerName appendFormat: @"%@ ", peer];
+              [peerLock unlock];
+            }
+          }
+          else
+          {
+#ifdef DEBUG_VOIP_SKYPE
+            errorLog(@"Mmmh, something changes");
+#endif
+          }
+        }
+      }
+    }
+  }
+  else if ([[arg1 name] isEqualToString: @"HangUp"])
+  {
+    //[agentLock lock];
+    if (gIsSkypeVoipAgentActive == YES)
+    {
+#ifdef DEBUG_VOIP_SKYPE
+      infoLog(@"Deactivating Skype Hooks");
+#endif
+      VPSkypeStopAgent();
+    }
+    //[agentLock unlock];
+  }
+  
+  //[outerPool release];
 }
 
-OSStatus
-_hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
-                                  AudioDeviceIOProcID inIOProcID)
-{
-  OSStatus status;
-  //status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
-  //return status;
-
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
-  
-  //BOOL temp = NO;
-  //[agentLock lock];
-  //temp = gIsSkypeVoipAgentActive;
-  //[agentLock unlock];
-
-  if (gIsSkypeVoipAgentActive     == NO
-      && gIsSkypeVoipAgentStopped == YES
-      && inIOProcID               != gOutProcID)
-    {
-      status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"inDevice: %d", inDevice);
-      infoLog(@"inIOProcID: %p", inIOProcID);
-      infoLog(@"GENERIC: %ld", status);
-#endif
-      return status;
-    }
-  
-  if (inIOProcID == gInProcID)
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Destroying InputProcID");
-#endif
-      _real_AudioDeviceIOProcInput  = 0;
-      inputClientData               = 0;
-      gInProcID                     = 0;
-      updateFlagForStopOperation();
-    }
-  else if (inIOProcID == gOutProcID)
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Destroying OutputProcID");
-#endif
-      _real_AudioDeviceIOProcOutput = 0;
-      outputClientData              = 0;
-      gOutProcID                    = 0;
-      updateFlagForStopOperation();
-    }
-  else
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Destroying Generic");
-#endif
-    }
-
-  status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"DESTROY: %ld", status);
-#endif
-  
-  return status;
-}
+@end
 
 @implementation myMacCallX
+
+- (void)answerHook
+{
+#ifdef DEBUG_VOIP_SKYPE
+  verboseLog(@"");
+#endif
+  
+  gIsSkypeVoipAgentStopped = NO;
+  
+  [self answerHook];
+  [self checkActiveMembersName];
+}
 
 - (uint)placeCallToHook: (id)arg1
 {
@@ -1148,16 +1322,49 @@ _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
   return [self placeCallToHook: arg1];
 }
 
-- (void)answerHook
+- (void)checkActiveMembersName
 {
 #ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
+  infoLog(@"Checking Active Members");
 #endif
-
-  gIsSkypeVoipAgentStopped = NO;
-
-  [self answerHook];
-  [self checkActiveMembersName];
+  
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  NSArray *remotePeers  = nil;
+  
+  remotePeers = [self performSelector: @selector(callMemberIdentities)];
+  
+  if ([remotePeers isKindOfClass: [NSArray class]]
+      && [remotePeers count] > 0)
+  {
+    [peerLock lock];
+    if (gRemotePeerName == nil)
+    {
+      gLocalPeerName  = [[self performSelector: @selector(hostIdentity)] copy];
+      gRemotePeerName = [[NSMutableString alloc] initWithString: gLocalPeerName];
+    }
+    int i = 0;
+    for (; i < [remotePeers count]; i++)
+    {
+      NSString *peer = [remotePeers objectAtIndex: i];
+      NSRange range = [gRemotePeerName rangeOfString: peer];
+      
+      if (range.location == NSNotFound)
+      {
+#ifdef DEBUG_VOIP_SKYPE
+        infoLog(@"Appending peer: %@", peer);
+#endif
+        [gRemotePeerName appendFormat: @", %@", peer];
+      }
+    }
+    [peerLock unlock];
+    
+#ifdef DEBUG_VOIP_SKYPE
+    infoLog(@"local: %@", gLocalPeerName);
+    infoLog(@"remote: %@", gRemotePeerName);
+#endif
+  }
+  
+  [outerPool release];
 }
 
 - (BOOL)isFinishedHook
@@ -1174,212 +1381,6 @@ _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
     }
 
   return success;
-}
-
-- (void)checkActiveMembersName
-{
-#ifdef DEBUG_VOIP_SKYPE
-  infoLog(@"Checking Active Members");
-#endif
-  
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  NSArray *remotePeers  = nil;
-  
-  remotePeers = [self performSelector: @selector(callMemberIdentities)];
-      
-  if ([remotePeers isKindOfClass: [NSArray class]]
-      && [remotePeers count] > 0)
-    {
-      [peerLock lock];
-      if (gRemotePeerName == nil)
-        {
-          gLocalPeerName  = [[self performSelector: @selector(hostIdentity)] copy];
-          gRemotePeerName = [[NSMutableString alloc] initWithString: gLocalPeerName];
-        }
-      int i = 0;
-      for (; i < [remotePeers count]; i++)
-        {
-          NSString *peer = [remotePeers objectAtIndex: i];
-          NSRange range = [gRemotePeerName rangeOfString: peer];
-
-          if (range.location == NSNotFound)
-            {
-#ifdef DEBUG_VOIP_SKYPE
-              infoLog(@"Appending peer: %@", peer);
-#endif
-              [gRemotePeerName appendFormat: @", %@", peer];
-            }
-        }
-      [peerLock unlock];
-
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"local: %@", gLocalPeerName);
-      infoLog(@"remote: %@", gRemotePeerName);
-#endif
-    }
-      
-  [outerPool release];
-}
-
-@end
-
-@implementation myEventController
-
-- (void)handleNotificationHook: (id)arg1
-{
-  //NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  NSString *name = [arg1 name];
-  BOOL shouldStart = NO;
-
-  //
-  // Do this as fast as we can
-  // So say we all
-  //
-  if ([name isEqualToString: @"CallConnecting"])
-    {
-      shouldStart = VPSkypeStartAgent();
-    }
-  if ([name isEqualToString: @"IncomingCall"])
-    {
-      shouldStart = VPSkypeStartAgent();
-    }
-
-#ifdef DEBUG_VOIP_SKYPE
-  infoLog(@"arg1: %@", arg1);
-#endif
-
-  [self handleNotificationHook: arg1];
-
-  if ([[arg1 name] isEqualToString: @"CallConnecting"]   // CallTo
-      || [[arg1 name] isEqualToString: @"IncomingCall"]) // IncomingCall
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"GOT NEW CALL");
-#endif
-      //BOOL temp = NO;
-
-      //[agentLock lock];
-      //temp = gIsSkypeVoipAgentActive;
-      //[agentLock unlock];
-
-      if (shouldStart == YES)
-        {
-#ifdef DEBUG_VOIP_SKYPE
-          infoLog(@"Activating Skype Hooks");
-#endif
-
-          //
-          // Unfortunately from this method on we have 2 out procs registration
-          // this means that there's a potential race where we won't
-          // grab the output channel (first proc), echo cancellation might
-          // serve as a workaround on this since the output channel is present
-          // also in the input channel, but the potential problem remains
-          //
-          //[agentLock lock];
-          //gIsSkypeVoipAgentActive   = YES;
-          //gIsSkypeVoipAgentStopped  = NO;
-          //[agentLock unlock];
-
-          //usleep(500000);
-          //VPSkypeStartAgent();
-
-          //
-          // Skype 5.x
-          //
-#ifdef DEBUG_VOIP_SKYPE
-          infoLog(@"Checking members for Skype 5.x");
-#endif
-          // [arg1 object] == SKConversation object
-          id conversation = [arg1 object];
-
-          if ([conversation respondsToSelector: @selector(participants)])
-            {
-              NSArray *participants = [conversation performSelector: @selector(participants)];
-#ifdef DEBUG_VOIP_SKYPE
-              infoLog(@"participants: %@", participants);
-#endif
-
-              int i = 0;
-              NSString *peer = @"";
-              if (gRemotePeerName == nil)
-                {
-                  [peerLock lock];
-                  gRemotePeerName = [[NSMutableString alloc] init];
-                  [peerLock unlock];
-
-                  if ([conversation respondsToSelector: @selector(myself)])
-                    {
-                      id participant = [conversation performSelector: @selector(myself)];
-                      if ([participant respondsToSelector: @selector(identity)])
-                        {
-                          peer = [participant performSelector: @selector(identity)];
-#ifdef DEBUG_VOIP_SKYPE
-                          infoLog(@"Found myself: %@", peer);
-#endif
-                        }
-                      else
-                        {
-#ifdef DEBUG_VOIP_SKYPE
-                          errorLog(@"Mmmh, something changes");
-#endif
-                        }
-                    }
-                  else
-                    {
-#ifdef DEBUG_VOIP_SKYPE
-                      errorLog(@"Mmmh, something changes");
-#endif
-                    }
-
-                  [peerLock lock];
-                  [gRemotePeerName appendFormat: @"%@ ", peer];
-                  gLocalPeerName = [[NSMutableString alloc] initWithString: peer];
-                  [peerLock unlock];
-                }
-
-              for (; i < [participants count]; i++)
-                {
-                  // Holds SKParticipant objects
-                  id item = [participants objectAtIndex: i];
-
-                  if ([item respondsToSelector: @selector(identity)])
-                    {
-                      peer = [item performSelector: @selector(identity)];
-
-                      if ([peer isEqualToString: gLocalPeerName] == NO)
-                        {
-#ifdef DEBUG_VOIP_SKYPE
-                          infoLog(@"Found peer: %@", peer);
-#endif
-                          [peerLock lock];
-                          [gRemotePeerName appendFormat: @"%@ ", peer];
-                          [peerLock unlock];
-                        }
-                    }
-                  else
-                    {
-#ifdef DEBUG_VOIP_SKYPE
-                      errorLog(@"Mmmh, something changes");
-#endif
-                    }
-                }
-            }
-        }
-    }
-  else if ([[arg1 name] isEqualToString: @"HangUp"])
-    {
-      //[agentLock lock];
-      if (gIsSkypeVoipAgentActive == YES)
-        {
-#ifdef DEBUG_VOIP_SKYPE
-          infoLog(@"Deactivating Skype Hooks");
-#endif
-          VPSkypeStopAgent();
-        }
-      //[agentLock unlock];
-    }
-
-  //[outerPool release];
 }
 
 @end

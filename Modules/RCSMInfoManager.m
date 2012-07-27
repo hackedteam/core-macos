@@ -19,6 +19,8 @@
 
 - (BOOL)logActionWithDescription: (NSString *)description
 {
+  int a = 0;
+  a++;
   if (description == nil)
     {
 #ifdef DEBUG_INFO_MANAGER
@@ -39,6 +41,8 @@
                            agentHeader: nil
                              withLogID: 0];
 
+  a--;
+  
   if (success == TRUE)
     {
       NSMutableData *logData = [[NSMutableData alloc] init];
@@ -61,6 +65,8 @@
 #endif
       return NO;
     }
+  
+  a++;
   
   [outerPool release];
   return YES;

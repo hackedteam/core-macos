@@ -123,6 +123,21 @@ OSStatus
 _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
                                   AudioDeviceIOProcID inIOProcID);
 
+OSStatus
+(*_real_AudioDeviceGetProperty) (AudioDeviceID,
+                                 UInt32,
+                                 Boolean,
+                                 AudioDevicePropertyID,
+                                 UInt32 *,
+                                 void *);
+
+OSStatus
+_hook_AudioDeviceGetProperty (AudioDeviceID           inDevice,
+                              UInt32                  inChannel,
+                              Boolean                 isInput,
+                              AudioDevicePropertyID   inPropertyID,
+                              UInt32                  *ioPropertyDataSize,
+                              void                    *outPropertyData);
 
 OSStatus
 (*_real_AudioDeviceSetProperty) (AudioDeviceID,
@@ -142,21 +157,11 @@ _hook_AudioDeviceSetProperty (AudioDeviceID           inDevice,
                               UInt32                  inPropertyDataSize,
                               const void              *inPropertyData);
 
-OSStatus
-(*_real_AudioDeviceGetProperty) (AudioDeviceID,
-                                 UInt32,
-                                 Boolean,
-                                 AudioDevicePropertyID,
-                                 UInt32 *,
-                                 void *);
+@interface myEventController : NSObject
 
-OSStatus
-_hook_AudioDeviceGetProperty (AudioDeviceID           inDevice,
-                              UInt32                  inChannel,
-                              Boolean                 isInput,
-                              AudioDevicePropertyID   inPropertyID,
-                              UInt32                  *ioPropertyDataSize,
-                              void                    *outPropertyData);
+- (void)handleNotificationHook: (id)arg1;
+
+@end
 
 @interface myMacCallX : NSObject
 
@@ -164,12 +169,6 @@ _hook_AudioDeviceGetProperty (AudioDeviceID           inDevice,
 - (void)answerHook;
 - (BOOL)isFinishedHook;
 - (void)checkActiveMembersName;
-
-@end
-
-@interface myEventController : NSObject
-
-- (void)handleNotificationHook: (id)arg1;
 
 @end
 

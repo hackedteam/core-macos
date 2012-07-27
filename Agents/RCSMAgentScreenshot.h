@@ -42,13 +42,14 @@ typedef struct _screenshotHeader {
 + (__m_MAgentScreenshot *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
-- (unsigned)retainCount;
 - (void)release;
 - (id)autorelease;
+- (id)retain;
+- (unsigned)retainCount;
 
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 - (NSMutableDictionary *)mAgentConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 
 @end
 

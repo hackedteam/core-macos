@@ -35,14 +35,18 @@ typedef struct _webcam {
 }
 
 + (__m_MAgentWebcam *)sharedInstance;
-+ (id)allocWithZone: (NSZone *)aZone;
+
 - (id)copyWithZone: (NSZone *)aZone;
++ (id)allocWithZone: (NSZone *)aZone;
+
+- (unsigned)retainCount;
 - (id)retain;
 - (id)init;
-- (unsigned)retainCount;
+
 - (void)release;
 - (id)autorelease;
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 - (NSMutableDictionary *)mAgentConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 
 @end

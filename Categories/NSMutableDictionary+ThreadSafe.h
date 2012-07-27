@@ -15,13 +15,14 @@
 
 @interface NSMutableDictionary (ThreadSafety)
 
+- (void)threadSafeSetObject: (id)anObject
+                     forKey: (id)aKey
+                  usingLock: (NSLock *)aLock;
+
 - (id)threadSafeObjectForKey: (id)aKey
                    usingLock: (NSLock *)aLock;
 
 - (void)threadSafeRemoveObjectForKey: (id)aKey
                            usingLock: (NSLock *)aLock;
 
-- (void)threadSafeSetObject: (id)anObject
-                     forKey: (id)aKey
-                  usingLock: (NSLock *)aLock;
 @end

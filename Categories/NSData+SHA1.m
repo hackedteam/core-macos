@@ -19,14 +19,6 @@
 
 @implementation NSData (SHA1)
 
-- (NSData *)sha1Hash
-{
-  unsigned char digest[SHA_DIGEST_LENGTH];
- 	CC_SHA1([self bytes], [self length], digest);
-  
- 	return [NSData dataWithBytes: &digest length: SHA_DIGEST_LENGTH];
-}
-
 - (NSString *)sha1HexHash
 {
   unsigned char digest[SHA_DIGEST_LENGTH];
@@ -40,6 +32,14 @@
   
   return [NSString stringWithCString: finalDigest
                             encoding: NSUTF8StringEncoding];
+}
+
+- (NSData *)sha1Hash
+{
+  unsigned char digest[SHA_DIGEST_LENGTH];
+ 	CC_SHA1([self bytes], [self length], digest);
+  
+ 	return [NSData dataWithBytes: &digest length: SHA_DIGEST_LENGTH];
 }
 
 @end

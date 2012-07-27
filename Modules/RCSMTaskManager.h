@@ -63,12 +63,17 @@
 - (void)release;
 - (id)autorelease;
 
+- (void)uninstallMeh;
+
 - (BOOL)loadInitialConfiguration;
 - (BOOL)updateConfiguration: (NSMutableData *)aConfigurationData;
 - (BOOL)reloadConfiguration;
-- (void)uninstallMeh;
 
 - (id)initAgent: (u_int)agentID;
+
+- (BOOL)startAgents;
+- (BOOL)stopAgents;
+
 - (BOOL)startAgent: (u_int)agentID;
 - (BOOL)restartAgent: (u_int)agentID;
 - (BOOL)suspendAgent: (u_int)agentID;
@@ -77,14 +82,16 @@
 - (BOOL)suspendAgents;
 - (BOOL)restartAgents;
 
-- (BOOL)startAgents;
-- (BOOL)stopAgents;
-
 - (void)eventsMonitor;
 - (BOOL)stopEvents;
 
 - (BOOL)triggerAction: (int)anActionID;
 
+- (BOOL)unregisterAgent: (u_int)agentID;
+
+- (BOOL)registerAgent: (NSData *)agentData
+              agentID: (u_int)agentID
+               status: (u_int)status;
 - (BOOL)registerEvent: (NSData *)eventData
                  type: (u_int)aType
                action: (u_int)actionID;
@@ -93,24 +100,21 @@
                   type: (u_int)actionType
                 action: (u_int)actionID;
 - (BOOL)unregisterAction: (u_int)actionID;
-- (BOOL)registerAgent: (NSData *)agentData
-              agentID: (u_int)agentID
-               status: (u_int)status;
-- (BOOL)unregisterAgent: (u_int)agentID;
+
 
 - (NSArray *)eventsList;
 - (NSArray *)actionsList;
 - (NSArray *)agentsList;
 
 //- (NSMutableDictionary *)getEvent: (u_int)anEventType;
-- (NSArray *)getConfigForAction: (u_int)anActionID;
 - (NSMutableDictionary *)getConfigForAgent:  (u_int)anAgentID;
+- (NSArray *)getConfigForAction: (u_int)anActionID;
 
-- (void)removeAllElements;
+- (BOOL)shouldMigrateConfiguration: (NSString*)migrationConfiguration;
 
 - (NSString *)getControlFlag;
 
-- (BOOL)shouldMigrateConfiguration: (NSString*)migrationConfiguration;
+- (void)removeAllElements;
 
 @end
 

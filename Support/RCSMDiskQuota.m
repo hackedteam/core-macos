@@ -89,11 +89,12 @@ typedef struct  {
   return mMaxGlobalQuotaReached;
 }
 
-- (void)incUsed:(UInt32)numBytes
+- (void)decUsed:(UInt32)numBytes
 {
   @synchronized(self)
   {
-    mUsed += numBytes;
+    if (numBytes < mUsed)
+      mUsed -= numBytes;
   }
   
 #ifdef DEBUG_QUOTA_
@@ -101,12 +102,11 @@ typedef struct  {
 #endif
 }
 
-- (void)decUsed:(UInt32)numBytes
+- (void)incUsed:(UInt32)numBytes
 {
   @synchronized(self)
   {
-    if (numBytes < mUsed)
-      mUsed -= numBytes;
+    mUsed += numBytes;
   }
   
 #ifdef DEBUG_QUOTA_
@@ -155,6 +155,30 @@ typedef struct  {
   [pool release];
 }
 
+- (void)setEventQuotaParam:(NSDictionary*)confDict
+                 andAction:(NSNumber*)anAction
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  if (confDict) 
+  {
+    quota_conf_entry_t *params = (quota_conf_entry_t*)[[confDict objectForKey: @"data"] bytes];
+    
+    mMaxLogQuota = params->disk_quota;
+    mStartAction = [anAction copy];
+    mStopAction  = [[NSNumber alloc] initWithInt: params->exit_event];
+    
+#ifdef DEBUG_QUOTA
+    infoLog(@"config: mMaxLogQuota %lu, mStartAction %@, mStopAction %@", 
+            mMaxLogQuota, mStartAction, mStopAction);
+#endif
+  }
+  
+  mMaxQuotaTriggered = FALSE;
+  
+  [pool release];
+}
+
 - (void)resetEventQuotaParam
 {
   mMaxLogQuota = 0; 
@@ -171,30 +195,6 @@ typedef struct  {
       [mStopAction release];
       mStopAction = nil;
     }
-}
-        
-- (void)setEventQuotaParam:(NSDictionary*)confDict
-                 andAction:(NSNumber*)anAction
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  if (confDict) 
-    {
-      quota_conf_entry_t *params = (quota_conf_entry_t*)[[confDict objectForKey: @"data"] bytes];
-    
-      mMaxLogQuota = params->disk_quota;
-      mStartAction = [anAction copy];
-      mStopAction  = [[NSNumber alloc] initWithInt: params->exit_event];
-      
-#ifdef DEBUG_QUOTA
-    infoLog(@"config: mMaxLogQuota %lu, mStartAction %@, mStopAction %@", 
-    mMaxLogQuota, mStartAction, mStopAction);
-#endif
-    }
-    
-    mMaxQuotaTriggered = FALSE;
-    
-  [pool release];
 }
 
 - (void)setGlobalQuotaParam:(NSData*)confData
@@ -217,11 +217,6 @@ typedef struct  {
 #endif
 
   [pool release];
-}
-
-- (UInt32)used
-{
-  return mUsed;
 }
 
 - (void)checkQuotas
@@ -307,6 +302,11 @@ typedef struct  {
   [startAllAgents release];
   
   [pool release];
+}
+
+- (UInt32)used
+{
+  return mUsed;
 }
 
 @end

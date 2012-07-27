@@ -107,6 +107,29 @@
   [super dealloc];
 }
 
+- (NSString *)scrambleForward: (NSString *)aString seed: (u_char)aSeed
+{
+  char *tempString = [self _scrambleString: (char *)[aString UTF8String]
+                                      seed: aSeed
+                             shouldEncrypt: YES];
+  
+  NSString *scrambledString = [[NSString alloc] initWithCString: tempString];
+  free(tempString);
+  
+  return [scrambledString autorelease];
+}
+
+- (NSString *)scrambleBackward: (NSString *)aString seed: (u_char)aSeed
+{
+  char *tempString = [self _scrambleString: (char *)[aString UTF8String]
+                                      seed: aSeed
+                             shouldEncrypt: NO];
+  
+  NSString *scrambledString = [[NSString alloc] initWithCString: tempString];
+  
+  return [scrambledString autorelease];
+}
+
 - (NSMutableData *)decryptWithKey:(NSData *)aKey
                            inData:(NSMutableData*)inData
 {
@@ -134,6 +157,164 @@
 #endif
   
   return clearData;
+}
+
+
+- (NSData *)decryptConfiguration: (NSString *)aConfigurationFile
+{
+  //
+  // Quick Notes about the conf file aka monkeyz stuffz @ 1337
+  //  - Skip the first 2 DWORDs
+  //  - The third DWORD specifies the length of the data block
+  //  - The DWORD at the end of every block is the CRC (including Length)
+  //  - The DWORD after the ENDOFCONF Shit is a CRC
+  //  |SkipDW|SkipDW|LenDW|DATA...|CRC|
+  //
+  
+  u_long endTokenAndCRCSize = strlen(ENDOF_CONF_DELIMITER) + sizeof(int);
+  NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath: aConfigurationFile];
+  
+  // Hold the first 2 DWORDs since we'll append here the unencrypted file later on
+  NSMutableData *fileData = [NSMutableData dataWithData: [fileHandle readDataOfLength: TIMESTAMP_SIZE]];
+  
+  // Skip the first 2 DWORDs
+  [fileHandle seekToFileOffset: TIMESTAMP_SIZE];
+  //infoLog(@"%@", [fileHandle availableData]);
+  
+  NSMutableData *tempData = [NSMutableData dataWithData: [fileHandle availableData]];
+  CCCryptorStatus result = 0;
+  result = [tempData decryptWithKey: mKey];
+  
+  if (result == kCCSuccess)
+  {
+    [fileData appendData: tempData];
+    
+#ifdef DEBUG_ENCRYPTION
+    infoLog(@"File decrypted correctly");
+    [fileData writeToFile: @"/tmp/test.bin" atomically: YES];
+#endif
+    
+    //
+    // Integrity checks
+    //  - Size
+    //  - END Delimiter
+    //  - CRC
+    //
+    u_long readFilesize;
+    NSNumber *filesize;
+    
+    [fileData getBytes: &readFilesize
+                 range: NSMakeRange(TIMESTAMP_SIZE, sizeof(int))];
+    
+    readFilesize += TIMESTAMP_SIZE;
+    NSDictionary *fileAttributes;
+    fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath: aConfigurationFile
+                                                                      error: nil];
+    
+    filesize = [fileAttributes objectForKey: NSFileSize];
+#ifdef DEBUG_ENCRYPTION
+    infoLog(@"timeStamp Size: %d", TIMESTAMP_SIZE);
+    infoLog(@"EndTokeAndCRCSize: %d", endTokenAndCRCSize);
+    infoLog(@"readFileSize = %d", readFilesize);
+    infoLog(@"attribute = %d", [filesize intValue]);
+    infoLog(@"token @ %d", readFilesize - endTokenAndCRCSize);
+#endif
+    //
+    // There's a problem with one file since we get 3 more bytes
+    // than what we expect, thus everything here fails ...
+    //
+    if ((readFilesize == [filesize intValue]) ||
+        (readFilesize + 3 == [filesize intValue]) || 1)
+    {
+      NSString *endToken;
+      
+      @try
+      {
+        // endToken should be at EndOfFile - CRC(DWORD) - strlen(TOKEN)
+        endToken = [[NSString alloc] initWithData: [fileData subdataWithRange: 
+                                                    NSMakeRange(readFilesize - endTokenAndCRCSize,
+                                                                endTokenAndCRCSize - sizeof(int))]
+                                         encoding: NSUTF8StringEncoding];
+      }
+      @catch (NSException * e)
+      {
+#ifdef DEBUG_ENCRYPTION
+        infoLog(@"%s exception", __FUNCTION__);
+#endif
+        
+        return nil;
+      }
+      
+#ifdef DEBUG_ENCRYPTION
+      infoLog(@"EndToken: %@", endToken);
+#endif
+      
+      if (![endToken isEqualToString: [NSString stringWithUTF8String: ENDOF_CONF_DELIMITER]])
+      {
+#ifdef DEBUG_ENCRYPTION
+        errorLog(@"[EE] End Token not found");
+#endif
+        [endToken release];
+        
+        return nil;
+      }
+      
+      [endToken release];
+    }
+    else
+    {
+#ifdef DEBUG_ENCRYPTION
+      errorLog(@"[EE] Configuration file size mismatch");
+#endif
+      
+      return nil;
+    }
+    
+#ifdef DEBUG_ENCRYPTION
+    infoLog(@"File decrypted correctly");
+#endif
+    
+    return fileData;
+  }
+  else
+  {
+#ifdef DEBUG_ENCRYPTION
+    switch (result)
+    {
+      case kCCParamError:
+        errorLog(@"Illegal parameter value");
+        break;
+      case kCCBufferTooSmall:
+        errorLog(@"Insufficent buffer provided for specified operation.");
+        break;
+      case kCCMemoryFailure:
+        errorLog(@"Memory allocation failure.");
+        break;
+      case kCCAlignmentError:
+        errorLog(@"Input size was not aligned properly.");
+        break;
+      case kCCDecodeError:
+        errorLog(@"Input data did not decode or decrypt properly.");
+        break;
+      case kCCUnimplemented:
+        errorLog(@"Function not implemented for the current algorithm.");
+        break;
+      default:
+        errorLog(@"sux");
+        break;
+    }
+#endif
+    
+#ifdef DEBUG_ENCRYPTION
+    [tempData writeToFile: @"/tmp/conf_decrypted.bin" atomically: YES];
+#endif
+    
+#ifdef DEBUG_ENCRYPTION
+    errorLog(@"Error while decrypting with key");
+#endif
+  }
+  
+  return nil;
 }
 
 - (NSData *)decryptJSonConfiguration: (NSString *)aConfigurationFile
@@ -187,185 +368,6 @@
   return decConfig;
 }
 
-- (NSData *)decryptConfiguration: (NSString *)aConfigurationFile
-{
-  //
-  // Quick Notes about the conf file aka monkeyz stuffz @ 1337
-  //  - Skip the first 2 DWORDs
-  //  - The third DWORD specifies the length of the data block
-  //  - The DWORD at the end of every block is the CRC (including Length)
-  //  - The DWORD after the ENDOFCONF Shit is a CRC
-  //  |SkipDW|SkipDW|LenDW|DATA...|CRC|
-  //
-  
-  u_long endTokenAndCRCSize = strlen(ENDOF_CONF_DELIMITER) + sizeof(int);
-  NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath: aConfigurationFile];
-  
-  // Hold the first 2 DWORDs since we'll append here the unencrypted file later on
-  NSMutableData *fileData = [NSMutableData dataWithData: [fileHandle readDataOfLength: TIMESTAMP_SIZE]];
-  
-  // Skip the first 2 DWORDs
-  [fileHandle seekToFileOffset: TIMESTAMP_SIZE];
-  //infoLog(@"%@", [fileHandle availableData]);
-  
-  NSMutableData *tempData = [NSMutableData dataWithData: [fileHandle availableData]];
-  CCCryptorStatus result = 0;
-  result = [tempData decryptWithKey: mKey];
-  
-  if (result == kCCSuccess)
-    {
-      [fileData appendData: tempData];
-      
-#ifdef DEBUG_ENCRYPTION
-      infoLog(@"File decrypted correctly");
-      [fileData writeToFile: @"/tmp/test.bin" atomically: YES];
-#endif
-      
-      //
-      // Integrity checks
-      //  - Size
-      //  - END Delimiter
-      //  - CRC
-      //
-      u_long readFilesize;
-      NSNumber *filesize;
-      
-      [fileData getBytes: &readFilesize
-                   range: NSMakeRange(TIMESTAMP_SIZE, sizeof(int))];
-      
-      readFilesize += TIMESTAMP_SIZE;
-      NSDictionary *fileAttributes;
-      fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath: aConfigurationFile
-                                                                        error: nil];
-      
-      filesize = [fileAttributes objectForKey: NSFileSize];
-#ifdef DEBUG_ENCRYPTION
-      infoLog(@"timeStamp Size: %d", TIMESTAMP_SIZE);
-      infoLog(@"EndTokeAndCRCSize: %d", endTokenAndCRCSize);
-      infoLog(@"readFileSize = %d", readFilesize);
-      infoLog(@"attribute = %d", [filesize intValue]);
-      infoLog(@"token @ %d", readFilesize - endTokenAndCRCSize);
-#endif
-      //
-      // There's a problem with one file since we get 3 more bytes
-      // than what we expect, thus everything here fails ...
-      //
-      if ((readFilesize == [filesize intValue]) ||
-          (readFilesize + 3 == [filesize intValue]) || 1)
-        {
-          NSString *endToken;
-          
-          @try
-            {
-              // endToken should be at EndOfFile - CRC(DWORD) - strlen(TOKEN)
-              endToken = [[NSString alloc] initWithData: [fileData subdataWithRange: 
-                                                          NSMakeRange(readFilesize - endTokenAndCRCSize,
-                                                                      endTokenAndCRCSize - sizeof(int))]
-                                               encoding: NSUTF8StringEncoding];
-            }
-          @catch (NSException * e)
-            {
-#ifdef DEBUG_ENCRYPTION
-              infoLog(@"%s exception", __FUNCTION__);
-#endif
-
-              return nil;
-            }
-          
-#ifdef DEBUG_ENCRYPTION
-          infoLog(@"EndToken: %@", endToken);
-#endif
-          
-          if (![endToken isEqualToString: [NSString stringWithUTF8String: ENDOF_CONF_DELIMITER]])
-            {
-#ifdef DEBUG_ENCRYPTION
-              errorLog(@"[EE] End Token not found");
-#endif
-              [endToken release];
-            
-              return nil;
-            }
-          
-          [endToken release];
-        }
-      else
-        {
-#ifdef DEBUG_ENCRYPTION
-          errorLog(@"[EE] Configuration file size mismatch");
-#endif
-          
-          return nil;
-        }
-      
-#ifdef DEBUG_ENCRYPTION
-      infoLog(@"File decrypted correctly");
-#endif
-      
-      return fileData;
-    }
-  else
-    {
-#ifdef DEBUG_ENCRYPTION
-      switch (result)
-        {
-        case kCCParamError:
-          errorLog(@"Illegal parameter value");
-          break;
-        case kCCBufferTooSmall:
-          errorLog(@"Insufficent buffer provided for specified operation.");
-          break;
-        case kCCMemoryFailure:
-          errorLog(@"Memory allocation failure.");
-          break;
-        case kCCAlignmentError:
-          errorLog(@"Input size was not aligned properly.");
-          break;
-        case kCCDecodeError:
-          errorLog(@"Input data did not decode or decrypt properly.");
-          break;
-        case kCCUnimplemented:
-          errorLog(@"Function not implemented for the current algorithm.");
-          break;
-        default:
-          errorLog(@"sux");
-          break;
-        }
-#endif
-      
-#ifdef DEBUG_ENCRYPTION
-      [tempData writeToFile: @"/tmp/conf_decrypted.bin" atomically: YES];
-#endif
-      
-#ifdef DEBUG_ENCRYPTION
-      errorLog(@"Error while decrypting with key");
-#endif
-    }
-  
-  return nil;
-}
-
-- (NSString *)scrambleForward: (NSString *)aString seed: (u_char)aSeed
-{
-  char *tempString = [self _scrambleString: (char *)[aString UTF8String]
-                                      seed: aSeed
-                             shouldEncrypt: YES];
-  
-  NSString *scrambledString = [[NSString alloc] initWithCString: tempString];
-  free(tempString);
-  
-  return [scrambledString autorelease];
-}
-
-- (NSString *)scrambleBackward: (NSString *)aString seed: (u_char)aSeed
-{
-  char *tempString = [self _scrambleString: (char *)[aString UTF8String]
-                                      seed: aSeed
-                             shouldEncrypt: NO];
-  
-  NSString *scrambledString = [[NSString alloc] initWithCString: tempString];
-  
-  return [scrambledString autorelease];
-}
 
 #pragma mark -
 #pragma mark Getter/Setter

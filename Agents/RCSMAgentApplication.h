@@ -28,17 +28,24 @@
 @property (readwrite) BOOL isAppStarted;
 
 + (__m_MAgentApplication *)sharedInstance;
+
 + (id)allocWithZone: (NSZone *)aZone;
-- (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
+
 - (unsigned)retainCount;
-- (void)release;
+- (id)retain;
+
+- (id)copyWithZone: (NSZone *)aZone;
+
 - (id)autorelease;
-- (BOOL)writeProcessInfoWithStatus: (NSString*)aStatus;
+- (void)release;
+
 - (BOOL)grabInfo: (NSString*)aStatus;
-- (void)sendStopLog;
-- (void)sendStartLog;
+- (BOOL)writeProcessInfoWithStatus: (NSString*)aStatus;
+
 - (void)start;
 - (BOOL)stop;
+
+- (void)sendStopLog;
+- (void)sendStartLog;
 
 @end

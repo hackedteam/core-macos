@@ -172,16 +172,16 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
 
 @implementation myAIContentController
 
-- (void)myfinishReceiveContentObject: (id)arg1
-{
-  adiumHookWrapper(arg1, ADIUM_MSG_RECEIVE);
-  [self myfinishReceiveContentObject: arg1];  
-}
-
 - (void)myfinishSendContentObject: (id)arg1
 {
   adiumHookWrapper(arg1, ADIUM_MSG_SEND);
   [self myfinishSendContentObject: arg1];
+}
+
+- (void)myfinishReceiveContentObject: (id)arg1
+{
+  adiumHookWrapper(arg1, ADIUM_MSG_RECEIVE);
+  [self myfinishReceiveContentObject: arg1];  
 }
 
 @end

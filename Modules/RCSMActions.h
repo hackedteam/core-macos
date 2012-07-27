@@ -23,12 +23,12 @@
 - (id)init;
 - (void)dealloc;
 
-- (BOOL)actionSync: (NSMutableDictionary *)aConfiguration;
-- (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag;
-- (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration;
-- (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration;
 - (BOOL)actionInfo: (NSMutableDictionary *)aConfiguration;
 - (BOOL)actionEvent: (NSMutableDictionary *)aConfiguration;
+- (BOOL)actionSync: (NSMutableDictionary *)aConfiguration;
+- (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag;
+- (BOOL)actionUninstall: (NSMutableDictionary *)aConfiguration;
+- (BOOL)actionLaunchCommand: (NSMutableDictionary *)aConfiguration;
 
 @end
 

