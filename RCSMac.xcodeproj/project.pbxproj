@@ -1413,6 +1413,7 @@
 					XPCOM_GLUE,
 					MOZILLA_STRICT_API,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
@@ -1456,6 +1457,7 @@
 					XPCOM_GLUE,
 					MOZILLA_STRICT_API,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
@@ -1561,7 +1563,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001047;
+				RCS_TEST_INSTANCE = RCS_0000000800;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
 				RCS_TEST_USER = osxtest;
@@ -1579,6 +1581,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = RCSMac_Prefix.pch;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -1593,7 +1596,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001047;
+				RCS_TEST_INSTANCE = RCS_0000000800;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
 				RCS_TEST_USER = osxtest;
