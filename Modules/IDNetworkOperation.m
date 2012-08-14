@@ -9,6 +9,8 @@
 
 #import "IDNetworkOperation.h"
 #import "RCSMCommon.h"
+#import "RCSMGlobals.h"
+
 #import "NSString+Pascal.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"

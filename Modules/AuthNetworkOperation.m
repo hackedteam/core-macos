@@ -15,6 +15,7 @@
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 #import "RCSMCommon.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"

@@ -20,6 +20,7 @@
 #import "RCSMUtils.h"
 #import "RCSMDiskQuota.h"
 #import "RCSIJSonConfiguration.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"

@@ -19,6 +19,7 @@
 #import "RCSMLogManager.h"
 #import "RCSMEncryption.h"
 #import "RCSMDiskQuota.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
