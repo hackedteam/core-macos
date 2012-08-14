@@ -177,6 +177,7 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -419,6 +420,8 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
+		CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMGlobals.h; sourceTree = "<group>"; };
+		CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMGlobals.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -913,6 +916,8 @@
 				29B97316FDCFA39411CA2CEA /* RCSMMain.m */,
 				1ABEEE2C0F975CE100063113 /* RCSMCore.h */,
 				1ABEEE2D0F975CE100063113 /* RCSMCore.m */,
+				CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */,
+				CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */,
 				1A4436570F8CD55400CD910E /* RCSMCommon.h */,
 				1A4436580F8CD55400CD910E /* RCSMCommon.m */,
 				1A508AD111A692260067BF81 /* RCSMDesktopImage.h */,
@@ -1305,6 +1310,7 @@
 				52B8504D15146D4E00F0D72E /* SBJsonWriter.m in Sources */,
 				52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */,
 				52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */,
+				CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1603,6 +1609,7 @@
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
 				SDKROOT = macosx10.6;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
 			};
 			name = Release;
