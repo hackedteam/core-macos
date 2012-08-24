@@ -6,6 +6,7 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "AuthNetworkOperation.h"
 
@@ -14,7 +15,6 @@
 #import "NSMutableData+AES128.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
-#import "RCSMCommon.h"
 #import "RCSMGlobals.h"
 
 #import "RCSMLogger.h"

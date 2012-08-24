@@ -15,9 +15,10 @@
 #ifndef __RCSMConfigManager_h__
 #define __RCSMConfigManager_h__
 
+#import "RCSMCommon.h"
+
 #import "NSString+SHA1.h"
 #import "RCSMEncryption.h"
-#import "RCSMCommon.h"
 
 typedef struct _agent {
   u_int   agentID;

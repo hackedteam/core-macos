@@ -8,9 +8,8 @@
  * Copyright (C) HT srl 2009. All rights reserved
  *
  */
-
-#import "RCSMInputManager.h"
 #import "RCSMCommon.h"
+#import "RCSMInputManager.h"
 
 // Just to avoid compiler warnings
 @interface MacContact

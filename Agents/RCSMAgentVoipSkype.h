@@ -12,9 +12,9 @@
 #ifndef __RCSMAgentVoip_h__
 #define __RCSMAgentVoip_h__
 
-#import "RCSMInputManager.h"
 #import "RCSMCommon.h"
 
+#import "RCSMInputManager.h"
 
 void VPSkypeSetupForVersion2();
 void VPSkypeSetupForVersion5();

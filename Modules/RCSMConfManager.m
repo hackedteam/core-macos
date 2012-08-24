@@ -13,10 +13,11 @@
 #import <sys/types.h>
 #include <wchar.h>
 
+#import "RCSMCommon.h"
+
 #import "RCSMConfManager.h"
 #import "RCSMTaskManager.h"
 #import "RCSMEncryption.h"
-#import "RCSMCommon.h"
 #import "RCSMUtils.h"
 #import "RCSMDiskQuota.h"
 #import "RCSIJSonConfiguration.h"

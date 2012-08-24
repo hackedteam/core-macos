@@ -7,9 +7,9 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "RESTTransport.h"
-#import "RCSMCommon.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"

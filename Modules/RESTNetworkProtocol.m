@@ -7,6 +7,7 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "RESTNetworkProtocol.h"
 #import "RESTTransport.h"
@@ -21,7 +22,7 @@
 #import "LogNetworkOperation.h"
 #import "ByeNetworkOperation.h"
 
-#import "RCSMCommon.h"
+
 #import "RCSMFileSystemManager.h"
 #import "RCSMTaskManager.h"
 

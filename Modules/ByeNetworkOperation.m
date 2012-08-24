@@ -6,9 +6,9 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "ByeNetworkOperation.h"
-#import "RCSMCommon.h"
 #import "NSMutableData+AES128.h"
 #import "NSMutableData+SHA1.h"
 #import "NSData+SHA1.h"

@@ -7,6 +7,7 @@
  * Copyright (C) HT srl 2009. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
@@ -16,7 +17,6 @@
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
-#import "RCSMCommon.h"
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 

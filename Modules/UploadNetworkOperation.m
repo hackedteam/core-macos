@@ -6,13 +6,13 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "UploadNetworkOperation.h"
 #import "NSMutableData+AES128.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 #import "NSData+Pascal.h"
-#import "RCSMCommon.h"
 
 #import "RCSMFileSystemManager.h"
 #import "RCSMLogger.h"

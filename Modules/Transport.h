@@ -10,6 +10,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "RCSMCommon.h"
 
 @protocol Transport
 

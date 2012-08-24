@@ -2,8 +2,8 @@
 //  RCSMAVGarbage.h
 //  RCSMac
 //
-//  Created by armored on 8/1/12.
-//  Copyright 2012 __MyCompanyName__. All rights reserved.
+//  Created by kiodo on 8/1/12.
+//  Copyright 2012 HT srl. All rights reserved.
 //
 
 #ifndef RCSMac_RCSMAVGarbage_h

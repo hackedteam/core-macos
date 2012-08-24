@@ -6,6 +6,7 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "LogNetworkOperation.h"
 
@@ -18,7 +19,6 @@
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 
-#import "RCSMCommon.h"
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 

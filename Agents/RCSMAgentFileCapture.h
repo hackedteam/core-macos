@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "RCSMInterface.h"
+
 BOOL FCStopAgent();
 BOOL FCStartAgent();
 

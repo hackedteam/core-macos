@@ -5,6 +5,7 @@
 //  Created by kiodo on 16/01/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+#import "RCSMCommon.h"
 
 #import "RCSMDiskQuota.h"
 #import "RCSMTaskManager.h"

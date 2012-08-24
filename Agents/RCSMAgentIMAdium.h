@@ -5,6 +5,7 @@
 //  Created by Guido on 2/16/12.
 //  Copyright 2012 HT srl. All rights reserved.
 //
+#import "RCSMInterface.h"
 
 #import "RCSMInputManager.h"
 

@@ -9,6 +9,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "RCSMInterface.h"
+
 typedef struct _urlConfiguration {
   u_int delimiter;
   BOOL isSnapshotActive;

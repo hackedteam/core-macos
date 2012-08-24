@@ -8,6 +8,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "RCSMInterface.h"
+
 #define KEY_MAX_BUFFER_SIZE   0x10
 
 extern int mouseAgentIsActive;

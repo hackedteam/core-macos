@@ -9,6 +9,9 @@
  */
 
 #import <Cocoa/Cocoa.h>
+
+#import "RCSMInterface.h"
+
 #import "RCSMDebug.h"
 
 

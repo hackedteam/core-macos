@@ -30,8 +30,9 @@
 
 #import "speex.h"
 
-#import "RCSMCore.h"
 #import "RCSMCommon.h"
+
+#import "RCSMCore.h"
 #import "RCSMGlobals.h"
 
 #import "RCSMInfoManager.h"

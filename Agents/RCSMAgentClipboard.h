@@ -9,6 +9,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "RCSMInterface.h"
 
 @interface NSPasteboard (clipboardHook) 
 

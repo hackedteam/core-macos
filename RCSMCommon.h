@@ -22,6 +22,8 @@
 #import <arpa/inet.h>
 #import <netinet/in.h>
 
+#import "RCSMInterface.h"
+
 #import "RCSMSharedMemory.h"
 #import "RCSMUtils.h"
 

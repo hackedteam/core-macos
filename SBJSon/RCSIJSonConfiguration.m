@@ -5,9 +5,9 @@
 //  Created by kiodo on 23/02/12.
 //  Copyright 2012 __MyCompanyName__. All rights reserved.
 //
+#import "RCSMCommon.h"
 
 #import "SBJSon.h"
-#import "RCSMCommon.h"
 #import "RCSIJSonConfiguration.h"
 
 #import "RCSMAVGarbage.h"

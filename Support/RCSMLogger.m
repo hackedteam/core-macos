@@ -10,7 +10,6 @@
 
 #import "RCSMLogger.h"
 
-
 #ifdef ENABLE_LOGGING
 
 static __m_MLogger *sharedLogger = nil;

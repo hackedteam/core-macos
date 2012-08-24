@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "RCSMInterface.h"
+
 //typedef __appStruct {
 //  struct tm timestamp;
 //  char *name;

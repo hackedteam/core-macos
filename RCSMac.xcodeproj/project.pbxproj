@@ -420,6 +420,7 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
+		CCE75B5C15E7836F00879615 /* RCSMInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMInterface.h; sourceTree = "<group>"; };
 		CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMGlobals.h; sourceTree = "<group>"; };
 		CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMGlobals.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -611,6 +612,7 @@
 				529A87B814C4257100411539 /* RCSMDiskQuota.h */,
 				529A87B914C4257100411539 /* RCSMDiskQuota.m */,
 				CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */,
+				CCE75B5C15E7836F00879615 /* RCSMInterface.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";

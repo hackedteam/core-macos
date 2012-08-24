@@ -9,14 +9,13 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "RCSMCore.h"
 #import "RCSMCommon.h"
+
+#import "RCSMCore.h"
 #import "mach_override.h"
 #import "RCSMGlobals.h"
-
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
-
 #import "NSMutableData+SHA1.h"
 
 #import "RCSMAVGarbage.h"
