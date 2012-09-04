@@ -5,6 +5,7 @@
 //  Created by Guido on 2/16/12.
 //  Copyright 2012 HT srl. All rights reserved.
 //
+#import "RCSMInterface.h"
 
 #import "RCSMInputManager.h"
 
@@ -14,7 +15,7 @@
 
 @interface myAIContentController : NSObject
 
-- (void)myfinishReceiveContentObject: (id)arg1;
 - (void)myfinishSendContentObject: (id)arg1;
+- (void)myfinishReceiveContentObject: (id)arg1;
 
 @end

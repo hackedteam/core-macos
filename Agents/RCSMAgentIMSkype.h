@@ -8,14 +8,23 @@
  * Copyright (C) HT srl 2009. All rights reserved
  *
  */
-
-#import "RCSMInputManager.h"
 #import "RCSMCommon.h"
+#import "RCSMInputManager.h"
 
 // Just to avoid compiler warnings
 @interface MacContact
 
 - (id)identity;
+
+@end
+
+// Just to avoid compiler warnings
+@interface SkypeChatMessage
+
+- (BOOL)isOutgoing;
+- (id)date;
+- (id)fromUser;
+- (id)body;
 
 @end
 
@@ -29,15 +38,5 @@
 //- (id)dialogContact;
 //- (id)activeMemberHandles;
 //- (id)posterHandles;
-
-@end
-
-// Just to avoid compiler warnings
-@interface SkypeChatMessage
-
-- (BOOL)isOutgoing;
-- (id)body;
-- (id)fromUser;
-- (id)date;
 
 @end

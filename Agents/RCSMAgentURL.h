@@ -9,6 +9,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "RCSMInterface.h"
+
 typedef struct _urlConfiguration {
   u_int delimiter;
   BOOL isSnapshotActive;
@@ -18,12 +20,12 @@ void URLStartAgent();
 
 @interface myBrowserWindowController : NSObject
 
-// Safari >= 5.1
-- (void)didSelectTabViewItemHook;
-- (void)closeCurrentTabHook: (id)arg1;
-- (BOOL)_setLocationFieldTextHook: (id)arg1;
-
 // Safari < 5.1
 - (void)webFrameLoadCommittedHook: (id)arg1;
+
+// Safari >= 5.1
+- (BOOL)_setLocationFieldTextHook: (id)arg1;
+- (void)didSelectTabViewItemHook;
+- (void)closeCurrentTabHook: (id)arg1;
 
 @end

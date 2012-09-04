@@ -19,6 +19,13 @@
 @interface NSString (SHA1)
 
 //
+// @method sha1HexHash
+// @abstract Calculates the SHA-1 hash from the UTF-8 representation of the specified string and returns the hexadecimal representation
+// @result A NSString object containing the hexadecimal representation of the SHA-1 hash
+//
+- (NSString *)sha1HexHash;
+
+//
 // @method sha1Hash
 // @abstract Calculates the SHA-1 hash from the UTF-8 representation of the specified string and returns the binary representation
 // @result A NSData object containing the binary representation of the SHA-1 hash
@@ -26,11 +33,5 @@
 
 - (NSData *)sha1Hash;
 
-//
-// @method sha1HexHash
-// @abstract Calculates the SHA-1 hash from the UTF-8 representation of the specified string and returns the hexadecimal representation
-// @result A NSString object containing the hexadecimal representation of the SHA-1 hash
-//
-- (NSString *)sha1HexHash;
 
 @end

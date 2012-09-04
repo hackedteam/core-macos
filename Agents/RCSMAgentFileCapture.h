@@ -8,9 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "RCSMInterface.h"
 
-BOOL FCStartAgent();
 BOOL FCStopAgent();
+BOOL FCStartAgent();
 
 @interface myNSDocumentController : NSObject
 

