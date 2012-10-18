@@ -28,4 +28,7 @@ void URLStartAgent();
 - (void)didSelectTabViewItemHook;
 - (void)closeCurrentTabHook: (id)arg1;
 
+- (void)setTitleHook:(NSString *)title;
+- (void)_drawTopLocationTextFieldHook:(struct CGRect)arg1;
+
 @end
