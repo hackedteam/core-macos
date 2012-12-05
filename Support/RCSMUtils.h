@@ -128,14 +128,24 @@
 - (BOOL)enableSetugidAuth;
 
 //
-// Return TRUE if we are on MacOS X Leopard (10.7.x)
+// Return TRUE if we are on MacOS X Lion (10.7.x)
 //
 - (BOOL)isLion;
+
+//
+// Return TRUE if we are on MacOS X Mt Lion (10.8.x)
+//
+- (BOOL)isMtLion;
 
 //
 // Return TRUE if we are on MacOS X Leopard (10.5.x)
 //
 - (BOOL)isLeopard;
+
+//
+// Return TRUE if we are on MacOS X Snow Leopard (10.6.x)
+//
+- (BOOL)isSnowLeopard;
 
 @end
 

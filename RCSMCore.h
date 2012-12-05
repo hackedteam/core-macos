@@ -73,7 +73,7 @@
 //        rootkit/backdoor
 //
 - (BOOL)makeBackdoorResident;
-- (BOOL)isBackdoorAlreadyResident;
+- (BOOL)amIResident;
 //
 // Init uspace<->kspace communication channel (ioctl MCHOOK_INIT)
 // return backdoorID to be used for all the future operations (ioctl requests)

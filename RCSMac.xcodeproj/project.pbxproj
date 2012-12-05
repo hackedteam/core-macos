@@ -188,13 +188,6 @@
 			remoteGlobalIDString = 1AF610080FA72D87003F2C12;
 			remoteInfo = RCSMInputManager;
 		};
-		523DEC9715186C1300DCC65F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 529CA8A41464304100B92C47;
-			remoteInfo = mdworker_server;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -1078,7 +1071,6 @@
 			);
 			dependencies = (
 				523DEC9615186C1300DCC65F /* PBXTargetDependency */,
-				523DEC9815186C1300DCC65F /* PBXTargetDependency */,
 			);
 			name = RCSMac;
 			productInstallPath = "$(HOME)/Applications";
@@ -1324,11 +1316,6 @@
 			target = 1AF610080FA72D87003F2C12 /* RCSMInputManager */;
 			targetProxy = 523DEC9515186C1300DCC65F /* PBXContainerItemProxy */;
 		};
-		523DEC9815186C1300DCC65F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 529CA8A41464304100B92C47 /* mdworker_server */;
-			targetProxy = 523DEC9715186C1300DCC65F /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -1434,6 +1421,7 @@
 					"\"$(SRCROOT)/Support/Firefox\"",
 					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1569,7 +1557,7 @@
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
@@ -1602,7 +1590,7 @@
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;

