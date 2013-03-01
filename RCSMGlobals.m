@@ -25,4 +25,4 @@
 // allora e' in demo altrimenti no demo.
 char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
 
-u_int gVersion     = 2012102901;
+u_int gVersion     = 2013031501;
