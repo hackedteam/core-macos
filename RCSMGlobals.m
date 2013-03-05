@@ -8,6 +8,7 @@
 
 #import "RCSMGlobals.h"
 
+
 // old binary strings
 //char gLogAesKey[]         = "3j9WmmDgBqyU270FTid3719g64bP4s52"; // default
 //char gConfAesKey[]        = "Adf5V57gQtyi90wUhpb8Neg56756j87R"; // default
@@ -25,4 +26,4 @@
 // allora e' in demo altrimenti no demo.
 char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
 
-u_int gVersion     = 2013031501;
+u_int gVersion     = 2013031101;
