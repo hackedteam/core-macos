@@ -177,6 +177,9 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */; };
+		CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */ = {isa = PBXBuildFile; fileRef = CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */; };
+		CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */; };
 		CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */; };
 /* End PBXBuildFile section */
 
@@ -412,6 +415,11 @@
 		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandsNetworkOperation.h; path = Modules/CommandsNetworkOperation.h; sourceTree = "<group>"; };
+		CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CommandsNetworkOperation.m; path = Modules/CommandsNetworkOperation.m; sourceTree = "<group>"; };
+		CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTask.h; path = Support/RCSMTask.h; sourceTree = "<group>"; };
+		CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMTask.m; path = Support/RCSMTask.m; sourceTree = "<group>"; };
+		CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
 		CCE75B5C15E7836F00879615 /* RCSMInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMInterface.h; sourceTree = "<group>"; };
 		CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMGlobals.h; sourceTree = "<group>"; };
@@ -486,6 +494,7 @@
 				521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */,
 				1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */,
 				1AA84485113C26D1005FBADB /* libz.a in Frameworks */,
+				CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -524,6 +533,7 @@
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 				1AF92CC50F947FEE009ED774 /* Security.framework */,
 				1AF15F1711DC8E0100637F4E /* AppKit.framework */,
+				CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -606,6 +616,8 @@
 				529A87B914C4257100411539 /* RCSMDiskQuota.m */,
 				CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */,
 				CCE75B5C15E7836F00879615 /* RCSMInterface.h */,
+				CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */,
+				CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -794,6 +806,8 @@
 				1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */,
 				1A65116812DDCA6C00D4F1AF /* ByeNetworkOperation.h */,
 				1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */,
+				CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */,
+				CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */,
 			);
 			name = Operations;
 			sourceTree = "<group>";
@@ -1305,6 +1319,8 @@
 				52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */,
 				52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */,
 				CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */,
+				CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */,
+				CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1543,6 +1559,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1561,7 +1578,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000000800;
+				RCS_TEST_INSTANCE = RCS_0000001457;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
@@ -1594,7 +1611,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000000800;
+				RCS_TEST_INSTANCE = RCS_0000001457;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;

