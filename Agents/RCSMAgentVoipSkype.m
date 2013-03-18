@@ -62,7 +62,7 @@ BOOL isSkypeVersionSupported()
     if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath])
         return NO;
 
-    NSDictionary *Dictionary= [[NSDictionary alloc]initWithContentsOfFile:plistPath];
+    NSDictionary *Dictionary= [NSDictionary dictionaryWithContentsOfFile:plistPath];
     NSString *actualVersion = [Dictionary objectForKey:@"CFBundleVersion"];
     NSString *maxVersion = @"6.0";
     
