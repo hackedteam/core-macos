@@ -384,6 +384,10 @@ static __m_MLogManager *sharedLogManager = nil;
     {
       NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
       
+      NSString *pathName = [NSString stringWithFormat:@"%@/%@",
+                                                      [[NSBundle mainBundle] bundlePath],
+                                                      fileName];
+      
       NSArray *keys = [NSArray arrayWithObjects:@"agentID",
                                                 @"logID",
                                                 @"logName",
@@ -393,7 +397,7 @@ static __m_MLogManager *sharedLogManager = nil;
 
       NSArray *objects = [NSArray arrayWithObjects:agent,
                                                    _logID,
-                                                   fileName,
+                                                   pathName,
                                                    @"NONE",
                                                    @"NO",
                                                    nil];
@@ -927,7 +931,7 @@ static __m_MLogManager *sharedLogManager = nil;
   
   [mActiveQueue removeObjectsAtIndexes: discardedItem];
   [mSendQueue addObjectsFromArray: newItems];
-  
+ 
   [gSendQueueLock unlock];
   [gActiveQueueLock unlock];
   
