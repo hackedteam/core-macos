@@ -81,6 +81,8 @@ enum {
 - (void)release;
 - (id)autorelease;
 
+- (void)updateLogQueue;
+
 //
 // @author
 //  revenge

