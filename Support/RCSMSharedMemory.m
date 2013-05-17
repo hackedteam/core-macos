@@ -1227,9 +1227,8 @@ static BOOL amIPrivileged()
       
       if (anOffset >= mSize)
       {
-#ifdef DEBUG_SHMEM
-        infoLog(@"[XPC __m_MSharedMemory] SHMem - write didn't found an available memory block mSize = %#x", mSize);
-#endif
+        [self _unlockShmem];
+        usleep(100000);
         return FALSE;
       }
     }

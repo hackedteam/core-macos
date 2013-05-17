@@ -244,7 +244,7 @@
         return SBJsonStreamParserComplete;
     }
   @catch (NSException *excp) {
-    NSLog(@"%s: error %@", __FUNCTION__, excp);
+    //NSLog(@"%s: error %@", __FUNCTION__, excp);
   }
     @finally {
         [pool drain];
