@@ -1453,6 +1453,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -1489,7 +1490,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1500,6 +1501,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -1522,6 +1524,7 @@
 					"\"$(SRCROOT)/Support/Firefox\"",
 					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1534,7 +1537,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
@@ -1599,7 +1602,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -1623,9 +1626,9 @@
 				RCS_TEST_COLLECTOR = 192.168.100.100;
 				RCS_TEST_INSTANCE = RCS_0000001486;
 				RCS_TEST_PASSWD = osx_test;
-				RCS_TEST_SYNCH = YES;
+				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = i386;
 			};
 			name = Debug;
@@ -1634,7 +1637,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
@@ -1657,9 +1660,9 @@
 				RCS_TEST_COLLECTOR = 192.168.100.100;
 				RCS_TEST_INSTANCE = RCS_0000001486;
 				RCS_TEST_PASSWD = osx_test;
-				RCS_TEST_SYNCH = YES;
+				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.6;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
 			};
