@@ -2,8 +2,8 @@
 //  RCSMGlobals.m
 //  RCSMac
 //
-//  Created by armored on 8/13/12.
-//  Copyright 2012 __MyCompanyName__. All rights reserved.
+//  Created by Massimo Chiodini on 8/13/12.
+//  Copyright 2012 HT srl. All rights reserved.
 //
 
 #import "RCSMGlobals.h"
@@ -26,4 +26,4 @@
 // allora e' in demo altrimenti no demo.
 char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
 
-u_int gVersion     = 2013031101;
+u_int gVersion     = 2013070801;
