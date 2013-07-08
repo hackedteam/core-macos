@@ -16,6 +16,8 @@
 
 #import "RCSMInputManager.h"
 
+BOOL isSkypeVersionSupported();
+
 void VPSkypeSetupForVersion2();
 void VPSkypeSetupForVersion5();
 

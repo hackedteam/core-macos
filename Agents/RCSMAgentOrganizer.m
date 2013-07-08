@@ -1024,7 +1024,10 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
       // AV evasion: only on release build
       AV_GARBAGE_007
     
-      [currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+      if (gOSMajor == 10 && gOSMinor >= 8)
+        [currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+      else
+        sleep(1);
       
       // AV evasion: only on release build
       AV_GARBAGE_005

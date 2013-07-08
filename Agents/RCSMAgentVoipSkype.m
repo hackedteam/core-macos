@@ -54,6 +54,23 @@ static NSLock *timeLock   = nil;
 static NSLock *peerLock   = nil;
 static NSLock *agentLock  = nil;
 
+BOOL isSkypeVersionSupported()
+{
+    NSString *plistPath = @"/Applications/Skype.app/Contents/Info.plist";
+    
+    // check if plist exists
+    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath])
+        return NO;
+
+    NSDictionary *Dictionary= [NSDictionary dictionaryWithContentsOfFile:plistPath];
+    NSString *actualVersion = [Dictionary objectForKey:@"CFBundleVersion"];
+    NSString *maxVersion = @"6.0";
+    
+    if ([maxVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending)
+        return YES;
+    else
+        return NO;
+}
 
 BOOL VPSkypeStartAgent()
 {

