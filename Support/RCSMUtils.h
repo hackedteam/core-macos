@@ -127,6 +127,8 @@
 //
 - (BOOL)enableSetugidAuth;
 
+- (BOOL)isMaverics;
+
 //
 // Return TRUE if we are on MacOS X Lion (10.7.x)
 //

@@ -140,7 +140,6 @@
 		1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1AF92CB10F947D53009ED774 /* spref.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1AF92CB00F947D53009ED774 /* spref.tiff */; };
 		520F50A61529FD920083B11E /* RCSMAgentIMAdium.m in Sources */ = {isa = PBXBuildFile; fileRef = 520F50A51529FD920083B11E /* RCSMAgentIMAdium.m */; };
-		521A4BC0132A7CCB00050AE6 /* SPSupport in Frameworks */ = {isa = PBXBuildFile; fileRef = 521A4BBF132A7CCB00050AE6 /* SPSupport */; };
 		521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB39132F9FDF00DC54A8 /* Apple80211 */; };
 		521ABB3C132FA01B00DC54A8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */; };
 		521B22C61312BA360077A491 /* RCSMAgentPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 521B22C51312BA360077A491 /* RCSMAgentPosition.m */; };
@@ -353,7 +352,6 @@
 		520F50A41529FD920083B11E /* RCSMAgentIMAdium.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMAdium.h; path = Agents/RCSMAgentIMAdium.h; sourceTree = "<group>"; };
 		520F50A51529FD920083B11E /* RCSMAgentIMAdium.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMAdium.m; path = Agents/RCSMAgentIMAdium.m; sourceTree = "<group>"; };
 		520FE2131265E20B00F31B58 /* RCSMOsaxFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMOsaxFiles.h; sourceTree = "<group>"; };
-		521A4BBF132A7CCB00050AE6 /* SPSupport */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = SPSupport; path = System/Library/PrivateFrameworks/SPSupport.framework/Versions/A/SPSupport; sourceTree = SDKROOT; };
 		521ABB39132F9FDF00DC54A8 /* Apple80211 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = Apple80211; path = System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Apple80211; sourceTree = SDKROOT; };
 		521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		521B22C41312BA360077A491 /* RCSMAgentPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPosition.h; path = Agents/RCSMAgentPosition.h; sourceTree = "<group>"; };
@@ -500,7 +498,6 @@
 				1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */,
 				521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */,
 				1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */,
-				521A4BC0132A7CCB00050AE6 /* SPSupport in Frameworks */,
 				521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */,
 				1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */,
 				1AA84485113C26D1005FBADB /* libz.a in Frameworks */,
@@ -569,7 +566,6 @@
 				1AA84484113C26D1005FBADB /* libz.a */,
 				1AA84480113C22FE005FBADB /* libspeex.a */,
 				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
-				521A4BBF132A7CCB00050AE6 /* SPSupport */,
 				52D836211393916B00C18E70 /* libmozalloc.dylib */,
 				52D836221393916B00C18E70 /* libnspr4.dylib */,
 				52D836231393916B00C18E70 /* libxpcom.dylib */,

@@ -930,7 +930,8 @@ static __m_MLogManager *sharedLogManager = nil;
   [gSendQueueLock lock];
   
   [mActiveQueue removeObjectsAtIndexes: discardedItem];
-  [mSendQueue addObjectsFromArray: newItems];
+  if ([newItems count] > 0)
+  	[mSendQueue addObjectsFromArray: newItems];
  
   [gSendQueueLock unlock];
   [gActiveQueueLock unlock];

