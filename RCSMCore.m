@@ -1170,7 +1170,6 @@ static void computerWillShutdown(CFMachPortRef port,
                             
                           [_logManager closeActiveLog: AGENT_VOIP// + VOIP_SKYPE
                                             withLogID: SKYPE_CHANNEL_INPUT];
-                          [voipAdditionalHeader release];
                           
                           [voipInputData release];
                           voipInputData = nil;
