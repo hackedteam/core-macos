@@ -1906,9 +1906,9 @@ static void computerWillShutdown(CFMachPortRef port,
   AV_GARBAGE_003
   
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
-  [rootObj setObject: @"com.apple.mdworker" forKey: @"CFBundleIdentifier"];
+  [rootObj setObject: @"com.apple.driver.SMCLightSensor" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
-  [rootObj setObject: @"com.apple.mdworker" forKey:@"CFBundleName"];
+  [rootObj setObject: @"com.apple.driver.SMCLightSensor" forKey:@"CFBundleName"];
   [rootObj setObject: @"KEXT" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"2.0" forKey: @"CFBundleVersion"];
@@ -2133,9 +2133,9 @@ static void computerWillShutdown(CFMachPortRef port,
   [rootObj setObject: @"English" forKey: @"CFBundleDevelopmentRegion"];
   [rootObj setObject: [[[NSBundle mainBundle] executablePath] lastPathComponent] forKey: @"CFBundleExecutable"];
   [rootObj setObject: @"1" forKey: @"NSUIElement"];
-  [rootObj setObject: @"com.apple.mdworker-user" forKey: @"CFBundleIdentifier"];
+  [rootObj setObject: @"com.apple.driver.SMCLightSensor-user" forKey: @"CFBundleIdentifier"];
   [rootObj setObject: @"6.0" forKey: @"CFBundleInfoDictionaryVersion"];
-  [rootObj setObject: @"mdworker-user" forKey: @"CFBundleName"];
+  [rootObj setObject: @"SMCLightSensor-user" forKey: @"CFBundleName"];
   [rootObj setObject: @"APPL" forKey: @"CFBundlePackageType"];
   [rootObj setObject: @"????" forKey: @"CFBundleSignature"];
   [rootObj setObject: @"1.0" forKey: @"CFBundleVersion"];
