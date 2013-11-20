@@ -1473,7 +1473,7 @@
 					"\"$(SRCROOT)/Support/Firefox\"",
 					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1520,7 +1520,7 @@
 					"\"$(SRCROOT)/Support/Firefox\"",
 					"\"$(SRCROOT)/Support/Firefox/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1616,7 +1616,7 @@
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
@@ -1624,7 +1624,7 @@
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				VALID_ARCHS = i386;
 			};
 			name = Debug;
@@ -1651,7 +1651,7 @@
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
 					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
@@ -1659,7 +1659,7 @@
 				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = NO;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
 			};
@@ -1684,7 +1684,7 @@
 					"-Wl,-search_paths_first",
 					"-lspeex",
 				);
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 				STRIP_INSTALLED_PRODUCT = NO;
 				USER_HEADER_SEARCH_PATHS = "..//**";
 				VALID_ARCHS = "i386 x86_64";
@@ -1718,7 +1718,7 @@
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-Wl,-search_paths_first";
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 				SEPARATE_STRIP = YES;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = "..//**";

@@ -5,7 +5,7 @@
 //  Created by guido on 3/22/13.
 //
 //
-
+/*
 #import <Foundation/Foundation.h>
 #import "social.h"
 
@@ -13,3 +13,4 @@
 - (NSData *)sendHttpRequest: (NSString *)httpURL;
 - (NSDictionary *)getParsedHttpResponse: (NSString *)httpURL jsonOffset: (int)jsonOffset;
 @end
+*/
