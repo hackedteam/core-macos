@@ -13,6 +13,8 @@
 #import <IOKit/IOKitLib.h>
 #import <CoreAudio/CoreAudio.h>
 #import <CoreFoundation/CoreFoundation.h>
+#import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonCryptor.h>
 
 #import <mach/machine.h>
 #import <mach-o/loader.h>

