@@ -856,13 +856,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
                                 @selector(expectedOrCurrentURLHook));
             
             // AV evasion: only on release build
-            AV_GARBAGE_007
-            
-            swizzleByAddingIMP (BrowserWindowClass, @selector(setTitle:),
-                                class_getMethodImplementation(classSource, @selector(setTitleHook:)),
-                                @selector(setTitleHook:));
-            
-            // AV evasion: only on release build
             AV_GARBAGE_005
           }
 
@@ -1058,12 +1051,6 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             
             swizzleMethod(BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURL),
                           BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURLHook));
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_007
-            
-            swizzleMethod(BrowserWindowClass, @selector(setTitle:),
-                          BrowserWindowClass, @selector(setTitleHook:));
             
             // AV evasion: only on release build
             AV_GARBAGE_007
