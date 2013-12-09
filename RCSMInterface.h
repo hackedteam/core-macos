@@ -76,7 +76,7 @@
 //#define mySKConversationManager __qmbdf_i_nz680powfstbujpo0bobhfs
 //#define mySKUserInteraction __qmbdf_i_nz688tfs6oufsbdujpo
 //#define mySMProcessController __qmbdf_i_nz603spdftt0pouspmmfs
-//#define mySkypeChat __qmbdf_i_nz6lzqf0ibu
+//#define __m_mySkypeChat __qmbdf_i_nz6lzqf0ibu
 
 /*
  * Class string for getting Class ptr in method swizzling...

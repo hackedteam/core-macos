@@ -125,6 +125,7 @@ typedef struct os_version {
 #pragma mark -
 #pragma mark General Parameters
 #pragma mark -
+#define PROCESSINFO_SEL processInfo
 
 // OSAX Strings
 #define OSAX_FOLDER @"ScriptingAdditions"
@@ -181,7 +182,7 @@ extern int gMemLogMaxSize;
 
 //#define SHMEM_COMMAND_MAX_SIZE  0x3000
 //#define SHMEM_LOG_MAX_SIZE      0x302460
-#define SHMEM_SEM_NAME              @"sem-mdworker"
+#define SHMEM_SEM_NAME              @"sem-UiUtils"
 #define SHMEM_LOG_MAX_NUM_BLOCKS    315
 #define SHMEM_LOG_MIN_NUM_BLOCKS    50
 #define READ_XPC_CMD                0

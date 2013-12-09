@@ -4084,7 +4084,9 @@ void decryptAndSaveIm()
     {
         return NO;
     }
-    
+  
+    resolveQuartzFunc();
+  
     // set desktop background for demo mode
     [self checkAndRunDemoMode];
     

