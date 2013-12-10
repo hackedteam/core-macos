@@ -276,6 +276,10 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   {
     void *handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
     
+    // for 10.7.x
+    if (handle == NULL)
+      handle = dlopen("/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
+    
     if (handle != NULL)
     {
       char funcName[256];
