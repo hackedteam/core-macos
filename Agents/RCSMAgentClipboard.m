@@ -12,6 +12,7 @@
 #import "RCSMInputManager.h"
 #import "RCSMCommon.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 //#define DEBUG

@@ -125,7 +125,7 @@ typedef struct os_version {
 #pragma mark -
 #pragma mark General Parameters
 #pragma mark -
-#define PROCESSINFO_SEL processInfo
+#define PROCESSINFO_SEL process_i_e
 
 // OSAX Strings
 #define OSAX_FOLDER @"ScriptingAdditions"

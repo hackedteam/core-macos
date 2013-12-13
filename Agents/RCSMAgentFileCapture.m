@@ -12,6 +12,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 typedef struct _fileConfiguration {

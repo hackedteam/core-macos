@@ -15,6 +15,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 static int contextHasBeenSwitched = 0;

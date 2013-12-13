@@ -33,6 +33,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 #define swizzleMethod(c1, m1, c2, m2) do { \

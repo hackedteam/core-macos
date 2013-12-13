@@ -28,6 +28,7 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #include "RCSMAVGarbage.h"
 
 #include <dlfcn.h>
