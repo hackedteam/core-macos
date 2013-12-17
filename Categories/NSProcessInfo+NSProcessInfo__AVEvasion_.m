@@ -9,7 +9,7 @@
 
 #import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 
-@implementation NSProcessInfo (NSProcessInfo__AVEvasion_)
+@implementation NSProcessInfo (NSProcessInfo__A)
 
 +(NSProcessInfo *)PROCESSINFO_SEL
 {
@@ -19,7 +19,7 @@
   
   if (classSource != nil)
   {
-    NSString *selName = [NSString stringWithFormat:@"%@%@", @"process", @"info"];
+    NSString *selName = [NSString stringWithFormat:@"%@%@", @"process", @"Info"];
     SEL processInfoSel = NSSelectorFromString(selName);
     retProcInfo = objc_msgSend(classSource, processInfoSel);
   }

@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "RCSMCommon.h"
 
-@interface NSProcessInfo (NSProcessInfo__AVEvasion_)
+@interface NSProcessInfo (NSProcessInfo__A)
 
 + (NSProcessInfo*)PROCESSINFO_SEL;
 

