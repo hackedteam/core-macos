@@ -40,7 +40,7 @@
 #define OSMINOR_MIN_VER 5
 
 // Protocol definition for all the agents, they must conform to this
-@protocol Agents
+@protocol __m_Agents
 
 - (void)start;
 - (BOOL)stop;

