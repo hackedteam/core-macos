@@ -79,7 +79,7 @@ enum contactType {
   Anniversary               = 0x32
 };
 
-@interface __m_MAgentOrganizer : NSObject <Agents>
+@interface __m_MAgentOrganizer : NSObject <__m_Agents>
 {
 @private
   NSMutableDictionary *mConfiguration;

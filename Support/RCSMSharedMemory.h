@@ -30,7 +30,7 @@ typedef struct dispatch_queue_s * dispatch_queue_t;
   sem_t *mSemaphoreID;
   NSString *mSemaphoreName;
 //  BOOL amISandboxed;
-  BOOL mAmIPrivUser;
+  BOOL mBamIPrivUser;
 //  xpc_connection_t mXpcCon;
 }
 

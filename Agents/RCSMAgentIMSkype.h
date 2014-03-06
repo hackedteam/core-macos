@@ -29,7 +29,7 @@
 @end
 
 // Just to avoid compiler warnings
-@interface mySkypeChat : NSObject
+@interface __m_mySkypeChat : NSObject
 
 - (BOOL)isMessageRecentlyDisplayedHook: (uint)arg1;
 //- (id)getChatMessageWithObjectID: (uint)arg1;

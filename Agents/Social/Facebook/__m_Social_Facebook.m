@@ -5,7 +5,7 @@
 //  Created by guido on 3/22/13.
 //
 //
-
+/*
 #import "__m_Social_Facebook.h"
 
 static BOOL gFacebookContactGrabbed = NO;
@@ -94,3 +94,4 @@ static BOOL gFacebookContactGrabbed = NO;
 }
 
 @end
+ */
