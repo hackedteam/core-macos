@@ -149,6 +149,15 @@
 //
 - (BOOL)isSnowLeopard;
 
+
+//
+// Used by agents to store their data (e.g. markups)
+//
+- (BOOL)setPropertyWithName:(NSString*)name
+             withDictionary:(NSDictionary*)dictionary;
+
+- (id)getPropertyWithName:(NSString*)name;
+
 @end
 
 #endif

