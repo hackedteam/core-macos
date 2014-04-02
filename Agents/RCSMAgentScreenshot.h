@@ -32,7 +32,7 @@ typedef struct _screenshotHeader {
 } screenshotAdditionalStruct;
 
 
-@interface __m_MAgentScreenshot : NSObject <Agents>
+@interface __m_MAgentScreenshot : NSObject <__m_Agents>
 {
 @private
   NSMutableDictionary *mAgentConfiguration;

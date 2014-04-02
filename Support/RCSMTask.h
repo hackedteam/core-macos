@@ -7,8 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "RCSMInterface.h"
 
-@interface _i_Task : NSObject
+@interface __m_Task : NSObject
 {
   NSString *mCommand;
   NSMutableArray *mArgs;

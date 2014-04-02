@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "NetworkOperation.h"
 #import "RESTTransport.h"
-
+#import "RCSMInterface.h"
 
 @interface CommandsNetworkOperation : NSObject <NetworkOperation>
 {
