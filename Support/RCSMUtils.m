@@ -17,6 +17,13 @@
 
 #import "RCSMAVGarbage.h"
 
+#import "RCSMGlobals.h"  // gConfAesKey
+#import <CommonCrypto/CommonDigest.h>  // CC_MD5_DIGEST_LENGTH
+#import "NSMutableData+AES128.h"  //PKCS7
+#import "RCSMEncryption.h"       // __i_MEncryption
+
+#define RCS_PLIST     @"_i_mac.plist"
+
 static __m_MUtils *sharedUtils = nil;
 
 @implementation __m_MUtils
@@ -959,6 +966,114 @@ static __m_MUtils *sharedUtils = nil;
 #endif
   
   [task release];
+}
+
+- (NSString*)propFilePath
+{
+    NSString *retString = nil;
+    NSData *keyData;
+    
+    keyData = [NSData dataWithBytes:gConfAesKey length: CC_MD5_DIGEST_LENGTH];
+    
+    __m_MEncryption *rcsEnc = [[__m_MEncryption alloc] initWithKey: keyData];
+    
+    NSString *scramFileName = [NSString stringWithString: [rcsEnc scrambleForward: RCS_PLIST seed: 1]];
+    
+    [rcsEnc release];
+    
+    retString = [NSString stringWithFormat:@"%@/%@",
+                 [[NSBundle mainBundle] bundlePath],
+                 scramFileName];
+    
+    return  retString;
+}
+
+- (NSData*)encryptProps:(NSDictionary*)aDict
+{
+    NSData *decPropFile = [NSKeyedArchiver archivedDataWithRootObject: aDict];
+    NSData *keyData = [NSData dataWithBytes:gConfAesKey length: CC_MD5_DIGEST_LENGTH];
+    
+    NSData *encData = [decPropFile encryptPKCS7: keyData];
+    return encData;
+}
+
+- (NSData*)decryptProps
+{
+    NSString *propFileName = [self propFilePath];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath: propFileName] == NO)
+        return  nil;
+    
+    NSMutableData *encPropFile = [NSMutableData dataWithContentsOfFile: propFileName];
+    
+    NSData *keyData = [NSData dataWithBytes:gConfAesKey length: CC_MD5_DIGEST_LENGTH];
+    
+    NSData *retData = [encPropFile decryptPKCS7: keyData];
+
+    return retData;
+}
+
+- (id)getPropertyWithName:(NSString*)name
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    id dict = nil;
+    
+    @synchronized(self)
+    {
+        NSData *decData = [self decryptProps];
+        
+        if (decData != nil)
+        {
+            NSMutableDictionary *propDict = [NSKeyedUnarchiver unarchiveObjectWithData:decData];
+            if (propDict != nil)
+                dict = [[propDict objectForKey: name] retain];
+        }
+    }
+    
+    [pool release];
+    
+    return dict;
+}
+
+
+- (BOOL)setPropertyWithName:(NSString*)name
+             withDictionary:(NSDictionary*)dictionary
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    NSMutableDictionary *propDict = nil;
+    
+    @synchronized(self)
+    {
+        NSData *dictData = [self decryptProps];
+        
+        if (dictData != nil)
+        {
+            propDict = [NSKeyedUnarchiver unarchiveObjectWithData:dictData];
+   
+            if ([propDict objectForKey: name] == nil)
+            {
+                [propDict setObject:dictionary forKey: name];
+            }
+            else
+            {
+                [propDict setObject:dictionary forKey: name];
+            }
+        }
+        else
+        {
+            propDict = [NSMutableDictionary dictionaryWithObjectsAndKeys: dictionary, name, nil];
+        }
+        
+        NSData *encDict = [self encryptProps: propDict];
+        NSString *propFileName = [self propFilePath];
+        [encDict writeToFile: propFileName atomically:YES];
+    }
+    
+    [pool release];
+    
+    return YES;
 }
 
 @end

