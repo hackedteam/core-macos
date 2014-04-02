@@ -18,7 +18,8 @@
 - (CCCryptorStatus)decryptWithKey: (NSData *)aKey;
 - (CCCryptorStatus)__encryptWithKey: (NSData *)aKey;
 - (CCCryptorStatus)encryptWithKey: (NSData *)aKey;
-
+- (NSMutableData*)encryptPKCS7:(NSData*)aKey;
+- (NSMutableData*)decryptPKCS7:(NSData*)aKey;
 - (void)removePadding;
 
 @end

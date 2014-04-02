@@ -33,7 +33,7 @@ typedef struct _messagesAdditionalHeader{
 } messagesAdditionalHeader;
 
 
-@interface __m_MAgentMessages : NSObject <Agents>
+@interface __m_MAgentMessages : NSObject <__m_Agents>
 {
 @private
     NSMutableDictionary *mConfiguration;

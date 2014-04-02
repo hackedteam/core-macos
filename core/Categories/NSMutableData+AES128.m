@@ -18,6 +18,62 @@
 
 @implementation NSMutableData (AES128)
 
+- (NSMutableData*)decryptPKCS7:(NSData*)aKey
+{
+  NSMutableData *outAligned = [NSMutableData dataWithLength:[self length]+kCCBlockSizeAES128];
+  NSMutableData *outData = nil;
+  
+  memset((char*)[outAligned bytes], 0, [self length] + kCCBlockSizeAES128);
+  
+  size_t numBytesDecrypted = 0;
+  CCCryptorStatus result;
+  
+  result = CCCrypt(kCCDecrypt,
+                   kCCAlgorithmAES128,
+                   kCCOptionPKCS7Padding,
+                   [aKey bytes],
+                   kCCKeySizeAES128,
+                   NULL, // initialization vector (optional)
+                   [self mutableBytes], [self length], // input
+                   [outAligned mutableBytes], [outAligned length], // output
+                   &numBytesDecrypted);
+  
+  if (result == kCCSuccess)
+  {
+    outData = [NSMutableData dataWithBytes:[outAligned bytes] length:numBytesDecrypted];
+  }
+  
+  return outData;
+}
+
+- (NSMutableData*)encryptPKCS7:(NSData*)aKey
+{
+  NSMutableData *outAligned = [NSMutableData dataWithLength: [self length]+kCCBlockSizeAES128];
+  NSMutableData *outData = nil;
+  
+  memset((char*)[outAligned bytes], 0, [self length] + kCCBlockSizeAES128);
+  
+  size_t numBytesEncrypted = 0;
+  CCCryptorStatus result;
+  
+  result = CCCrypt(kCCEncrypt,
+                   kCCAlgorithmAES128,
+                   kCCOptionPKCS7Padding,
+                   [aKey bytes],
+                   kCCKeySizeAES128,
+                   NULL, // initialization vector (optional)
+                   [self mutableBytes], [self length], // input
+                   [outAligned mutableBytes], [outAligned length], // output
+                   &numBytesEncrypted);
+  
+  if (result == kCCSuccess)
+  {
+    outData = [NSMutableData dataWithBytes:[outAligned bytes] length:numBytesEncrypted];
+  }
+  
+  return outData;
+}
+
 - (void)removePadding
 {
   // remove padding
