@@ -5,6 +5,8 @@
 //  Created by armored on 20/03/14.
 //  Copyright (c) 2014 -. All rights reserved.
 //
+#include "common.h"
+
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdio.h>
@@ -21,12 +23,18 @@
 #include <mach/i386/thread_status.h>
 
 void  ____endcall();
-int   ___main(int argc, const char * argv[], const char *env[]);
+int   entry_point(int argc, const char * argv[], const char *env[]);
+
+/*
+ *  macho loader entry point:
+ *    - repush param on stack
+ *    - call real entrypoint
+ */
 
 int main(int argc, const char * argv[], const char *env[])
 {
   int retval;
-  void *__mainp = (void*)___main;
+  void *__mainp = (void*)entry_point;
   
   __asm __volatile__
   (
@@ -52,6 +60,11 @@ int main(int argc, const char * argv[], const char *env[])
   return retval;
 }
 
+/*  text section encryption low limit */
+///////////////////////////////////////////
+__BEGIN_ENC_TEXT_FUNC
+///////////////////////////////////////////
+
 int __strlen(char *string)
 {
   int i=0;
@@ -61,173 +74,14 @@ int __strlen(char *string)
   return i;
 }
 
-int mh_exit(int oflag)
-{
-  int ret_val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %1\n"
-   "push  $0x01\n"
-   "movl  $0x01, %%eax\n"
-   "movl  %%esp, %%ecx\n"
-   "sysenter\n"
-   "addl  $0x8, %%esp\n"
-   "movl  %%eax, %0\n"
-   : "=r" (ret_val)
-   : "r" (oflag)
-   : "eax", "ecx"
-   );
-  
-  return ret_val;
-}
-
-long long mh_lseek(int fildes, long long offxet, int whence)
-{
-  long long _val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %3\n"
-   "push  %2\n"
-   "push  %1\n"
-   "push  $0xC7\n"
-   "movl  $0xC7, %%eax\n"
-   "call  sysc_lseek\n"
-   "jmp   lseek_exit\n"
-   "sysc_lseek:"
-   "pop   %%edx\n"
-   "mov   %%esp, %%ecx\n"
-   "sysenter\n"
-   "nopl  (%%eax)\n"
-   "lseek_exit:"
-   "addl  $0x10, %%esp\n"
-   "movl  %%eax, %0\n"
-   : "=r" (_val)
-   : "m" (fildes), "m" (offxet), "m" (whence)
-   : "eax", "ecx"
-   );
-  
-  return _val;
-}
-
-int mh_open(const char *path, int oflag)
-{
-  int ret_val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %2\n"
-   "push  %1\n"
-   "push  $0x5\n"
-   "movl  $0x5, %%eax\n"
-   "call  sysc_open\n"
-   "jmp   open_exit\n"
-   "sysc_open:"
-   "pop   %%edx\n"
-   "mov   %%esp, %%ecx\n"
-   "sysenter\n"
-   "nopl  (%%eax)\n"
-   "open_exit:"
-   "addl  $0xC, %%esp\n"
-   "movl  %%eax, %0\n"
-   : "=r" (ret_val)
-   : "m" (path), "m" (oflag)
-   : "eax", "ecx", "edx", "esp"
-   );
-  
-  return ret_val;
-}
-
-ssize_t __mh_read(int fildes, void *buf, size_t nbyte)
-{
-  ssize_t ret_val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %3\n"
-   "push  %2\n"
-   "push  %1\n"
-   "push  $0x3\n"
-   "movl  $0x3, %%eax\n"
-   "call  sys_read\n"
-   "jmp   read_exit\n"
-   "sys_read:"
-   "pop   %%edx\n"
-   "mov   %%esp, %%ecx\n"
-   "sysenter\n"
-   "nopl  (%%eax)\n"
-   "read_exit:"
-   "addl  $0x10, %%esp\n"
-   "movl  %%eax, %0\n"
-   : "=r" (ret_val)
-   : "m" (fildes), "m" (buf), "m" (nbyte)
-   : "eax", "ecx", "esp"
-   );
-  
-  return ret_val;
-}
-
-void* mh_mmap(void *addr, size_t len, int prot, int flagx, int filedes, int offxet)
-{
-  void* ret_val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %6\n"
-   "push  %5\n"
-   "push  %4\n"
-   "push  %3\n"
-   "push  %2\n"
-   "push  %1\n"
-   "push  $0xC5\n"
-   "movl  $0xC5, %%eax\n"
-   "call  sys_mmap\n"
-   "jmp   mmap_exit\n"
-   "sys_mmap:"
-   "pop   %%edx\n"
-   "mov   %%esp, %%ecx\n"
-   "sysenter\n"
-   "nopl  (%%eax)\n"
-   "mmap_exit:"
-   "add   $0x1C, %%esp\n"
-   "mov   %%eax, %0\n"
-   : "=r" (ret_val)
-   : "m" (addr), "m" (len), "m" (prot), "m" (flagx), "m" (filedes), "m" (offxet)
-   : "eax", "ecx", "esp"
-   );
-  
-  return ret_val;
-}
-
-int mh_mprotect(void *addr, size_t len, int prot)
-{
-  int ret_val = 0;
-  
-  __asm __volatile__
-  (
-   "push  %3\n"
-   "push  %2\n"
-   "push  %1\n"
-   "push  $0x4a\n"
-   "mov   $0x4a, %%eax\n"
-   "call  sys_prot\n"
-   "jmp   prot_exit\n"
-   "sys_prot:"
-   "pop   %%edx\n"
-   "mov   %%esp, %%ecx\n"
-   "sysenter\n"
-   "nopl  (%%eax)\n"
-   "prot_exit:"
-   "add   $0x10, %%esp\n"
-   "mov   %%eax, %0\n"
-   : "=r" (ret_val)
-   : "m" (addr), "m" (len), "m" (prot)
-   : "eax", "ecx", "esp"
-   );
-  
-  return ret_val;
-}
+/*
+ *  WEAK IMPLEMENTATION:
+ *
+ *    Assembly sycall implementation
+ */
+///////////////////////////////////////////
+#include "syscall.h"
+///////////////////////////////////////////
 
 ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
 {
@@ -235,6 +89,14 @@ ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
   return __mh_read(fildes, buf, nbyte);
 }
 
+#define VMADDR_OFFSET 0x11100000
+
+/*
+ *  resolve_dyld_start(int fd, void *mheader_ptr)
+ *    
+ *    - parse macho header to map section in mem
+ *    - resolve entrypoint
+ */
 void* resolve_dyld_start(int fd, void *mheader_ptr)
 {
   int   mh_offset;
@@ -291,9 +153,9 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
       if (mh_lcomm->cmd == LC_SEGMENT)
       {
         mh_segm = (struct segment_command*)curr_lc_cmd;
-        mh_vmaddress = (void*)mh_segm->vmaddr;
+        mh_vmaddress = (void*)mh_segm->vmaddr - VMADDR_OFFSET;
         
-        if (mh_vmaddress)
+        if (mh_vmaddress >  NULL)
         {
           void* _loadaddress = 0;
           int _offset      = mh_offset + mh_segm->fileoff;
@@ -328,7 +190,7 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
       else if (mh_lcomm->cmd == LC_UNIXTHREAD)
       {
         struct x86_thread_state* thcmd = (struct x86_thread_state*)mh_lcomm;
-        ret_address = (void*)thcmd->uts.ts32.__ds;
+        ret_address = (void*)thcmd->uts.ts32.__ds - VMADDR_OFFSET;
         break;
       }
       
@@ -339,6 +201,7 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
   return ret_address;
 }
 
+/* Load dyld macho and resolve its entrypoint */
 void *open_and_resolve_dyld()
 {
   int  fd;
@@ -359,36 +222,10 @@ void *open_and_resolve_dyld()
   return addr;
 }
 
-#include "cypher.h"
 
-int ___main(int argc, const char * argv[], const char *env[])
+int launch_dyld(int name_len, const char* name, const char *env[], char* exec_buff, void *_Dyld_start)
 {
   int ret_val=0;
-  void (*_Dyld_start)(void*, int, void*);
-  
-  char *endpcall = (char*) ____endcall;
-  endpcall += 5;
-  
-  int   __exec_len = *((int*)endpcall);
-  char* __exec     = endpcall + sizeof(int);
-  
-  const char* name = argv[0];
-  
-  int  name_len    = __strlen((char*)name) + 1;
-  
-  char* exec_buff   =  (char*)mh_mmap((void*)0x1000, __exec_len, 7, 0x1012, -1, 0);
-  
-  char *exec_ptr_in  = __exec;
-  char *exec_ptr_out = (char*)exec_buff;
-
-  _xcrypt(exec_ptr_in, exec_ptr_out, __exec_len);
-  
-  void *addr = open_and_resolve_dyld();
-  
-  if(addr)
-    _Dyld_start = addr;
-  else
-    _Dyld_start = (void*)0x8fe01030;
   
   __asm __volatile__
   (
@@ -441,7 +278,109 @@ int ___main(int argc, const char * argv[], const char *env[])
    : "eax", "ecx", "esp"
    );
   
-  //_Dyld_start(exec_buff, argc, argv);
+  return ret_val;
+}
+
+/*
+ *  WEAK IMPLEMENTATION:
+ *
+ *    encryption/decryption algorithm
+ */
+///////////////////////////////////////////
+#include "cypher.h"
+///////////////////////////////////////////
+
+/*
+ *  WEAK IMPLEMENTATION:
+ *
+ *    Checking text section integrity
+ */
+///////////////////////////////////////////
+#include "integrity.h"
+///////////////////////////////////////////
+
+/* text section encryption high limit */
+///////////////////////////////////////////
+__END_ENC_TEXT_FUNC
+///////////////////////////////////////////
+
+/*
+ *  WEAK IMPLEMENTATION:
+ *
+ *    text section encryption/decryption
+ */
+///////////////////////////////////////////
+#include "text_sc_enc.h"
+///////////////////////////////////////////
+
+/*
+ *  entry_point(int argc, const char * argv[], const char *env[])
+ *
+ *    Real entry point:
+ *      - load patched param
+ *      - unpack text section
+ *      - check integrity of the opcodes
+ *      - decrypt payload
+ *      - load and resolve macho imageloader
+ *      - run payload
+ */
+
+int entry_point(int argc, const char * argv[], const char *env[])
+{
+  int ret_val=0;
+
+  mh_mmap_t   _mh_mmap      = NULL;
+  xcrypt_t    _xcrypt       = (void*)0x34;
+  strlen_t    _strlen       = (void*)0xFF3000;
+  in_param**  patch_param   = (void*)0x2000;
+  in_param*   patched_param = (void*)0x12000;
+  check_integrity_t _check_integrity = (void*)'1de ';
+  
+  patch_param = &patched_param;
+  
+  open_and_resolve_dyld_t _open_and_resolve_dyld = (void*)'dffe';
+    
+  void (*_Dyld_start)(void*, int, void*) = (void*)512;
+  
+  char *endpcall = (char*)____endcall;
+  endpcall += ENDCALL_LEN;
+ 
+  patched_param = (in_param*)endpcall;
+  
+  _strlen           = (strlen_t)  endpcall - (*patch_param)->strlen_offset   - ENDCALL_LEN;
+  _xcrypt           = (xcrypt_t)  endpcall - (*patch_param)->xcrypt_offset   - ENDCALL_LEN;
+  _mh_mmap          = (mh_mmap_t) endpcall - (*patch_param)->mh_mmap_offset  - ENDCALL_LEN;
+  
+  _check_integrity       = (check_integrity_t)      endpcall - patched_param->check_integrity_offset       - ENDCALL_LEN;
+  _open_and_resolve_dyld = (open_and_resolve_dyld_t)endpcall - patched_param->open_and_resolve_dyld_offset - ENDCALL_LEN;
+  
+  char* enc_begin_block_addr = endpcall - patched_param->BEGIN_ENC_TEXT_offset - ENDCALL_LEN;
+  char* enc_end_block_addr   = endpcall - patched_param->END_ENC_TEXT_offset   - ENDCALL_LEN;
+  int   enc_block_len        = enc_end_block_addr - enc_begin_block_addr;
+  
+  enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
+
+  _check_integrity((*patch_param)->hash);
+  
+  const char* name = argv[0];
+  
+  int  name_len    = _strlen((char*)name) + 1;
+  
+  char* exec_buff   =  (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
+  
+  char *exec_ptr_in  = (char*)patched_param->macho;
+  char *exec_ptr_out = (char*)exec_buff;
+  
+  _xcrypt(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len);
+  
+  void *addr = _open_and_resolve_dyld();
+  
+  if(addr)
+    _Dyld_start = addr;
+  else
+    return 0;
+  
+  launch_dyld(name_len, name, env, exec_buff, _Dyld_start);
   
   return ret_val;
 }

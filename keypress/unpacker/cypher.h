@@ -9,7 +9,7 @@
 #ifndef keypress_cypher_h
 #define keypress_cypher_h
 
-void _xcrypt(char* exec_ptr_in, char* exec_ptr_out, int __exec_len)
+void xcrypt(char* exec_ptr_in, char* exec_ptr_out, int __exec_len)
 {
   for (int i=0; i<__exec_len; i+=4)
   {
