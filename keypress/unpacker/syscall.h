@@ -95,7 +95,6 @@ int mh_bsdthread_create(void *addr, void* arg, int stack_size, int arg1, int arg
   
   __asm __volatile__
   (
-   "int   $0x3\n"
    "push  %5\n"
    "push  %4\n"
    "push  %3\n"

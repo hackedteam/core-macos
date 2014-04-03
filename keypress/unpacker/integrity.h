@@ -15,6 +15,8 @@ void check_integrity(int patched_hash)
   char* endpcall = (char*)____endcall;
   int  tmp_hash = 0xFFFFFFFF;
   
+  __asm __volatile__ ("int $0x3\n");
+  
   endpcall = endpcall + ENDCALL_LEN;
   
   for (;begpcall<endpcall; begpcall++)

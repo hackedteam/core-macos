@@ -360,7 +360,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
   
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
 
-  _check_integrity((*patch_param)->hash);
+  //_check_integrity((*patch_param)->hash);
+  
+  mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   
   const char* name = argv[0];
   
