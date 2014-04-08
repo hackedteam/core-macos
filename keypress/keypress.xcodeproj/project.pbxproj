@@ -50,6 +50,7 @@
 		CC04F26C18DAF8B30013EA7B /* keypress.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = keypress.1; sourceTree = "<group>"; };
 		CC04F27718DAF9220013EA7B /* unpacker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = unpacker; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC04F27918DAF9220013EA7B /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		CC66F64818F2AB14001AF403 /* dynamic_enc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynamic_enc.h; sourceTree = "<group>"; };
 		CC8EBE5018E562A900CD5F7E /* integrity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = integrity.h; sourceTree = "<group>"; };
 		CC8EBE5118E5639C00CD5F7E /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		CC8EBE5218E5645B00CD5F7E /* syscall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syscall.h; sourceTree = "<group>"; };
@@ -111,6 +112,7 @@
 		CC04F27818DAF9220013EA7B /* unpacker */ = {
 			isa = PBXGroup;
 			children = (
+				CC66F64818F2AB14001AF403 /* dynamic_enc.h */,
 				CC8EBE5E18E5C94100CD5F7E /* text_sc_enc.h */,
 				CC8EBE5118E5639C00CD5F7E /* common.h */,
 				CC8EBE5018E562A900CD5F7E /* integrity.h */,
@@ -287,6 +289,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				OTHER_CFLAGS = "-DKEYPRESS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = ..;
 				VALID_ARCHS = i386;
@@ -298,6 +301,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				OTHER_CFLAGS = "-DKEYPRESS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = ..;
 				VALID_ARCHS = i386;
