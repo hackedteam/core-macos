@@ -28,6 +28,14 @@
 #include "macho.h"
 #endif
 
+// simmetric functions used by unpacker
+#include "common.h"
+#include "cypher.h"
+#include "integrity.h"
+#include "text_sc_enc.h"
+#include "dynamic_enc.h"
+//
+
 #define LC_SEG_TYPE_TEXT    1
 #define LC_SEG_TYPE_DATA    2
 #define LC_CMDS_NUM         3
@@ -105,72 +113,6 @@ setup_lc_xthd_header(__int32_t addr)
   return &thcmd;
 }
 
-int _xencrypt(char *buff, int size)
-{
-  int i = 0;
-  char *ptr = buff;
-  
-  for (i=0; i<size; i+=4)
-  {
-    int *iptr = (int*)ptr;
-    *iptr ^= 0x12345678;
-    ptr += 4;
-  }
-  
-  return i;
-}
-
-int calc_integrity(char* buff, int len)
-{
-  char  tmp_hash = 0xFF;
-  char* begpcall = buff;
-  
-  for (int i=0; i<len; i++, begpcall++)
-  {
-    tmp_hash ^= *begpcall;
-  }
-  
-  return tmp_hash;
-}
-
-#define DF_FRAME_OFFSET 0xc
-
-int _ddencrypt(char *end, char *begin)
-{
-  int i = 0;
-  
-  begin += DF_FRAME_OFFSET;
-  
-  int len = end - begin;
-  
-  for (i=0; i<len; i++) {
-    *begin++ ^= 0xE1;
-  }
-  
-  return 1;
-}
-
-void enc_unpacker_text_section(char* buff_in, int payload_len)
-{
-  for (int i = 0; i<payload_len; i++)
-  {
-    buff_in[i] ^= 0xf4;
-  }
-}
-
-typedef struct _in_param {
-  uint32_t    hash;
-  uint32_t    check_integrity_offset;
-  uint32_t    strlen_offset;
-  uint32_t    mh_mmap_offset;
-  uint32_t    xcrypt_offset;
-  uint32_t    open_and_resolve_dyld_offset;
-  uint32_t    BEGIN_ENC_TEXT_offset;
-  uint32_t    END_ENC_TEXT_offset;
-  uint32_t    macho_len;
-  unsigned char   macho[1]; // macho payload enc buff
-} in_param;
-
 #define MAX_LEN 8192
 #define MIN_LEN 1024
 
@@ -205,7 +147,7 @@ void setup_unpacker_param(in_param* out_param, int payload_len, char* _unpacker_
   out_param->strlen_offset           = _ENDCALL_ADDR - _STRLEN_ADDR;
   //out_param->mh_mmap_offset        = _ENDCALL_ADDR - _MH_MMAP_ADDR;
   out_param->mh_mmap_offset          = _ENDCALL_ADDR - _DMH_MMAP;
-  out_param->xcrypt_offset           = _ENDCALL_ADDR - _XCRPYT_ADDR;
+  out_param->crypt_macho_offset           = _ENDCALL_ADDR - _XCRPYT_ADDR;
   out_param->open_and_resolve_dyld_offset  = _ENDCALL_ADDR - _OPEN_AND_RESOLVE_ADDR;
   out_param->BEGIN_ENC_TEXT_offset         = _ENDCALL_ADDR - _BEGIN_ENC_TEXT;
   out_param->END_ENC_TEXT_offset           = _ENDCALL_ADDR - _END_ENC_TEXT;
@@ -247,7 +189,7 @@ void encrypt_dynamic_func(char* _unpacker_buff)
 {
   uint32_t d_enc_begin = _DMH_MMAP_ENC_X1 - _MAIN_ADDR;
   uint32_t d_enc_end   = _DMH_MMAP_END    - _MAIN_ADDR;
-  _ddencrypt(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
+  _dynamic_enc(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
 }
 
 void encrypt_unpacker_func(char* _unpacker_buff)
@@ -301,7 +243,7 @@ int main(int argc, const char * argv[])
   printf("\treading %d bytes from %s\n\ttry to encrypt payload...\n",
          payload_len, file_in);
   
-  payload_len = _xencrypt(payload_buff, payload_len);
+  crypt_text(payload_buff, payload_buff, payload_len);
 
   
 #ifndef _WIN32

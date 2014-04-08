@@ -9,25 +9,10 @@
 #ifndef keypress_syscall_h
 #define keypress_syscall_h
 
-#define DF_FRAME_OFFSET 0x0C
+#include "dynamic_enc.h"
 
 void dmh_mmap_end();
 void dmh_mmap_enc_1();
-
-__attribute__((__stdcall__)) int _ddecrypt(char *end, char *begin)
-{
-  int i = 0;
-  
-  begin += DF_FRAME_OFFSET;
-  
-  int len = end - begin;
-  
-  for (i=0; i<len; i++) {
-    *begin++ ^= 0xE1;
-  }
-  
-  return 1;
-}
 
 void* _dmh_mmap(void *addr, size_t len, int prot, int flags, int filedes, int offset)
 {
@@ -42,7 +27,7 @@ void* _dmh_mmap(void *addr, size_t len, int prot, int flags, int filedes, int of
    "dmh_mmap_enc_1:\n"
     "movl   %0, %%eax\n"
     "push   %%eax\n"
-    "call   __ddecrypt\n"
+    "call   __dynamic_enc\n"
     "test   %%eax, %%eax\n"
    : 
    : "m" (dmh_mmap_end_ptr)

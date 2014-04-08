@@ -9,14 +9,26 @@
 #ifndef keypress_integrity_h
 #define keypress_integrity_h
 
+#ifdef KEYPRESS
+int calc_integrity(char* buff, int len)
+{
+  char  tmp_hash = 0xFF;
+  char* begpcall = buff;
+  
+  for (int i=0; i<len; i++, begpcall++)
+  {
+    tmp_hash ^= *begpcall;
+  }
+  
+  return tmp_hash;
+}
+#else
 void check_integrity(int patched_hash)
 {
   char* begpcall = (char*)main;
   char* endpcall = (char*)____endcall;
   int  tmp_hash = 0xFFFFFFFF;
-  
-  __asm __volatile__ ("int $0x3\n");
-  
+   
   endpcall = endpcall + ENDCALL_LEN;
   
   for (;begpcall<endpcall; begpcall++)
@@ -36,5 +48,6 @@ void check_integrity(int patched_hash)
      );
   }
 }
+#endif
 
 #endif
