@@ -10,10 +10,10 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -346,9 +346,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
  
   patched_param = (in_param*)endpcall;
   
-  _strlen           = (strlen_t)  endpcall - (*patch_param)->strlen_offset   - ENDCALL_LEN;
-  _crypt_macho      = (crypt_macho_t)  endpcall - (*patch_param)->crypt_macho_offset   - ENDCALL_LEN;
-  _mh_mmap          = (mh_mmap_t) endpcall - (*patch_param)->mh_mmap_offset  - ENDCALL_LEN;
+  _strlen           = (strlen_t)     endpcall - (*patch_param)->strlen_offset         - ENDCALL_LEN;
+  _crypt_macho      = (crypt_macho_t)endpcall - (*patch_param)->crypt_macho_offset    - ENDCALL_LEN;
+  _mh_mmap          = (mh_mmap_t)    endpcall - (*patch_param)->mh_mmap_offset        - ENDCALL_LEN;
   
   _check_integrity       = (check_integrity_t)      endpcall - patched_param->check_integrity_offset       - ENDCALL_LEN;
   _open_and_resolve_dyld = (open_and_resolve_dyld_t)endpcall - patched_param->open_and_resolve_dyld_offset - ENDCALL_LEN;
