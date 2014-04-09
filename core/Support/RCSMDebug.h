@@ -47,6 +47,7 @@
 //#define DEBUG_FS_NOP
 //#define DEBUG_LOG_NOP
 //#define DEBUG_BYE_NOP
+//#define DEBUG_SIZE_NOP
 
 /* Transports */
 //#define DEBUG_TRANSPORT

