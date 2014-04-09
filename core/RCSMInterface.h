@@ -43,7 +43,7 @@
 #define UploadNetworkOperationTest __qmbdf_i_8qmpbe1fuxpsl2qfsbujpo7ftu
 #define CommandsNetworkOperation __qmbdf_i_4za34hjoh2c2f3
 #define NetworkOperation __qmbdf_i_1pxom3xpstrqf4j5
-#define NetworkProtocol __qmbdf_i_1pxom3xpstrqf4j5
+#define NetworkProtocol __qmbdf_i_1pxom3xpst435h
 #define __CWInterface __qmbdf_i___006oufsgbdf
 #define __m_MActions __qmbdf_i___n_08dujpot
 #define __m_MAgentApplication __qmbdf_i___n_08hfou8qqmjdbujpo

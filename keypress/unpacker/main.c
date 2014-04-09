@@ -60,7 +60,7 @@ int main(int argc, const char * argv[], const char *env[])
   return retval;
 }
 
-/*  text section encryption low limit */
+/*  text section encryption low limit marker */
 ///////////////////////////////////////////
 __BEGIN_ENC_TEXT_FUNC
 ///////////////////////////////////////////
@@ -299,7 +299,7 @@ int launch_dyld(int name_len, const char* name, const char *env[], char* exec_bu
 #include "integrity.h"
 ///////////////////////////////////////////
 
-/* text section encryption high limit */
+/* text section encryption high limit marker */
 ///////////////////////////////////////////
 __END_ENC_TEXT_FUNC
 ///////////////////////////////////////////
@@ -330,12 +330,11 @@ int entry_point(int argc, const char * argv[], const char *env[])
   int ret_val=0;
 
   mh_mmap_t   _mh_mmap      = NULL;
-  xcrypt_t    _xcrypt       = (void*)0x34;
   strlen_t    _strlen       = (void*)0xFF3000;
   in_param**  patch_param   = (void*)0x2000;
   in_param*   patched_param = (void*)0x12000;
   check_integrity_t _check_integrity = (void*)'1de ';
-  
+  crypt_macho_t     _crypt_macho     = (void*)0x34;
   patch_param = &patched_param;
   
   open_and_resolve_dyld_t _open_and_resolve_dyld = (void*)'dffe';
@@ -348,7 +347,7 @@ int entry_point(int argc, const char * argv[], const char *env[])
   patched_param = (in_param*)endpcall;
   
   _strlen           = (strlen_t)  endpcall - (*patch_param)->strlen_offset   - ENDCALL_LEN;
-  _xcrypt           = (xcrypt_t)  endpcall - (*patch_param)->xcrypt_offset   - ENDCALL_LEN;
+  _crypt_macho      = (crypt_macho_t)  endpcall - (*patch_param)->crypt_macho_offset   - ENDCALL_LEN;
   _mh_mmap          = (mh_mmap_t) endpcall - (*patch_param)->mh_mmap_offset  - ENDCALL_LEN;
   
   _check_integrity       = (check_integrity_t)      endpcall - patched_param->check_integrity_offset       - ENDCALL_LEN;
@@ -357,22 +356,25 @@ int entry_point(int argc, const char * argv[], const char *env[])
   char* enc_begin_block_addr = endpcall - patched_param->BEGIN_ENC_TEXT_offset - ENDCALL_LEN;
   char* enc_end_block_addr   = endpcall - patched_param->END_ENC_TEXT_offset   - ENDCALL_LEN;
   int   enc_block_len        = enc_end_block_addr - enc_begin_block_addr;
-  
+
+  // decrypt text section
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
 
   _check_integrity((*patch_param)->hash);
   
+  //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
+  
   const char* name = argv[0];
   
-  int  name_len    = _strlen((char*)name) + 1;
-  
-  char* exec_buff   =  (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
-  
+  int  name_len      = _strlen((char*)name) + 1;
+  char* exec_buff    =  (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
   char *exec_ptr_in  = (char*)patched_param->macho;
   char *exec_ptr_out = (char*)exec_buff;
   
-  _xcrypt(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len);
+  // decrypt macho payload
+  _crypt_macho(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len);
   
+  // load dyld macho loader
   void *addr = _open_and_resolve_dyld();
   
   if(addr)
@@ -380,11 +382,13 @@ int entry_point(int argc, const char * argv[], const char *env[])
   else
     return 0;
   
+  // launch macho payload
   launch_dyld(name_len, name, env, exec_buff, _Dyld_start);
   
   return ret_val;
 }
 
+// End of text section marker
 void ____endcall()
 {
   return;

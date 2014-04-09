@@ -9,7 +9,9 @@
 #ifndef keypress_text_sc_enc_h
 #define keypress_text_sc_enc_h
 
+#ifndef KEYPRESS
 static inline __attribute__((always_inline))
+#endif
 void enc_unpacker_text_section(char* buff_in, int nbyte)
 {
   for (int i = 0; i<nbyte; i++)
