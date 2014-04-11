@@ -18,6 +18,8 @@ void* _dmh_mmap(void *addr, size_t len, int prot, int flags, int filedes, int of
 {
   void* dmh_mmap_end_ptr = dmh_mmap_end;
   
+  dynamic_enc_t dyn_enc = (void*)DYNAMIC_ENC;
+  
   /////////////////////////////////
   // decryptin code block
   /////////////////////////////////
@@ -27,10 +29,10 @@ void* _dmh_mmap(void *addr, size_t len, int prot, int flags, int filedes, int of
    "dmh_mmap_enc_1:\n"
     "movl   %0, %%eax\n"
     "push   %%eax\n"
-    "call   __dynamic_enc\n"
+    "call   %1\n"
     "test   %%eax, %%eax\n"
    : 
-   : "m" (dmh_mmap_end_ptr)
+   : "m" (dmh_mmap_end_ptr), "m" (dyn_enc)
    : "ebx", "eax"
    );
   

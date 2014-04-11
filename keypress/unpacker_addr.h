@@ -1,7 +1,7 @@
 //
 // keypress - unpacker_addr.h
 // base function pointer
-// automatically rebuilding date: Mon Apr  7 11:54:11 CEST 2014
+// automatically rebuilding date: Fri Apr 11 15:37:29 CEST 2014
 //
 #define _ENDCALL_ADDR (uint32_t)0x00013fb0
 #define _STRLEN_ADDR (uint32_t)0x00013330
@@ -13,6 +13,6 @@
 #define _ENTRYPOINT_ADDR (uint32_t)0x00013d80
 #define _BEGIN_ENC_TEXT (uint32_t)0x000132f0
 #define _END_ENC_TEXT (uint32_t)0x00013d40
-#define _DMH_MMAP_ENC_X1 (uint32_t)0x00013437
+#define _DMH_MMAP_ENC_X1 (uint32_t)0x00013440
 #define _DMH_MMAP_END (uint32_t)0x000134a0
 #define _DMH_MMAP (uint32_t)0x000133f0
