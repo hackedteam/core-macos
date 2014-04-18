@@ -13,11 +13,12 @@
 #define CRYPT_V1
 
 uint32_t  gKey_len = 32;
-uint8_t   gKey[] = {1,1,1,1,1,1,1,1,
-                    2,2,2,2,2,2,2,2,
-                    3,3,3,3,3,3,3,3,
-                    4,4,4,4,4,4,4,4
+uint8_t   gKey[] = { 1,  2,  3,  4,  5,  6,  7,  8,
+                    21, 22, 23, 24, 25, 26, 27, 28,
+                    31, 32, 33, 34, 35, 36, 37, 38,
+                    41, 42, 43, 44, 45, 46, 47, 48
                     };
+
 #ifdef  CRYPT_V1
 void crypt_payload_v1(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uint8_t* tKey);
 #define CRYPT_PAYLOAD crypt_payload_v1

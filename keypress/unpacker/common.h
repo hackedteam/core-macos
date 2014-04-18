@@ -48,6 +48,8 @@ typedef struct _in_param {
   uint32_t    mh_mmap_offset;
   uint32_t    crypt_payload_offset;
   uint32_t    open_and_resolve_dyld_offset;
+  uint32_t    sys_mmap_offset;
+  uint32_t    sigtramp_offset;
   uint32_t    BEGIN_ENC_TEXT_offset;
   uint32_t    END_ENC_TEXT_offset;
   uint32_t    macho_len;
