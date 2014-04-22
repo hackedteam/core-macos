@@ -256,7 +256,7 @@ int main(int argc, const char * argv[])
   char* file_in  = (char*)argv[1];
   char* file_out = (char*)argv[2];
   
-  FILE *fd_out  = fopen(file_out, "wb");
+  FILE *fd_out  = fopen((const char*)file_out, "wb");
   
   if (fd_out == 0)
   {
@@ -323,7 +323,7 @@ int main(int argc, const char * argv[])
   
   st->cmdsize += sizeof(struct section);
   
-  int vmsize_len = __text_len + mh->sizeofcmds;
+  int vmsize_len = __text_len + mh->sizeofcmds + sizeof(struct mach_header);
   int vmsize_pad_len = ((vmsize_len/4096)+1)*4096 - vmsize_len;
   st->vmsize = st->filesize = vmsize_len + vmsize_pad_len + HEADER_PAD_LEN;
  
