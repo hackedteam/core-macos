@@ -10,7 +10,7 @@
 #define keypress_cypher_h
 
 // payload, dynamic_enc version 1
-#define CRYPT_V1
+#define CRYPT_V2
 
 uint32_t  gKey_len = 32;
 uint8_t   gKey[] = { 1,  2,  3,  4,  5,  6,  7,  8,
@@ -19,21 +19,25 @@ uint8_t   gKey[] = { 1,  2,  3,  4,  5,  6,  7,  8,
                     41, 42, 43, 44, 45, 46, 47, 48
                     };
 
-#ifdef  CRYPT_V1
-void crypt_payload_v1(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uint8_t* tKey);
-#define CRYPT_PAYLOAD crypt_payload_v1
-#elif   CRYPT_V2
-void crypt_payload_v2(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uint8_t* tKey);
-#define CRYPT_PAYLOAD crypt_payload_v2
-#endif
-
 #define SWAPC(X, Y) do { char p; p = *(uint8_t*)X; *(uint8_t*)X = *(uint8_t*)Y; *(uint8_t*)Y = p; } while(0)
+
+#ifdef CRYPT_V1
+
+void crypt_payload_v1(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey);
+#define CRYPT_PAYLOAD crypt_payload_v1
+
+#elif defined(CRYPT_V2)
+
+void crypt_payload_v2(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey);
+#define CRYPT_PAYLOAD crypt_payload_v2
+
+#endif
 
 #ifndef KEYPRESS /* decrypt [used by unpacker] */
 
 #ifdef  CRYPT_V1
 
-void crypt_payload_v1(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uint8_t* tKey)
+void crypt_payload_v1(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey)
 {
   for (int i=0; i<__exec_len; i+=4)
   {
@@ -45,7 +49,7 @@ void crypt_payload_v1(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uin
   }
 }
 
-#elif   CRYPT_V2
+#elif defined(CRYPT_V2)
 
 void crypt_payload_v2(uint8_t *data, uint8_t *data_out, int32_t len, uint8_t* tKey)
 {
@@ -110,7 +114,7 @@ void crypt_payload_v2(uint8_t *data, uint8_t *data_out, int32_t len, uint8_t* tK
 
 #else /* encrypt [used by kpress] */
 
-void crypt_payload_v1(char* exec_ptr_in, char* exec_ptr_out, int __exec_len, uint8_t* tKey)
+void crypt_payload_v1(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey)
 {
   for (int i=0; i<__exec_len; i+=4)
   {
