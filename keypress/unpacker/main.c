@@ -60,7 +60,7 @@ int main(int argc, const char * argv[], const char *env[])
   return retval;
 }
 
-/*  text section encryption low limit marker */
+/*  text section encryption begin limit marker */
 ///////////////////////////////////////////
 __BEGIN_ENC_TEXT_FUNC
 ///////////////////////////////////////////
@@ -89,8 +89,8 @@ ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
   return __mh_read(fildes, buf, nbyte);
 }
 
-//#define VMADDR_OFFSET 0x11100000
-#define VMADDR_OFFSET 0x00000
+#define VMADDR_OFFSET 0x11100000
+//#define VMADDR_OFFSET 0x00000
 
 /*
  *  resolve_dyld_start(int fd, void *mheader_ptr)
@@ -299,7 +299,7 @@ int launch_dyld(int name_len, const char* name, const char *env[], char* exec_bu
 #include "integrity.h"
 ///////////////////////////////////////////
 
-/* text section encryption high limit marker */
+/* text section encryption end limit marker */
 ///////////////////////////////////////////
 __END_ENC_TEXT_FUNC
 ///////////////////////////////////////////
