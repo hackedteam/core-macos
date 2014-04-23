@@ -37,7 +37,7 @@ return i; \
 typedef void  (*____endcall_t)();
 typedef int   (*strlen_t)(char *);
 typedef void  (*check_integrity_t)(int);
-typedef void  (*crypt_macho_t)(char*, char*, int);
+typedef void  (*crypt_payload_t)(char*, char*, int, uint8_t*);
 typedef void* (*open_and_resolve_dyld_t)(void);
 typedef void* (*mh_mmap_t)(void *, size_t, int, int, int, int);
 
@@ -46,11 +46,14 @@ typedef struct _in_param {
   uint32_t    check_integrity_offset;
   uint32_t    strlen_offset;
   uint32_t    mh_mmap_offset;
-  uint32_t    crypt_macho_offset;
+  uint32_t    crypt_payload_offset;
   uint32_t    open_and_resolve_dyld_offset;
+  uint32_t    sys_mmap_offset;
+  uint32_t    sigtramp_offset;
   uint32_t    BEGIN_ENC_TEXT_offset;
   uint32_t    END_ENC_TEXT_offset;
   uint32_t    macho_len;
+  uint8_t     crKey[32];
   unsigned char   macho[1];
 } in_param;
 

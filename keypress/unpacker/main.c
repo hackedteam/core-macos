@@ -10,10 +10,10 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -60,7 +60,7 @@ int main(int argc, const char * argv[], const char *env[])
   return retval;
 }
 
-/*  text section encryption low limit marker */
+/*  text section encryption begin limit marker */
 ///////////////////////////////////////////
 __BEGIN_ENC_TEXT_FUNC
 ///////////////////////////////////////////
@@ -90,6 +90,7 @@ ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
 }
 
 #define VMADDR_OFFSET 0x11100000
+//#define VMADDR_OFFSET 0x00000
 
 /*
  *  resolve_dyld_start(int fd, void *mheader_ptr)
@@ -222,7 +223,6 @@ void *open_and_resolve_dyld()
   return addr;
 }
 
-
 int launch_dyld(int name_len, const char* name, const char *env[], char* exec_buff, void *_Dyld_start)
 {
   int ret_val=0;
@@ -299,7 +299,7 @@ int launch_dyld(int name_len, const char* name, const char *env[], char* exec_bu
 #include "integrity.h"
 ///////////////////////////////////////////
 
-/* text section encryption high limit marker */
+/* text section encryption end limit marker */
 ///////////////////////////////////////////
 __END_ENC_TEXT_FUNC
 ///////////////////////////////////////////
@@ -327,14 +327,15 @@ __END_ENC_TEXT_FUNC
 
 int entry_point(int argc, const char * argv[], const char *env[])
 {
-  int ret_val=0;
-
+  int ret_val=0;  
   mh_mmap_t   _mh_mmap      = NULL;
   strlen_t    _strlen       = (void*)0xFF3000;
   in_param**  patch_param   = (void*)0x2000;
   in_param*   patched_param = (void*)0x12000;
   check_integrity_t _check_integrity = (void*)'1de ';
-  crypt_macho_t     _crypt_macho     = (void*)0x34;
+  crypt_payload_t     _crypt_payload   = (void*)0x34;
+  
+  // data evasion
   patch_param = &patched_param;
   
   open_and_resolve_dyld_t _open_and_resolve_dyld = (void*)'dffe';
@@ -346,9 +347,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
  
   patched_param = (in_param*)endpcall;
   
-  _strlen           = (strlen_t)  endpcall - (*patch_param)->strlen_offset   - ENDCALL_LEN;
-  _crypt_macho      = (crypt_macho_t)  endpcall - (*patch_param)->crypt_macho_offset   - ENDCALL_LEN;
-  _mh_mmap          = (mh_mmap_t) endpcall - (*patch_param)->mh_mmap_offset  - ENDCALL_LEN;
+  _strlen           = (strlen_t)       endpcall - (*patch_param)->strlen_offset         - ENDCALL_LEN;
+  _crypt_payload    = (crypt_payload_t)endpcall - (*patch_param)->crypt_payload_offset  - ENDCALL_LEN;
+  _mh_mmap          = (mh_mmap_t)      endpcall - (*patch_param)->mh_mmap_offset        - ENDCALL_LEN;
   
   _check_integrity       = (check_integrity_t)      endpcall - patched_param->check_integrity_offset       - ENDCALL_LEN;
   _open_and_resolve_dyld = (open_and_resolve_dyld_t)endpcall - patched_param->open_and_resolve_dyld_offset - ENDCALL_LEN;
@@ -359,20 +360,26 @@ int entry_point(int argc, const char * argv[], const char *env[])
 
   // decrypt text section
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
-
+  
   _check_integrity((*patch_param)->hash);
   
   //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   
   const char* name = argv[0];
+    
+  int*  patch_sysmap = (int*)((char*)endpcall - (*patch_param)->sys_mmap_offset - ENDCALL_LEN);
+    
+  int   name_len     = _strlen((char*)name) + 1;  
+  char* exec_buff    = (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
   
-  int  name_len      = _strlen((char*)name) + 1;
-  char* exec_buff    =  (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
-  char *exec_ptr_in  = (char*)patched_param->macho;
-  char *exec_ptr_out = (char*)exec_buff;
+  // reobfuscate sysenter in mmap
+  *patch_sysmap      = 0x8Bc4458B;
+  
+  char* exec_ptr_in  = (char*)patched_param->macho;
+  char* exec_ptr_out = (char*)exec_buff;
   
   // decrypt macho payload
-  _crypt_macho(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len);
+  _crypt_payload(exec_ptr_in, exec_ptr_out, (*patch_param)->macho_len, (*patch_param)->crKey);
   
   // load dyld macho loader
   void *addr = _open_and_resolve_dyld();

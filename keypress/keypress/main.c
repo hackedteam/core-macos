@@ -41,6 +41,7 @@
 #define LC_CMDS_NUM         3
 #define LC_TEXT_VMADDR      0x1800000
 #define UNPACKER_IMAGE_BASE 0x12000
+#define HEADER_PAD_LEN      0x3000
 
 void usage()
 {
@@ -69,7 +70,7 @@ struct segment_command* setup_lc_seg_data_header()
   
   mh_segm.cmd       = LC_SEGMENT;
   mh_segm.cmdsize   = sizeof(struct segment_command);
-  strcpy(mh_segm.segname, "___DATA");
+  strcpy(mh_segm.segname, "__DATA");
   mh_segm.vmaddr    = 0;  // to adjust;
   mh_segm.vmsize    = 0;  // to adjust
   mh_segm.fileoff   = 0;
@@ -88,17 +89,36 @@ struct segment_command* setup_lc_seg_text_header()
   
   mh_segm.cmd       = LC_SEGMENT;
   mh_segm.cmdsize   = sizeof(struct segment_command);
-  strcpy(mh_segm.segname, "___TEXT");
+  strcpy(mh_segm.segname, "__TEXT");
   mh_segm.vmaddr    = LC_TEXT_VMADDR;
   mh_segm.vmsize    = 0;  // to adjust
   mh_segm.fileoff   = 0;
   mh_segm.filesize  = 0;  // to adjust
   mh_segm.maxprot   = VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE;
   mh_segm.initprot  = VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE;
-  mh_segm.nsects    = 0;
+  mh_segm.nsects    = 1;
   mh_segm.flags     = 0;
   
   return &mh_segm;
+}
+
+struct section* setup_lc_sec_text_header()
+{
+  static struct section mh_sec;
+
+  strcpy(mh_sec.segname,  "__TEXT");
+  strcpy(mh_sec.sectname, "__text");
+  mh_sec.addr      = 0; // to adjust
+  mh_sec.size      = 0; // to adjust
+  mh_sec.offset    = 0; // to adjust
+  mh_sec.align     = 4;
+  mh_sec.reloff    = 0;
+  mh_sec.nreloc    = 0;
+  mh_sec.reserved1 = 0;
+  mh_sec.reserved2 = 0;
+  mh_sec.flags     = 0x80000400;
+  
+  return &mh_sec;
 }
 
 x86_thread_state32_t *
@@ -145,13 +165,15 @@ void setup_unpacker_param(in_param* out_param, int payload_len, char* _unpacker_
   out_param->hash = calc_integrity(_unpacker_buff, _unpacker_len);
   out_param->check_integrity_offset  = _ENDCALL_ADDR - _CHECK_INTEGRITY_ADDR;
   out_param->strlen_offset           = _ENDCALL_ADDR - _STRLEN_ADDR;
-  //out_param->mh_mmap_offset        = _ENDCALL_ADDR - _MH_MMAP_ADDR;
-  out_param->mh_mmap_offset          = _ENDCALL_ADDR - _DMH_MMAP;
-  out_param->crypt_macho_offset           = _ENDCALL_ADDR - _XCRPYT_ADDR;
-  out_param->open_and_resolve_dyld_offset  = _ENDCALL_ADDR - _OPEN_AND_RESOLVE_ADDR;
-  out_param->BEGIN_ENC_TEXT_offset         = _ENDCALL_ADDR - _BEGIN_ENC_TEXT;
-  out_param->END_ENC_TEXT_offset           = _ENDCALL_ADDR - _END_ENC_TEXT;
+  out_param->mh_mmap_offset          = _ENDCALL_ADDR - _DMH_MMAP_V1_ADDR; // using dmh_mmap_v1
+  out_param->crypt_payload_offset          = _ENDCALL_ADDR - _CRPYT_PAYLOAD_ADDR;
+  out_param->open_and_resolve_dyld_offset  = _ENDCALL_ADDR  - _OPEN_AND_RESOLVE_ADDR;
+  out_param->sys_mmap_offset               = _ENDCALL_ADDR  - _SYS_MMAP_ADDR;
+  out_param->sigtramp_offset               = 0x00A1FFFF; /* _ENDCALL_ADDR  - _SIGTRAMP */
+  out_param->BEGIN_ENC_TEXT_offset         = _ENDCALL_ADDR  - _BEGIN_ENC_TEXT_ADDR;
+  out_param->END_ENC_TEXT_offset           = _ENDCALL_ADDR  - _END_ENC_TEXT_ADDR;
   out_param->macho_len                     = payload_len;
+  memcpy(out_param->crKey, gKey, gKey_len);
 }
 
 char* open_payload(char* file_in, int *payload_len)
@@ -187,15 +209,26 @@ char* open_payload(char* file_in, int *payload_len)
 
 void encrypt_dynamic_func(char* _unpacker_buff)
 {
-  uint32_t d_enc_begin = _DMH_MMAP_ENC_X1 - _MAIN_ADDR;
-  uint32_t d_enc_end   = _DMH_MMAP_END    - _MAIN_ADDR;
-  _dynamic_enc(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
+  // obfuscate sysenter call of _dmh_mmap_v1
+  uint32_t  d_obf_sys_map_off   = _SYS_MMAP_ADDR - _MAIN_ADDR;
+  uint32_t* d_obf_sys_map_addr  = (uint32_t*)(_unpacker_buff+d_obf_sys_map_off);
+  *d_obf_sys_map_addr = 0x8Bc4458B;
+  
+  // obfuscate sysenter call of _dmh_mmap_v2
+//  #define _SYS_MMAP_V2_BC_OFF 0xe  
+//  d_obf_sys_map_off   = _SYS_MMAP_V2 - _MAIN_ADDR;
+//  d_obf_sys_map_addr  = (uint32_t*)(_unpacker_buff+d_obf_sys_map_off + _SYS_MMAP_V2_BC_OFF);
+//  *d_obf_sys_map_addr = 0x8Bc4458B;
+  
+  uint32_t d_enc_begin = _DMH_MMAP_ENC_V1_ADDR - _MAIN_ADDR;
+  uint32_t d_enc_end   = _DMH_MMAP_END_V1_ADDR - _MAIN_ADDR;
+  DYNAMIC_ENC(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
 }
 
 void encrypt_unpacker_func(char* _unpacker_buff)
 {
-  int begin_enc_off = _BEGIN_ENC_TEXT - _MAIN_ADDR;
-  int enc_len       = _END_ENC_TEXT   - _BEGIN_ENC_TEXT;
+  int begin_enc_off = _BEGIN_ENC_TEXT_ADDR - _MAIN_ADDR;
+  int enc_len       = _END_ENC_TEXT_ADDR   - _BEGIN_ENC_TEXT_ADDR;
   enc_unpacker_text_section(_unpacker_buff + begin_enc_off, enc_len);
 }
 
@@ -208,6 +241,7 @@ int main(int argc, const char * argv[])
 {
   int payload_len = 0;
   in_param  out_param;
+  struct section*         sc;
   struct load_command     lc;
   struct mach_header*     mh = NULL;
   struct segment_command* st = NULL;
@@ -222,7 +256,7 @@ int main(int argc, const char * argv[])
   char* file_in  = (char*)argv[1];
   char* file_out = (char*)argv[2];
   
-  FILE *fd_out  = fopen(file_out, "wb");
+  FILE *fd_out  = fopen((const char*)file_out, "wb");
   
   if (fd_out == 0)
   {
@@ -243,7 +277,7 @@ int main(int argc, const char * argv[])
   printf("\treading %d bytes from %s\n\ttry to encrypt payload...\n",
          payload_len, file_in);
   
-  crypt_text(payload_buff, payload_buff, payload_len);
+  CRYPT_PAYLOAD((uint8_t*)payload_buff, (uint8_t*)payload_buff, payload_len, gKey);
 
   
 #ifndef _WIN32
@@ -255,8 +289,10 @@ int main(int argc, const char * argv[])
   /////////////////////////////////////////////
   // _text section len = unpacker code +
   //                     in_param + macho paylod
-  
+    
   int __text_len = _unpacker_len + sizeof(in_param) + payload_len;
+  //int _text_pad_len = ((__text_len/4096)+1)*4096 - __text_len;
+  //__text_len += _text_pad_len;
   
   /////////////////////////////////////////////
   // setup load command
@@ -265,7 +301,8 @@ int main(int argc, const char * argv[])
   st = setup_lc_seg_text_header();
   sd = setup_lc_seg_data_header();
   th = setup_lc_xthd_header(LC_TEXT_VMADDR);
-    
+  sc = setup_lc_sec_text_header();
+  
   lc.cmd      = LC_UNIXTHREAD;
   lc.cmdsize  = sizeof(x86_thread_state32_t) + sizeof(int) + sizeof(int) + sizeof(lc);
   int flavor  = x86_THREAD_STATE32;
@@ -275,33 +312,46 @@ int main(int argc, const char * argv[])
   // adjust param
   
   mh->sizeofcmds = sizeof(struct segment_command) +
+                   sizeof(struct section)         +
                    sizeof(struct segment_command) +
                    sizeof(lc) +
                    sizeof(flavor) +
                    sizeof(count) +
                    sizeof(x86_thread_state32_t);
+
+  th->__eip = LC_TEXT_VMADDR + mh->sizeofcmds + sizeof(struct mach_header) + HEADER_PAD_LEN;
   
-  th->__eip = LC_TEXT_VMADDR + mh->sizeofcmds + sizeof(struct mach_header);
+  st->cmdsize += sizeof(struct section);
   
-  st->vmsize = st->filesize = __text_len + mh->sizeofcmds;
+  int vmsize_len = __text_len + mh->sizeofcmds + sizeof(struct mach_header);
+  int vmsize_pad_len = ((vmsize_len/4096)+1)*4096 - vmsize_len;
+  st->vmsize = st->filesize = vmsize_len + vmsize_pad_len + HEADER_PAD_LEN;
  
   int sd_len;
   unsigned char* sd_buff = rand_buff(&sd_len);
   
   sd->vmsize = sd->filesize = sd_len;
-  sd->vmaddr = st->vmaddr + st->vmsize + 0x1000;
+  sd->vmaddr = st->vmaddr + st->vmsize + 0x1000 + HEADER_PAD_LEN;
+  
+  sc->addr    = th->__eip;
+  sc->size    = _unpacker_len + sizeof(in_param);
+  sc->offset  = mh->sizeofcmds + sizeof(struct mach_header) + HEADER_PAD_LEN;
   
   /////////////////////////////////////////////
   // Save Load Command section
 
   save_packed_macho(mh,  sizeof(struct mach_header), fd_out);
   save_packed_macho(st,  sizeof(struct segment_command), fd_out);
+  save_packed_macho(sc,  sizeof(struct section), fd_out);
   save_packed_macho(sd,  sizeof(struct segment_command), fd_out);
   save_packed_macho(&lc, sizeof(lc), fd_out);
   
   save_packed_macho(&flavor, sizeof(int), fd_out);
   save_packed_macho(&count,  sizeof(int), fd_out);
   save_packed_macho(th,      sizeof(x86_thread_state32_t), fd_out);
+  
+  char *headerpad = (char*)calloc(HEADER_PAD_LEN, 1);
+  save_packed_macho(headerpad, HEADER_PAD_LEN, fd_out);
   
   /////////////////////////////////////////////
   // encrypt and save unpacker text section
@@ -314,13 +364,15 @@ int main(int argc, const char * argv[])
   // save unpacker input param
   
   setup_unpacker_param(&out_param, payload_len, _unpacker_buff, _unpacker_len);
-
   save_packed_macho(&out_param, sizeof(in_param) - sizeof(uint32_t), fd_out);
   
   /////////////////////////////////////////////
   // save enc payload 
   
   save_packed_macho(payload_buff, payload_len, fd_out);
+  
+  char *vmsize_pad = (char*)calloc(vmsize_pad_len, 1);
+  save_packed_macho(vmsize_pad, vmsize_pad_len, fd_out);
   
   /////////////////////////////////////////////
   // save bogus data section

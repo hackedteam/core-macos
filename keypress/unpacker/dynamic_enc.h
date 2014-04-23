@@ -10,8 +10,11 @@
 #define keypress_dynamic_enc_h
 
 #define DF_FRAME_OFFSET 0x0C
+#define DYNAMIC_ENC     _dynamic_enc_v1
 
-__attribute__((__stdcall__)) int _dynamic_enc(char *end, char *begin)
+typedef int (*dynamic_enc_t)(char*, char*);
+
+__attribute__((__stdcall__)) int _dynamic_enc_v1(char *end, char *begin)
 {
   int i = 0;
   
