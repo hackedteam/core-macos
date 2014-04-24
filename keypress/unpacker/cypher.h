@@ -24,11 +24,13 @@ uint8_t   gKey[] = { 1,  2,  3,  4,  5,  6,  7,  8,
 #ifdef CRYPT_V1
 
 void crypt_payload_v1(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey);
+
 #define CRYPT_PAYLOAD crypt_payload_v1
 
 #elif defined(CRYPT_V2)
 
 void crypt_payload_v2(uint8_t* exec_ptr_in, uint8_t* exec_ptr_out, int __exec_len, uint8_t* tKey);
+
 #define CRYPT_PAYLOAD crypt_payload_v2
 
 #endif
