@@ -211,7 +211,7 @@ void encrypt_dynamic_func(char* _unpacker_buff)
 {
   // obfuscate sysenter call of _dmh_mmap_v1
   uint32_t  d_obf_sys_map_off   = _SYS_MMAP_ADDR - _MAIN_ADDR;
-  uint32_t* d_obf_sys_map_addr  = (uint32_t*)(_unpacker_buff+d_obf_sys_map_off);
+  uint32_t* d_obf_sys_map_addr  = (uint32_t*)(_unpacker_buff + d_obf_sys_map_off);
   *d_obf_sys_map_addr = 0x8Bc4458B;
   
   // obfuscate sysenter call of _dmh_mmap_v2
@@ -291,8 +291,6 @@ int main(int argc, const char * argv[])
   //                     in_param + macho paylod
     
   int __text_len = _unpacker_len + sizeof(in_param) + payload_len;
-  //int _text_pad_len = ((__text_len/4096)+1)*4096 - __text_len;
-  //__text_len += _text_pad_len;
   
   /////////////////////////////////////////////
   // setup load command
@@ -311,13 +309,13 @@ int main(int argc, const char * argv[])
   /////////////////////////////////////////////
   // adjust param
   
-  mh->sizeofcmds = sizeof(struct segment_command) +
-                   sizeof(struct section)         +
-                   sizeof(struct segment_command) +
-                   sizeof(lc) +
-                   sizeof(flavor) +
-                   sizeof(count) +
-                   sizeof(x86_thread_state32_t);
+  mh->sizeofcmds = sizeof(struct segment_command) +   /* __TEXT segment */
+                   sizeof(struct section)         +   /* __text section */
+                   sizeof(struct segment_command) +   /* __DATA segment */
+                   sizeof(lc) +                       /* lc struct      */
+                   sizeof(flavor) +                   /* flavor for LC_X */
+                   sizeof(count) +                    /* count  for LC_X */
+                   sizeof(x86_thread_state32_t);      /* LC_X Thread     */
 
   th->__eip = LC_TEXT_VMADDR + mh->sizeofcmds + sizeof(struct mach_header) + HEADER_PAD_LEN;
   
