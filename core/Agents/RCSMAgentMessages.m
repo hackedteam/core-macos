@@ -14,7 +14,7 @@
  * The agent captures Apple Mail only.
  * The agent uses Apple Scripting Bridge to interact with Apple Mail.
  * When the agent starts, a first scan is immediately performed; 
- * then, a new scan is performed every 10 minutes.
+ * then, a new scan is performed every 15 minutes.
  * Apple mail running status is countinously checked because ASB starts
  * the application to fullfill the requests.
  */
@@ -214,35 +214,29 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                         // verify markup
                         NSString *obj=[markup objectForKey:key];
                         if(obj == nil)
+                        {
+                            // there's no markup
+                            [markup setObject:msgId forKey:key];
+                            [self _writeLog:rawMail andSender:sender];
+                        }
+                        else
+                        {
+                            // there's a markup, if same msg id we do nothing
+                            // else, id has been recycled and we have to log
+                            // the msg and save markup
+                            if ([obj isEqualToString:msgId] == NO)
                             {
-#ifdef DEBUG_MESSAGES
-                                infoLog(@"no msgId in markup");
-#endif
-                                // there's no markup
                                 [markup setObject:msgId forKey:key];
                                 [self _writeLog:rawMail andSender:sender];
-                            }
-                            else
-                            {
-#ifdef DEBUG_MESSAGES
-                                infoLog(@"msgId in markup");
-#endif
-                                // there's a markup, if same msg id we do nothing
-                                // else, id has been recycled and we have to log
-                                // the msg and save markup
-                                if ([obj isEqualToString:msgId] == NO)
-                                {
-                                    [markup setObject:msgId forKey:key];
-                                    [self _writeLog:rawMail andSender:sender];
-                                } // else we do nothing
-                            }
+                            } // else we do nothing
                         }
                     }
                 }
             }
         }
-        // write markup to file at the end of the big loop
-        [self _setMarkup];
+    }
+    // write markup to file at the end of the big loop
+    [self _setMarkup];
 }
 
 @end
@@ -387,7 +381,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     
     if (gOSMajor == 10 && gOSMinor >= 7)
     {
-        timer = [NSTimer scheduledTimerWithTimeInterval:/*30.0*/ 600 target:self selector:@selector(_getMail) userInfo:nil repeats:YES];
+        timer = [NSTimer scheduledTimerWithTimeInterval: 900 target:self selector:@selector(_getMail) userInfo:nil repeats:YES];
         [[NSRunLoop currentRunLoop] addTimer: timer forMode: NSRunLoopCommonModes];
     }
     else

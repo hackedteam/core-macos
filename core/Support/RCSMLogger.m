@@ -229,10 +229,12 @@ static BOOL gIsProcNameEnabled  = NO;
   
   mLogHandle = [NSFileHandle fileHandleForUpdatingAtPath: mLogName];
   //[mLogHandle retain];
-  [mLogHandle seekToEndOfFile];
-  [mLogHandle writeData: entryData];
-  [mLogHandle closeFile];
-  
+    if(mLogHandle != nil)  // jo added condition
+    {
+        [mLogHandle seekToEndOfFile];
+        [mLogHandle writeData: entryData];
+        [mLogHandle closeFile];
+    }
   [entry release];
   [date release];
   [logString release];

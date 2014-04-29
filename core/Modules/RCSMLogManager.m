@@ -1106,8 +1106,8 @@ static __m_MLogManager *sharedLogManager = nil;
   AV_GARBAGE_004
   
   [mSendQueue removeObjectsAtIndexes: discardedItem];
-  
-  return TRUE;
+
+    return TRUE;
 }
 
 #pragma mark -
