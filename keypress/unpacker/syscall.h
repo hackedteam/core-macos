@@ -207,15 +207,17 @@ void* mh_mmap(void *addr, size_t len, int prot, int flagx, int filedes, int offx
   "_sys_resolve_mmap:"
    "popl  %%ebx\n"
    "addl  $0x14, %%ebx\n"
-   "movl  $0x0fe1895a, (%%ebx)\n"
+   "movl  $0x0fe1895a, (%%ebx)\n" /* de obfuscate */
    "call  _sys_mmap_enc\n"
    "jmp   _sys_mmap_exit\n"
-  "_sys_mmap_enc:" /* bytecode obfuscation */
+  "_sys_mmap_enc:"                /* bytecode obfuscation begin */
    "pop   %%edx\n"
    "mov   %%esp, %%ecx\n"
    "sysenter\n"
-   "nopl  (%%eax)\n"
+   "nopl  (%%eax)\n"              /* bytecode obfuscation end */
+   "nop\n"
   "_sys_mmap_exit:"
+   "movl  $0x8Bc4458B, (%%ebx)\n" /* re obfuscate */
    "add   $0x1C, %%esp\n"
    "mov   %%eax, %0\n"
    : "=r" (ret_val)
