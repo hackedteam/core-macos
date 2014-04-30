@@ -51,7 +51,7 @@ int main(int argc, const char * argv[], const char *env[])
    "push  %%edx\n"
    
    "movl  %1, %%eax\n"
-   "call  %%eax\n"
+   "call  *%%eax\n"
    : "=r" (retval)
    : "m" (__mainp)
    : "eax", "edx"
@@ -74,6 +74,80 @@ int __strlen(char *string)
   return i;
 }
 
+void mh_mach_absolute_time(long long *ret)
+{
+  __asm __volatile__
+  (
+   "nop\n"
+   "nop\n"
+   "nop\n"
+   "nop\n"
+	 "mach_abs_time_repeat:"
+	 "mov   0xFFFF0068, %%esi\n"
+	 "test  %%esi, %%esi\n"
+	 "jz    mach_abs_time_repeat\n"
+	 "lfence\n"
+	 "rdtsc\n"
+	 "lfence\n"
+	 "sub   0xFFFF0050, %%eax\n"
+	 "sbb   0xFFFF0054, %%edx\n"
+	 "mov   0xFFFF005C, %%ecx\n"
+	 "shld  %%cl, %%eax, %%edx\n"
+	 "shl   %%cl, %%eax\n"
+	 "mov   0xFFFF0058, %%ecx\n"
+	 "mov   %%edx, %%ebx\n"
+	 "mul   %%ecx\n"
+	 "mov   %%ebx, %%eax\n"
+	 "mov   %%edx, %%ebx\n"
+	 "mul   %%ecx\n"
+	 "add   %%ebx, %%eax\n"
+	 "adc   $0x0, %%edx\n"
+	 "add   0xFFFF0060, %%eax\n"
+	 "adc   0xFFFF0064, %%edx\n"
+	 "cmp   0xFFFF0068, %%esi\n"
+	 "jnz   mach_abs_time_repeat\n"
+	 "mov   %0, %%esi\n"
+	 "mov   %%eax, (%%esi)\n"
+	 "mov    %%edx, 0x4(%%esi)\n"
+   : "=m" (ret)
+   :
+   : "ebx", "ecx", "esp", "esi"
+   );
+  return;
+}
+
+int mh_rand(unsigned int next)
+{
+  unsigned int v0;
+  unsigned int v1;
+  unsigned int v2;
+  int v3;
+  int v4;
+  
+  v0 = next;
+  if ( !next )
+  {
+    next = 123459876;
+    v0 = 123459876;
+  }
+  v1 = -2836 * (v0 / 0x1F31D);
+  v2 = 16807 * (v0 % 0x1F31D);
+  v3 = v2 + v1 + 0x7FFFFFFF;
+  v4 = v1 + v2;
+  if ( v4 < 0 )
+    v4 = v3;
+  
+  return v4 & 0x7FFFFFFF;
+}
+
+int get_rand_pageaddr()
+{
+  long long end ;
+  mh_mach_absolute_time(&end);
+  int r = (((mh_rand((unsigned int)end)%(MAX_PAGE_ADDR-MIN_PAGE_ADDR))+MIN_PAGE_ADDR)/4096)*4096;
+  return r;
+}
+
 /*
  *  WEAK IMPLEMENTATION:
  *
@@ -88,9 +162,6 @@ ssize_t mh_read(int fildes, void *buf, size_t nbyte, int offset)
   mh_lseek(fildes, offset, SEEK_SET);
   return __mh_read(fildes, buf, nbyte);
 }
-
-#define VMADDR_OFFSET 0x11100000
-//#define VMADDR_OFFSET 0x00000
 
 /*
  *  resolve_dyld_start(int fd, void *mheader_ptr)
@@ -108,7 +179,7 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
   char* mh_buffer = (char*)mh_mmap(NULL, 0x1000, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
   void* ret_address       = NULL;
   void* mh_vmaddress      = NULL;
-  
+  void* mh_vmadd_off      = (void*)VMADDR_OFFSET;
   struct fat_arch*        ft_arch;
   struct fat_header*      ft_header;
   struct mach_header*     mh_header;
@@ -117,6 +188,10 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
   
   ft_header = (struct fat_header*)mheader_ptr;
   ft_arch   = (struct fat_arch*)(mheader_ptr + sizeof(struct fat_header));
+  
+  // randomize entry point of dyld
+  mh_vmadd_off += get_rand_pageaddr();
+  mh_vmadd_off += get_rand_pageaddr();
   
   if (ft_header->magic != MH_MAGIC)
   {
@@ -154,7 +229,7 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
       if (mh_lcomm->cmd == LC_SEGMENT)
       {
         mh_segm = (struct segment_command*)curr_lc_cmd;
-        mh_vmaddress = (void*)mh_segm->vmaddr - VMADDR_OFFSET;
+        mh_vmaddress = (void*)((void*)mh_segm->vmaddr - mh_vmadd_off);
         
         if (mh_vmaddress >  NULL)
         {
@@ -191,7 +266,7 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
       else if (mh_lcomm->cmd == LC_UNIXTHREAD)
       {
         struct x86_thread_state* thcmd = (struct x86_thread_state*)mh_lcomm;
-        ret_address = (void*)thcmd->uts.ts32.__ds - VMADDR_OFFSET;
+        ret_address = (void*)thcmd->uts.ts32.__ds - (int)mh_vmadd_off;
         break;
       }
       
@@ -272,7 +347,7 @@ int launch_dyld(int name_len, const char* name, const char *env[], char* exec_bu
    "push  $0x1\n"
    "push  %4\n"
    "mov   %5, %%eax\n"
-   "jmp   %%eax\n"
+   "jmp   *%%eax\n"
    : "=r" (ret_val)
    : "r" (name_len), "r" (name), "m" (env), "m" (exec_buff), "m" (_Dyld_start)
    : "eax", "ecx", "esp"
@@ -366,15 +441,17 @@ int entry_point(int argc, const char * argv[], const char *env[])
   //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   
   const char* name = argv[0];
-    
-  int*  patch_sysmap = (int*)((char*)endpcall - (*patch_param)->sys_mmap_offset - ENDCALL_LEN);
-    
-  int   name_len     = _strlen((char*)name) + 1;  
-  char* exec_buff    = (char*)_mh_mmap((void*)0x1000, patched_param->macho_len, 7, 0x1012, -1, 0);
   
-  // reobfuscate sysenter in mmap
-  *patch_sysmap      = 0x8Bc4458B;
+  // randomize unpacked payload base address
+  int payload_addr1 = get_rand_pageaddr();
+  int payload_addr2 = get_rand_pageaddr();
   
+  payload_addr1 +=payload_addr2;
+  
+  int   name_len     = _strlen((char*)name) + 1;
+
+  char* exec_buff    = (char*)_mh_mmap((void*)payload_addr1, patched_param->macho_len, 7, 0x1012, -1, 0);
+
   char* exec_ptr_in  = (char*)patched_param->macho;
   char* exec_ptr_out = (char*)exec_buff;
   
