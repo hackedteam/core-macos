@@ -220,8 +220,14 @@ void encrypt_dynamic_func(char* _unpacker_buff)
 //  d_obf_sys_map_addr  = (uint32_t*)(_unpacker_buff+d_obf_sys_map_off + _SYS_MMAP_V2_BC_OFF);
 //  *d_obf_sys_map_addr = 0x8Bc4458B;
   
+  // intial encryption of: _dmh_mmap_v1
   uint32_t d_enc_begin = _DMH_MMAP_ENC_V1_ADDR - _MAIN_ADDR;
   uint32_t d_enc_end   = _DMH_MMAP_END_V1_ADDR - _MAIN_ADDR;
+  DYNAMIC_ENC(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
+  
+  // intial encryption of: _dmh_open_v1
+  d_enc_begin = _DMH_OPEN_ENC_V1_ADDR - _MAIN_ADDR;
+  d_enc_end   = _DMH_OPEN_END_V1_ADDR - _MAIN_ADDR;
   DYNAMIC_ENC(_unpacker_buff + d_enc_end, _unpacker_buff + d_enc_begin);
 }
 
