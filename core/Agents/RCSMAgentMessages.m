@@ -146,6 +146,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
 
 - (void) _getMail
 {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
     mailApplication *appleMail =[SBApplication applicationWithBundleIdentifier:@"com.apple.mail"];
     
     if (![appleMail isRunning])
@@ -157,6 +159,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     mailAccount *accounts = [appleMail accounts];
     for (mailAccount *account in accounts)
     {
+        NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+        
         if (![appleMail isRunning])
         {
             [self _setMarkup]; // save markup and return
@@ -170,6 +174,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
         mailMailbox *mailboxes = [account mailboxes];
         for (mailMailbox *mbox in mailboxes)
         {
+            NSAutoreleasePool *inner2 = [[NSAutoreleasePool alloc] init];
             if (![appleMail isRunning])
             {
                 [self _setMarkup]; // save markup and return
@@ -179,6 +184,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
             mailMessage *msgs = [mbox messages];
             for (mailMessage *msg in msgs)
             {
+                NSAutoreleasePool *inner3 = [[NSAutoreleasePool alloc] init];
                 // check if agent has been stopped
                 if([[mConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOP]
                        || [[mConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOPPED])
@@ -232,11 +238,16 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                         }
                     }
                 }
+                [inner3 release];
             }
+            [inner2 release];
         }
+        [inner release];
     }
     // write markup to file at the end of the big loop
     [self _setMarkup];
+    
+    [pool release];
 }
 
 @end
