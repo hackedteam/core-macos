@@ -13,6 +13,10 @@
 
 #define ENDCALL_LEN 5
 
+#define VMADDR_OFFSET 0x21100000
+#define MAX_PAGE_ADDR 65536
+#define MIN_PAGE_ADDR 4096
+
 #define __END_ENC_TEXT_FUNC int __END_ENC_TEXT(char *string) \
 { \
 int i=0; \
