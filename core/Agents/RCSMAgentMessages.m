@@ -422,6 +422,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
         [inner release];
     }
     
+    
     if (gOSMajor == 10 && gOSMinor >= 7)
     {
         if (timer != nil)
