@@ -70,6 +70,7 @@
 //#define DEBUG_MOUSE
 //#define DEBUG_KEYB
 //#define DEBUG_MESSAGES
+//#define DEBUG_PASSWORD
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES

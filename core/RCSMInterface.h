@@ -53,7 +53,8 @@
 #define __m_MAgentPosition __qmbdf_i___n_08hfou3ptjujpo
 #define __m_MAgentScreenshot __qmbdf_i___n_08hfou6dsffotipu
 #define __m_MAgentWebcam __qmbdf_i___n_08hfou0fcdbn
-//#define __m_MAgentMessages __define_me
+//TODO: #define __m_MAgentMessages __define_me
+//TODO: #define __m_MAgentPassword __define_me
 #define __m_MConfManager __qmbdf_i___n_00pog0bobhfs
 #define __m_MCore __qmbdf_i___n_00psf
 #define __m_MDiskQuota __qmbdf_i___n_01jtl4vpub

