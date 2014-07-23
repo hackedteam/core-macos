@@ -333,9 +333,9 @@ int mh_mprotect(void *addr, size_t len, int prot)
   return ret_val;
 }
 
-void* dmh_sysctl_v1(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp, size_t newlen)
+int dmh_sysctl_v1(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp, size_t newlen)
 {
-  void* ret_val = 0;
+  int ret_val = 0;
   
   __asm __volatile__
   (
@@ -397,7 +397,7 @@ int mh_sysctlbyname(char *name, void *oldp, size_t *oldlenp, void *newp, size_t 
   i_name[1] = 3;
   i_name[0] = 0;
   ii_namelen = 56;
-  namelen = __strlen(name);
+  namelen = (size_t)__strlen(name);
   result = dmh_sysctl_v1(i_name, 2u, ii_name, &ii_namelen, (void *)name, namelen);
   if ( result >= 0 )
   {
@@ -416,6 +416,170 @@ int mh_sysctlbyname(char *name, void *oldp, size_t *oldlenp, void *newp, size_t 
   return result;
 }
 
+void ___memcpy(char* dst, char* src, int size)
+{
+  char* _dst = (char*)dst;
+  char* _src = (char*)src;
+  for (int i=0; i<size; i++)
+  {
+    _dst[i]=_src[i];
+  }
+}
+
+static inline __attribute__((always_inline)) int randomize_addresses_v1()
+{
+  char* osstr;
+  char* osrelease;
+  int ret_addr = 0;
+  size_t osstrsize = 0x100;
+  
+  // Anti checkguard: make room for key table on stack
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osrelease)
+   :
+   : "eax"
+   );
+  
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osstr)
+   :
+   : "eax"
+   );
+  
+  for(int i=0; i<0x100; i++)
+    osstr[i]=0;
+  
+  int o1 = 'nrek', o2 = 'rso.', o3 = 'aele', o4 = 'es';
+  
+  ___memcpy(osrelease,   (char*)&o1, 4);
+  ___memcpy(osrelease+4, (char*)&o2, 4);
+  ___memcpy(osrelease+8, (char*)&o3, 4);
+  ___memcpy(osrelease+12,(char*)&o4, 4);
+  
+  int ret = mh_sysctlbyname(osrelease, osstr, &osstrsize, NULL, 0);
+
+  if (ret == 0 && osstrsize != 0)
+  {
+    if (osstr[0] == '1' && osstr[1] == '0')
+      ret_addr = 0;
+    else
+      ret_addr = 1;
+  }
+  
+  __asm __volatile__
+  (
+   "addl  $0x200, %%esp\n"
+   :
+   :
+   : "eax"
+   );
+  
+  return ret_addr;
+}
+
+static inline __attribute__((always_inline))int randomize_addresses_v2()
+{
+  char* osstr;
+  char* osrelease;
+  size_t osstrsize = 0x100;
+  
+  // Anti checkguard: make room for key table on stack
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osrelease)
+   :
+   : "eax"
+   );
+  
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osstr)
+   :
+   : "eax"
+   );
+  
+  for(int i=0; i<0x100; i++)
+    osstr[i]=0;
+  
+  int o1 = 'nrek', o2 = 'rso.', o3 = 'aele', o4 = 'es';
+  
+  ___memcpy(osrelease,   (char*)&o1, 4);
+  ___memcpy(osrelease+4, (char*)&o2, 4);
+  ___memcpy(osrelease+8, (char*)&o3, 4);
+  ___memcpy(osrelease+12,(char*)&o4, 4);
+  
+  int ret = mh_sysctlbyname(osrelease, osstr, &osstrsize, NULL, 0);
+  
+  if (ret == 0 && osstrsize != 0)
+  {
+    if (osstr[0] == '1' && osstr[1] == '0')
+      return 0;
+    else
+      return 1;
+  }
+  else
+    return 0;
+}
+
+static inline __attribute__((always_inline))int randomize_addresses_v3()
+{
+  char* osstr;
+  char* osrelease;
+  size_t osstrsize = 0x100;
+  
+  // Anti checkguard: make room for key table on stack
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osrelease)
+   :
+   : "eax"
+   );
+  
+  __asm __volatile__
+  (
+   "subl  $0x100, %%esp\n"
+   "movl  %%esp , %0\n"
+   : "=r" (osstr)
+   :
+   : "eax"
+   );
+  
+  for(int i=0; i<0x100; i++)
+    osstr[i]=0;
+  
+  int o1 = 'nrek', o2 = 'rso.', o3 = 'aele', o4 = 'es';
+  
+  ___memcpy(osrelease,   (char*)&o1, 4);
+  ___memcpy(osrelease+4, (char*)&o2, 4);
+  ___memcpy(osrelease+8, (char*)&o3, 4);
+  ___memcpy(osrelease+12,(char*)&o4, 4);
+  
+  int ret = mh_sysctlbyname(osrelease, osstr, &osstrsize, NULL, 0);
+  
+  if (ret == 0 && osstrsize != 0)
+  {
+    if (osstr[0] == '1' && osstr[1] == '0')
+      return 0;
+    else
+      return 1;
+  }
+  else
+    return 0;
+}
+
+// Not used syscalls
 #ifdef SYS_INCLUDED
 
 __attribute__ ((visibility ("default"))) void sys_mmap_v2();
@@ -566,7 +730,7 @@ int mh_sigaction(int sig, struct sigaction * act, struct sigaction *oact, void* 
   
   __asm __volatile__
   (
-   "int $0x3\n"
+   // "int $0x3\n"
    "push  %3\n"
    "push  %2\n"
    "push  %1\n"
