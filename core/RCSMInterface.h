@@ -117,7 +117,7 @@
 #define kMySKConversationManager "mySKConversationManager"
 #define kMySKUserInteraction "mySKUserInteraction"
 #define kMySMProcessController "mySMProcessController"
-#define kMySkypeChat "mySkypeChat"
+#define kMySkypeChat "__m_mySkypeChat"
 
 #endif
 

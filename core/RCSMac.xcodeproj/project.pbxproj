@@ -430,6 +430,7 @@
 		C52FEF4616FC5A0E00DCBF2A /* __m_Social_Facebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Facebook.h; path = Agents/Social/Facebook/__m_Social_Facebook.h; sourceTree = "<group>"; };
 		C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Facebook.m; path = Agents/Social/Facebook/__m_Social_Facebook.m; sourceTree = "<group>"; };
 		C52FEF4916FC5A5A00DCBF2A /* social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = social.h; path = Agents/Social/social.h; sourceTree = "<group>"; };
+		CC181F301937537400503469 /* RCSMClassDumpSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMClassDumpSupport.m; path = InputManager/RCSMClassDumpSupport.m; sourceTree = "<group>"; };
 		CC27338016B7D1D100DCD0E4 /* CommandsNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandsNetworkOperation.h; path = Modules/CommandsNetworkOperation.h; sourceTree = "<group>"; };
 		CC27338116B7D1D100DCD0E4 /* CommandsNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CommandsNetworkOperation.m; path = Modules/CommandsNetworkOperation.m; sourceTree = "<group>"; };
 		CC31C80E16DCB5FB00922BD6 /* RCSMTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMTask.h; path = Support/RCSMTask.h; sourceTree = "<group>"; };
@@ -734,7 +735,6 @@
 			children = (
 				1A8F5A3A10AC6D7100403FAE /* Voip */,
 				1A68E0EA0FB884F500B17F60 /* IM */,
-				1A68E1510FB9A3B800B17F60 /* RCSMAgentInputLogger.h */,
 				1A68E1520FB9A3B800B17F60 /* RCSMAgentInputLogger.m */,
 				1A68E36E0FBB1F3200B17F60 /* RCSMAgentURL.h */,
 				1A68E36F0FBB1F3200B17F60 /* RCSMAgentURL.m */,
@@ -925,6 +925,8 @@
 			children = (
 				1A68E0230FB87A9300B17F60 /* Agents */,
 				1A319EE30FA9B6410079B060 /* RCSMInputManager.h */,
+				1A68E1510FB9A3B800B17F60 /* RCSMAgentInputLogger.h */,
+				CC181F301937537400503469 /* RCSMClassDumpSupport.m */,
 				1A319EE40FA9B6410079B060 /* RCSMInputManager.m */,
 				1A319F080FA9C8260079B060 /* Info */,
 			);
@@ -1653,10 +1655,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001796;
-				RCS_TEST_PASSWD = symbian123;
+				RCS_TEST_INSTANCE = RCS_0000001793;
+				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = osxtest;
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = i386;
 			};
@@ -1693,10 +1695,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000001796;
-				RCS_TEST_PASSWD = symbian123;
+				RCS_TEST_INSTANCE = RCS_0000001793;
+				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = osxtest;
 				SDKROOT = macosx10.9;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
