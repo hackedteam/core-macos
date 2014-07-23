@@ -29,6 +29,7 @@
 #define MODULES_CHAT_KEY      @"chat"
 #define MODULES_MOUSE_KEY     @"mouse"
 #define MODULES_CALL_KEY      @"call"
+#define MODULES_PASSWD_KEY    @"password"
 #define MODULES_STATUS_KEY    @"enabled"
 
 #define MODULE_DEVICE_APPLIST_KEY   @"applicationlist"
@@ -130,6 +131,7 @@
 #define ACTION_MODULE_SNAPSHOT  @"screenshot"
 #define ACTION_MODULE_MOUSE     @"mouse"
 #define ACTION_MODULE_FILE      @"file"
+#define ACTION_MODULE_PASSWD    @"password"
 
 // iOS
 #define ACTION_SYNC_GPRS_KEY  @"cell"

