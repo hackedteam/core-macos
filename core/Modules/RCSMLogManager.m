@@ -489,7 +489,7 @@ static __m_MLogManager *sharedLogManager = nil;
   AV_GARBAGE_002
   
 #ifdef DEBUG_LOG_MANAGER
-  infoLog(@"Creating log: %@", encryptedLogName);
+  infoLog(@"Creating log: %@ id [%d]", encryptedLogName, agentID);
   infoLog(@"anAgentHeader: %@", anAgentHeader);
 #endif
   

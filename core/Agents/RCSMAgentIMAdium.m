@@ -108,7 +108,7 @@ void logAdiumContacts(NSString *contact)
                           fromComponent: COMP_AGENT] == TRUE)
   {
 #ifdef DEBUG_IM_SKYPE
-    verboseLog(@"message: %@", loggedText);
+    //verboseLog(@"message: %@", loggedText);
 #endif
   }
   else
