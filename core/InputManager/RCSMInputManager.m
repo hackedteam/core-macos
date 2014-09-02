@@ -423,10 +423,32 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
   }
 }
 
+typedef struct {
+  NSInteger majorVersion;
+  NSInteger minorVersion;
+  NSInteger patchVersion;
+} MyOperatingSystemVersion;
+
 + (void)getSystemVersionMajor: (u_int *)major
                         minor: (u_int *)minor
                        bugFix: (u_int *)bugFix
 {
+  // Fix for Gestalt exception on yosemite
+  if ([[NSProcessInfo processInfo] respondsToSelector:@selector(operatingSystemVersion)])
+  {
+    MyOperatingSystemVersion version =
+    ((MyOperatingSystemVersion(*)(id, SEL))objc_msgSend_stret)([NSProcessInfo processInfo], @selector(operatingSystemVersion));
+    
+    *major = version.majorVersion; *minor = version.minorVersion; *bugFix = version.patchVersion;
+    
+    return;
+  }
+  else
+  {
+    *major = 10; *minor = 0; *bugFix = 0;
+  }
+  
+  /*
   OSErr err;
   SInt32 systemVersion, versionMajor, versionMinor, versionBugFix;
   
@@ -471,6 +493,7 @@ BOOL swizzleByAddingIMP (Class _class, SEL _original, IMP _newImplementation, SE
       if (bugFix)
         *bugFix = 0;
     }
+   */
 }
 
 + (BOOL)isACrsApp
