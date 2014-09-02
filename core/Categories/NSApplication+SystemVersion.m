@@ -16,19 +16,40 @@
 
 #import "RCSMAVGarbage.h"
 
+typedef struct {
+  NSInteger majorVersion;
+  NSInteger minorVersion;
+  NSInteger patchVersion;
+} MyOperatingSystemVersion;
+
 @implementation NSApplication (SystemVersion)
 
 - (void)getSystemVersionMajor: (u_int *)major
                         minor: (u_int *)minor
                        bugFix: (u_int *)bugFix
 {
-  OSErr err;
-  SInt32 systemVersion, versionMajor, versionMinor, versionBugFix;
+  // Fix for Gestalt exception on yosemite
+  if ([[NSProcessInfo processInfo] respondsToSelector:@selector(operatingSystemVersion)])
+  {
+    MyOperatingSystemVersion version =
+      ((MyOperatingSystemVersion(*)(id, SEL))objc_msgSend_stret)([NSProcessInfo processInfo], @selector(operatingSystemVersion));
+    
+    *major = version.majorVersion; *minor = version.minorVersion; *bugFix = version.patchVersion;
   
+    return;
+  }
+  else
+  {
+    *major = 10; *minor = 0; *bugFix = 0;
+  }
+
+/*
   // AV evasion: only on release build
   AV_GARBAGE_000
-  
-  err = Gestalt(gestaltSystemVersion, &systemVersion);  
+  OSErr err;
+  SInt32 systemVersion, versionMajor, versionMinor, versionBugFix;
+ 
+  err = Gestalt(gestaltSystemVersion, &systemVersion);
   
   // AV evasion: only on release build
   AV_GARBAGE_001
@@ -125,6 +146,7 @@
       AV_GARBAGE_007
       
     }
+ */
 }
 
 @end
