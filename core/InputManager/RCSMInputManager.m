@@ -446,54 +446,52 @@ typedef struct {
   else
   {
     *major = 10; *minor = 0; *bugFix = 0;
-  }
-  
-  /*
-  OSErr err;
-  SInt32 systemVersion, versionMajor, versionMinor, versionBugFix;
-  
-  err = Gestalt(gestaltSystemVersion, &systemVersion);
-  if (err == noErr && systemVersion < 0x1040)
-    {
-      if (major)
-        *major = ((systemVersion & 0xF000) >> 12) * 10
-        + ((systemVersion & 0x0F00) >> 8);
-      if (minor)
-        *minor = (systemVersion & 0x00F0) >> 4;
-      if (bugFix)
-        *bugFix = (systemVersion & 0x000F);
-    }
-  else
-    {
-      err = Gestalt(gestaltSystemVersionMajor, &versionMajor);
-      err = Gestalt(gestaltSystemVersionMinor, &versionMinor);
-      err = Gestalt(gestaltSystemVersionBugFix, &versionBugFix);
-      
-      if (err == noErr)
-        {
-          if (major)
-            *major = versionMajor;
-          if (minor)
-            *minor = versionMinor;
-          if (bugFix)
-            *bugFix = versionBugFix;
-        }
-    }
-  
-  if (err != noErr)
-    {
-#ifdef DEBUG_INPUT_MANAGER
-      errorLog(@"%s - Unable to obtain system version: %ld", __FUNCTION__, (long)err);
-#endif
+
+    OSErr err;
+    SInt32 systemVersion, versionMajor, versionMinor, versionBugFix;
     
-      if (major)
-        *major = 10;
-      if (minor)
-        *minor = 0;
-      if (bugFix)
-        *bugFix = 0;
-    }
-   */
+    err = Gestalt(gestaltSystemVersion, &systemVersion);
+    if (err == noErr && systemVersion < 0x1040)
+      {
+        if (major)
+          *major = ((systemVersion & 0xF000) >> 12) * 10
+          + ((systemVersion & 0x0F00) >> 8);
+        if (minor)
+          *minor = (systemVersion & 0x00F0) >> 4;
+        if (bugFix)
+          *bugFix = (systemVersion & 0x000F);
+      }
+    else
+      {
+        err = Gestalt(gestaltSystemVersionMajor, &versionMajor);
+        err = Gestalt(gestaltSystemVersionMinor, &versionMinor);
+        err = Gestalt(gestaltSystemVersionBugFix, &versionBugFix);
+        
+        if (err == noErr)
+          {
+            if (major)
+              *major = versionMajor;
+            if (minor)
+              *minor = versionMinor;
+            if (bugFix)
+              *bugFix = versionBugFix;
+          }
+      }
+    
+    if (err != noErr)
+      {
+#ifdef DEBUG_INPUT_MANAGER
+        errorLog(@"%s - Unable to obtain system version: %ld", __FUNCTION__, (long)err);
+#endif
+      
+        if (major)
+          *major = 10;
+        if (minor)
+          *minor = 0;
+        if (bugFix)
+          *bugFix = 0;
+      }
+   }
 }
 
 + (BOOL)isACrsApp
@@ -1429,6 +1427,10 @@ typedef struct {
 
       Class className;
       Class classSource;
+      
+#ifdef DEBUG_INPUT_MANAGER
+      infoLog(@"Try to hook: %@", bundleIdentifier);
+#endif
       
       if ([bundleIdentifier isEqualToString: @"com.microsoft.Messenger"])
       {   

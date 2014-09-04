@@ -56,13 +56,8 @@ static NSLock *agentLock  = nil;
 
 BOOL isSkypeVersionSupported()
 {
-    NSString *plistPath = @"/Applications/Skype.app/Contents/Info.plist";
-    
-    // check if plist exists
-    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath])
-        return NO;
-
-    NSDictionary *Dictionary= [NSDictionary dictionaryWithContentsOfFile:plistPath];
+    NSDictionary *Dictionary = [[NSBundle mainBundle] infoDictionary];
+  
     NSString *actualVersion = [Dictionary objectForKey:@"CFBundleVersion"];
     NSString *maxVersion = @"7.0";
     
