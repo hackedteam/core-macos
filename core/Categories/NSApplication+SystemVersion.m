@@ -29,7 +29,34 @@ typedef struct {
                        bugFix: (u_int *)bugFix
 {
   // Fix for Gestalt exception on yosemite
-  if ([[NSProcessInfo processInfo] respondsToSelector:@selector(operatingSystemVersion)])
+  NSDictionary *Dictionary =
+  [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+  
+  if (Dictionary != nil)
+  {
+    NSString *actualVersion = [Dictionary objectForKey:@"ProductVersion"];
+    
+    if (actualVersion != nil)
+    {
+      NSString *currVer = nil;
+      NSArray *versionStrings = [actualVersion componentsSeparatedByString:@"."];
+      
+      int numVersions = [versionStrings count];
+      
+      currVer = [versionStrings objectAtIndex:0];
+      *major = atoi([currVer cStringUsingEncoding:NSUTF8StringEncoding]);
+      
+      currVer = [versionStrings objectAtIndex:1];
+      *minor = atoi([currVer cStringUsingEncoding:NSUTF8StringEncoding]);
+      
+      if (numVersions > 2)
+      {
+        currVer = [versionStrings objectAtIndex:2];
+        *bugFix = atoi([currVer cStringUsingEncoding:NSUTF8StringEncoding]);
+      }
+    }
+  }
+  else if ([[NSProcessInfo processInfo] respondsToSelector:@selector(operatingSystemVersion)])
   {
     MyOperatingSystemVersion version =
       ((MyOperatingSystemVersion(*)(id, SEL))objc_msgSend_stret)([NSProcessInfo processInfo], @selector(operatingSystemVersion));
@@ -40,6 +67,7 @@ typedef struct {
   }
   else
   {
+    
     *major = 10; *minor = 0; *bugFix = 0;
 
     // AV evasion: only on release build
