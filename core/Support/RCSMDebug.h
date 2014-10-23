@@ -72,6 +72,7 @@
 //#define DEBUG_MESSAGES
 //#define DEBUG_PASSWORD
 //#define DEBUG_MONEY
+//#define DEBUG_DEVICE
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES

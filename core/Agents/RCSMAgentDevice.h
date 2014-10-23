@@ -33,8 +33,12 @@
 - (void)start;
 - (BOOL)stop;
 - (BOOL)writeDeviceInfo: (NSData*)aInfo;
+- (BOOL)writeProfilerInfo: (NSData*)aInfo;
 - (NSData*)getSystemInfoWithType:(NSString*)aType;
+- (NSData*)getSystemProfilerInfo: (NSString*)aDataType;
+- (NSData*)parseXml: (NSData*)xmlData;
 - (BOOL)getDeviceInfo;
+- (BOOL)filterOut: (NSString*)aPath;
 
 
 @end

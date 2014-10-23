@@ -1568,7 +1568,11 @@ static NSLock *gSyncLock                  = nil;
         break;
       }
     case AGENT_DEVICE:
-      {       
+      {
+#ifdef DEBUG_TASK_MANAGER
+          infoLog(@"Starting Agent Device");
+#endif
+
         // AV evasion: only on release build
         AV_GARBAGE_001
         
@@ -2445,7 +2449,11 @@ static NSLock *gSyncLock                  = nil;
       break;
     }
     case AGENT_DEVICE:
-    {     
+    {
+#ifdef DEBUG_TASK_MANAGER
+        infoLog(@"Starting Agent Device");
+#endif
+
       // AV evasion: only on release build
       AV_GARBAGE_000
       
@@ -3163,7 +3171,11 @@ static NSLock *gSyncLock                  = nil;
           break;
         }
         case AGENT_DEVICE:
-        {          
+        {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Device");
+#endif
+
           // AV evasion: only on release build
           AV_GARBAGE_007
           
@@ -3952,7 +3964,11 @@ static NSLock *gSyncLock                  = nil;
                 break;
               }
             case AGENT_DEVICE:
-              {         
+              {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Starting Agent Device");
+#endif
+
                 // AV evasion: only on release build
                 AV_GARBAGE_002
                 
