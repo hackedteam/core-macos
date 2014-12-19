@@ -176,10 +176,10 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* RCSMMain.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		8D465C2E19E524A700A3CC99 /* RCSMAgentMoney.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D465C2D19E524A700A3CC99 /* RCSMAgentMoney.m */; };
-		8D65A16A1A2D0D05001FE86B /* RCSMAgentChat.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D65A1691A2D0D05001FE86B /* RCSMAgentChat.m */; };
 		8DA09FC2195C53390032959E /* RCSMAgentPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DA09FC1195C53390032959E /* RCSMAgentPassword.m */; };
 		8DC5BB7918EE92AF0014E263 /* SizeNetworkOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5BB7818EE92AF0014E263 /* SizeNetworkOperation.m */; };
+		8DCC84B81A4429C90005B68F /* RCSMAgentChat.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DCC84B71A4429C90005B68F /* RCSMAgentChat.m */; };
+		8DCC84BB1A4429DC0005B68F /* RCSMAgentMoney.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DCC84BA1A4429DC0005B68F /* RCSMAgentMoney.m */; };
 		C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */; };
 		C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4416FC59C900DCBF2A /* __m_Social.m */; };
 		C52FEF4816FC5A0E00DCBF2A /* __m_Social_Facebook.m in Sources */ = {isa = PBXBuildFile; fileRef = C52FEF4716FC5A0E00DCBF2A /* __m_Social_Facebook.m */; };
@@ -423,15 +423,15 @@
 		52D836241393916B00C18E70 /* libxpcomglue_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue_s.a; path = Support/Firefox/lib/libxpcomglue_s.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* RCSMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RCSMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8D465C2C19E524A700A3CC99 /* RCSMAgentMoney.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMAgentMoney.h; sourceTree = "<group>"; };
-		8D465C2D19E524A700A3CC99 /* RCSMAgentMoney.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMAgentMoney.m; sourceTree = "<group>"; };
 		8D64FDC518EC05EC0056C514 /* RCSNativeMail.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSNativeMail.h; sourceTree = "<group>"; };
-		8D65A1681A2D0CC8001FE86B /* RCSMAgentChat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCSMAgentChat.h; sourceTree = "<group>"; };
-		8D65A1691A2D0D05001FE86B /* RCSMAgentChat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCSMAgentChat.m; sourceTree = "<group>"; };
 		8DA09FC0195C53390032959E /* RCSMAgentPassword.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentPassword.h; path = Agents/RCSMAgentPassword.h; sourceTree = "<group>"; };
 		8DA09FC1195C53390032959E /* RCSMAgentPassword.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentPassword.m; path = Agents/RCSMAgentPassword.m; sourceTree = "<group>"; };
 		8DC5BB7718EE92AF0014E263 /* SizeNetworkOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SizeNetworkOperation.h; path = Modules/SizeNetworkOperation.h; sourceTree = "<group>"; };
 		8DC5BB7818EE92AF0014E263 /* SizeNetworkOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SizeNetworkOperation.m; path = Modules/SizeNetworkOperation.m; sourceTree = "<group>"; };
+		8DCC84B61A4429C90005B68F /* RCSMAgentChat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentChat.h; path = Agents/RCSMAgentChat.h; sourceTree = "<group>"; };
+		8DCC84B71A4429C90005B68F /* RCSMAgentChat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentChat.m; path = Agents/RCSMAgentChat.m; sourceTree = "<group>"; };
+		8DCC84B91A4429DC0005B68F /* RCSMAgentMoney.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCSMAgentMoney.h; path = Agents/RCSMAgentMoney.h; sourceTree = "<group>"; };
+		8DCC84BA1A4429DC0005B68F /* RCSMAgentMoney.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RCSMAgentMoney.m; path = Agents/RCSMAgentMoney.m; sourceTree = "<group>"; };
 		C52FEF3F16FC596200DCBF2A /* __m_Social_Module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social_Module.h; path = Agents/Social/__m_Social_Module.h; sourceTree = "<group>"; };
 		C52FEF4016FC596200DCBF2A /* __m_Social_Module.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = __m_Social_Module.m; path = Agents/Social/__m_Social_Module.m; sourceTree = "<group>"; };
 		C52FEF4316FC59C900DCBF2A /* __m_Social.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = __m_Social.h; path = Agents/Social/__m_Social.h; sourceTree = "<group>"; };
@@ -859,6 +859,10 @@
 		1AE6B5610F8E2574004736EA /* Agents */ = {
 			isa = PBXGroup;
 			children = (
+				8DCC84B91A4429DC0005B68F /* RCSMAgentMoney.h */,
+				8DCC84BA1A4429DC0005B68F /* RCSMAgentMoney.m */,
+				8DCC84B61A4429C90005B68F /* RCSMAgentChat.h */,
+				8DCC84B71A4429C90005B68F /* RCSMAgentChat.m */,
 				8D64FDC518EC05EC0056C514 /* RCSNativeMail.h */,
 				C52FEF3E16FC58F600DCBF2A /* Social */,
 				CCD43B5A18EC00AC005B2B67 /* RCSMAgentMessages.h */,
@@ -887,10 +891,6 @@
 				1A8CB94D132665D1005579F9 /* RCSMAgentMicrophone.m */,
 				8DA09FC0195C53390032959E /* RCSMAgentPassword.h */,
 				8DA09FC1195C53390032959E /* RCSMAgentPassword.m */,
-				8D465C2C19E524A700A3CC99 /* RCSMAgentMoney.h */,
-				8D465C2D19E524A700A3CC99 /* RCSMAgentMoney.m */,
-				8D65A1681A2D0CC8001FE86B /* RCSMAgentChat.h */,
-				8D65A1691A2D0D05001FE86B /* RCSMAgentChat.m */,
 			);
 			name = Agents;
 			sourceTree = "<group>";
@@ -1337,7 +1337,6 @@
 				1A33F8EC0FCC1EB000590FA1 /* RCSMEvents.m in Sources */,
 				8D11072D0486CEB800E47090 /* RCSMMain.m in Sources */,
 				1ABE7E7B0F7CE6ED00BC61B1 /* RCSMUtils.m in Sources */,
-				8D465C2E19E524A700A3CC99 /* RCSMAgentMoney.m in Sources */,
 				1AA1376C12F6FA7100E0CD52 /* NSMutableData+SHA1.m in Sources */,
 				1A4435230F8CA23E00CD910E /* NSMutableData+AES128.m in Sources */,
 				1A7FD34112F1841200361B0B /* NSData+SHA1.m in Sources */,
@@ -1385,15 +1384,16 @@
 				52B8504215146D4E00F0D72E /* RCSIJSonConfiguration.m in Sources */,
 				52B8504615146D4E00F0D72E /* SBJsonStreamParserAdapter.m in Sources */,
 				52B8504715146D4E00F0D72E /* SBJsonStreamParserState.m in Sources */,
+				8DCC84BB1A4429DC0005B68F /* RCSMAgentMoney.m in Sources */,
 				52B8504815146D4E00F0D72E /* SBJsonStreamWriter.m in Sources */,
 				52B8504915146D4E00F0D72E /* SBJsonStreamWriterAccumulator.m in Sources */,
 				52B8504A15146D4E00F0D72E /* SBJsonStreamWriterState.m in Sources */,
 				52B8504D15146D4E00F0D72E /* SBJsonWriter.m in Sources */,
 				52B8504B15146D4E00F0D72E /* SBJsonTokeniser.m in Sources */,
 				52B8504C15146D4E00F0D72E /* SBJsonUTF8Stream.m in Sources */,
-				8D65A16A1A2D0D05001FE86B /* RCSMAgentChat.m in Sources */,
 				CCFFD70615D8ED6E00131597 /* RCSMGlobals.m in Sources */,
 				CC27338216B7D1D100DCD0E4 /* CommandsNetworkOperation.m in Sources */,
+				8DCC84B81A4429C90005B68F /* RCSMAgentChat.m in Sources */,
 				CC31C81016DCB5FB00922BD6 /* RCSMTask.m in Sources */,
 				C52FEF4116FC596200DCBF2A /* __m_Social_Module.m in Sources */,
 				C52FEF4516FC59C900DCBF2A /* __m_Social.m in Sources */,
@@ -1676,7 +1676,7 @@
 				RCS_TEST_INSTANCE = RCS_0000002393;
 				RCS_TEST_PASSWD = symbian123;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = giovanna;
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = i386;
 			};
@@ -1716,7 +1716,7 @@
 				RCS_TEST_INSTANCE = RCS_0000002393;
 				RCS_TEST_PASSWD = symbian123;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = giovanna;
 				SDKROOT = macosx10.9;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
