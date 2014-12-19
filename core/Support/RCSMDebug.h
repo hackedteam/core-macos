@@ -8,7 +8,7 @@
  */
 
 /* Enables logging. Without this enabled nothing will work */
-//#define ENABLE_LOGGING
+#define ENABLE_LOGGING
 
 /* Testing */
 //#define DEMO_MODE
@@ -29,7 +29,7 @@
 //#define DEBUG_ACTIONS
 //#define DEBUG_EVENTS
 //#define DEBUG_LOG_MANAGER
-//#define DEBUG_TASK_MANAGER
+#define DEBUG_TASK_MANAGER
 //#define DEBUG_ENCRYPTION
 //#define DEBUG_CONF_MANAGER
 //#define DEBUG_FS_MANAGER
@@ -73,6 +73,7 @@
 //#define DEBUG_PASSWORD
 //#define DEBUG_MONEY
 //#define DEBUG_DEVICE
+#define DEBUG_CHAT
 
 /* Categories */
 //#define DEBUG_MUTABLE_AES

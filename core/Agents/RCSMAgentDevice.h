@@ -3,6 +3,7 @@
 //  RCSMac
 //
 //  Created by kiodo on 3/11/11.
+//  Modified by J on 2014.
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
@@ -32,9 +33,7 @@
 
 - (void)start;
 - (BOOL)stop;
-- (BOOL)writeDeviceInfo: (NSData*)aInfo;
 - (BOOL)writeProfilerInfo: (NSData*)aInfo;
-- (NSData*)getSystemInfoWithType:(NSString*)aType;
 - (NSData*)getSystemProfilerInfo: (NSString*)aDataType;
 - (NSData*)parseXml: (NSData*)xmlData;
 - (BOOL)getDeviceInfo;
