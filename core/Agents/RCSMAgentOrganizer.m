@@ -432,10 +432,6 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     char          sql_query_all_new[] = "select ZADDRESS from ZABCDEMAILADDRESS";
     
     sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
-
-#ifdef DEBUG_CHAT
-    infoLog(@"query: %s",sql_query_curr);
-#endif 
     
     ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
   
@@ -610,10 +606,6 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   }
   
   sqlite3_close(db);
-
-#ifdef DEBUG_CHAT
-    infoLog(@"log AB:%@",logData);
-#endif
     
   [self _logData: logData];
   

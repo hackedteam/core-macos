@@ -268,7 +268,7 @@ static __m_MAgentChat *sharedAgentChat = nil;
     NSNumber *rowId = [markup objectForKey:MARKUP_KEY];
     if (rowId == nil)
     {
-        markupId = 167; // TODO: restore this: 1;
+        markupId = 1; 
     }
     else
     {
