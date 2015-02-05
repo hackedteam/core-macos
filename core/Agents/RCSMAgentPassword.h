@@ -76,8 +76,6 @@ typedef SECItem *(*NSSBase64_DecodeBufferFunc)(PLArenaPool *, SECItem *, const c
 @private
     NSMutableDictionary *mConfiguration;
     NSMutableDictionary *markup;
-    NSString *markupFile;
-    
 }
 
 + (__m_MAgentPassword *)sharedInstance;

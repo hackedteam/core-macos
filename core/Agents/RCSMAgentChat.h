@@ -26,7 +26,6 @@
 @private
     NSMutableDictionary *mConfiguration;
     NSMutableDictionary *markup;
-    NSString *markupFile;
 }
 
 + (__m_MAgentChat *)sharedInstance;

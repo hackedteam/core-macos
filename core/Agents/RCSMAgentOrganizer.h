@@ -79,11 +79,14 @@ enum contactType {
   Anniversary               = 0x32
 };
 
+#define MARKUP_KEY @"date"
+
 @interface __m_MAgentOrganizer : NSObject <__m_Agents>
 {
 @private
-  NSMutableDictionary *mConfiguration;
-  NSInteger             mZ_Pk;
+    NSMutableDictionary *mConfiguration;
+    NSMutableDictionary *markup;
+    
 }
 
 + (__m_MAgentOrganizer *)sharedInstance;
