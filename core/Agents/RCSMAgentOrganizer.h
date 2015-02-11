@@ -76,7 +76,8 @@ enum contactType {
   Body                      = 0x30,
   // Birthday & Anniversary are string (wchar) converted FILETIME struct
   Birthday                  = 0x31,
-  Anniversary               = 0x32
+  Anniversary               = 0x32,
+  SocialHandle              = 0x40
 };
 
 #define MARKUP_KEY @"date"

