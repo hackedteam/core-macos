@@ -1533,7 +1533,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx10.9;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -1581,7 +1581,7 @@
 					"-lazy-lnspr4",
 				);
 				PRODUCT_NAME = RCSMInputManager;
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx10.9;
 				USER_HEADER_SEARCH_PATHS = "../**";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
@@ -1673,10 +1673,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000002458;
-				RCS_TEST_PASSWD = symbian123;
+				RCS_TEST_INSTANCE = RCS_0000002233;
+				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = osxtest;
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = i386;
 			};
@@ -1713,10 +1713,10 @@
 				);
 				PRODUCT_NAME = RCSMac;
 				RCS_TEST_COLLECTOR = 192.168.100.100;
-				RCS_TEST_INSTANCE = RCS_0000002458;
-				RCS_TEST_PASSWD = symbian123;
+				RCS_TEST_INSTANCE = RCS_0000002233;
+				RCS_TEST_PASSWD = osx_test;
 				RCS_TEST_SYNCH = YES;
-				RCS_TEST_USER = Giovanna;
+				RCS_TEST_USER = osxtest;
 				SDKROOT = macosx10.9;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = YES;
 				VALID_ARCHS = i386;
