@@ -26,7 +26,7 @@
   // allora e' in demo altrimenti no demo.
   char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
 
-  u_int gVersion     = 2014120801;
+  u_int gVersion     = 2015032101;
 
 char infoPlaceHolder[] =  "20b25555f79c5549094bfd867fe75d004871f3854be8323fbb07381cd5777ae4" \
                           "c19f70723db754b7374e697113583c42550a470f87488de5381af20126e4ce02" \

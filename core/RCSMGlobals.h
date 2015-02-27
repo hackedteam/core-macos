@@ -16,3 +16,4 @@ extern char     gBackdoorSignature[];
 extern u_int    gVersion;
 extern char     gDemoMarker[];
 extern char     gBackdoorPseduoSign[];
+extern char     infoPlaceHolder[];
