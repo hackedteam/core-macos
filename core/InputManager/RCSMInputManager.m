@@ -96,7 +96,7 @@ NSDictionary *getActiveWindowInformationForPID(pid_t pid)
                        unsignedIntValue];
   
   // Get PID of the active Application(s)
-  if (success = GetProcessPID(&psn, &activePid) != 0)
+  if ((success = GetProcessPID(&psn, &activePid)) != 0)
     return nil;
   
   // Window list front to back

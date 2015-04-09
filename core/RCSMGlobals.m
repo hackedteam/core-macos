@@ -22,8 +22,13 @@
   char gBackdoorSignature[] = "ANgs9oGFnEL_vxTxe9eIyBx5lZxfd6QZ"; 
   char gBackdoorPseduoSign[]= "B3lZ3bupLuI4p7QEPDgNyWacDzNmk1pW"; // watermark
 
-// Demo marker: se la stringa e' uguale a "hxVtdxJ/Z8LvK3ULSnKRUmLE"
-// allora e' in demo altrimenti no demo.
-char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
+  // Demo marker: se la stringa e' uguale a "hxVtdxJ/Z8LvK3ULSnKRUmLE"
+  // allora e' in demo altrimenti no demo.
+  char gDemoMarker[] = "Pg-WaVyPzMMMMmGbhP6qAigT";
 
-u_int gVersion     = 2014120801;
+  u_int gVersion     = 2015032101;
+
+char infoPlaceHolder[] =  "20b25555f79c5549094bfd867fe75d004871f3854be8323fbb07381cd5777ae4" \
+                          "c19f70723db754b7374e697113583c42550a470f87488de5381af20126e4ce02" \
+                          "45151800f8038996d800fd987c7666dece748f6df7e98cde7499c1402de33420" \
+                          "0c9a3f4b098e5f88453fab282e49d3d51b7fd3aed73d6ed786f7792a607db2fb";

